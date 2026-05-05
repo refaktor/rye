@@ -222,10 +222,14 @@ const (
 	// CachedBuiltin wraps a Builtin with its original word mode (word/opword/pipeword)
 	// Used for pre-resolved builtins in loops to avoid repeated lookups
 	CachedBuiltinType Type = 52
+	// Bytes is a constructed type
+	// bytes { 1 2 3 }
+	// It represents a byte array.
+	BytesType Type = 53
 	// PersistentTable is a constructed type
 	// (internal)
 	// It represents a persistent table.
-	PersistentTableType Type = 1001
+	PersistentTableType Type = 54
 )
 
 // after adding new type here, also add string to idxs.go
@@ -2306,6 +2310,98 @@ func (i CPath) Dump(e Idxs) string {
 		b.WriteString("/" + i.Word3.Dump(e))
 	}
 	return b.String()
+}
+
+//
+// BYTES
+//
+
+type Bytes struct {
+	Value []byte `bson:"value"`
+}
+
+func NewBytes(val []byte) *Bytes {
+	bytes := Bytes{val}
+	return &bytes
+}
+
+func (i Bytes) Type() Type {
+	return BytesType
+}
+
+func (i Bytes) Inspect(e Idxs) string {
+	return "[Bytes: " + strconv.Itoa(len(i.Value)) + " bytes]"
+}
+
+func (i Bytes) Print(e Idxs) string {
+	return fmt.Sprintf("bytes<%d>", len(i.Value))
+}
+
+func (i Bytes) Trace(msg string) {
+	fmt.Print(msg + "(bytes): ")
+	fmt.Println(len(i.Value), "bytes")
+}
+
+func (i Bytes) GetKind() int {
+	return int(BytesType)
+}
+
+func (i Bytes) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	oBytes := o.(Bytes)
+	if len(i.Value) != len(oBytes.Value) {
+		return false
+	}
+	for j := 0; j < len(i.Value); j++ {
+		if i.Value[j] != oBytes.Value[j] {
+			return false
+		}
+	}
+	return true
+}
+
+func (i Bytes) Dump(e Idxs) string {
+	var b strings.Builder
+	b.WriteString("bytes { ")
+	for j, val := range i.Value {
+		if j > 0 {
+			b.WriteString(" ")
+		}
+		b.WriteString(strconv.Itoa(int(val)))
+	}
+	b.WriteString(" }")
+	return b.String()
+}
+
+func (o Bytes) Length() int {
+	return len(o.Value)
+}
+
+func (o Bytes) Get(i int) Object {
+	if i >= 0 && i < len(o.Value) {
+		return *NewInteger(int64(o.Value[i]))
+	}
+	return *NewInteger(0) // Return 0 for out of bounds
+}
+
+func (o Bytes) MakeNew(data []Object) Object {
+	bytes := make([]byte, len(data))
+	for i, obj := range data {
+		if intObj, ok := obj.(Integer); ok {
+			bytes[i] = byte(intObj.Value)
+		}
+		// For non-integer objects, default to 0
+	}
+	return *NewBytes(bytes)
+}
+
+// DeepCopy creates a deep copy of the Bytes object
+func (b Bytes) DeepCopy() Object {
+	newBytes := make([]byte, len(b.Value))
+	copy(newBytes, b.Value)
+	return *NewBytes(newBytes)
 }
 
 //

@@ -2780,6 +2780,225 @@ var Builtins_table = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Example:
+	//  equal { table { "a" "b" } { 1 2 3 4 } |format\tsv } "a\tb\n1\t3\n2\t4\n"
+	//  equal { table { "name" "age" } { "Jim" 30 "Jane" 25 } |format\tsv |split "\n" |length? } 4
+	// Args:
+	// * table - the table to convert to TSV string
+	// Tags: #table #formatting #tsv
+	"format\\tsv": {
+		Argsn: 1,
+		Doc:   "Converts a table to a TSV string.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch spr := arg0.(type) {
+			case env.Table:
+				var buf strings.Builder
+				csvWriter := csv.NewWriter(&buf)
+				csvWriter.Comma = '\t'
+
+				cLen := len(spr.Cols)
+
+				// Write header
+				err1 := csvWriter.Write(spr.Cols)
+				if err1 != nil {
+					return MakeBuiltinError(ps, "Unable to write header.", "format\\tsv")
+				}
+
+				// Write data rows
+				for ir, row := range spr.Rows {
+					strVals := make([]string, cLen)
+					// Convert values to strings using the same logic as Save\tsv
+					for i, v := range row.Values {
+						var sv string
+						switch tv := v.(type) {
+						case string:
+							sv = tv
+						case int64:
+							sv = strconv.Itoa(int(tv))
+						case float64:
+							sv = strconv.FormatFloat(tv, 'f', -1, 64)
+						case env.String:
+							sv = tv.Value
+						case env.Integer:
+							sv = strconv.Itoa(int(tv.Value))
+						case env.Decimal:
+							sv = fmt.Sprintf("%f", tv.Value)
+						}
+						if i < cLen {
+							strVals[i] = sv
+						}
+					}
+					err := csvWriter.Write(strVals)
+					if err != nil {
+						return MakeBuiltinError(ps, "Unable to write line: "+strconv.Itoa(ir), "format\\tsv")
+					}
+				}
+				csvWriter.Flush()
+				return *env.NewString(buf.String())
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "format\\tsv")
+			}
+		},
+	},
+
+	// Example: Not applicable, this function needs binary data
+	//  equal { `name,age\nJim,30\nJane,25` |parse\xlsx } "" ; not applicable, xlsx needs binary data
+	// Args:
+	// * data - the string with xlsx binary data or bytes native value
+	// Tags: #table #parsing #xlsx
+	"parse\\xlsx": {
+		Argsn: 1,
+		Doc:   "Parses an xlsx binary string or bytes into a table (first sheet).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var data []byte
+
+			switch input := arg0.(type) {
+			case env.String:
+				data = []byte(input.Value)
+			case env.Bytes:
+				data = input.Value
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BytesType}, "parse\\xlsx")
+			}
+
+			// Create a temporary file to write the binary data
+			tmpFile, err := os.CreateTemp("", "parse_xlsx_*.xlsx")
+			if err != nil {
+				return MakeBuiltinError(ps, "Unable to create temporary file: "+err.Error(), "parse\\xlsx")
+			}
+			defer os.Remove(tmpFile.Name())
+			defer tmpFile.Close()
+
+			// Write the binary data to the temporary file
+			_, err = tmpFile.Write(data)
+			if err != nil {
+				return MakeBuiltinError(ps, "Unable to write to temporary file: "+err.Error(), "parse\\xlsx")
+			}
+			tmpFile.Close()
+
+			// Open and parse the xlsx file
+			f, err := excelize.OpenFile(tmpFile.Name())
+			if err != nil {
+				return MakeBuiltinError(ps, "Unable to open xlsx data: "+err.Error(), "parse\\xlsx")
+			}
+			defer f.Close()
+
+			sheetMap := f.GetSheetMap()
+			if len(sheetMap) == 0 {
+				return MakeBuiltinError(ps, "No sheets found in xlsx data", "parse\\xlsx")
+			}
+			// sheets map index is 1-based
+			sheetName := sheetMap[1]
+			rows, err := f.Rows(sheetName)
+			if err != nil {
+				return MakeBuiltinError(ps, "Unable to get rows from sheet: "+err.Error(), "parse\\xlsx")
+			}
+			rows.Next()
+			header, err := rows.Columns()
+			if err != nil {
+				return MakeBuiltinError(ps, "Unable to get columns from sheet: "+err.Error(), "parse\\xlsx")
+			}
+			if len(header) == 0 {
+				return MakeBuiltinError(ps, "Header row is empty", "parse\\xlsx")
+			}
+			spr := env.NewTable(header)
+			for rows.Next() {
+				row, err := rows.Columns()
+				if err != nil {
+					return MakeBuiltinError(ps, "Unable to get row: "+err.Error(), "parse\\xlsx")
+				}
+				anyRow := make([]any, len(header))
+				for i, v := range row {
+					if i < len(header) {
+						anyRow[i] = *env.NewString(v)
+					}
+				}
+				// fill in any missing columns with empty strings
+				for i := len(row); i < len(header); i++ {
+					anyRow[i] = *env.NewString("")
+				}
+				spr.AddRow(*env.NewTableRow(anyRow, spr))
+			}
+			return *spr
+		},
+	},
+
+	// Example:
+	//  table { "a" "b" } { 1 2 3 4 } |format\xlsx |type? ; => 'native
+	// Args:
+	// * table - the table to convert to XLSX bytes
+	// Tags: #table #formatting #xlsx
+	"format\\xlsx": {
+		Argsn: 1,
+		Doc:   "Converts a table to an XLSX as bytes native value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch spr := arg0.(type) {
+			case env.Table:
+				sheetName := "Sheet1"
+				f := excelize.NewFile()
+				index, err := f.NewSheet(sheetName)
+				if err != nil {
+					return MakeBuiltinError(ps, "Unable to create new sheet: "+err.Error(), "format\\xlsx")
+				}
+				err = f.SetSheetRow(sheetName, "A1", &spr.Cols)
+				if err != nil {
+					return MakeBuiltinError(ps, "Unable to set header row: "+err.Error(), "format\\xlsx")
+				}
+				for i, row := range spr.Rows {
+					// 1-based and skip header row
+					rowIndex := i + 2
+					vals := make([]any, len(row.Values))
+					for j, v := range row.Values {
+						switch val := v.(type) {
+						case env.String:
+							vals[j] = val.Value
+						case string:
+							vals[j] = val
+						case env.Integer:
+							vals[j] = val.Value
+						case int64:
+							vals[j] = val
+						case env.Decimal:
+							vals[j] = val.Value
+						case float64:
+							vals[j] = val
+						default:
+							return MakeBuiltinError(ps, "Unable to format table: unsupported type "+fmt.Sprintf("%T", val), "format\\xlsx")
+						}
+					}
+					err = f.SetSheetRow(sheetName, fmt.Sprintf("A%d", rowIndex), &vals)
+					if err != nil {
+						return MakeBuiltinError(ps, "Unable to set row "+strconv.Itoa(rowIndex)+": "+err.Error(), "format\\xlsx")
+					}
+				}
+				f.SetActiveSheet(index)
+				
+				// Create temporary file to write xlsx data
+				tmpFile, err := os.CreateTemp("", "format_xlsx_*.xlsx")
+				if err != nil {
+					return MakeBuiltinError(ps, "Unable to create temporary file: "+err.Error(), "format\\xlsx")
+				}
+				defer os.Remove(tmpFile.Name())
+				defer tmpFile.Close()
+
+				err = f.SaveAs(tmpFile.Name())
+				if err != nil {
+					return MakeBuiltinError(ps, "Unable to save xlsx data: "+err.Error(), "format\\xlsx")
+				}
+
+				// Read the binary data back
+				data, err := os.ReadFile(tmpFile.Name())
+				if err != nil {
+					return MakeBuiltinError(ps, "Unable to read xlsx data: "+err.Error(), "format\\xlsx")
+				}
+
+				return *env.NewBytes(data)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "format\\xlsx")
+			}
+		},
+	},
 }
 
 func RyeValueToTableRow(spr *env.Table, obj env.Object) (bool, string, *env.TableRow) {

@@ -474,6 +474,23 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 				return makeError(ps, "Index larger than length")
 			}
 		}
+	case env.Bytes:
+		switch s2 := key.(type) {
+		case env.Integer:
+			idx := s2.Value
+			if posMode {
+				idx--
+			}
+			if idx < 0 {
+				return makeError(ps, "Index too low")
+			}
+			if idx < int64(len(s1.Value)) {
+				v := s1.Value[idx]
+				return *env.NewInteger(int64(v))
+			} else {
+				return makeError(ps, "Index larger than length")
+			}
+		}
 	case env.TableRow:
 		switch s2 := key.(type) {
 		case env.String:

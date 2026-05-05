@@ -68,6 +68,8 @@ var NativeTypes = [...]string{ // Todo change to BuiltinTypes
 	"LazyValue",
 	"Dotword",
 	"Matrix",
+	"CachedBuiltin",
+	"Bytes",
 	"PersistentTable",
 }
 
