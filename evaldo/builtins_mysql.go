@@ -249,7 +249,8 @@ var Builtins_mysql = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch db := arg0.(type) {
 			case env.Native:
-				if db.Kind != "Rye-mysql" {
+				mysqlKind, _ := ps.Idx.GetIndex("Rye-mysql")
+				if db.Kind.Index != mysqlKind {
 					return MakeBuiltinError(ps, "Expected MySQL database connection.", "Rye-mysql//Close")
 				}
 				sqlDB, ok := db.Value.(*sql.DB)

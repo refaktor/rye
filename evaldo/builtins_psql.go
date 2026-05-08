@@ -271,7 +271,8 @@ var Builtins_psql = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch db := arg0.(type) {
 			case env.Native:
-				if db.Kind != "Rye-psql" {
+				psqlKind, _ := ps.Idx.GetIndex("Rye-psql")
+				if db.Kind.Index != psqlKind {
 					return MakeBuiltinError(ps, "Expected PostgreSQL database connection.", "Rye-psql//Close")
 				}
 				sqlDB, ok := db.Value.(*sql.DB)

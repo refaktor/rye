@@ -273,7 +273,8 @@ var Builtins_sqlite = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch db := arg0.(type) {
 			case env.Native:
-				if db.Kind != "Rye-sqlite" {
+				sqliteKind, _ := ps.Idx.GetIndex("Rye-sqlite")
+				if db.Kind.Index != sqliteKind {
 					return MakeBuiltinError(ps, "Expected SQLite database connection.", "Rye-sqlite//Close")
 				}
 				sqlDB, ok := db.Value.(*sql.DB)
