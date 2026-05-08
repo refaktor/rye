@@ -260,4 +260,34 @@ var Builtins_sqlite = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// equal { db: Open sqlite://test.db ; db .Close |type? } 'integer
+	// Args:
+	// * db: SQLite database connection
+	// Returns:
+	// * integer 1 on successful close, error otherwise
+	"Rye-sqlite//Close": {
+		Argsn: 1,
+		Doc:   "Closes the SQLite database connection.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch db := arg0.(type) {
+			case env.Native:
+				if db.Kind != "Rye-sqlite" {
+					return MakeBuiltinError(ps, "Expected SQLite database connection.", "Rye-sqlite//Close")
+				}
+				sqlDB, ok := db.Value.(*sql.DB)
+				if !ok {
+					return MakeBuiltinError(ps, "Invalid database connection.", "Rye-sqlite//Close")
+				}
+				err := sqlDB.Close()
+				if err != nil {
+					return MakeBuiltinError(ps, fmt.Sprintf("Error closing database: %v", err.Error()), "Rye-sqlite//Close")
+				}
+				return *env.NewInteger(1)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-sqlite//Close")
+			}
+		},
+	},
 }

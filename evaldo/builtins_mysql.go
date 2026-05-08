@@ -236,4 +236,34 @@ var Builtins_mysql = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// equal { db: Open mysql://user:pass@tcp(localhost:3306)/dbname ; db .Close |type? } 'integer
+	// Args:
+	// * db: MySQL database connection
+	// Returns:
+	// * integer 1 on successful close, error otherwise
+	"Rye-mysql//Close": {
+		Argsn: 1,
+		Doc:   "Closes the MySQL database connection.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch db := arg0.(type) {
+			case env.Native:
+				if db.Kind != "Rye-mysql" {
+					return MakeBuiltinError(ps, "Expected MySQL database connection.", "Rye-mysql//Close")
+				}
+				sqlDB, ok := db.Value.(*sql.DB)
+				if !ok {
+					return MakeBuiltinError(ps, "Invalid database connection.", "Rye-mysql//Close")
+				}
+				err := sqlDB.Close()
+				if err != nil {
+					return MakeBuiltinError(ps, fmt.Sprintf("Error closing database: %v", err.Error()), "Rye-mysql//Close")
+				}
+				return *env.NewInteger(1)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-mysql//Close")
+			}
+		},
+	},
 }

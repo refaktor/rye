@@ -1674,6 +1674,38 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { ftp: Open ftp://localhost:21 ; ftp .Close |type? } 'integer
+	// Args:
+	// * connection: native ftp-connection object
+	// Returns:
+	// * integer 1 for success
+	// * error if close fails
+	"ftp-connection//Close": {
+		Argsn: 1,
+		Doc:   "Closes an FTP server connection.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(s.Kind.Index) != "ftp-connection" {
+					return MakeBuiltinError(ps, "Expected FTP connection.", "ftp-connection//Close")
+				}
+				conn, ok := s.Value.(*ftp.ServerConn)
+				if !ok {
+					return MakeBuiltinError(ps, "Invalid FTP connection.", "ftp-connection//Close")
+				}
+				err := conn.Quit()
+				if err != nil {
+					return MakeBuiltinError(ps, fmt.Sprintf("Error closing FTP connection: %v", err.Error()), "ftp-connection//Close")
+				}
+				return *env.NewInteger(1)
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ftp-connection//Close")
+			}
+		},
+	},
+
 	//
 	// ##### File Monitoring ##### "File watching and tailing operations"
 	//

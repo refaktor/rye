@@ -258,4 +258,34 @@ var Builtins_psql = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// equal { db: Open postgres://user:pass@localhost:5432/dbname ; db .Close |type? } 'integer
+	// Args:
+	// * db: PostgreSQL database connection
+	// Returns:
+	// * integer 1 on successful close, error otherwise
+	"Rye-psql//Close": {
+		Argsn: 1,
+		Doc:   "Closes the PostgreSQL database connection.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch db := arg0.(type) {
+			case env.Native:
+				if db.Kind != "Rye-psql" {
+					return MakeBuiltinError(ps, "Expected PostgreSQL database connection.", "Rye-psql//Close")
+				}
+				sqlDB, ok := db.Value.(*sql.DB)
+				if !ok {
+					return MakeBuiltinError(ps, "Invalid database connection.", "Rye-psql//Close")
+				}
+				err := sqlDB.Close()
+				if err != nil {
+					return MakeBuiltinError(ps, fmt.Sprintf("Error closing database: %v", err.Error()), "Rye-psql//Close")
+				}
+				return *env.NewInteger(1)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-psql//Close")
+			}
+		},
+	},
 }

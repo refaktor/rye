@@ -698,6 +698,8 @@ section "Column level functions " "Functions that construct a table." {
 	{
 		equal { table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
 		|gen-column 'job { } { "Cook" } |column? "job" } { "Cook" "Cook" "Cook" }
+		equal { table { "email" } { "john@example.com" "jane@test.org" }
+		|gen-column 'domain 'email { regexp ".*@(.+)$" "$1" } |column? "domain" } { "example.com" "test.org" }
 	}
 
 	{
@@ -1207,6 +1209,138 @@ spr1 = spr2
 
 	{
 	}
+
+	group "parse\\csv" 
+	"Parses a CSV string to a table datatype."
+	{
+		argsn 1
+		argtypes {
+			1 [ String ]
+		}
+		arg `csv-string - string containing CSV data`
+		arg `Tags: #table #parsing #csv`
+	}
+
+	{
+		equal { `a,b\n1,2\n3,4` |parse\csv |length? } 2
+		equal { `a,b\n1,2\n3,4` |parse\csv |column? "a" } { "1" "3" }
+	}
+
+	{
+	}
+
+	group "parse\\csv\\" 
+	"Parses a CSV string to a table datatype with custom separator."
+	{
+		argsn 2
+		argtypes {
+			1 [ String ]
+			2 [ String ]
+		}
+		arg `csv-string - string containing CSV data`
+		arg `separator - single character separator`
+		arg `Tags: #table #parsing #csv`
+	}
+
+	{
+		equal { `a,b\n1,2\n3,4` |parse\csv\ "," |length? } 2
+		equal { `a;b\n1;2\n3;4` |parse\csv\ ";" |column? "a" } { "1" "3" }
+	}
+
+	{
+	}
+
+	group "parse\\tsv" 
+	"Parses a TSV (tab-separated values) string to a table datatype."
+	{
+		argsn 1
+		argtypes {
+			1 [ String ]
+		}
+		arg `tsv-string - string containing TSV (tab-separated values) data`
+		arg `Tags: #table #parsing #tsv`
+	}
+
+	{
+		equal { `a	b\n1	2\n3	4` |parse\tsv |length? } 2
+		equal { `a	b\n1	2\n3	4` |parse\tsv |column? "a" } { "1" "3" }
+	}
+
+	{
+	}
+
+	group "format\\csv" 
+	"Converts a table to a CSV string."
+	{
+		argsn 1
+		argtypes {
+			1 [ Table ]
+		}
+		arg `table - the table to convert to CSV string`
+		arg `Tags: #table #formatting #csv`
+	}
+
+	{
+		equal { table { "a" "b" } { 1 2 3 4 } |format\csv } "a,b\n1,3\n2,4\n"
+		equal { table { "name" "age" } { "Jim" 30 "Jane" 25 } |format\csv |split "\n" |length? } 4
+	}
+
+	{
+	}
+
+	group "format\\tsv" 
+	"Converts a table to a TSV string."
+	{
+		argsn 1
+		argtypes {
+			1 [ Table ]
+		}
+		arg `table - the table to convert to TSV string`
+		arg `Tags: #table #formatting #tsv`
+	}
+
+	{
+	}
+
+	{
+`equal { table { "a" "b" } { 1 2 3 4 } |format\tsv } "a\tb\n1\t3\n2\t4\n"
+equal { table { "name" "age" } { "Jim" 30 "Jane" 25 } |format\tsv |split "\n" |length? } 4
+`	}
+
+	group "parse\\xlsx" 
+	"Parses an xlsx binary string or bytes into a table (first sheet)."
+	{
+		argsn 1
+		argtypes {
+			1 [ String Bytes ]
+		}
+		arg `data - the string with xlsx binary data or bytes native value`
+		arg `Tags: #table #parsing #xlsx`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "format\\xlsx" 
+	"Converts a table to an XLSX as bytes native value."
+	{
+		argsn 1
+		argtypes {
+			1 [ Table ]
+		}
+		arg `table - the table to convert to XLSX bytes`
+		arg `Tags: #table #formatting #xlsx`
+	}
+
+	{
+	}
+
+	{
+`table { "a" "b" } { 1 2 3 4 } |format\xlsx |type? ; => 'native
+`	}
 
 }
 

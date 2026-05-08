@@ -959,7 +959,7 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { first "abcde" } "a"
 	// equal { first list { 1 2 3 } } 1
 	// equal { first { { "nested" } 2 3 } } { "nested" }
-	// equal { table { 'a } { 42 } |format\xlsx |first |greater 0 } true  ; first byte should be positive integer
+	// equal { table { 'a } { 42 } |format\xlsx |first |> 0 } true  ; first byte should be positive integer
 	// ; equal { first table { 'a 'b } { 1 2 } { 3 4 } } table-row { 'a 1 'b 2 }
 	// equal { first vector { 1.0 2.0 3.0 } } 1.0
 	// equal { first matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |type? } 'vector
@@ -1377,7 +1377,7 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { try { last { } } |type? } 'error
 	// equal { last vector { 1.0 2.0 3.0 } } 3.0
 	// equal { last matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |first } 4.0
-	// equal { table { 'a } { 42 } |format\xlsx |last |greater -1 } true  ; last byte should be >= 0
+	// equal { table { 'a } { 42 } |format\xlsx |last |> -1 } true  ; last byte should be >= 0
 	// Args:
 	// * collection: Block, list, string, vector, matrix or bytes to get the last item from
 	// Returns:
@@ -2519,7 +2519,7 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { vector { 10 20 30 } |length? } 3
 	// equal { dict { "a" 1 "b" 2 } |length? } 2
 	// equal { list { 1 2 3 4 5 } |length? } 5
-	// equal { table { 'a } { 1 } |format\xlsx |length? |greater 100 } true  ; xlsx bytes should have decent length
+	// equal { table { 'a } { 1 } |format\xlsx |length? |> 100 } true  ; xlsx bytes should have decent length
 	// Args:
 	// * collection: String, block, dict, list, table, context, vector or bytes to measure
 	// Returns:

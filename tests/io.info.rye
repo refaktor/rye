@@ -626,8 +626,8 @@ section "File Operations " "File system operations and file manipulation" {
 	{
 		argsn 2
 		argtypes {
-			1 [ Native ]
-			2 [ Native ]
+			1 [ Bytes ]
+			2 [ Bytes ]
 		}
 		arg `bytes1: first Go-bytes native value`
 		arg `bytes2: second Go-bytes native value`
@@ -860,6 +860,23 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 		}
 		arg `response: native https-response object`
 		returns `string containing the response body`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "https-response//Close-body!" 
+	"Closes the HTTPS response body to free network resources."
+	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
+		arg `response: native https-response object`
+		returns `empty string if close succeeds`
 	}
 
 	{

@@ -124,6 +124,32 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	// equal { client: Open mqtt://localhost:1883/my-client ; client .Close |type? } 'integer
+	// Args:
+	// * client: MQTT client connection (type: "mqtt-client")
+	// Returns:
+	// * integer 1 for success
+	// * error if close fails
+	"mqtt-client//Close": {
+		Argsn: 1,
+		Doc:   "Closes the MQTT client connection (alias for Disconnect).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch client := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(client.Kind.Index) != "mqtt-client" {
+					return MakeBuiltinError(ps, "Expected MQTT client connection.", "mqtt-client//Close")
+				}
+				mqttClient := client.Value.(mqtt.Client)
+				mqttClient.Disconnect(250) // 250ms timeout
+				return *env.NewInteger(1)
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "mqtt-client//Close")
+			}
+		},
+	},
+
+	// Tests:
 	// example { client |Publish "sensors/temperature" "23.5" 0 false }
 	// Args:
 	// * client: MQTT client connection (type: "mqtt-client")
