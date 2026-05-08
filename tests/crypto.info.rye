@@ -24,7 +24,7 @@ section "Basic Cryptographic Operations " "Hashing, encoding, and basic cryptogr
 	{
 		argsn 1
 		argtypes {
-			1 [ Native ]
+			1 [ Bytes ]
 		}
 		arg `bytes: native bytes object to encode`
 		returns `string containing the hexadecimal representation of the bytes`
@@ -202,7 +202,7 @@ section "Age " "Age encryption/decryption and key generation" {
 	{
 		argsn 1
 		argtypes {
-			1 [ Native String ]
+			1 [ Bytes String ]
 		}
 	}
 
@@ -220,7 +220,7 @@ section "Age " "Age encryption/decryption and key generation" {
 	{
 		argsn 1
 		argtypes {
-			1 [ Native String ]
+			1 [ Bytes String ]
 		}
 	}
 
@@ -281,7 +281,7 @@ section "Age " "Age encryption/decryption and key generation" {
 	{
 		argsn 2
 		argtypes {
-			1 [ Native ]
+			1 [ Bytes ]
 			2 [ String ]
 		}
 		arg `p12-data: PKCS#12 file content as bytes native value`
@@ -303,7 +303,7 @@ section "Age " "Age encryption/decryption and key generation" {
 	{
 		argsn 2
 		argtypes {
-			1 [ Native ]
+			1 [ Bytes ]
 			2 [ String ]
 		}
 		arg `p12-data: PKCS#12 file content as bytes native value`

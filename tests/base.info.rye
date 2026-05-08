@@ -1207,7 +1207,7 @@ section "Strings " "" {
 		argsn 1
 		pure
 		argtypes {
-			1 [ String Native ]
+			1 [ String Native Bytes ]
 		}
 		arg `data: String or native bytes/pem-block to encode`
 		returns `base64-encoded string`
@@ -2256,13 +2256,13 @@ section "Collections " "" {
 	}
 
 	group "first" 
-	"Retrieves the first item from a collection (block, list, string, table, vector, or matrix)."
+	"Retrieves the first item from a collection (block, list, string, table, vector, matrix, or bytes)."
 	{
 		argsn 1
 		argtypes {
-			1 [ Table Block String List Vector Matrix ]
+			1 [ Table Block String List Vector Matrix Bytes ]
 		}
-		arg `collection: Block, list, string, table, vector or matrix to get the first item from`
+		arg `collection: Block, list, string, table, vector, matrix or bytes to get the first item from`
 		returns `the first item in the collection (for matrix: first row as vector)`
 	}
 
@@ -2271,6 +2271,7 @@ section "Collections " "" {
 		equal { first "abcde" } "a"
 		equal { first list { 1 2 3 } } 1
 		equal { first { { "nested" } 2 3 } } { "nested" }
+		equal { table { 'a } { 42 } |format\xlsx |first |> 0 } true  ; first byte should be positive integer
 		; equal { first table { 'a 'b } { 1 2 } { 3 4 } } table-row { 'a 1 'b 2 }
 		equal { first vector { 1.0 2.0 3.0 } } 1.0
 		equal { first matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |type? } 'vector
@@ -2354,11 +2355,11 @@ section "Collections " "" {
 	}
 
 	group "second" 
-	"Retrieves the second item from a collection (block, list, string, vector, or matrix)."
+	"Retrieves the second item from a collection (block, list, string, vector, matrix, or bytes)."
 	{
 		argsn 1
 		argtypes {
-			1 [ Block List String Vector Matrix ]
+			1 [ Block List String Vector Matrix Bytes ]
 		}
 		arg `collection: Block, list, string, vector or matrix to get the second item from`
 		returns `the second item in the collection (for matrix: second row as vector)`
@@ -2370,17 +2371,18 @@ section "Collections " "" {
 		equal { second list { 10 20 30 } } 20
 		equal { second vector { 1.0 2.0 3.0 } } 2.0
 		equal { second matrix { 3 2 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |first } 3.0
+		equal { table { 'a } { 1 } |format\xlsx |second |type? } 'integer
 	}
 
 	{
 	}
 
 	group "third" 
-	"Retrieves the third item from a collection (block, list, string, vector, or matrix)."
+	"Retrieves the third item from a collection (block, list, string, vector, matrix, or bytes)."
 	{
 		argsn 1
 		argtypes {
-			1 [ Block List String Vector Matrix ]
+			1 [ Block List String Vector Matrix Bytes ]
 		}
 		arg `collection: Block, list, string, vector or matrix to get the third item from`
 		returns `the third item in the collection (for matrix: third row as vector)`
@@ -2392,19 +2394,20 @@ section "Collections " "" {
 		equal { third list { 10 20 30 40 } } 30
 		equal { third vector { 1.0 2.0 3.0 4.0 } } 3.0
 		equal { third matrix { 4 2 } { 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 } |first } 5.0
+		equal { table { 'a } { 1 } |format\xlsx |third |type? } 'integer
 	}
 
 	{
 	}
 
 	group "last" 
-	"Retrieves the last item from a collection (block, list, string, vector, or matrix)."
+	"Retrieves the last item from a collection (block, list, string, vector, matrix, or bytes)."
 	{
 		argsn 1
 		argtypes {
-			1 [ Block List String Vector Matrix ]
+			1 [ Block List String Vector Matrix Bytes ]
 		}
-		arg `collection: Block, list, string, vector or matrix to get the last item from`
+		arg `collection: Block, list, string, vector, matrix or bytes to get the last item from`
 		returns `the last item in the collection (for matrix: last row as vector)`
 	}
 
@@ -2415,6 +2418,7 @@ section "Collections " "" {
 		equal { try { last { } } |type? } 'error
 		equal { last vector { 1.0 2.0 3.0 } } 3.0
 		equal { last matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |first } 4.0
+		equal { table { 'a } { 42 } |format\xlsx |last |> -1 } true  ; last byte should be >= 0
 	}
 
 	{
@@ -2475,7 +2479,7 @@ section "Collections " "" {
 	"Retrieves the item at the specified position (1-based indexing) from a collection."
 	{
 		argsn 2
-		arg `collection: Block, list, string or table to get an item from`
+		arg `collection: Block, list, string, table, vector, matrix or bytes to get an item from`
 		arg `n: Position of the item to retrieve (1-based)`
 		returns `the item at position n in the collection`
 	}
@@ -2486,6 +2490,7 @@ section "Collections " "" {
 		; equal { nth "abcde" 3 } "c"
 		equal { nth list { 10 20 30 40 } 2 } 20
 		error { nth list { 10 20 30 40 } 0 }
+		equal { table { 'a } { 1 } |format\xlsx |nth 1 |type? } 'integer
 		; equal { nth table { 'a 'b } { 1 2 } { 3 4 } 2 } table-row { 'a 3 'b 4 }
 	}
 
@@ -2797,9 +2802,9 @@ section "Collections " "" {
 	{
 		argsn 1
 		argtypes {
-			2 [ String Dict List Block Table PersistentTable Vector ]
+			2 [ String Dict List Block Table PersistentTable Vector Bytes ]
 		}
-		arg `collection: String, block, dict, list, table, context or vector to measure`
+		arg `collection: String, block, dict, list, table, context, vector or bytes to measure`
 		returns `integer count of elements in the collection`
 	}
 
@@ -2810,6 +2815,7 @@ section "Collections " "" {
 		equal { vector { 10 20 30 } |length? } 3
 		equal { dict { "a" 1 "b" 2 } |length? } 2
 		equal { list { 1 2 3 4 5 } |length? } 5
+		equal { table { 'a } { 1 } |format\xlsx |length? |> 100 } true  ; xlsx bytes should have decent length
 	}
 
 	{
@@ -4300,6 +4306,28 @@ section "Types and Kinds " "" {
 	{
 		equal { char 42 } "*"
 		error { char "*" }
+	}
+
+	{
+	}
+
+	group "ascii" 
+	"Tries to turn a single character string to its ASCII code integer."
+	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ String ]
+		}
+		arg `value: String containing a single character`
+		returns `An integer representing the ASCII code of the character`
+	}
+
+	{
+		equal { ascii "*" } 42
+		equal { ascii "A" } 65
+		error { ascii "ab" }
+		error { ascii 42 }
 	}
 
 	{
@@ -8253,6 +8281,49 @@ section "Default" "" {
 		equal { try { "x" |requires-one-of { "a" "b" "c" } } |message? |contains "must be one of" } true
 		equal { try { "x" |requires-one-of { "a" "b" "c" } } |message? |contains "[String: x]" } true
 		equal { try { 5 |requires-one-of { 1 2 3 } } |message? |contains "5" } true
+	}
+
+	{
+	}
+
+	group "ensure\\with" 
+	"Injects a value into a validation block and returns the value if the block is truthy, otherwise creates an error."
+	{
+		argsn 3
+		argtypes {
+			2 [ Block ]
+		}
+		arg `value: Value to inject into the validation block`
+		arg `block: Block that receives the value and returns truthy/falsy result`
+		arg `error_info: Error information to use if block returns falsy`
+		returns `original value if block returns truthy, or creates an error with failure flag set`
+	}
+
+	{
+		equal { req: Request "GET" "http://example.com" req |ensure\with { .Status? = 200 } "request failed" } req
+		equal { dict { "status" 200 } |ensure\with { .Status? = 200 } "status check failed" } dict { "status" 200 }
+		equal { try { dict { "status" 404 } |ensure\with { .Status? = 200 } "status check failed" } |message? } "status check failed"
+	}
+
+	{
+	}
+
+	group "^ensure\\with" 
+	"Like ensure\\with but also sets the return flag to immediately exit the current function."
+	{
+		argsn 3
+		argtypes {
+			2 [ Block ]
+		}
+		arg `value: Value to inject into the validation block`
+		arg `block: Block that receives the value and returns truthy/falsy result`
+		arg `error_info: Error information to use if block returns falsy`
+		returns `original value if block returns truthy, or immediately returns from function with an error`
+	}
+
+	{
+		equal { fn { req } { req |^ensure\with { .Status? = 200 } "request failed" } |apply [ Request "GET" "http://example.com" ] } Request "GET" "http://example.com"
+		equal { ff:: fn { val } { val |^ensure\with { .Status? = 200 } "status check failed" } ff dict { "status" 404 } |disarm |message? } "status check failed"
 	}
 
 	{
