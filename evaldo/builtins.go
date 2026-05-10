@@ -3068,7 +3068,7 @@ func RegisterBuiltinsInContext(builtins map[string]*env.Builtin, ps *env.Program
 	ps.Ctx = env.NewEnv(ps.Ctx) // make new context with no parent
 
 	for k, v := range builtins {
-		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc+" ("+k+")")
+		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc+" ("+name+"//"+k+")")
 		registerBuiltin(ps, k, *bu)
 	}
 	newctx := ps.Ctx
@@ -3087,7 +3087,7 @@ func RegisterBuiltinsInSubContext(builtins map[string]*env.Builtin, ps *env.Prog
 	ps.Ctx = env.NewEnv(parent) // make new context with no parent
 
 	for k, v := range builtins {
-		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc+" ("+k+")")
+		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc+" ("+name+"//"+k+")")
 		registerBuiltin(ps, k, *bu)
 	}
 	newctx := ps.Ctx
@@ -3312,10 +3312,12 @@ func RegisterBuiltinsFilter(ps *env.ProgramState, names []string) {
 					}
 					ctxCache[grp.name] = gCtx
 				}
-				bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc+" ("+word+")")
+				// Use "group//name" format to avoid naming collisions
+				namespacedName := grp.name + "//" + word
+				bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc+" ("+namespacedName+")")
 				saved := ps.Ctx
 				ps.Ctx = gCtx
-				registerBuiltin(ps, word, *bu)
+				registerBuiltin(ps, namespacedName, *bu)
 				ps.Ctx = saved
 			}
 		}
