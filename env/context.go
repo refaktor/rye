@@ -44,6 +44,24 @@ type Context interface {
 	GetKindWord() Word
 	SetKindWord(kind Word)
 
+	// Type-specific getters
+	GetInteger(word int) (Integer, bool)
+	GetString(word int) (String, bool)
+	GetFunction(word int) (Function, bool)
+	GetList(word int) (List, bool)
+	GetDict(word int) (Dict, bool)
+	GetBlock(word int) (Block, bool)
+	GetContext(word int) (Context, bool)
+
+	// Type-specific getters with defaults
+	GetIntegerOr(word int, defaultVal int64) int64
+	GetStringOr(word int, defaultVal string) string
+	GetFunctionOr(word int, defaultVal Function) Function
+	GetListOr(word int, defaultVal List) List
+	GetDictOr(word int, defaultVal Dict) Dict
+	GetBlockOr(word int, defaultVal Block) Block
+	GetContextOr(word int, defaultVal Context) Context
+
 	// Conversion methods for backward compatibility
 	AsRyeCtx() *RyeCtx
 }
@@ -657,6 +675,140 @@ func (e *RyeCtx) AsRyeCtx() *RyeCtx {
 	return e
 }
 
+// Type-specific getters
+
+func (e *RyeCtx) GetInteger(word int) (Integer, bool) {
+	obj, exists := e.Get(word)
+	if !exists {
+		return Integer{}, false
+	}
+	if integer, ok := obj.(Integer); ok {
+		return integer, true
+	}
+	return Integer{}, false
+}
+
+func (e *RyeCtx) GetString(word int) (String, bool) {
+	obj, exists := e.Get(word)
+	if !exists {
+		return String{}, false
+	}
+	if str, ok := obj.(String); ok {
+		return str, true
+	}
+	return String{}, false
+}
+
+func (e *RyeCtx) GetFunction(word int) (Function, bool) {
+	obj, exists := e.Get(word)
+	if !exists {
+		return Function{}, false
+	}
+	if fn, ok := obj.(Function); ok {
+		return fn, true
+	}
+	return Function{}, false
+}
+
+func (e *RyeCtx) GetList(word int) (List, bool) {
+	obj, exists := e.Get(word)
+	if !exists {
+		return List{}, false
+	}
+	if list, ok := obj.(List); ok {
+		return list, true
+	}
+	return List{}, false
+}
+
+func (e *RyeCtx) GetDict(word int) (Dict, bool) {
+	obj, exists := e.Get(word)
+	if !exists {
+		return Dict{}, false
+	}
+	if dict, ok := obj.(Dict); ok {
+		return dict, true
+	}
+	return Dict{}, false
+}
+
+func (e *RyeCtx) GetBlock(word int) (Block, bool) {
+	obj, exists := e.Get(word)
+	if !exists {
+		return Block{}, false
+	}
+	if block, ok := obj.(Block); ok {
+		return block, true
+	}
+	return Block{}, false
+}
+
+func (e *RyeCtx) GetContext(word int) (Context, bool) {
+	obj, exists := e.Get(word)
+	if !exists {
+		return nil, false
+	}
+	if ctx, ok := obj.(Context); ok {
+		return ctx, true
+	}
+	// Also handle *RyeCtx which implements Context
+	if ryeCtx, ok := obj.(*RyeCtx); ok {
+		return ryeCtx, true
+	}
+	return nil, false
+}
+
+// Type-specific getters with defaults
+
+func (e *RyeCtx) GetIntegerOr(word int, defaultVal int64) int64 {
+	if integer, ok := e.GetInteger(word); ok {
+		return integer.Value
+	}
+	return defaultVal
+}
+
+func (e *RyeCtx) GetStringOr(word int, defaultVal string) string {
+	if str, ok := e.GetString(word); ok {
+		return str.Value
+	}
+	return defaultVal
+}
+
+func (e *RyeCtx) GetFunctionOr(word int, defaultVal Function) Function {
+	if fn, ok := e.GetFunction(word); ok {
+		return fn
+	}
+	return defaultVal
+}
+
+func (e *RyeCtx) GetListOr(word int, defaultVal List) List {
+	if list, ok := e.GetList(word); ok {
+		return list
+	}
+	return defaultVal
+}
+
+func (e *RyeCtx) GetDictOr(word int, defaultVal Dict) Dict {
+	if dict, ok := e.GetDict(word); ok {
+		return dict
+	}
+	return defaultVal
+}
+
+func (e *RyeCtx) GetBlockOr(word int, defaultVal Block) Block {
+	if block, ok := e.GetBlock(word); ok {
+		return block
+	}
+	return defaultVal
+}
+
+func (e *RyeCtx) GetContextOr(word int, defaultVal Context) Context {
+	if ctx, ok := e.GetContext(word); ok {
+		return ctx
+	}
+	return defaultVal
+}
+
 // Observer management methods for context-level observers
 
 // AddObserver registers an observer block for a specific word in this context
@@ -1021,6 +1173,41 @@ func (ps *ProgramState) GetFunction(word string) (Function, bool) {
 		return Function{}, false
 	}
 	return v.(Function), true
+}
+
+// GetInteger looks up a word and returns its integer value if it is an Integer.
+func (ps *ProgramState) GetInteger(word string) (int64, bool) {
+	v, ok := ps.GetValue(word, IntegerType)
+	if !ok {
+		return 0, false
+	}
+	return v.(Integer).Value, true
+}
+
+// Type-specific getters with default values
+
+// GetStringOr returns a string value or the default if not found/wrong type.
+func (ps *ProgramState) GetStringOr(word string, defaultVal string) string {
+	if val, ok := ps.GetString(word); ok {
+		return val
+	}
+	return defaultVal
+}
+
+// GetIntegerOr returns an integer value or the default if not found/wrong type.
+func (ps *ProgramState) GetIntegerOr(word string, defaultVal int64) int64 {
+	if val, ok := ps.GetInteger(word); ok {
+		return val
+	}
+	return defaultVal
+}
+
+// GetFunctionOr returns a Function or the default if not found/wrong type.
+func (ps *ProgramState) GetFunctionOr(word string, defaultVal Function) Function {
+	if fn, ok := ps.GetFunction(word); ok {
+		return fn
+	}
+	return defaultVal
 }
 
 const STACK_SIZE int = 1000
