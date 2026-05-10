@@ -1,0 +1,4 @@
+port:          any { get-env "PORT" "3000" }
+docs-dir:      any { get-env "DOCS_DIR" "content" }
+cache-max-age: 60 * 60 * 24
+max-body-kb:   10 * 1024

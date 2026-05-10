@@ -1,0 +1,4 @@
+port:          "3000"
+docs-dir:      "content"
+cache-max-age: 60 * 60 * 24    ; one day in seconds
+max-body-kb:   10 * 1024       ; 10 MB expressed readably
