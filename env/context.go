@@ -45,22 +45,22 @@ type Context interface {
 	SetKindWord(kind Word)
 
 	// Type-specific getters
-	GetInteger(word int) (Integer, bool)
-	GetString(word int) (String, bool)
-	GetFunction(word int) (Function, bool)
-	GetList(word int) (List, bool)
-	GetDict(word int) (Dict, bool)
-	GetBlock(word int) (Block, bool)
-	GetContext(word int) (Context, bool)
+	GetInteger(word string, idxs *Idxs) (Integer, bool)
+	GetString(word string, idxs *Idxs) (String, bool)
+	GetFunction(word string, idxs *Idxs) (Function, bool)
+	GetList(word string, idxs *Idxs) (List, bool)
+	GetDict(word string, idxs *Idxs) (Dict, bool)
+	GetBlock(word string, idxs *Idxs) (Block, bool)
+	GetContext(word string, idxs *Idxs) (Context, bool)
 
 	// Type-specific getters with defaults
-	GetIntegerOr(word int, defaultVal int64) int64
-	GetStringOr(word int, defaultVal string) string
-	GetFunctionOr(word int, defaultVal Function) Function
-	GetListOr(word int, defaultVal List) List
-	GetDictOr(word int, defaultVal Dict) Dict
-	GetBlockOr(word int, defaultVal Block) Block
-	GetContextOr(word int, defaultVal Context) Context
+	GetIntegerOr(word string, idxs *Idxs, defaultVal int64) int64
+	GetStringOr(word string, idxs *Idxs, defaultVal string) string
+	GetFunctionOr(word string, idxs *Idxs, defaultVal Function) Function
+	GetListOr(word string, idxs *Idxs, defaultVal List) List
+	GetDictOr(word string, idxs *Idxs, defaultVal Dict) Dict
+	GetBlockOr(word string, idxs *Idxs, defaultVal Block) Block
+	GetContextOr(word string, idxs *Idxs, defaultVal Context) Context
 
 	// Conversion methods for backward compatibility
 	AsRyeCtx() *RyeCtx
@@ -677,8 +677,12 @@ func (e *RyeCtx) AsRyeCtx() *RyeCtx {
 
 // Type-specific getters
 
-func (e *RyeCtx) GetInteger(word int) (Integer, bool) {
-	obj, exists := e.Get(word)
+func (e *RyeCtx) GetInteger(word string, idxs *Idxs) (Integer, bool) {
+	wordIndex, found := idxs.GetIndex(word)
+	if !found {
+		return Integer{}, false
+	}
+	obj, exists := e.Get(wordIndex)
 	if !exists {
 		return Integer{}, false
 	}
@@ -688,8 +692,12 @@ func (e *RyeCtx) GetInteger(word int) (Integer, bool) {
 	return Integer{}, false
 }
 
-func (e *RyeCtx) GetString(word int) (String, bool) {
-	obj, exists := e.Get(word)
+func (e *RyeCtx) GetString(word string, idxs *Idxs) (String, bool) {
+	wordIndex, found := idxs.GetIndex(word)
+	if !found {
+		return String{}, false
+	}
+	obj, exists := e.Get(wordIndex)
 	if !exists {
 		return String{}, false
 	}
@@ -699,8 +707,12 @@ func (e *RyeCtx) GetString(word int) (String, bool) {
 	return String{}, false
 }
 
-func (e *RyeCtx) GetFunction(word int) (Function, bool) {
-	obj, exists := e.Get(word)
+func (e *RyeCtx) GetFunction(word string, idxs *Idxs) (Function, bool) {
+	wordIndex, found := idxs.GetIndex(word)
+	if !found {
+		return Function{}, false
+	}
+	obj, exists := e.Get(wordIndex)
 	if !exists {
 		return Function{}, false
 	}
@@ -710,8 +722,12 @@ func (e *RyeCtx) GetFunction(word int) (Function, bool) {
 	return Function{}, false
 }
 
-func (e *RyeCtx) GetList(word int) (List, bool) {
-	obj, exists := e.Get(word)
+func (e *RyeCtx) GetList(word string, idxs *Idxs) (List, bool) {
+	wordIndex, found := idxs.GetIndex(word)
+	if !found {
+		return List{}, false
+	}
+	obj, exists := e.Get(wordIndex)
 	if !exists {
 		return List{}, false
 	}
@@ -721,8 +737,12 @@ func (e *RyeCtx) GetList(word int) (List, bool) {
 	return List{}, false
 }
 
-func (e *RyeCtx) GetDict(word int) (Dict, bool) {
-	obj, exists := e.Get(word)
+func (e *RyeCtx) GetDict(word string, idxs *Idxs) (Dict, bool) {
+	wordIndex, found := idxs.GetIndex(word)
+	if !found {
+		return Dict{}, false
+	}
+	obj, exists := e.Get(wordIndex)
 	if !exists {
 		return Dict{}, false
 	}
@@ -732,8 +752,12 @@ func (e *RyeCtx) GetDict(word int) (Dict, bool) {
 	return Dict{}, false
 }
 
-func (e *RyeCtx) GetBlock(word int) (Block, bool) {
-	obj, exists := e.Get(word)
+func (e *RyeCtx) GetBlock(word string, idxs *Idxs) (Block, bool) {
+	wordIndex, found := idxs.GetIndex(word)
+	if !found {
+		return Block{}, false
+	}
+	obj, exists := e.Get(wordIndex)
 	if !exists {
 		return Block{}, false
 	}
@@ -743,8 +767,12 @@ func (e *RyeCtx) GetBlock(word int) (Block, bool) {
 	return Block{}, false
 }
 
-func (e *RyeCtx) GetContext(word int) (Context, bool) {
-	obj, exists := e.Get(word)
+func (e *RyeCtx) GetContext(word string, idxs *Idxs) (Context, bool) {
+	wordIndex, found := idxs.GetIndex(word)
+	if !found {
+		return nil, false
+	}
+	obj, exists := e.Get(wordIndex)
 	if !exists {
 		return nil, false
 	}
@@ -760,50 +788,50 @@ func (e *RyeCtx) GetContext(word int) (Context, bool) {
 
 // Type-specific getters with defaults
 
-func (e *RyeCtx) GetIntegerOr(word int, defaultVal int64) int64 {
-	if integer, ok := e.GetInteger(word); ok {
+func (e *RyeCtx) GetIntegerOr(word string, idxs *Idxs, defaultVal int64) int64 {
+	if integer, ok := e.GetInteger(word, idxs); ok {
 		return integer.Value
 	}
 	return defaultVal
 }
 
-func (e *RyeCtx) GetStringOr(word int, defaultVal string) string {
-	if str, ok := e.GetString(word); ok {
+func (e *RyeCtx) GetStringOr(word string, idxs *Idxs, defaultVal string) string {
+	if str, ok := e.GetString(word, idxs); ok {
 		return str.Value
 	}
 	return defaultVal
 }
 
-func (e *RyeCtx) GetFunctionOr(word int, defaultVal Function) Function {
-	if fn, ok := e.GetFunction(word); ok {
+func (e *RyeCtx) GetFunctionOr(word string, idxs *Idxs, defaultVal Function) Function {
+	if fn, ok := e.GetFunction(word, idxs); ok {
 		return fn
 	}
 	return defaultVal
 }
 
-func (e *RyeCtx) GetListOr(word int, defaultVal List) List {
-	if list, ok := e.GetList(word); ok {
+func (e *RyeCtx) GetListOr(word string, idxs *Idxs, defaultVal List) List {
+	if list, ok := e.GetList(word, idxs); ok {
 		return list
 	}
 	return defaultVal
 }
 
-func (e *RyeCtx) GetDictOr(word int, defaultVal Dict) Dict {
-	if dict, ok := e.GetDict(word); ok {
+func (e *RyeCtx) GetDictOr(word string, idxs *Idxs, defaultVal Dict) Dict {
+	if dict, ok := e.GetDict(word, idxs); ok {
 		return dict
 	}
 	return defaultVal
 }
 
-func (e *RyeCtx) GetBlockOr(word int, defaultVal Block) Block {
-	if block, ok := e.GetBlock(word); ok {
+func (e *RyeCtx) GetBlockOr(word string, idxs *Idxs, defaultVal Block) Block {
+	if block, ok := e.GetBlock(word, idxs); ok {
 		return block
 	}
 	return defaultVal
 }
 
-func (e *RyeCtx) GetContextOr(word int, defaultVal Context) Context {
-	if ctx, ok := e.GetContext(word); ok {
+func (e *RyeCtx) GetContextOr(word string, idxs *Idxs, defaultVal Context) Context {
+	if ctx, ok := e.GetContext(word, idxs); ok {
 		return ctx
 	}
 	return defaultVal
@@ -1148,67 +1176,7 @@ func (ps *ProgramState) GetValue(word string, typ Type) (Object, bool) {
 	return v, true
 }
 
-// GetString looks up a word and returns its string value if it is a String.
-// It is a typed convenience wrapper around GetValue for the common case of
-// reading string configuration words:
-//
-//	port, ok := ps.GetString("port")
-func (ps *ProgramState) GetString(word string) (string, bool) {
-	v, ok := ps.GetValue(word, StringType)
-	if !ok {
-		return "", false
-	}
-	return v.(String).Value, true
-}
 
-// GetFunction looks up a word and returns it as a Function if it is one.
-// Useful for reading user-defined callbacks from a config block:
-//
-//	if fn, ok := ps.GetFunction("page-title"); ok {
-//	    res := evaldo.CallFunction(fn, ps, arg, ps.Ctx)
-//	}
-func (ps *ProgramState) GetFunction(word string) (Function, bool) {
-	v, ok := ps.GetValue(word, FunctionType)
-	if !ok {
-		return Function{}, false
-	}
-	return v.(Function), true
-}
-
-// GetInteger looks up a word and returns its integer value if it is an Integer.
-func (ps *ProgramState) GetInteger(word string) (int64, bool) {
-	v, ok := ps.GetValue(word, IntegerType)
-	if !ok {
-		return 0, false
-	}
-	return v.(Integer).Value, true
-}
-
-// Type-specific getters with default values
-
-// GetStringOr returns a string value or the default if not found/wrong type.
-func (ps *ProgramState) GetStringOr(word string, defaultVal string) string {
-	if val, ok := ps.GetString(word); ok {
-		return val
-	}
-	return defaultVal
-}
-
-// GetIntegerOr returns an integer value or the default if not found/wrong type.
-func (ps *ProgramState) GetIntegerOr(word string, defaultVal int64) int64 {
-	if val, ok := ps.GetInteger(word); ok {
-		return val
-	}
-	return defaultVal
-}
-
-// GetFunctionOr returns a Function or the default if not found/wrong type.
-func (ps *ProgramState) GetFunctionOr(word string, defaultVal Function) Function {
-	if fn, ok := ps.GetFunction(word); ok {
-		return fn
-	}
-	return defaultVal
-}
 
 const STACK_SIZE int = 1000
 
