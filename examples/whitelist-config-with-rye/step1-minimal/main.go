@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/refaktor/rye/env"
@@ -45,7 +46,35 @@ func main() {
 		if slug == "" {
 			slug = "index"
 		}
-		md, err := os.ReadFile(dir + "/" + slug + ".md")
+		
+		// Validate the slug to prevent path injection
+		if strings.Contains(slug, "/") || strings.Contains(slug, "\\") || strings.Contains(slug, "..") {
+			http.Error(w, "Invalid file name", http.StatusBadRequest)
+			return
+		}
+		
+		// Use filepath.Join for safe path construction
+		filePath := filepath.Join(dir, slug+".md")
+		
+		// Verify the resolved path is still within the safe directory
+		absPath, err := filepath.Abs(filePath)
+		if err != nil {
+			http.Error(w, "Invalid file path", http.StatusBadRequest)
+			return
+		}
+		
+		absDir, err := filepath.Abs(dir)
+		if err != nil {
+			http.Error(w, "Invalid directory path", http.StatusBadRequest)
+			return
+		}
+		
+		if !strings.HasPrefix(absPath, absDir+string(filepath.Separator)) {
+			http.Error(w, "Invalid file path", http.StatusBadRequest)
+			return
+		}
+		
+		md, err := os.ReadFile(absPath)
 		if err != nil {
 			http.NotFound(w, r)
 			return
