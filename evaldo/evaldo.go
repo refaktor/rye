@@ -1155,7 +1155,7 @@ func CallFunctionWithArgs(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx
 		CallFunction_CollectArgs(fn, ps, nil, false, ctx)
 		return
 	case 1:
-		CallFunction_CollectArgs(fn, ps, args[0], false, ctx)
+		CallFunctionArgs1(fn, ps, args[0], ctx)
 		return
 	case 2:
 		CallFunctionArgs2(fn, ps, args[0], args[1], ctx)
@@ -1177,7 +1177,7 @@ var envPool = sync.Pool{
 }
 
 // CallFunction_CollectArgs calls a function by collecting arguments from the code stream.
-// Called from: EvalObject, CallFunctionWithArgs (0 or 1 arg case)
+// Called from: EvalObject, CallFunctionWithArgs (0 arg case)
 // Purpose: Main function caller in evaluator - collects args from code, sets up context, executes function body
 func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.Object, toLeft bool, ctx *env.RyeCtx, pipeSecond ...interface{}) {
 	// fmt.Println(1)
@@ -1440,6 +1440,62 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 	*/
 }
 
+// CallFunctionArgs1 calls a function with exactly 1 argument provided.
+// Called from: CallFunctionWithArgs, builtins needing to call 1-arg functions
+// Purpose: Optimized path for 1-argument function calls from builtins
+func CallFunctionArgs1(fn env.Function, ps *env.ProgramState, arg0 env.Object, ctx *env.RyeCtx) {
+	fnCtx, fromPool := DetermineContext(fn, ps, ctx)
+	if ps.ReturnFlag || ps.ErrorFlag {
+		return
+	}
+	i := 0
+	index := fn.Spec.Series.Get(i).(env.Word).Index
+	fnCtx.SetVar(index, arg0)
+	// TRY
+	psX := env.NewProgramStateOLD(fn.Body.Series, ps.Idx)
+	psX.Ctx = fnCtx
+	psX.PCtx = ps.PCtx
+	psX.Gen = ps.Gen
+	// Propagate execution guards so sub-calls respect the same limits
+	psX.CallDepth = ps.CallDepth + 1
+	psX.MaxCallDepth = ps.MaxCallDepth
+	psX.MaxOps = ps.MaxOps
+	psX.OpsCount = ps.OpsCount
+
+	// END TRY
+
+	defer func() {
+		if len(psX.DeferBlocks) > 0 {
+			ExecuteDeferredBlocks(psX)
+		}
+		returnContextToPool(fnCtx, fromPool)
+		// Propagate ops count back so the parent sees work done in sub-calls
+		ps.OpsCount = psX.OpsCount
+	}()
+	// Check depth guard before running
+	if psX.MaxCallDepth > 0 && psX.CallDepth > psX.MaxCallDepth {
+		ps.ErrorFlag = true
+		ps.Res = env.NewError2(5, "Stack overflow: call depth "+strconv.Itoa(psX.CallDepth)+" exceeded maximum of "+strconv.Itoa(psX.MaxCallDepth)+". Use `max-call-depth!` to configure the limit.")
+		return
+	}
+	psX.Ser.SetPos(0)
+	EvalBlockInj(psX, arg0, true)
+	MaybeDisplayFailureOrError(psX, psX.Idx, "call func args 1")
+	if psX.ErrorFlag || psX.FailureFlag {
+		ps.Res = psX.Res
+		ps.ErrorFlag = psX.ErrorFlag
+		ps.FailureFlag = psX.FailureFlag
+		return
+	}
+	if psX.ForcedResult != nil {
+		ps.Res = psX.ForcedResult
+		psX.ForcedResult = nil
+	} else {
+		ps.Res = psX.Res
+	}
+	ps.ReturnFlag = false
+}
+
 // CallFunctionArgs2 calls a function with exactly 2 arguments provided.
 // Called from: CallFunctionWithArgs, builtins needing to call 2-arg functions
 // Purpose: Optimized path for 2-argument function calls from builtins
@@ -1642,7 +1698,7 @@ func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, a
 }
 
 // DetermineContext determines the appropriate context for a function call.
-// Called from: CallFunctionWithArgs, CallFunctionArgsN, CallFunctionArgs2, CallFunctionArgs4
+// Called from: CallFunctionWithArgs, CallFunctionArgs1, CallFunctionArgs2, CallFunctionArgs4, CallFunctionArgsN
 // Purpose: Sets up function execution context based on pure/impure, defined context, and parent context
 // Returns: The context to use and a boolean indicating if it was obtained from the pool (and can be returned)
 func DetermineContext(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx) (*env.RyeCtx, bool) {
@@ -1717,7 +1773,7 @@ func DetermineContext(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx) (*
 }
 
 // returnContextToPool returns a context to the pool if it's safe to do so.
-// Called from: CallFunctionArgs2, CallFunctionArgs4, CallFunctionArgsN
+// Called from: CallFunctionArgs1, CallFunctionArgs2, CallFunctionArgs4, CallFunctionArgsN
 // Purpose: Centralizes the logic for returning contexts to the pool
 func returnContextToPool(fnCtx *env.RyeCtx, fromPool bool) {
 	if fromPool && !fnCtx.IsClosure {
@@ -2492,7 +2548,7 @@ func TriggerObservers(ps *env.ProgramState, ctx *env.RyeCtx, wordIndex int, oldV
 }
 
 // ExecuteDeferredBlocks executes all deferred blocks in LIFO order (last in, first out).
-// Called from: CallFunction_CollectArgs, CallFunctionArgs2, CallFunctionArgs4, CallFunctionArgsN (via defer)
+// Called from: CallFunction_CollectArgs, CallFunctionArgs1, CallFunctionArgs2, CallFunctionArgs4, CallFunctionArgsN (via defer)
 // Purpose: Executes cleanup blocks registered with defer, similar to Go's defer statement
 func ExecuteDeferredBlocks(ps *env.ProgramState) {
 	if len(ps.DeferBlocks) == 0 {

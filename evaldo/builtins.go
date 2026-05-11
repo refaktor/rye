@@ -2976,8 +2976,8 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_mqtt, ps, "mqtt")
 	RegisterBuiltins2(Builtins_chitosocket, ps, "chitosocket")
 	RegisterBuiltins2(builtins_trees, ps, "trees")
-	RegisterBuiltinsInContext(Builtins_git, ps, "git")
-	RegisterBuiltinsInContext(Builtins_docker, ps, "docker")
+	// RegisterBuiltinsInContext(Builtins_git, ps, "git")
+	// temporarily removed RegisterBuiltinsInContext(Builtins_docker, ps, "docker")
 	RegisterBuiltinsInContext(Builtins_prometheus, ps, "prometheus")
 	RegisterBuiltinsInContext(Builtins_echarts, ps, "echarts")
 	RegisterBuiltinsInContext(Builtins_flui, ps, "flui")
@@ -3224,8 +3224,8 @@ var allBuiltinGroups = []builtinGroup{
 	{"tui", Builtins_tui, true},
 	{"telegram", Builtins_telegrambot, true},
 	{"mcp", Builtins_mcp, true},
-	{"git", Builtins_git, true},
-	{"docker", Builtins_docker, true},
+	// {"git", Builtins_git, true},
+	// {"docker", Builtins_docker, true},
 	{"prometheus", Builtins_prometheus, true},
 	{"echarts", Builtins_echarts, true},
 	{"flui", Builtins_flui, true},

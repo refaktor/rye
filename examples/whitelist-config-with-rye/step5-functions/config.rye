@@ -1,0 +1,14 @@
+port:          any { get-env "PORT" "3000" }
+docs-dir:      "content"
+cache-max-age: 60 * 60 * 24
+
+route "/blog" "posts"
+route "/docs" "docs"
+
+if ( get-env "DEBUG" ) = "1" {
+    route "/drafts" "drafts"
+}
+
+page-title: fn { slug } {
+    slug .replace "-" " " |capitalize
+}
