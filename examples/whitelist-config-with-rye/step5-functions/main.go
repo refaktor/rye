@@ -15,6 +15,37 @@ import (
 	"github.com/yuin/goldmark"
 )
 
+func safeMarkdownPath(baseDir, slug string) (string, error) {
+	if slug == "" {
+		slug = "index"
+	}
+
+	// Reject path traversal and nested paths
+	if strings.Contains(slug, "/") ||
+		strings.Contains(slug, "\\") ||
+		strings.Contains(slug, "..") {
+		return "", fmt.Errorf("invalid file name")
+	}
+
+	filePath := filepath.Join(baseDir, slug+".md")
+
+	absPath, err := filepath.Abs(filePath)
+	if err != nil {
+		return "", err
+	}
+
+	absDir, err := filepath.Abs(baseDir)
+	if err != nil {
+		return "", err
+	}
+
+	if !strings.HasPrefix(absPath, absDir+string(filepath.Separator)) {
+		return "", fmt.Errorf("invalid file path")
+	}
+
+	return absPath, nil
+}
+
 func main() {
 	raw, err := os.ReadFile("config.rye")
 	if err != nil {
@@ -70,15 +101,6 @@ func main() {
 		http.Handle(prefix+"/", http.StripPrefix(prefix,
 			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				slug := strings.TrimPrefix(r.URL.Path, "/")
-				if slug == "" {
-					slug = "index"
-				}
-
-				// Validate the slug to prevent path injection
-				if strings.Contains(slug, "/") || strings.Contains(slug, "\\") || strings.Contains(slug, "..") {
-					http.Error(w, "Invalid file name", http.StatusBadRequest)
-					return
-				}
 
 				// Use page-title function if defined
 				title := slug
@@ -89,32 +111,18 @@ func main() {
 					}
 				}
 
-				// Use filepath.Join for safe path construction
-				filePath := filepath.Join(routeDir, slug+".md")
-				
-				// Verify the resolved path is still within the safe directory
-				absPath, err := filepath.Abs(filePath)
+				path, err := safeMarkdownPath(routeDir, slug)
 				if err != nil {
-					http.Error(w, "Invalid file path", http.StatusBadRequest)
-					return
-				}
-				
-				absRouteDir, err := filepath.Abs(routeDir)
-				if err != nil {
-					http.Error(w, "Invalid directory path", http.StatusBadRequest)
-					return
-				}
-				
-				if !strings.HasPrefix(absPath, absRouteDir+string(filepath.Separator)) {
-					http.Error(w, "Invalid file path", http.StatusBadRequest)
+					http.Error(w, err.Error(), http.StatusBadRequest)
 					return
 				}
 
-				md, err := os.ReadFile(absPath)
+				md, err := os.ReadFile(path)
 				if err != nil {
 					http.NotFound(w, r)
 					return
 				}
+
 				var buf strings.Builder
 				goldmark.Convert(md, &buf)
 
@@ -146,32 +154,18 @@ func main() {
 			}
 		}
 
-		// Use filepath.Join for safe path construction
-		filePath := filepath.Join(dir, slug+".md")
-		
-		// Verify the resolved path is still within the safe directory
-		absPath, err := filepath.Abs(filePath)
+		path, err := safeMarkdownPath(dir, slug)
 		if err != nil {
-			http.Error(w, "Invalid file path", http.StatusBadRequest)
-			return
-		}
-		
-		absDir, err := filepath.Abs(dir)
-		if err != nil {
-			http.Error(w, "Invalid directory path", http.StatusBadRequest)
-			return
-		}
-		
-		if !strings.HasPrefix(absPath, absDir+string(filepath.Separator)) {
-			http.Error(w, "Invalid file path", http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		md, err := os.ReadFile(absPath)
+		md, err := os.ReadFile(path)
 		if err != nil {
 			http.NotFound(w, r)
 			return
 		}
+
 		var buf strings.Builder
 		goldmark.Convert(md, &buf)
 
