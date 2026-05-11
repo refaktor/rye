@@ -1,4 +1,4 @@
-rye .needs { http }
+rye .Needs { http }
 
 print "visit http://localhost" ++ port: ":8086"
 

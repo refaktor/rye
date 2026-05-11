@@ -1,4 +1,4 @@
-rye .needs { openai imap }
+rye .Needs { openai imap }
 
 config: context {
 	imap: context {

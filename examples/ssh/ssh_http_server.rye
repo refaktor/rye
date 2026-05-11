@@ -1,6 +1,6 @@
 ; # Minimal HTTP and SSH servers in one script
 
-rye .needs { http ssh }
+rye .Needs { http ssh }
 
 ssh-server ":2222" 
  |Handle fn { s } { Write s "I c you\n" } 
