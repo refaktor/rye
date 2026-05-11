@@ -1,6 +1,8 @@
 # Config Blogpost Examples
 
-This directory contains complete Go source code and config files for each step described in the "Whitelist-based Config files with Rye and Go" blog post.
+This directory contains complete Go source code and config files for each step described in the "Whitelist-based Config files with Rye and Go" blog post. Because there the full code doesn't repeat at each step of course.
+
+Blogpost: https://ryelang.org/blog/posts/whitelist-config-with-rye/
 
 ## Structure
 
@@ -73,25 +75,3 @@ For any step:
    ```
 
 6. For step 6, enable debugging by uncommenting the `enter-console` line in config.rye
-
-## Dependencies
-
-All steps require:
-- Go 1.21+
-- github.com/refaktor/rye
-- github.com/yuin/goldmark
-
-Dependencies are managed in the root `go.mod` file.
-
-## Configuration
-
-Each step's `config.rye` demonstrates the capabilities available at that stage:
-
-- **Step 1**: Static values only
-- **Step 2**: Basic arithmetic  
-- **Step 3**: Environment variables with fallbacks
-- **Step 4**: Conditional routes based on env vars
-- **Step 5**: Custom page title transformation functions
-- **Step 6**: Debugging and introspection capabilities
-
-The examples show the progressive enablement of features through explicit whitelisting of Rye builtins.
