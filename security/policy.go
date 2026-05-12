@@ -145,8 +145,16 @@ func ApplySecurityPolicy(policy *SecurityPolicy) error {
 		return nil
 	}
 
-	// Log policy source
-	if policy.Source != PolicySourceNone {
+	// Check if policy has any meaningful security features enabled
+	hasSecurityFeatures := policy.Seccomp.Enabled ||
+		policy.Landlock.Enabled ||
+		policy.CodeSig.Enforced ||
+		policy.Unshare.Enabled ||
+		len(policy.AllowedScriptPaths) > 0
+
+	// Log policy source only if there are actual security features or policy is not from CLI
+	if policy.Source != PolicySourceNone && 
+		(hasSecurityFeatures || policy.Source != PolicySourceCLI) {
 		fmt.Fprintf(os.Stderr, "\033[2;37mSecurity policy loaded from: %s\033[0m\n", policy.Source)
 	}
 
