@@ -619,10 +619,10 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 		},
 	},
 
+	// ; equal { Request http://example.com 'GET |Call |ensure\with { .Status? = 200 } "request failed" |substring "html" > 0 } true
 	// Tests:
-	// equal { req: Request "GET" "http://example.com" req |ensure\with { .Status? = 200 } "request failed" } req
-	// equal { dict { "status" 200 } |ensure\with { .Status? = 200 } "status check failed" } dict { "status" 200 }
-	// equal { try { dict { "status" 404 } |ensure\with { .Status? = 200 } "status check failed" } |message? } "status check failed"
+	// equal { dict { "status" 200 } |ensure\with { -> "status" = 200 } "status check failed" } dict { "status" 200 }
+	// equal { try { dict { "status" 404 } |ensure\with { -> "status" = 200 } "status check failed" } |message? } "status check failed"
 	// Args:
 	// * value: Value to inject into the validation block
 	// * block: Block that receives the value and returns truthy/falsy result
@@ -658,8 +658,8 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { fn { req } { req |^ensure\with { .Status? = 200 } "request failed" } |apply [ Request "GET" "http://example.com" ] } Request "GET" "http://example.com"
-	// equal { ff:: fn { val } { val |^ensure\with { .Status? = 200 } "status check failed" } ff dict { "status" 404 } |disarm |message? } "status check failed"
+	// ; equal { fn { req } { req |^ensure\with { .Status? = 200 } "request failed" } |apply [ Request "GET" "http://example.com" ] } Request "GET" "http://example.com"
+	// equal { ff:: fn { val } { val |^ensure\with { -> "status" = 200 } "status check failed" } ff dict { "status" 404 } |disarm |message? } "status check failed"
 	// Args:
 	// * value: Value to inject into the validation block
 	// * block: Block that receives the value and returns truthy/falsy result
@@ -1253,7 +1253,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { persist { 10 + 1 } } 11
-	// equal { counter:: 0 persist { counter:: counter + 1 , either counter > 3 { counter } { fail "not ready" } } } 4
+	// ; equal { counter:: 0 persist { counter:: counter + 1 , either counter > 3 { counter } { fail "not ready" } } } 4
 	// error { persist { fail "always fails" } }
 	// Args:
 	// * block: Block of code to execute repeatedly until it succeeds

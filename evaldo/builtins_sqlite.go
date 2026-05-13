@@ -262,7 +262,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { db: Open sqlite://test.db ; db .Close |type? } 'integer
+	// equal { db: Open sqlite://test.db db .Close |type? } 'integer
 	// Args:
 	// * db: SQLite database connection
 	// Returns:

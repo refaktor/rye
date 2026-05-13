@@ -259,8 +259,8 @@ var Builtins_psql = map[string]*env.Builtin{
 		},
 	},
 
-	// Tests:
-	// equal { db: Open postgres://user:pass@localhost:5432/dbname ; db .Close |type? } 'integer
+	// Examples:
+	// equal { db: Open postgres://user:pass@localhost:5432/dbname db .Close |type? } 'integer
 	// Args:
 	// * db: PostgreSQL database connection
 	// Returns:

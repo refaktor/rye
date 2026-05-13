@@ -699,7 +699,7 @@ section "Column level functions " "Functions that construct a table." {
 		equal { table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
 		|gen-column 'job { } { "Cook" } |column? "job" } { "Cook" "Cook" "Cook" }
 		equal { table { "email" } { "john@example.com" "jane@test.org" }
-		|gen-column 'domain 'email { regexp ".*@(.+)$" "$1" } |column? "domain" } { "example.com" "test.org" }
+		|gen-column 'domain 'email [ regexp ".*@(.+)$" "$1" ] |column? "domain" } { "example.com" "test.org" }
 	}
 
 	{

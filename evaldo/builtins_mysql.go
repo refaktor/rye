@@ -237,8 +237,8 @@ var Builtins_mysql = map[string]*env.Builtin{
 		},
 	},
 
-	// Tests:
-	// equal { db: Open mysql://user:pass@tcp(localhost:3306)/dbname ; db .Close |type? } 'integer
+	// Example:
+	// equal { db: Open mysql://user:pass@tcp(localhost:3306)/dbname db .Close |type? } 'integer
 	// Args:
 	// * db: MySQL database connection
 	// Returns:
