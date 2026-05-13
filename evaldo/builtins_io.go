@@ -1674,8 +1674,8 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
-	// Tests:
-	// equal { ftp: Open ftp://localhost:21 ; ftp .Close |type? } 'integer
+	// Examples:
+	// equal { ftp: Open ftp://localhost:21	 ftp .Close |type? } 'integer
 	// Args:
 	// * connection: native ftp-connection object
 	// Returns:

@@ -199,7 +199,7 @@ var Builtins_bson = map[string]*env.Builtin{
 			var val map[string]any
 			// var val interface{}
 			// err := bson.Unmarshal(arg0.(env.Native).Value.([]byte), &val)
-			err := bson.Unmarshal(arg0.(env.Native).Value.([]byte), &val)
+			err := bson.Unmarshal(arg0.(env.Bytes).Value, &val)
 			if err != nil {
 				return MakeBuiltinError(ps, err.Error(), "from-bson")
 			}

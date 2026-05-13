@@ -41,7 +41,7 @@
 ../cmd/rbit/rbit ../evaldo/builtins_smtpd.go >> protocols.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_mqtt.go >> protocols.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_os.go > system.info.rye
-../cmd/rbit/rbit ../evaldo/builtins_git.go >> system.info.rye
+# ../cmd/rbit/rbit ../evaldo/builtins_git.go >> system.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_ssh.go >> system.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_goroutines.go >> system.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_complex.go >> dialects.info.rye

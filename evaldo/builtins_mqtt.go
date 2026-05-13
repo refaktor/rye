@@ -124,7 +124,7 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { client: Open mqtt://localhost:1883/my-client ; client .Close |type? } 'integer
+	// equal { client: Open mqtt://localhost:1883/my-client client .Close |type? } 'integer
 	// Args:
 	// * client: MQTT client connection (type: "mqtt-client")
 	// Returns:

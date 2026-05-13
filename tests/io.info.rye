@@ -964,6 +964,23 @@ section "FTP Operations " "File Transfer Protocol operations and connections" {
 	{
 	}
 
+	group "ftp-connection//Close" 
+	"Closes an FTP server connection."
+	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
+		arg `connection: native ftp-connection object`
+		returns `integer 1 for successerror if close fails`
+	}
+
+	{
+	}
+
+	{
+	}
+
 }
 
 section "File Monitoring " "File watching and tailing operations" {
@@ -1289,6 +1306,24 @@ db .Exec { INSERT INTO users ( name , age ) VALUES ( ?name , 42 ) }
 	{
 	}
 
+	group "Rye-sqlite//Close" 
+	"Closes the SQLite database connection."
+	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
+		arg `db: SQLite database connection`
+		returns `integer 1 on successful close, error otherwise`
+	}
+
+	{
+		equal { db: Open sqlite://test.db db .Close |type? } 'integer
+	}
+
+	{
+	}
+
 }
 
 section "PostgreSQL " "" {
@@ -1375,6 +1410,23 @@ Open postgres://user:pass@localhost:5432/dbname
 |Show-SQL {  SELECT * FROM users WHERE first_name = ?name}
 `	}
 
+	group "Rye-psql//Close" 
+	"Closes the PostgreSQL database connection."
+	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
+		arg `db: PostgreSQL database connection`
+		returns `integer 1 on successful close, error otherwise`
+	}
+
+	{
+	}
+
+	{
+	}
+
 }
 
 section "MySQL " "MySQL database functions" {
@@ -1457,6 +1509,24 @@ section "MySQL " "MySQL database functions" {
 `id: 101
 db: Open mysql://user:pass@tcp(localhost:3306)/dbname
 db .Query { SELECT * FROM test where id = ?id }
+`	}
+
+	group "Rye-mysql//Close" 
+	"Closes the MySQL database connection."
+	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
+		arg `db: MySQL database connection`
+		returns `integer 1 on successful close, error otherwise`
+	}
+
+	{
+	}
+
+	{
+`equal { db: Open mysql://user:pass@tcp(localhost:3306)/dbname db .Close |type? } 'integer
 `	}
 
 }

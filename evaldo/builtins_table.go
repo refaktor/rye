@@ -1371,7 +1371,7 @@ var Builtins_table = map[string]*env.Builtin{
 	//  equal { table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
 	//  |gen-column 'job { } { "Cook" } |column? "job" } { "Cook" "Cook" "Cook" }
 	//  equal { table { "email" } { "john@example.com" "jane@test.org" }
-	//  |gen-column 'domain 'email { regexp ".*@(.+)$" "$1" } |column? "domain" } { "example.com" "test.org" }
+	//  |gen-column 'domain 'email [ regexp ".*@(.+)$" "$1" ] |column? "domain" } { "example.com" "test.org" }
 	"gen-column": {
 		Argsn: 4,
 		Doc:   "Adds a new column to table. Changes in-place and returns the new table.",
@@ -2973,7 +2973,7 @@ var Builtins_table = map[string]*env.Builtin{
 					}
 				}
 				f.SetActiveSheet(index)
-				
+
 				// Create temporary file to write xlsx data
 				tmpFile, err := os.CreateTemp("", "format_xlsx_*.xlsx")
 				if err != nil {
