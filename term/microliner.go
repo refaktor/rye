@@ -631,6 +631,10 @@ type MLState struct {
 	ctrlSMode        int                                                            // Ctrl+S cycles through modes: 1=context, 2=generics (0 is Tab-only)
 	isWasmMode       bool                                                           // Flag to track if we're in WASM mode (xterm.js)
 	promptFunc       func() string                                                  // Optional dynamic prompt function; called before each input line
+	killRing         [][]rune                                                       // Kill ring for cut/paste operations
+	killPos          int                                                            // Current position in kill ring for Alt+y
+	lastYankPos      int                                                            // Position where last yank got inserted (for Alt+y replacement)
+	lastYankLen      int                                                            // Length of last yanked text (for Alt+y replacement)
 }
 
 // NewMicroLiner initializes a new *MLState with the provided event channel,
@@ -675,6 +679,63 @@ func (s *MLState) SetOnValueSelectedFunc(fn func(env.Object)) {
 // reflect dynamic state (e.g. the current context kind).
 func (s *MLState) SetPromptFunc(fn func() string) {
 	s.promptFunc = fn
+}
+
+// resetYankTracking clears the yank position tracking to prevent
+// accidental replacment by Alt+y after non-yank operations
+func (s *MLState) resetYankTracking() {
+	s.lastYankPos = 0
+	s.lastYankLen = 0
+}
+
+// addToKillRing adds text to the kill ring for later yanking ..
+// mode: 0 = normal (replace), 1 = append, 2 = prepend
+func (s *MLState) addToKillRing(text []rune, mode int) {
+	if len(text) == 0 {
+		return
+	}
+
+	// Initialize kill ring if needed
+	if s.killRing == nil {
+		s.killRing = make([][]rune, 0, 10) // capacity of 10 entries
+	}
+
+	switch mode {
+	case 1: // append to last entry
+		if len(s.killRing) > 0 {
+			s.killRing[len(s.killRing)-1] = append(s.killRing[len(s.killRing)-1], text...)
+		} else {
+			s.killRing = append(s.killRing, append([]rune(nil), text...))
+		}
+	case 2: // prepend to last entry
+		if len(s.killRing) > 0 {
+			s.killRing[len(s.killRing)-1] = append(append([]rune(nil), text...), s.killRing[len(s.killRing)-1]...)
+		} else {
+			s.killRing = append(s.killRing, append([]rune(nil), text...))
+		}
+	default: // normal mode (0) - add new entry
+		s.killRing = append(s.killRing, append([]rune(nil), text...))
+		// Keep kill ring size reasonable
+		if len(s.killRing) > 10 {
+			s.killRing = s.killRing[1:]
+		}
+	}
+	s.killPos = 0 // Reset yank position for Alt+y
+}
+
+// yankFromKillRing returns text from kill ring for pasting.
+// offset: 0 = most recent, 1 = second most recent, etc.
+func (s *MLState) yankFromKillRing(offset int) []rune {
+	if s.killRing == nil || len(s.killRing) == 0 {
+		return nil
+	}
+
+	idx := len(s.killRing) - 1 - offset
+	if idx < 0 || idx >= len(s.killRing) {
+		return nil
+	}
+
+	return append([]rune(nil), s.killRing[idx]...) // return copy
 }
 
 // historyBrowse opens an inline history browser below the current input line.
@@ -1625,14 +1686,11 @@ startOfHere:
 					}
 				case "k": // delete remainder of line
 					if pos >= len(line) {
-						// s.doBeep()
+						s.doBeep()
 					} else {
-						// if killAction > 0 {
-						//	s.addToKillRing(line[pos:], 1) // Add in apend mode
-						// } else {
-						//	s.addToKillRing(line[pos:], 0) // Add in normal mode
-						// }
-						// killAction = 2 // Mark that there was a kill action
+						cutText := line[pos:]
+						s.addToKillRing(cutText, 0) // Add to kill ring in normal mode
+						s.resetYankTracking()       // Reset since line content changed
 						line = line[:pos]
 						s.needRefresh = true
 					}
@@ -1643,10 +1701,52 @@ startOfHere:
 					if pos == 0 {
 						s.doBeep()
 					} else {
+						cutText := line[:pos]
+						s.addToKillRing(cutText, 0) // Add to kill ring in normal mode
+						s.resetYankTracking()       // Reset since line content changed
 						line = line[pos:]
 						pos = 0
 						s.needRefresh = true
 					}
+				case "w": // cut word before cursor
+					if pos <= 0 {
+						s.doBeep()
+					} else {
+						// Find start of current word
+						newPos := pos
+						// Skip trailing whitespace
+						for newPos > 0 && unicode.IsSpace(line[newPos-1]) {
+							newPos--
+						}
+						// Skip non-whitespace (the word itself)
+						for newPos > 0 && !unicode.IsSpace(line[newPos-1]) {
+							newPos--
+						}
+						if newPos < pos {
+							cutText := line[newPos:pos]
+							s.addToKillRing(cutText, 0) // Add to kill ring in normal mode
+							s.resetYankTracking()       // Reset since line content changed
+							line = append(line[:newPos], line[pos:]...)
+							pos = newPos
+							s.needRefresh = true
+						}
+					}
+				case "y": // yank (paste) from kill ring
+					if s.killRing != nil && len(s.killRing) > 0 {
+						yankText := s.yankFromKillRing(0) // Get most recent
+						if yankText != nil {
+							line = append(line[:pos], append(yankText, line[pos:]...)...)
+							s.lastYankPos = pos           // Track where we inserted
+							s.lastYankLen = len(yankText) // Track what we inserted
+							pos += len(yankText)
+							s.needRefresh = true
+							s.killPos = 0 // Reset for Alt+y cycling
+						}
+					} else {
+						s.doBeep()
+					}
+				case "p": // previous line in history
+					histPrev()
 				//case "n":
 				//	histNext()
 				// case "p":
@@ -1797,16 +1897,35 @@ startOfHere:
 						}
 						buf = append(buf, line[pos])
 						line = append(line[:pos], line[pos+1:]...)
-						trace(buf)
 					}
+					s.addToKillRing(buf, 0) // Add to kill ring in normal mode
+					s.resetYankTracking()   // Reset since line content changed
 					s.needRefresh = true
-					// Save the result on the killRing
-					/*if killAction > 0 {
-						s.addToKillRing(buf, 2) // Add in prepend mode
+				case "y": // yank previous (cycle through kill ring)
+					if s.killRing != nil && len(s.killRing) > 1 && s.lastYankLen > 0 &&
+						s.lastYankPos <= len(line) && s.lastYankPos+s.lastYankLen <= len(line) {
+						// Only proceed if we can safely replace the last yank
+						s.killPos++ // Move to next older entry
+						if s.killPos >= len(s.killRing) {
+							s.killPos = 0 // Wrap around
+						}
+						yankText := s.yankFromKillRing(s.killPos)
+						if yankText != nil {
+							// Remove the previously yanked text
+							line = append(line[:s.lastYankPos], line[s.lastYankPos+s.lastYankLen:]...)
+							// Insert the new yank at the same position
+							line = append(line[:s.lastYankPos], append(yankText, line[s.lastYankPos:]...)...)
+							// Update cursor position to end of new yank
+							pos = s.lastYankPos + len(yankText)
+							// Update tracking for potential next Alt+y
+							s.lastYankLen = len(yankText)
+							s.needRefresh = true
+						}
 					} else {
-						s.addToKillRing(buf, 0) // Add in normal mode
-					} */
-					// killAction = 2 // Mark that there was some killing
+						s.doBeep()
+					}
+				case "n": // next line in history
+					histNext()
 					//			case "bs": // Erase word
 					//				pos, line, killAction = s.eraseWord(pos, line, killAction)
 
@@ -1932,11 +2051,13 @@ startOfHere:
 							if s.currline == 0 && len(s.lines) == 0 {
 								multiline = false
 							}
+							s.resetYankTracking() // Line content changed
 							s.needRefresh = true
 						} else {
 							s.doBeep()
 						}
 					} else {
+						s.resetYankTracking() // Line content changed
 						// pos += 1
 						n := len(getSuffixGlyphs(line[:pos], 1))
 
@@ -1990,6 +2111,7 @@ startOfHere:
 					if pos >= len(line) {
 						s.doBeep()
 					} else {
+						s.resetYankTracking() // Line content changed
 						n := len(getPrefixGlyphs(line[pos:], 1))
 						line = append(line[:pos], line[pos+n:]...)
 						s.needRefresh = true
@@ -2090,6 +2212,8 @@ startOfHere:
 
 					vs := []rune(next.Key)
 					v := vs[0]
+
+					s.resetYankTracking() // Reset yank tracking since we're adding text
 
 					if pos >= countGlyphs(p)+countGlyphs(line) {
 						line = append(line, v)
