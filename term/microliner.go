@@ -1747,10 +1747,8 @@ startOfHere:
 					}
 				case "p": // previous line in history
 					histPrev()
-				//case "n":
-				//	histNext()
-				// case "p":
-				//	histPrev()
+				case "n":
+					histNext()
 				case "r": // Ctrl+R → inline history browser
 					line, pos, next, _ = s.historyBrowse(p, line, pos)
 					goto haveNext
