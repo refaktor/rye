@@ -21,7 +21,7 @@ func SetTerminalRestoreFunc(restoreFunc func() error) {
 // SuspendProcess implements Unix-style process suspension using SIGTSTP signal
 // It properly handles terminal state restoration after resume to fix input issues
 func SuspendProcess() error {
-	fmt.Println("[ Process suspended with Ctrl+Z - Use '%NUMBER' to resume ]")
+	fmt.Println("[ Process suspended with Ctrl+Z - Use '%NUM' (see below) to resume ]")
 
 	// Create a channel to handle signals
 	sigCh := make(chan os.Signal, 1)
