@@ -492,6 +492,12 @@ func constructKeyEvent(r rune, k keyboard.Key) term.KeyEvent {
 	case keyboard.KeyCtrlZ:
 		ch = "z"
 		ctrl = true
+	case keyboard.KeyCtrlW:
+		ch = "w"
+		ctrl = true
+	case keyboard.KeyCtrlY:
+		ch = "y"
+		ctrl = true
 
 	case keyboard.KeyEnter:
 		code = 13
