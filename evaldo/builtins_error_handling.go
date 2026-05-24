@@ -413,7 +413,13 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 						er = nil
 					}
 					return MakeRyeError(ps, arg1, er)
+				case env.Error: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+					// if er.Status == 0 && er.Message == "" {
+					// er = nil
+					// }
+					return MakeRyeError(ps, arg1, &er)
 				}
+				return env.NewError("Failure flag but value not Failure")
 			}
 			return arg0
 		},
@@ -432,7 +438,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 		Argsn:         2,
 		Doc:           "Like 'check' but also sets the return flag to immediately exit the current function.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			if ps.FailureFlag {
+			if ps.FailureFlag || arg0.Type() == env.ErrorType {
 				ps.ReturnFlag = true
 				switch er := arg0.(type) {
 				case *env.Error: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
@@ -446,7 +452,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 					// }
 					return MakeRyeError(ps, arg1, &er)
 				}
-				return env.NewError("error 12221")
+				return env.NewError("Failure flag but value not Failure")
 			}
 			return arg0
 		},

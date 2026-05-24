@@ -28,7 +28,7 @@ assert\display "word with multiple hyphens" {
 } 'word
 
 assert\display "word ending with ?" {
-	type? first { is-empty? }
+	type? first { length? }
 } 'word
 
 assert\display "word ending with !" {

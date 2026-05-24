@@ -1390,12 +1390,19 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 	} else {
 		Eval(ps)
 	}
-	// Handle failure based on ReturnFlag:
-	// - If ReturnFlag is set (via ^fail or return), propagate failure to caller
-	// - If ReturnFlag is NOT set, failure happened but wasn't explicitly returned, convert to error
+	// Handle failure based on ReturnFlag and position:
+	// - If ReturnFlag is set (via ^fail or return), always propagate failure to caller
+	// - If failure is from the last expression of the function body, treat it as a return value
+	// - Otherwise, convert non-returned failures to error
 	if ps.FailureFlag && !ps.ReturnFlag && !ps.ErrorFlag {
-		// Failure without explicit return - convert to error
-		ps.ErrorFlag = true
+		// Check if we're at the end of the function body (last expression completed)
+		if ps.Ser.Pos() >= ps.Ser.Len() {
+			// Last expression failed - treat this as an implicit return of the failure
+			// Do NOT convert to error, let it propagate to caller
+		} else {
+			// Mid-function failure without explicit return - convert to error
+			ps.ErrorFlag = true
+		}
 	}
 	MaybeDisplayFailureOrError(ps, ps.Idx, "Call func collect args")
 	if ps.ErrorFlag || ps.FailureFlag {
@@ -2525,11 +2532,15 @@ func tryHandleFailure(ps *env.ProgramState) bool {
 			return true // Convert to error at top level
 		}
 
-		// Inside a function: only convert non-returned failures to error
-		// Returned failures (ReturnFlag set) should propagate up
+		// Inside a function: check if failure should be converted to error or propagated
 		if !ps.ReturnFlag {
-			// fmt.Println("**Err tryHandleFailure inside func (no return): T**")
-			return true // Non-returned failure - convert to error
+			// Check if we're at the end of the function body (last expression failed)
+			// If so, treat it as an implicit return and let it propagate
+			if ps.Ser.Pos() >= ps.Ser.Len() {
+				return false // Let failure propagate to caller (implicit return)
+			} else {
+				return true // Non-returned failure - convert to error
+			}
 		}
 
 		// ReturnFlag is set - let the failure propagate up to caller
