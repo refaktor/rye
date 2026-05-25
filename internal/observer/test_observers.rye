@@ -36,7 +36,7 @@ assert\display "context isolated observers" {
 		on-change w { triggered:: true }
 	}
 	; Modify ctx7a value
-	ctx7a/value:: 42
+	do\inside ctx7a { value:: 42 }
 	; ctx7b should not be affected
 	ctx7b/triggered
 } false
@@ -47,7 +47,7 @@ assert\display "context1 observer triggers" {
 		var 'triggered false
 		on-change w { triggered:: true }
 	}
-	ctx8/value:: 42
+	do\inside ctx8 { value:: 42 }
 	ctx8/triggered
 } true
 

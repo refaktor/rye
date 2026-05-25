@@ -42,7 +42,7 @@ assert\display "word with hyphen" {
 } 'word
 
 assert\display "word with question mark" {
-	type? first { empty? }
+	type? first { length? }
 } 'word
 
 assert\display "word with exclamation" {

@@ -1428,17 +1428,17 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { a: ref [ 1 2 ] same? a a } true
-	// equal { a: ref [ 1 2 ] b: ref [ 1 2 ] same? a b } false
-	// equal { a: ref [ 1 2 ] b: a same? a b } true
-	// equal { same? 123 123 } true
-	// equal { same? "abc" "abc" } false ; strings are different objects
+	// equal { a: ref [ 1 2 ] is-same a a } true
+	// equal { a: ref [ 1 2 ] b: ref [ 1 2 ] is-same a b } false
+	// equal { a: ref [ 1 2 ] b: a is-same a b } true
+	// equal { is-same 123 123 } true
+	// equal { is-same "abc" "abc" } false ; strings are different objects
 	// Args:
 	// * value1: First value to compare
 	// * value2: Second value to compare
 	// Returns:
 	// * Boolean true if values are the same object (identity), false otherwise
-	"same?": {
+	"is-same": {
 		Argsn: 2,
 		Doc:   "Checks if two values are the same object (identity comparison, not value comparison).",
 		Pure:  true,

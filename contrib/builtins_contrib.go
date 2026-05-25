@@ -11,6 +11,7 @@ import (
 
 	"github.com/refaktor/rye/contrib/aws"
 	"github.com/refaktor/rye/contrib/bleve"
+	"github.com/refaktor/rye/contrib/genai"
 	"github.com/refaktor/rye/contrib/ollama"
 	"github.com/refaktor/rye/contrib/postmark"
 	"github.com/refaktor/rye/contrib/ryeopenai"
@@ -55,7 +56,8 @@ func RegisterBuiltins(ps *env.ProgramState, builtinNames *map[string]int) {
 	RegisterBuiltins2(ollama.Builtins_ollama, ps, "ollama", builtinNames)
 	RegisterBuiltins2(postmark.Builtins_postmark, ps, "postmark", builtinNames)
 	RegisterBuiltins2(ryeopenai.Builtins_openai, ps, "openai", builtinNames)
-
+	evaldo.RegisterBuiltinsInContext(genai.Builtins_genai, ps, "genai")
+	//	RegisterBuiltinsInContext(Builtins_prometheus, ps, "prometheus")
 	// Register surf if build tag is present
 	for _, regFunc := range surfRegistrationFuncs {
 		regFunc(ps, builtinNames)
