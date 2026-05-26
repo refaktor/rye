@@ -1,0 +1,71 @@
+#!/usr/bin/env rye
+; hello.rye - A minimal example of Rye's CLI parsing dialect
+
+; ## CLI Specification
+
+cli-spec: {
+    program "Hello"
+    description "Hello CLI world example"
+
+    ; Global flags (available to all commands)
+    --hello string optional "Hello" doc "The 'hello' word"
+    
+    subcommand {
+        
+        'all {
+            doc "Say hello to all"
+            -x|exclaim integer optional 1 check { >= 1 } "At least one exclamation needed"
+			           doc "How many exclamation marks."
+        }
+        
+        'to {
+            doc "Say hello to specific thing"
+			what: string required 
+        }
+	}
+}
+
+; ## Command Handlers
+
+handle-all: fn { result } {
+	.anchor .do\in {
+		print hello ++ " all" ++ produce exclaim "" { ++ "!" }
+	}
+}
+
+handle-to: fn { result } {
+	.anchor .do\in {
+		print hello ++ " " ++ what
+	}
+}
+
+; ## main entry point
+
+fn { } {
+    ; Get command line arguments
+    rye .Args?
+	:args .contains\flag -h|help <^if> {
+        print generate-help cli-spec
+		0
+	}
+        
+    ; Parse arguments
+    parse-args\ctx args cli-spec
+    ; Handle parse errors
+    |^fix {
+        print "Error parsing arguments:" ,
+        .format-parse-errors |print
+        1
+    } :result
+
+    ; Route to appropriate handler
+    switch 	result -> 'command <fix> { "" } {
+        "all" { handle-all result }
+        "to" { handle-to result }
+        _ { 
+            print "Unknown or missing command\n"
+            print generate-help cli-spec 
+        }
+    }    
+	0
+} |apply { }

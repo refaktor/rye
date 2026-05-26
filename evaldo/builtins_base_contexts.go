@@ -289,7 +289,7 @@ var builtins_contexts = map[string]*env.Builtin{
 	// * the modified child context with its parent set to the specified parent context
 	"bind!": { // **
 		Argsn: 2,
-		Doc:   "Binds a context to a parent context, allowing it to access the parent's values.",
+		Doc:   "Binds a context as a parent context to first context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch swCtx1 := arg0.(type) {
 			case *env.RyeCtx:
@@ -300,6 +300,52 @@ var builtins_contexts = map[string]*env.Builtin{
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.ContextType}, "bind!")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "bind!")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { c: context { y: 123 } cc: bind! context { z: does { y + 234 } } c , cc/z } 357
+	// Args:
+	// * child: Context object to be bound
+	// * parent: Context object to bind to as parent
+	// Returns:
+	// * the modified child context with its parent set to the specified parent context
+	"anchor": { // **
+		Argsn: 1,
+		Doc:   "Binds a current context as a parent context.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch swCtx1 := arg0.(type) {
+			case *env.RyeCtx:
+				clonedCtx := swCtx1.Copy()
+				if cloned2, ok := clonedCtx.(*env.RyeCtx); ok {
+					cloned2.Parent = ps.Ctx
+					return cloned2
+				}
+				return MakeBuiltinError(ps, "Couldn't clone a context", "anchor")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "anchor")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { c: context { y: 123 } cc: bind! context { z: does { y + 234 } } c , cc/z } 357
+	// Args:
+	// * child: Context object to be bound
+	// * parent: Context object to bind to as parent
+	// Returns:
+	// * the modified child context with its parent set to the specified parent context
+	"anchor!": { // **
+		Argsn: 1,
+		Doc:   "Binds a current context as a parent context.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch swCtx1 := arg0.(type) {
+			case *env.RyeCtx:
+				swCtx1.Parent = ps.Ctx
+				return swCtx1
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "bind!")
 			}
