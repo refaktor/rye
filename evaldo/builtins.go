@@ -2479,8 +2479,8 @@ var builtins = map[string]*env.Builtin{
 	},
 	// Deprecated
 	"Rye-itself//args?": {
-		Argsn: 1,
-		Doc:   "",
+		Argsn: 0,
+		Doc:   "Returns command line arguments as a block of parsed values. Each argument is converted to appropriate type (integer, float, or string).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var firstArg int
 			if ps.Embedded {
@@ -2488,14 +2488,46 @@ var builtins = map[string]*env.Builtin{
 			} else {
 				firstArg = 2
 			}
-			return util.StringToFieldsWithQuoted(strings.Join(os.Args[firstArg:], " "), " ", "\"")
-			// block, _ := loader.LoadString(os.Args[0], false)
-			// return block
+			
+			// If no arguments beyond the script name, return empty block
+			if firstArg >= len(os.Args) {
+				return *env.NewBlock(*env.NewTSeries([]env.Object{}))
+			}
+			
+			// Convert each argument to appropriate Rye type
+			args := os.Args[firstArg:]
+			lst := make([]env.Object, len(args))
+			
+			intRe := regexp.MustCompile("^[+-]?[0-9]+$")
+			floatRe := regexp.MustCompile("^[+-]?[0-9]*\\.[0-9]+$")
+			
+			for i, arg := range args {
+				// Try to parse as integer
+				if intRe.MatchString(arg) {
+					if num, err := strconv.ParseInt(arg, 10, 64); err == nil {
+						lst[i] = *env.NewInteger(num)
+						continue
+					}
+				}
+				
+				// Try to parse as float
+				if floatRe.MatchString(arg) {
+					if num, err := strconv.ParseFloat(arg, 64); err == nil {
+						lst[i] = *env.NewDecimal(num)
+						continue
+					}
+				}
+				
+				// Default to string
+				lst[i] = *env.NewString(arg)
+			}
+			
+			return *env.NewBlock(*env.NewTSeries(lst))
 		},
 	},
 	"Rye-itself//Args?": {
-		Argsn: 1,
-		Doc:   "",
+		Argsn: 0,
+		Doc:   "Returns command line arguments as a block of parsed values. Each argument is converted to appropriate type (integer, float, or string).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var firstArg int
 			if ps.Embedded {
@@ -2503,9 +2535,41 @@ var builtins = map[string]*env.Builtin{
 			} else {
 				firstArg = 2
 			}
-			return util.StringToFieldsWithQuoted(strings.Join(os.Args[firstArg:], " "), " ", "\"")
-			// block, _ := loader.LoadString(os.Args[0], false)
-			// return block
+			
+			// If no arguments beyond the script name, return empty block
+			if firstArg >= len(os.Args) {
+				return *env.NewBlock(*env.NewTSeries([]env.Object{}))
+			}
+			
+			// Convert each argument to appropriate Rye type
+			args := os.Args[firstArg:]
+			lst := make([]env.Object, len(args))
+			
+			intRe := regexp.MustCompile("^[+-]?[0-9]+$")
+			floatRe := regexp.MustCompile("^[+-]?[0-9]*\\.[0-9]+$")
+			
+			for i, arg := range args {
+				// Try to parse as integer
+				if intRe.MatchString(arg) {
+					if num, err := strconv.ParseInt(arg, 10, 64); err == nil {
+						lst[i] = *env.NewInteger(num)
+						continue
+					}
+				}
+				
+				// Try to parse as float
+				if floatRe.MatchString(arg) {
+					if num, err := strconv.ParseFloat(arg, 64); err == nil {
+						lst[i] = *env.NewDecimal(num)
+						continue
+					}
+				}
+				
+				// Default to string
+				lst[i] = *env.NewString(arg)
+			}
+			
+			return *env.NewBlock(*env.NewTSeries(lst))
 		},
 	},
 	"Rye-itself//Args\\raw?": {

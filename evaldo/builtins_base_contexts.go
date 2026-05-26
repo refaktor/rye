@@ -307,15 +307,49 @@ var builtins_contexts = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { c: context { y: 123 } cc: bind! context { z: does { y + 234 } } c , cc/z } 357
+	// equal { c: context { x: 123 } p: context { y: 456 } cc: bind c p cc/x } 123
+	// equal { c: context { x: 123 } p: context { y: 456 } cc: bind c p cc/y } 456  
+	// equal { c: context { x: 123 } p: context { y: 456 } cc: bind c p do\inside c { x:: 999 } cc/x } 123 ; clone unchanged
+	// equal { c: context { x: 123 } p: context { y: 456 } cc: bind c p do\inside c { x:: 999 } c/x } 999 ; original modified
 	// Args:
-	// * child: Context object to be bound
-	// * parent: Context object to bind to as parent
+	// * child: Context object to clone and bind
+	// * parent: Context object to bind to as parent  
 	// Returns:
-	// * the modified child context with its parent set to the specified parent context
+	// * a cloned child context with its parent set to the specified parent context
+	"bind": { // **
+		Argsn: 2,
+		Doc:   "Creates a clone of the first context and binds the second context as its parent.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch swCtx1 := arg0.(type) {
+			case *env.RyeCtx:
+				switch swCtx2 := arg1.(type) {
+				case *env.RyeCtx:
+					clonedCtx := swCtx1.Copy()
+					if cloned2, ok := clonedCtx.(*env.RyeCtx); ok {
+						cloned2.Parent = swCtx2
+						return cloned2
+					}
+					return MakeBuiltinError(ps, "Couldn't clone a context", "bind")
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.ContextType}, "bind")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "bind")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { c: context { x: 123 } cc: anchor c cc/x } 123
+	// equal { c: context { x: 123 } cc: anchor c do\inside c { x:: 999 } cc/x } 123 ; clone unchanged
+	// equal { c: context { x: 123 } cc: anchor c do\inside c { x:: 999 } c/x } 999 ; original modified
+	// Args:
+	// * ctx: Context object to clone and anchor to current context
+	// Returns:
+	// * a cloned context with current context set as parent
 	"anchor": { // **
 		Argsn: 1,
-		Doc:   "Binds a current context as a parent context.",
+		Doc:   "Creates a clone of a context and sets current context as its parent.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch swCtx1 := arg0.(type) {
 			case *env.RyeCtx:
@@ -332,22 +366,22 @@ var builtins_contexts = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { c: context { y: 123 } cc: bind! context { z: does { y + 234 } } c , cc/z } 357
+	// equal { c: context { x: 123 } anchor! c c/x } 123
+	// equal { c: context { x: 123 } anchor! c do\inside c { x:: 999 } c/x } 999 ; original modified
 	// Args:
-	// * child: Context object to be bound
-	// * parent: Context object to bind to as parent
+	// * ctx: Context object to anchor to current context
 	// Returns:
-	// * the modified child context with its parent set to the specified parent context
+	// * the modified context with current context set as parent
 	"anchor!": { // **
 		Argsn: 1,
-		Doc:   "Binds a current context as a parent context.",
+		Doc:   "Sets current context as parent of the given context (modifies the context in place).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch swCtx1 := arg0.(type) {
 			case *env.RyeCtx:
 				swCtx1.Parent = ps.Ctx
 				return swCtx1
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "bind!")
+				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "anchor!")
 			}
 		},
 	},
