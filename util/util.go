@@ -106,6 +106,126 @@ func StringToFieldsWithQuoted(str string, sepa string, quote string) env.Block {
 	return *env.NewBlock(*env.NewTSeries(lst))
 }
 
+func ParseShellArgs(str string) env.Block {
+	var result []string
+	var current strings.Builder
+	quoted := false
+	var quoteChar byte
+	
+	i := 0
+	for i < len(str) {
+		char := str[i]
+		
+		// Handle quote characters
+		if !quoted && (char == '"' || char == '\'') {
+			quoted = true
+			quoteChar = char
+			i++
+			continue
+		}
+		
+		if quoted && char == quoteChar {
+			quoted = false
+			i++
+			continue
+		}
+		
+		// Handle spaces outside quotes
+		if !quoted && (char == ' ' || char == '\t') {
+			if current.Len() > 0 {
+				result = append(result, current.String())
+				current.Reset()
+			}
+			// Skip consecutive whitespace
+			for i < len(str) && (str[i] == ' ' || str[i] == '\t') {
+				i++
+			}
+			continue
+		}
+		
+		// Handle escape sequences
+		if char == '\\' && i+1 < len(str) {
+			next := str[i+1]
+			if quoted && quoteChar == '"' {
+				// In double quotes, handle common escape sequences
+				switch next {
+				case 'n':
+					current.WriteByte('\n')
+					i += 2
+					continue
+				case 't':
+					current.WriteByte('\t')
+					i += 2
+					continue
+				case 'r':
+					current.WriteByte('\r')
+					i += 2
+					continue
+				case '\\':
+					current.WriteByte('\\')
+					i += 2
+					continue
+				case '"':
+					current.WriteByte('"')
+					i += 2
+					continue
+				}
+			} else if quoted && quoteChar == '\'' {
+				// In single quotes, only handle escaped single quotes
+				if next == '\'' {
+					current.WriteByte('\'')
+					i += 2
+					continue
+				}
+			} else if !quoted {
+				// Outside quotes, handle escaped spaces and quotes
+				if next == ' ' || next == '\t' || next == '"' || next == '\'' || next == '\\' {
+					current.WriteByte(next)
+					i += 2
+					continue
+				}
+			}
+		}
+		
+		current.WriteByte(char)
+		i++
+	}
+	
+	// Add final field if any
+	if current.Len() > 0 {
+		result = append(result, current.String())
+	}
+
+	lst := make([]env.Object, len(result))
+	re := regexp.MustCompile("^[+-]?[0-9]+$")
+	floatRe := regexp.MustCompile("^[+-]?[0-9]*\\.[0-9]+$")
+	
+	for i := 0; i < len(result); i++ {
+		field := result[i]
+		
+		// Try to parse as integer
+		if re.MatchString(field) {
+			if num, err := strconv.ParseInt(field, 10, 64); err == nil {
+				lst[i] = *env.NewInteger(num)
+				continue
+			}
+		}
+		
+		// Try to parse as float
+		if floatRe.MatchString(field) {
+			if num, err := strconv.ParseFloat(field, 64); err == nil {
+				lst[i] = *env.NewDecimal(num)
+				continue
+			}
+		}
+		
+		// Default to string
+		lst[i] = *env.NewString(field)
+	}
+	
+	return *env.NewBlock(*env.NewTSeries(lst))
+}
+
 func FormatJson(val env.Object, e env.Idxs) string {
 	// TODO -- this is currently made just for block of strings and integers
 	var r strings.Builder
