@@ -344,6 +344,44 @@ var builtins_string = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
+	// equal { contains\flag "-help -yello -ho" -h|help  } true
+	// equal { contains\flag "hello -help ho" -h|help  } true
+	// equal { contains\flag "hello yello -ho" -h|help  } false
+	// equal { contains\flag "-hello yello ho" -h|help  } false
+	// Args:
+	// * collection: block of strings to search in
+	// * value: Flag value to search for
+	// Returns:
+	// * true if the collection contains the flag in short or long form, false otherwise
+	"contains\\flag": {
+		Argsn: 2,
+		Doc:   "Checks if a block contains a specific flag (long or short), returning true if found or false if not found.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			//contains block
+			case env.Block:
+				switch value := arg1.(type) {
+				case env.Flagword:
+					fShort := value.GetShortName(*ps.Idx)
+					if fShort != "" && util.ContainsVal(ps, s1.Series.S, *env.NewString("-" + fShort)) {
+						return *env.NewBoolean(true)
+					}
+					fLong := value.GetLongName(*ps.Idx)
+					if fLong != "" && util.ContainsVal(ps, s1.Series.S, *env.NewString("--" + fLong)) {
+						return *env.NewBoolean(true)
+					}
+					return *env.NewBoolean(false)
+
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.FlagwordType}, "contains\\flag")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "contains")
+			}
+		},
+	},
+	// Tests:
 	// equal { has-suffix "xoxo..." "xoxo" } false
 	// equal { has-suffix "...xoxo" "xoxo" } true
 	// equal { has-suffix "hello.txt" ".txt" } true

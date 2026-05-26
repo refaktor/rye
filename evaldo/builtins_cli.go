@@ -103,25 +103,29 @@ func CLI_ParseSpec(es *env.ProgramState, specBlock env.Block) (*CLISpec, error) 
 						spec.ProgramDoc = str.Value
 					}
 				}
-			} else if wordName == "_" || strings.HasPrefix(wordName, "_") {
+			} else {
+				return nil, fmt.Errorf("program, description or subcommand expected but got " + wordName)
+			}
+
+			/* else if wordName == "_" || strings.HasPrefix(wordName, "_") {
 				// Positional argument
 				argSpec, err := parsePositionalSpec(es, &ser, wordName)
 				if err != nil {
 					return nil, err
 				}
 				spec.GlobalArgs = append(spec.GlobalArgs, *argSpec)
-			}
+			}*/
 
 		case env.Setword:
 			// Named argument using setword (alternative syntax)
 			wordName := es.Idx.GetWord(item.Index)
-			if strings.HasPrefix(wordName, "_") || wordName == "_" {
-				argSpec, err := parsePositionalSpec(es, &ser, wordName)
-				if err != nil {
-					return nil, err
-				}
-				spec.GlobalArgs = append(spec.GlobalArgs, *argSpec)
+			// if strings.HasPrefix(wordName, "_") || wordName == "_" {
+			argSpec, err := parsePositionalSpec(es, &ser, wordName)
+			if err != nil {
+				return nil, err
 			}
+			spec.GlobalArgs = append(spec.GlobalArgs, *argSpec)
+			// }
 		}
 	}
 
@@ -155,14 +159,14 @@ func parseArgSpec(es *env.ProgramState, ser *env.TSeries, flagword env.Flagword)
 			return spec, nil
 		case env.Word:
 			wordName := es.Idx.GetWord(next.Index)
-			if strings.HasPrefix(wordName, "_") || wordName == "subcommand" {
+			if wordName == "subcommand" {
 				return spec, nil
 			}
 		case env.Setword:
-			wordName := es.Idx.GetWord(next.Index)
-			if strings.HasPrefix(wordName, "_") {
-				return spec, nil
-			}
+			// wordName := es.Idx.GetWord(next.Index)
+			// if strings.HasPrefix(wordName, "_") {
+			return spec, nil
+			// }
 		}
 
 		obj := ser.Pop()
@@ -260,14 +264,14 @@ func parsePositionalSpec(es *env.ProgramState, ser *env.TSeries, name string) (*
 			return spec, nil
 		case env.Word:
 			wordName := es.Idx.GetWord(next.Index)
-			if strings.HasPrefix(wordName, "_") || wordName == "subcommand" {
+			if wordName == "subcommand" {
 				return spec, nil
 			}
 		case env.Setword:
-			wordName := es.Idx.GetWord(next.Index)
-			if strings.HasPrefix(wordName, "_") {
-				return spec, nil
-			}
+			// wordName := es.Idx.GetWord(next.Index)
+			// if strings.HasPrefix(wordName, "_") {
+			return spec, nil
+			// }
 		}
 
 		obj := ser.Pop()
@@ -343,9 +347,9 @@ func parseSubcommands(es *env.ProgramState, block env.Block) (map[string]*Subcom
 	for ser.Pos() < ser.Len() {
 		// Expect word (subcommand name) followed by block
 		nameObj := ser.Pop()
-		nameWord, ok := nameObj.(env.Word)
+		nameWord, ok := nameObj.(env.Tagword)
 		if !ok {
-			return nil, fmt.Errorf("expected subcommand name (word), got %T", nameObj)
+			return nil, fmt.Errorf("expected subcommand name ('litword), got %T", nameObj)
 		}
 		cmdName := es.Idx.GetWord(nameWord.Index)
 
@@ -402,17 +406,21 @@ func parseSubcommands(es *env.ProgramState, block env.Block) (map[string]*Subcom
 							subSpec.Doc = str.Value
 						}
 					}
-				} else if strings.HasPrefix(wordName, "_") || wordName == "_" {
-					argSpec, err := parsePositionalSpec(es, &subSer, wordName)
-					if err != nil {
-						return nil, err
-					}
-					subSpec.Args = append(subSpec.Args, *argSpec)
+				} else {
+					return nil, fmt.Errorf("program, description or subcommand expected but got " + wordName)
 				}
+				//else if strings.HasPrefix(wordName, "_") || wordName == "_" {
+			case env.Setword:
+				wordName := es.Idx.GetWord(item.Index)
+				argSpec, err := parsePositionalSpec(es, &subSer, wordName)
+				if err != nil {
+					return nil, err
+				}
+				subSpec.Args = append(subSpec.Args, *argSpec)
 			}
-		}
 
-		subcommands[cmdName] = subSpec
+			subcommands[cmdName] = subSpec
+		}
 	}
 
 	return subcommands, nil
