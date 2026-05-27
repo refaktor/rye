@@ -6,8 +6,6 @@ retract v0.0.11 // Published accidentally with a bug
 
 // replace github.com/refaktor/keyboard => ../keyboard
 
-replace github.com/jaytaylor/go-find => github.com/refaktor/go-find v0.0.0-20260208134259-020cb144f5ba
-
 require (
 	filippo.io/age v1.3.1
 	github.com/BrianLeishman/go-imap v0.1.28
@@ -38,7 +36,6 @@ require (
 	github.com/gobwas/ws v1.4.0
 	github.com/gorilla/sessions v1.4.0
 	github.com/hpcloud/tail v1.0.0
-	github.com/jaytaylor/go-find v0.0.0-20230626195527-2e304c986aaf
 	github.com/jinzhu/copier v0.4.0
 	github.com/jlaffaye/ftp v0.2.0
 	github.com/jwalton/go-supportscolor v1.2.0
@@ -55,6 +52,7 @@ require (
 	github.com/openai/openai-go v1.12.0
 	github.com/pkg/term v1.2.0-beta.2.0.20211217091447-1a4a3b719465
 	github.com/prometheus/client_golang v1.23.2
+	github.com/refaktor/go-find v0.0.1
 	github.com/refaktor/keyboard v0.0.0-20260517095250-755a59d30156
 	github.com/sairash/chitosocket v1.0.2
 	github.com/shirou/gopsutil/v3 v3.24.5
@@ -72,7 +70,10 @@ require (
 	software.sslmate.com/src/go-pkcs12 v0.7.1
 )
 
-require google.golang.org/genai v1.57.0
+require (
+	github.com/spf13/cobra v1.10.2
+	google.golang.org/genai v1.57.0
+)
 
 require (
 	cloud.google.com/go v0.116.0 // indirect
@@ -109,6 +110,7 @@ require (
 	github.com/headzoo/surf v1.0.1 // indirect
 	github.com/headzoo/ut v0.0.0-20181013193318-a13b5a7a02ca // indirect
 	github.com/inbucket/html2text v1.0.0 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jhillyerd/enmime/v2 v2.3.0 // indirect
 	github.com/klauspost/compress v1.18.3 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
@@ -124,6 +126,7 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rs/xid v1.6.0 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
+	github.com/spf13/pflag v1.0.9 // indirect
 	github.com/sqs/go-xoauth2 v0.0.0-20120917012134-0911dad68e56 // indirect
 	github.com/ssor/bom v0.0.0-20170718123548-6386211fdfcf // indirect
 	github.com/tidwall/gjson v1.18.0 // indirect

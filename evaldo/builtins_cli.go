@@ -1152,30 +1152,90 @@ var Builtins_cli = map[string]*env.Builtin{
 	// - Words: unquoted-word
 	// - etc.
 	//
-	// Tests:
+	// ## Basic Flag and Option Tests
 	// equal { parse-args { --verbose } { -v|verbose flag } -> "verbose" } true
 	// equal { parse-args { -v } { -v|verbose flag } -> "verbose" } true
 	// equal { parse-args { --output "file.txt" } { -o|output string required } -> "output" } "file.txt"
 	// equal { parse-args { -o "file.txt" } { -o|output string required } -> "output" } "file.txt"
 	// equal { parse-args { --count 5 } { -n|count integer optional 1 } -> "count" } 5
 	// equal { parse-args { } { -n|count integer optional 3 } -> "count" } 3
-	// equal { parse-args { "file1.txt" "file2.txt" } { _ positional string many } -> "_" |length? } 2
+	// equal { parse-args { "file1.txt" "file2.txt" } { _files string many } -> "_files" |length? } 2
 	// error { parse-args { } { -o|output string required } }
 	//
-	// String flag tests (for command line args):
+	// ## Type Coercion Tests
+	// equal { parse-args { --port "8080" } { -p|port integer } -> "port" } 8080
+	// equal { parse-args { --rate "3.14" } { -r|rate decimal } -> "rate" } 3.14
+	// equal { parse-args { --enabled "true" } { -e|enabled boolean } -> "enabled" } true
+	// equal { parse-args { --disabled "false" } { -d|disabled boolean } -> "disabled" } false
+	//
+	// ## List/Repeated Options Tests  
+	// equal { parse-args { -I "/usr/include" -I "/opt/include" } { -I|include string list } -> "include" |length? } 2
+	// equal { parse-args { --exclude "*.tmp" --exclude "*.log" } { -x|exclude string list } -> "exclude" |length? } 2
+	//
+	// ## Positional Arguments Tests
+	// equal { parse-args { "input.txt" } { _input string required } -> "_input" } "input.txt"
+	// equal { parse-args { "input.txt" "output.txt" } { _input string required _output string required } -> "_output" } "output.txt"
+	// equal { parse-args { } { _input string optional "default.txt" } -> "_input" } "default.txt"
+	// equal { parse-args { "a" "b" "c" } { _first string required _rest string many } -> "_rest" |length? } 2
+	//
+	// ## Validation (Check Block) Tests
+	// equal { parse-args { --count 5 } { -n|count integer check { > 0 } "must be positive" } -> "count" } 5
+	// error { parse-args { --count 0 } { -n|count integer check { > 0 } "must be positive" } }
+	// error { parse-args { --port 80 } { -p|port integer check { >= 1024 } "privileged port" } }
+	// equal { parse-args { --file "test.txt" } { -f|file string check { .ends-with? ".txt" } "must be .txt file" } -> "file" } "test.txt"
+	//
+	// ## String flag tests (for command line args):
 	// equal { parse-args { "--verbose" } { -v|verbose flag } -> "verbose" } true
 	// equal { parse-args { "-v" } { -v|verbose flag } -> "verbose" } true
 	// equal { parse-args { "-o" "file.txt" } { -o|output string required } -> "output" } "file.txt"
 	//
-	// Subcommand tests:
+	// ## Simple Subcommand Tests
 	// equal { parse-args { init --force } { subcommand { init { -f|force flag } } } -> "command" } "init"
 	// equal { parse-args { init --force } { subcommand { init { -f|force flag } } } -> "force" } true
+	// equal { parse-args { build -o "dist" } { subcommand { build { -o|output string } } } -> "output" } "dist"
 	//
-	// Nested subcommand tests:
-	// equal { parse-args { remote add } { subcommand { remote { subcommand { add { } } } } } -> "command" } "remote add"
+	// ## Complex Subcommand Tests
+	// equal { parse-args { --verbose remote add origin "url" } { -v|verbose flag subcommand { remote { subcommand { add { _name string required _url string required } } } } } -> "verbose" } true
+	// equal { parse-args { remote add origin "url" } { subcommand { remote { subcommand { add { _name string required _url string required } } } } } -> "command" } "remote add"
+	// equal { parse-args { remote add origin "url" } { subcommand { remote { subcommand { add { _name string required _url string required } } } } } -> "_name" } "origin"
+	//
+	// ## Git-like CLI Example
+	// equal { parse-args { --verbose commit -m "message" --amend } { 
+	//   -v|verbose flag
+	//   subcommand {
+	//     commit {
+	//       -m|message string required doc "Commit message"
+	//       -a|amend flag doc "Amend last commit"
+	//     }
+	//     push {
+	//       -f|force flag doc "Force push"
+	//       _remote string optional "origin" doc "Remote name"
+	//     }
+	//   }
+	// } -> "message" } "message"
+	//
+	// ## Docker-like CLI Example  
+	// equal { parse-args { run --detach --port "8080:80" nginx } {
+	//   subcommand {
+	//     run {
+	//       -d|detach flag doc "Run in background"
+	//       -p|port string list doc "Port mapping"
+	//       _image string required doc "Container image"
+	//       _command string many doc "Command to run"
+	//     }
+	//     build {
+	//       -t|tag string doc "Tag for image"
+	//       _path string optional "." doc "Build context"
+	//     }
+	//   }
+	// } -> "image" } "nginx"
+	//
+	// ## Help Generation Tests
+	// equal { generate-help { -v|verbose flag doc "Enable verbose output" } |type? } 'string
+	// equal { generate-help { subcommand { test { doc "Run tests" } } } |.contains? "test" } true
 	//
 	// Args:
-	// * args: Block of Rye values representing command line arguments
+	// * args: Block of Rye values representing command line arguments  
 	// * spec: Block containing argument specifications
 	// Returns:
 	// * Dict with parsed argument values or error if parsing fails
