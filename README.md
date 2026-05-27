@@ -183,5 +183,5 @@ Pre-compiled binaries for **Linux**, **macOS**, **Windows**, and **WASM** are av
 - **[GitHub Discussions](https://github.com/refaktor/rye/discussions)**
 - **[Reddit](https://reddit.com/r/ryelang/)**
 - **[Issues](https://github.com/refaktor/rye/issues)**
-- **[Discord](https://discord.gg/z7NRTAFv)** - we have a small channel on a Concatenative server
+- **[Discord](https://discord.gg/8SFmNM2U)** - #Homoiconic server for languages like Lisp, Rebol, Red, Rye ...
 - **Email**: janko.itm+rye[at]gmail.com
