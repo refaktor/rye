@@ -72,7 +72,10 @@ require (
 	software.sslmate.com/src/go-pkcs12 v0.7.1
 )
 
-require google.golang.org/genai v1.57.0
+require (
+	github.com/spf13/cobra v1.10.2
+	google.golang.org/genai v1.57.0
+)
 
 require (
 	cloud.google.com/go v0.116.0 // indirect
@@ -109,6 +112,7 @@ require (
 	github.com/headzoo/surf v1.0.1 // indirect
 	github.com/headzoo/ut v0.0.0-20181013193318-a13b5a7a02ca // indirect
 	github.com/inbucket/html2text v1.0.0 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jhillyerd/enmime/v2 v2.3.0 // indirect
 	github.com/klauspost/compress v1.18.3 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
@@ -124,6 +128,7 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rs/xid v1.6.0 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
+	github.com/spf13/pflag v1.0.9 // indirect
 	github.com/sqs/go-xoauth2 v0.0.0-20120917012134-0911dad68e56 // indirect
 	github.com/ssor/bom v0.0.0-20170718123548-6386211fdfcf // indirect
 	github.com/tidwall/gjson v1.18.0 // indirect
