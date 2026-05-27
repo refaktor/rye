@@ -16,7 +16,7 @@ import (
 	"time"
 
 	"github.com/atotto/clipboard"
-	"github.com/jaytaylor/go-find"
+	"github.com/refaktor/go-find"
 	"github.com/refaktor/rye/env"
 
 	"github.com/shirou/gopsutil/v3/disk"

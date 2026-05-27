@@ -6,8 +6,6 @@ retract v0.0.11 // Published accidentally with a bug
 
 // replace github.com/refaktor/keyboard => ../keyboard
 
-replace github.com/jaytaylor/go-find => github.com/refaktor/go-find v0.0.0-20260208134259-020cb144f5ba
-
 require (
 	filippo.io/age v1.3.1
 	github.com/BrianLeishman/go-imap v0.1.28
@@ -38,7 +36,6 @@ require (
 	github.com/gobwas/ws v1.4.0
 	github.com/gorilla/sessions v1.4.0
 	github.com/hpcloud/tail v1.0.0
-	github.com/jaytaylor/go-find v0.0.0-20230626195527-2e304c986aaf
 	github.com/jinzhu/copier v0.4.0
 	github.com/jlaffaye/ftp v0.2.0
 	github.com/jwalton/go-supportscolor v1.2.0
@@ -55,6 +52,7 @@ require (
 	github.com/openai/openai-go v1.12.0
 	github.com/pkg/term v1.2.0-beta.2.0.20211217091447-1a4a3b719465
 	github.com/prometheus/client_golang v1.23.2
+	github.com/refaktor/go-find v0.0.1
 	github.com/refaktor/keyboard v0.0.0-20260517095250-755a59d30156
 	github.com/sairash/chitosocket v1.0.2
 	github.com/shirou/gopsutil/v3 v3.24.5
