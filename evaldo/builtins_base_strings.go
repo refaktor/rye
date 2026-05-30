@@ -714,16 +714,17 @@ var builtins_string = map[string]*env.Builtin{
 	// equal { join { "Mary" "Anne" } } "MaryAnne"
 	// equal { join { "Spot" "Fido" "Rex" } } "SpotFidoRex"
 	// equal { join { 1 2 3 } } "123"
+	// equal { join { 1.5 2.25 3.0 } } "1.5000002.2500003.000000"
 	// equal { join { https://example.com/ "path" } |type? } 'uri
 	// equal { join { } } ""
 	// Args:
-	// * collection: Block or list of strings, numbers or URIs to join
+	// * collection: Block or list of strings, numbers (integers and decimals) or URIs to join
 	// Returns:
 	// * a single string with all values concatenated together, or a URI if first element is a URI
 	"join": { // **
 		Argsn: 1,
 		Pure:  true,
-		Doc:   "Concatenates all strings, numbers or URIs in a block or list into a single string with no separator. If the first element is a URI, returns a URI.",
+		Doc:   "Concatenates all strings, numbers (integers and decimals) or URIs in a block or list into a single string with no separator. If the first element is a URI, returns a URI.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.List:
@@ -739,6 +740,8 @@ var builtins_string = map[string]*env.Builtin{
 						str.WriteString(strconv.Itoa(it))
 					case env.Integer:
 						str.WriteString(strconv.Itoa(int(it.Value)))
+					case env.Decimal:
+						str.WriteString(it.Print(*ps.Idx))
 					case env.Uri:
 						if i == 0 {
 							firstUri = &it
@@ -747,7 +750,7 @@ var builtins_string = map[string]*env.Builtin{
 							str.WriteString(it.GetPath())
 						}
 					default:
-						return MakeBuiltinError(ps, "List data should be integer, string or uri.", "join")
+						return MakeBuiltinError(ps, "List data should be integer, decimal, string or uri.", "join")
 					}
 				}
 				if firstUri != nil {
@@ -791,6 +794,8 @@ var builtins_string = map[string]*env.Builtin{
 						str.WriteString(it.Value)
 					case env.Integer:
 						str.WriteString(strconv.Itoa(int(it.Value)))
+					case env.Decimal:
+						str.WriteString(it.Print(*ps.Idx))
 					case env.Uri:
 						if i == 0 {
 							firstUri = &it
@@ -799,7 +804,7 @@ var builtins_string = map[string]*env.Builtin{
 							str.WriteString(it.GetPath())
 						}
 					default:
-						return MakeBuiltinError(ps, "Block series data should be string, integer or uri.", "join")
+						return MakeBuiltinError(ps, "Block series data should be string, integer, decimal or uri.", "join")
 					}
 				}
 				if firstUri != nil {
@@ -816,15 +821,16 @@ var builtins_string = map[string]*env.Builtin{
 	// equal { join\with { "Mary" "Anne" } " " } "Mary Anne"
 	// equal { join\with { "Spot" "Fido" "Rex" } "/" } "Spot/Fido/Rex"
 	// equal { join\with { 1 2 3 } "-" } "1-2-3"
+	// equal { join\with { 1.5 2.25 3.0 } "-" } "1.500000-2.250000-3.000000"
 	// Args:
-	// * collection: Block or list of strings or numbers to join
+	// * collection: Block or list of strings, integers or decimals to join
 	// * delimiter: String to insert between each value
 	// Returns:
 	// * a single string with all values concatenated with the delimiter between them
 	"join\\with": { // **
 		Argsn: 2,
 		Pure:  true,
-		Doc:   "Concatenates all strings or numbers in a block or list into a single string with a specified delimiter between values.",
+		Doc:   "Concatenates all strings, integers or decimals in a block or list into a single string with a specified delimiter between values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.List:
@@ -844,8 +850,10 @@ var builtins_string = map[string]*env.Builtin{
 							str.WriteString(strconv.Itoa(it))
 						case env.Integer:
 							str.WriteString(strconv.Itoa(int(it.Value)))
+						case env.Decimal:
+							str.WriteString(it.Print(*ps.Idx))
 						default:
-							return MakeBuiltinError(ps, "Data should be string or integer.", "join\\with")
+							return MakeBuiltinError(ps, "Data should be string, integer or decimal.", "join\\with")
 						}
 					}
 					return *env.NewString(str.String())
@@ -865,8 +873,10 @@ var builtins_string = map[string]*env.Builtin{
 							str.WriteString(it.Value)
 						case env.Integer:
 							str.WriteString(strconv.Itoa(int(it.Value)))
+						case env.Decimal:
+							str.WriteString(it.Print(*ps.Idx))
 						default:
-							return MakeBuiltinError(ps, "Block series data should be string or integer.", "join\\with")
+							return MakeBuiltinError(ps, "Block series data should be string, integer or decimal.", "join\\with")
 						}
 					}
 					return *env.NewString(str.String())
