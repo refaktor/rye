@@ -18,7 +18,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ses v1.34.24
 	github.com/bitfield/script v0.24.1
 	github.com/blevesearch/bleve/v2 v2.6.0
-	github.com/blevesearch/bleve_index_api v1.3.11
+	github.com/blevesearch/bleve_index_api v1.3.12
 	github.com/dgraph-io/badger/v4 v4.9.1
 	// NOTE: Vulnerabilities GHSA-x744-4wpc-v9h2 and GHSA-pjbgf-vjq9-x5w7 are server-side only, client usage has limited risk
 	github.com/drewlanenga/govector v0.0.0-20220726163947-b958ac08bc93
