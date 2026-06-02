@@ -23,7 +23,7 @@ require (
 	// NOTE: Vulnerabilities GHSA-x744-4wpc-v9h2 and GHSA-pjbgf-vjq9-x5w7 are server-side only, client usage has limited risk
 	github.com/drewlanenga/govector v0.0.0-20220726163947-b958ac08bc93
 	github.com/eclipse/paho.mqtt.golang v1.5.1
-	github.com/fsnotify/fsnotify v1.10.0
+	github.com/fsnotify/fsnotify v1.10.1
 	github.com/fxtlabs/primes v0.0.0-20150821004651-dad82d10a449
 	github.com/gdamore/tcell/v2 v2.13.9
 	github.com/gen2brain/go-mpv v0.2.3
