@@ -59,7 +59,7 @@ require (
 	github.com/xuri/excelize/v2 v2.10.1
 	github.com/yuin/goldmark v1.8.2
 	go.mongodb.org/mongo-driver v1.17.9
-	golang.org/x/crypto v0.51.0
+	golang.org/x/crypto v0.52.0
 	golang.org/x/net v0.55.0
 	golang.org/x/sync v0.20.0
 	golang.org/x/term v0.43.0
