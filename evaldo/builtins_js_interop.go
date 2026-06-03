@@ -4,12 +4,21 @@
 package evaldo
 
 import (
+	"regexp"
 	"syscall/js"
 
 	// "encoding/json"
 
 	"github.com/refaktor/rye/env"
 )
+
+// ANSI escape code regex for stripping in browser console output
+var ansiRegexWASM = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]`)
+
+// stripAnsiCodes removes ANSI escape sequences from a string
+func stripAnsiCodes(s string) string {
+	return ansiRegexWASM.ReplaceAllString(s, "")
+}
 
 // JavaScript interop functions for Rye WASM
 var Builtins_js_interop = map[string]*env.Builtin{
@@ -360,16 +369,19 @@ var Builtins_js_interop = map[string]*env.Builtin{
 	// * the message string
 	"js-log": {
 		Argsn: 1,
-		Doc:   "Logs a message to the browser console.",
+		Doc:   "Logs a message to the browser console (ANSI codes are stripped).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch message := arg0.(type) {
 			case env.String:
-				js.Global().Get("console").Call("log", "Rye: "+message.Value)
+				// Strip ANSI codes before logging to browser console
+				cleanMessage := stripAnsiCodes(message.Value)
+				js.Global().Get("console").Call("log", "Rye: "+cleanMessage)
 				return message
 			default:
-				// Convert other types to string
+				// Convert other types to string and strip ANSI codes
 				str := arg0.Inspect(*ps.Idx)
-				js.Global().Get("console").Call("log", "Rye: "+str)
+				cleanStr := stripAnsiCodes(str)
+				js.Global().Get("console").Call("log", "Rye: "+cleanStr)
 				return *env.NewString(str)
 			}
 		},
@@ -404,16 +416,19 @@ var Builtins_js_interop = map[string]*env.Builtin{
 	// * the message string
 	"js-alert": {
 		Argsn: 1,
-		Doc:   "Shows a browser alert dialog with the given message.",
+		Doc:   "Shows a browser alert dialog with the given message (ANSI codes are stripped).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch message := arg0.(type) {
 			case env.String:
-				js.Global().Call("alert", message.Value)
+				// Strip ANSI codes before showing browser alert
+				cleanMessage := stripAnsiCodes(message.Value)
+				js.Global().Call("alert", cleanMessage)
 				return message
 			default:
-				// Convert other types to string
+				// Convert other types to string and strip ANSI codes
 				str := arg0.Inspect(*ps.Idx)
-				js.Global().Call("alert", str)
+				cleanStr := stripAnsiCodes(str)
+				js.Global().Call("alert", cleanStr)
 				return *env.NewString(str)
 			}
 		},
@@ -429,7 +444,7 @@ var Builtins_js_interop = map[string]*env.Builtin{
 	// * String containing the user input, or void if cancelled
 	"js-prompt": {
 		Argsn: -1, // Variable arguments (1 or 2)
-		Doc:   "Shows a browser prompt dialog and returns user input.",
+		Doc:   "Shows a browser prompt dialog and returns user input (ANSI codes are stripped from message).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Check if arg0 is nil (no arguments)
 			if arg0 == nil {
@@ -438,19 +453,24 @@ var Builtins_js_interop = map[string]*env.Builtin{
 
 			switch message := arg0.(type) {
 			case env.String:
+				// Strip ANSI codes from the message
+				cleanMessage := stripAnsiCodes(message.Value)
 				var result js.Value
 				// Check if default value is provided (arg1 is not nil)
 				if arg1 != nil {
 					switch defaultVal := arg1.(type) {
 					case env.String:
-						result = js.Global().Call("prompt", message.Value, defaultVal.Value)
+						// Strip ANSI codes from default value too
+						cleanDefault := stripAnsiCodes(defaultVal.Value)
+						result = js.Global().Call("prompt", cleanMessage, cleanDefault)
 					default:
-						// Convert other types to string for default value
+						// Convert other types to string for default value and strip ANSI
 						defaultStr := arg1.Inspect(*ps.Idx)
-						result = js.Global().Call("prompt", message.Value, defaultStr)
+						cleanDefault := stripAnsiCodes(defaultStr)
+						result = js.Global().Call("prompt", cleanMessage, cleanDefault)
 					}
 				} else {
-					result = js.Global().Call("prompt", message.Value)
+					result = js.Global().Call("prompt", cleanMessage)
 				}
 
 				// Check if user cancelled (returns null)
@@ -459,14 +479,16 @@ var Builtins_js_interop = map[string]*env.Builtin{
 				}
 				return *env.NewString(result.String())
 			default:
-				// Convert other types to string for message
+				// Convert other types to string for message and strip ANSI
 				str := arg0.Inspect(*ps.Idx)
+				cleanStr := stripAnsiCodes(str)
 				var result js.Value
 				if arg1 != nil {
 					defaultStr := arg1.Inspect(*ps.Idx)
-					result = js.Global().Call("prompt", str, defaultStr)
+					cleanDefault := stripAnsiCodes(defaultStr)
+					result = js.Global().Call("prompt", cleanStr, cleanDefault)
 				} else {
-					result = js.Global().Call("prompt", str)
+					result = js.Global().Call("prompt", cleanStr)
 				}
 				if result.IsNull() {
 					return env.NewVoid()

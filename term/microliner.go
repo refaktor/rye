@@ -456,9 +456,14 @@ func (s *MLState) tabComplete(p []rune, line []rune, pos int, mode int) ([]rune,
 
 	// Set flag to indicate we're in tab completion mode
 	s.inTabCompletion = true
+	
+	// Extract the current word being completed
+	s.currentTabWord = s.extractCurrentWord(string(line), pos)
+	
 	defer func() {
 		// Always clear the flag and suggestion space when exiting tab completion
 		s.inTabCompletion = false
+		s.currentTabWord = ""
 		s.clearSuggestionSpace()
 	}()
 
@@ -534,6 +539,30 @@ func (s *MLState) tabComplete(p []rune, line []rune, pos int, mode int) ([]rune,
 				return originalLine, originalPos, next, fmt.Errorf("failed to refresh display: %w", err)
 			}
 			return originalLine, originalPos, next, nil
+		}
+		// Check for Ctrl+X to display word info while in tab completion
+		if next.Ctrl && strings.ToLower(next.Key) == "x" {
+			if s.programState != nil && s.currentTabWord != "" {
+				// Display word info without exiting tab completion
+				s.sendBack("\n") // Move to a new line
+				
+				// Get word information
+				wordInfo := findWordInfo(s.programState, s.currentTabWord)
+				if wordInfo != "" {
+					fmt.Print(wordInfo)
+				} else {
+					fmt.Printf("No documentation found for '%s'\n", s.currentTabWord)
+				}
+				
+				// Refresh the completion display
+				err = s.refresh(p, completedLine, newPos)
+				if err != nil {
+					return line, pos, KeyEvent{Code: 27}, fmt.Errorf("failed to refresh display: %w", err)
+				}
+				s.displayTabSuggestions(list, currentIndex, mode)
+				direction = 0 // Don't change selection
+				continue
+			}
 		}
 		return completedLine, newPos, next, nil
 	}
@@ -629,6 +658,7 @@ type MLState struct {
 	inTabCompletion  bool                                                           // Flag to track if we're in tab completion mode
 	suggestionSpace  int                                                            // Number of lines reserved for suggestions (0 = none reserved)
 	ctrlSMode        int                                                            // Ctrl+S cycles through modes: 1=context, 2=generics (0 is Tab-only)
+	currentTabWord   string                                                         // The current word being tab-completed
 	isWasmMode       bool                                                           // Flag to track if we're in WASM mode (xterm.js)
 	promptFunc       func() string                                                  // Optional dynamic prompt function; called before each input line
 	killRing         [][]rune                                                       // Kill ring for cut/paste operations
@@ -1790,8 +1820,23 @@ startOfHere:
 					// Mode indicator is shown in displayTabSuggestions, not here
 					line, pos, next, _ = s.tabComplete(p, line, pos, s.ctrlSMode)
 					goto haveNext
-				case "x": // display last returned value interactively
-					if s.programState != nil && s.programState.Res != nil && s.displayValue != nil {
+				case "x": // display last returned value interactively, or word info if in tab completion
+					if s.inTabCompletion && s.currentTabWord != "" && s.programState != nil {
+						// We're in tab completion mode - show word information
+						s.sendBack("\n") // Move to a new line
+						
+						// Get word information
+						wordInfo := findWordInfo(s.programState, s.currentTabWord)
+						if wordInfo != "" {
+							fmt.Print(wordInfo)
+						} else {
+							fmt.Printf("No documentation found for '%s'\n", s.currentTabWord)
+						}
+						
+						// Force refresh to redraw the prompt
+						s.needRefresh = true
+						
+					} else if s.programState != nil && s.programState.Res != nil && s.displayValue != nil {
 						// Move to a new line
 						s.sendBack("\n")
 
@@ -2302,4 +2347,28 @@ startOfHere:
 		}
 	}
 	// return string(line), nil
+}
+
+// extractCurrentWord extracts the word at the cursor position for tab completion
+func (s *MLState) extractCurrentWord(line string, pos int) string {
+	if pos < 0 || pos > len(line) {
+		return ""
+	}
+
+	// Parse word context similar to the REPL completer
+	var wordpart string
+	spacePos := strings.LastIndex(line[:pos], " ")
+
+	if spacePos < 0 {
+		wordpart = line[:pos]
+	} else {
+		wordpart = strings.TrimSpace(line[spacePos:pos])
+	}
+
+	// Remove op-prefix ("." or "|") if present, but keep the prefix for context
+	if strings.HasPrefix(wordpart, ".") || strings.HasPrefix(wordpart, "|") {
+		return wordpart
+	}
+
+	return wordpart
 }

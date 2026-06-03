@@ -1,6 +1,7 @@
 package evaldo
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 
@@ -280,7 +281,7 @@ var Builtins_matrix = map[string]*env.Builtin{
 						r := int(row.Value)
 						c := int(col.Value)
 						if r < 0 || r >= m.Rows || c < 0 || c >= m.Cols {
-							return MakeBuiltinError(ps, "Index out of bounds", "mat-get")
+							return MakeBuiltinError(ps, fmt.Sprintf("Matrix indices out of bounds: row %d, col %d (matrix is %dx%d)", r, c, m.Rows, m.Cols), "mat-get")
 						}
 						return *env.NewDecimal(m.Get(r, c))
 					default:
@@ -317,7 +318,7 @@ var Builtins_matrix = map[string]*env.Builtin{
 						r := int(row.Value)
 						c := int(col.Value)
 						if r < 0 || r >= m.Rows || c < 0 || c >= m.Cols {
-							return MakeBuiltinError(ps, "Index out of bounds", "mat-set!")
+							return MakeBuiltinError(ps, fmt.Sprintf("Matrix indices out of bounds: row %d, col %d (matrix is %dx%d)", r, c, m.Rows, m.Cols), "mat-set!")
 						}
 						var val float64
 						switch v := arg3.(type) {
@@ -359,7 +360,7 @@ var Builtins_matrix = map[string]*env.Builtin{
 				case env.Integer:
 					r := int(row.Value)
 					if r < 0 || r >= m.Rows {
-						return MakeBuiltinError(ps, "Row index out of bounds", "mat-row")
+						return MakeBuiltinError(ps, fmt.Sprintf("Row index %d out of bounds (matrix has %d rows)", r, m.Rows), "mat-row")
 					}
 					data := make(govector.Vector, m.Cols)
 					for j := 0; j < m.Cols; j++ {
@@ -392,7 +393,7 @@ var Builtins_matrix = map[string]*env.Builtin{
 				case env.Integer:
 					c := int(col.Value)
 					if c < 0 || c >= m.Cols {
-						return MakeBuiltinError(ps, "Column index out of bounds", "mat-col")
+						return MakeBuiltinError(ps, fmt.Sprintf("Column index %d out of bounds (matrix has %d columns)", c, m.Cols), "mat-col")
 					}
 					data := make(govector.Vector, m.Rows)
 					for i := 0; i < m.Rows; i++ {
@@ -975,7 +976,7 @@ var Builtins_matrix = map[string]*env.Builtin{
 				case env.Integer:
 					c := int(col.Value)
 					if c < 0 || c >= m.Cols {
-						return MakeBuiltinError(ps, "Column index out of bounds", "mat-set-col!")
+						return MakeBuiltinError(ps, fmt.Sprintf("Column index %d out of bounds (matrix has %d columns)", c, m.Cols), "mat-set-col!")
 					}
 					switch vals := arg2.(type) {
 					case env.Vector:

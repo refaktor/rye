@@ -46,6 +46,7 @@ var (
 	version  = flag.Bool("version", false, "Displays the version of Rye.")
 
 	localhist = flag.Bool("localhist", false, "Store console history to local file local_rye_history")
+	histfile  = flag.String("histfile", "", "Store console history to specified file")
 
 	// Seccomp options (Linux only) - using pure Go library
 	SeccompProfile = flag.String("seccomp-profile", "", "Seccomp profile to use: strict, readonly")
@@ -257,6 +258,7 @@ func DoMain(regfn func(*env.ProgramState) error) {
 		fmt.Println("\033[33m  rye -unshare -unshare-net=false .    \033[36m# run main.rye isolated but with network access kept")
 		fmt.Println("\033[33m  rye -unshare -unshare-fs=false .     \033[36m# isolate network/pid/uts but keep full filesystem access")
 		fmt.Println("\033[33m  rye -localhist                       \033[36m# append console history to local file local_rye_history")
+		fmt.Println("\033[33m  rye -histfile hist.rye               \033[36m# append console history to specified file hist.rye")
 		fmt.Println("\033[33m  rye -http 8080                       \033[36m# start HTTP REPL mode on port 8080 (localhost only)")
 		fmt.Println("\033[33m  rye -http 8080 main.rye              \033[36m# load main.rye and expose via HTTP console on port 8080")
 		fmt.Println("\033[0m\n Thank you for trying out \033[1mRye\033[22m ...")
@@ -1104,7 +1106,7 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 		//		evaldo.MaybeDisplayFailureOrError(ps, ps.Idx, "main rye file #2")
 
 		if interactive {
-			evaldo.DoRyeRepl(ps, "rye", evaldo.ShowResults, *localhist)
+			evaldo.DoRyeRepl(ps, "rye", evaldo.ShowResults, *localhist, *histfile)
 		} else {
 			if file == "" && evaldo.ShowResults { // TODO -- move this to some instance ... to ProgramState? or is more of a ReplState?
 				fmt.Println(ps.Res.Print(*ps.Idx))
@@ -1301,7 +1303,7 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 		// Start dual REPL
 		evaldo.DoRyeDualRepl(es, rightEs, lang, evaldo.ShowResults)
 	} else {
-		evaldo.DoRyeRepl(es, lang, evaldo.ShowResults, *localhist)
+		evaldo.DoRyeRepl(es, lang, evaldo.ShowResults, *localhist, *histfile)
 	}
 }
 
