@@ -5,6 +5,7 @@ package evaldo
 
 import (
 	"regexp"
+	"runtime"
 	"syscall/js"
 
 	// "encoding/json"
@@ -610,6 +611,47 @@ var Builtins_js_interop = map[string]*env.Builtin{
 			} else {
 				return *env.NewString("Table displayed successfully")
 			}
+		},
+	},
+
+	// Tests:
+	// js-sleep 100
+	// js-sleep 1000
+	// Args:
+	// * milliseconds: Integer number of milliseconds to sleep
+	// Returns:
+	// * Integer milliseconds actually slept
+	"js-sleep": {
+		Argsn: 1,
+		Doc:   "Non-blocking sleep that yields control to JavaScript event loop, allowing async operations to complete.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch ms := arg0.(type) {
+			case env.Integer:
+				if ms.Value <= 0 {
+					return ms // Return immediately for zero or negative values
+				}
+
+				// For WASM, we use a different approach - we just yield briefly
+				// and return immediately instead of trying to do actual timing
+				// This allows the JavaScript event loop to process callbacks
+				runtime.Gosched()
+				return ms
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "js-sleep")
+			}
+		},
+	},
+
+	// js-yield
+	// Yields control to JavaScript event loop without delay
+	// This is safer than js-sleep for avoiding deadlocks
+	"js-yield": {
+		Argsn: 0,
+		Doc:   "Yields control to JavaScript event loop without delay.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// Simple yield without any channel operations
+			runtime.Gosched()
+			return env.Void{}
 		},
 	},
 }

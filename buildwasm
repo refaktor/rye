@@ -1,3 +1,4 @@
-env GOOS=js GOARCH=wasm go build  -ldflags="-s -w" -tags "wasm,b_wasm,no_sqlite,no_psql,no_mysql,no_io,no_git,no_chitosocket,no_termui,no_telegram,no_smtpd,no_tui,no_mcp,no_os,no_pipes,no_mail,no_smtpd,no_prometheus" -o wasm/tryrye/main.wasm main_wasm.go ; bin/rye serve_wasm.rye
+env GOOS=js GOARCH=wasm go build  -ldflags="-s -w" -tags "wasm,b_wasm,no_sqlite,no_psql,no_mysql,no_io,no_git,no_chitosocket,no_termui,no_telegram,no_smtpd,no_tui,no_mcp,no_os,no_pipes,no_mail,no_smtpd,no_prometheus" -o wasm/tryrye/main.wasm main_wasm.go
+# ; bin/rye serve_wasm.rye
 
 # no_termui,no_os,no_pipes,no_mail,no_crypto,no_bcrypt,no_bson,no_echarts,no_email,no_imap,no_mqtt,no_prometheus,no_smtpd,no_telegram,no_validation,no_sxml,no_markdown,no_cli,no_tui,no_mcp" \
