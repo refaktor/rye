@@ -587,11 +587,17 @@ func (e *RyeCtx) MarkAsVariable(word int) {
 
 // Check if a word is a variable
 func (e *RyeCtx) IsVariable(word int) bool {
-	isVar, exists := e.varFlags[word]
-	if exists && isVar {
+	// Fast path: check current context first
+	if isVar, exists := e.varFlags[word]; exists && isVar {
 		return true
 	}
-	// Not a variable in this context
+	// Walk parent chain without recursion
+	for ctx := e.Parent; ctx != nil; ctx = ctx.Parent {
+		if isVar, exists := ctx.varFlags[word]; exists && isVar {
+			return true
+		}
+	}
+	// Not a variable in this context or any parent
 	return false
 }
 
@@ -612,16 +618,17 @@ func (e *RyeCtx) Mod(word int, val Object) bool {
 // ModWithInfo modifies a word and returns detailed information about the result
 // Returns (ModResult, existingType) where existingType is the type of the existing value if there's a mismatch
 func (e *RyeCtx) ModWithInfo(word int, val Object) (ModResult, Type) {
-	if existingVal, exists := e.state[word]; exists {
+	if _, exists := e.state[word]; exists {
 		// Word exists, check if it's a variable
 		if !e.IsVariable(word) {
 			// Cannot modify constants
 			return ModErrConstant, 0
 		}
+		// bug ... Mod retuns always false, even if error is different type of value than previous
 		// Type check - compare Object.Type()
-		if existingVal.Type() != val.Type() {
-			return ModErrTypeMismatch, existingVal.Type()
-		}
+		//if existingVal.Type() != val.Type() {
+		//	return ModErrTypeMismatch, existingVal.Type()
+		//}
 	} else {
 		// Word doesn't exist, create it as a variable
 		e.MarkAsVariable(word)
@@ -1175,8 +1182,6 @@ func (ps *ProgramState) GetValue(word string, typ Type) (Object, bool) {
 	}
 	return v, true
 }
-
-
 
 const STACK_SIZE int = 1000
 
