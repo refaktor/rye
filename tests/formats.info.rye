@@ -280,7 +280,7 @@ section "BSON " "BSON encoding and decoding" {
 }
 
 section "SXML " "Streaming, SAX-like XML processing" {
-	group "reader//do-sxml" 
+	group "reader//Do-sxml" 
 	"Processes XML using a streaming SAX-like approach with tag handlers."
 	{
 		argsn 2

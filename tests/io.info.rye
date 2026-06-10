@@ -1041,6 +1041,79 @@ section "File Monitoring " "File watching and tailing operations" {
 
 }
 
+section "Unix Domain Socket Operations " "Unix domain socket operations for IPC" {
+	group "unix-uri//Open" 
+	"Opens a connection to a Unix domain socket."
+	{
+		argsn 1
+		argtypes {
+			1 [ Uri ]
+		}
+		arg `path: uri representing the Unix socket path to connect to`
+		returns `native unix-connection object`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "unix-connection//Write" 
+	"Writes data to a Unix domain socket connection."
+	{
+		argsn 2
+		argtypes {
+			1 [ Native ]
+			2 [ String ]
+		}
+		arg `connection: native unix-connection object`
+		arg `data: string to write to the socket`
+		returns `the connection object if successful (allows chaining)`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "unix-connection//Read" 
+	"Reads data from a Unix domain socket connection."
+	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
+		arg `connection: native unix-connection object`
+		returns `string containing data read from the socket`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "unix-connection//Close" 
+	"Closes a Unix domain socket connection."
+	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
+		arg `connection: native unix-connection object`
+		returns `empty string if successful`
+	}
+
+	{
+	}
+
+	{
+	}
+
+}
+
 section "Command Operations " "Running other programs" {
 	group "cmd" 
 	"Create a command."
