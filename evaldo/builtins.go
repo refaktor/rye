@@ -291,7 +291,7 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 			return reflect.TypeOf(obj).String()
 		}
 	}
-	
+
 	// Helper function to get key description for error messages
 	getKeyDesc := func(key any) string {
 		switch k := key.(type) {
@@ -410,7 +410,13 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 				idx--
 			}
 			if idx < 0 {
-				return makeError(ps, fmt.Sprintf("Index %d is too low (minimum is %d)", s2.Value, func() int64 { if posMode { return 1 } else { return 0 } }()))
+				return makeError(ps, fmt.Sprintf("Index %d is too low (minimum is %d)", s2.Value, func() int64 {
+					if posMode {
+						return 1
+					} else {
+						return 0
+					}
+				}()))
 			}
 			if len(s1.Data) > int(idx) && idx >= 0 {
 				v := s1.Data[idx]
@@ -429,7 +435,13 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 				idx--
 			}
 			if idx < 0 {
-				return makeError(ps, fmt.Sprintf("Index %d is too low (minimum is %d)", s2.Value, func() int64 { if posMode { return 1 } else { return 0 } }()))
+				return makeError(ps, fmt.Sprintf("Index %d is too low (minimum is %d)", s2.Value, func() int64 {
+					if posMode {
+						return 1
+					} else {
+						return 0
+					}
+				}()))
 			}
 			if len(s1.Data) > int(idx) && idx >= 0 {
 				v := s1.Data[idx]
@@ -448,7 +460,13 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 				idx--
 			}
 			if idx < 0 {
-				return makeError(ps, fmt.Sprintf("Index %d is too low (minimum is %d)", s2.Value, func() int64 { if posMode { return 1 } else { return 0 } }()))
+				return makeError(ps, fmt.Sprintf("Index %d is too low (minimum is %d)", s2.Value, func() int64 {
+					if posMode {
+						return 1
+					} else {
+						return 0
+					}
+				}()))
 			}
 			if len(s1.Series.S) >= int(idx)+1 {
 				v := s1.Series.Get(int(idx))
@@ -467,7 +485,13 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 				idx--
 			}
 			if idx < 0 {
-				return makeError(ps, fmt.Sprintf("Index %d is too low (minimum is %d)", s2.Value, func() int64 { if posMode { return 1 } else { return 0 } }()))
+				return makeError(ps, fmt.Sprintf("Index %d is too low (minimum is %d)", s2.Value, func() int64 {
+					if posMode {
+						return 1
+					} else {
+						return 0
+					}
+				}()))
 			}
 			if len(s1.Series.S) >= int(idx)+1 {
 				v := s1.Series.Get(int(idx))
@@ -486,7 +510,13 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 				idx--
 			}
 			if idx < 0 {
-				return makeError(ps, fmt.Sprintf("Index %d is too low (minimum is %d)", s2.Value, func() int64 { if posMode { return 1 } else { return 0 } }()))
+				return makeError(ps, fmt.Sprintf("Index %d is too low (minimum is %d)", s2.Value, func() int64 {
+					if posMode {
+						return 1
+					} else {
+						return 0
+					}
+				}()))
 			}
 			if idx < int64(len(s1.Rows)) {
 				v := s1.Rows[idx]
@@ -505,7 +535,13 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 				idx--
 			}
 			if idx < 0 {
-				return makeError(ps, fmt.Sprintf("Index %d is too low (minimum is %d)", s2.Value, func() int64 { if posMode { return 1 } else { return 0 } }()))
+				return makeError(ps, fmt.Sprintf("Index %d is too low (minimum is %d)", s2.Value, func() int64 {
+					if posMode {
+						return 1
+					} else {
+						return 0
+					}
+				}()))
 			}
 			if idx < int64(len(s1.Rows)) {
 				v := s1.Rows[idx]
@@ -524,7 +560,13 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 				idx--
 			}
 			if idx < 0 {
-				return makeError(ps, fmt.Sprintf("Index %d is too low (minimum is %d)", s2.Value, func() int64 { if posMode { return 1 } else { return 0 } }()))
+				return makeError(ps, fmt.Sprintf("Index %d is too low (minimum is %d)", s2.Value, func() int64 {
+					if posMode {
+						return 1
+					} else {
+						return 0
+					}
+				}()))
 			}
 			if idx < int64(len(s1.Value)) {
 				v := s1.Value[idx]
@@ -560,7 +602,13 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 				idx--
 			}
 			if idx < 0 {
-				return makeError(ps, fmt.Sprintf("Index %d is too low (minimum is %d)", s2.Value, func() int64 { if posMode { return 1 } else { return 0 } }()))
+				return makeError(ps, fmt.Sprintf("Index %d is too low (minimum is %d)", s2.Value, func() int64 {
+					if posMode {
+						return 1
+					} else {
+						return 0
+					}
+				}()))
 			}
 			if idx < int64(len(s1.Values)) {
 				v := s1.Values[idx]
@@ -2539,19 +2587,19 @@ var builtins = map[string]*env.Builtin{
 			} else {
 				firstArg = 2
 			}
-			
+
 			// If no arguments beyond the script name, return empty block
 			if firstArg >= len(os.Args) {
 				return *env.NewBlock(*env.NewTSeries([]env.Object{}))
 			}
-			
+
 			// Convert each argument to appropriate Rye type
 			args := os.Args[firstArg:]
 			lst := make([]env.Object, len(args))
-			
+
 			intRe := regexp.MustCompile("^[+-]?[0-9]+$")
 			floatRe := regexp.MustCompile("^[+-]?[0-9]*\\.[0-9]+$")
-			
+
 			for i, arg := range args {
 				// Try to parse as integer
 				if intRe.MatchString(arg) {
@@ -2560,7 +2608,7 @@ var builtins = map[string]*env.Builtin{
 						continue
 					}
 				}
-				
+
 				// Try to parse as float
 				if floatRe.MatchString(arg) {
 					if num, err := strconv.ParseFloat(arg, 64); err == nil {
@@ -2568,11 +2616,11 @@ var builtins = map[string]*env.Builtin{
 						continue
 					}
 				}
-				
+
 				// Default to string
 				lst[i] = *env.NewString(arg)
 			}
-			
+
 			return *env.NewBlock(*env.NewTSeries(lst))
 		},
 	},
@@ -2586,19 +2634,19 @@ var builtins = map[string]*env.Builtin{
 			} else {
 				firstArg = 2
 			}
-			
+
 			// If no arguments beyond the script name, return empty block
 			if firstArg >= len(os.Args) {
 				return *env.NewBlock(*env.NewTSeries([]env.Object{}))
 			}
-			
+
 			// Convert each argument to appropriate Rye type
 			args := os.Args[firstArg:]
 			lst := make([]env.Object, len(args))
-			
+
 			intRe := regexp.MustCompile("^[+-]?[0-9]+$")
 			floatRe := regexp.MustCompile("^[+-]?[0-9]*\\.[0-9]+$")
-			
+
 			for i, arg := range args {
 				// Try to parse as integer
 				if intRe.MatchString(arg) {
@@ -2607,7 +2655,7 @@ var builtins = map[string]*env.Builtin{
 						continue
 					}
 				}
-				
+
 				// Try to parse as float
 				if floatRe.MatchString(arg) {
 					if num, err := strconv.ParseFloat(arg, 64); err == nil {
@@ -2615,11 +2663,11 @@ var builtins = map[string]*env.Builtin{
 						continue
 					}
 				}
-				
+
 				// Default to string
 				lst[i] = *env.NewString(arg)
 			}
-			
+
 			return *env.NewBlock(*env.NewTSeries(lst))
 		},
 	},
@@ -3043,6 +3091,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(builtins_contexts, ps, "base")
 	RegisterBuiltins2(builtins_persistent_contexts, ps, "base")
 	RegisterBuiltins2(builtins_functions, ps, "base")
+	RegisterBuiltins2(builtins_unique, ps, "base")
 	// already in base_functions RegisterBuiltins2(builtins_apply, ps, "base")
 	RegisterBuiltins2(Builtins_error_creation, ps, "error-creation")
 	RegisterBuiltins2(Builtins_error_inspection, ps, "error-inspection")
@@ -3080,6 +3129,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_bcrypt, ps, "bcrypt")
 	RegisterBuiltins2(Builtins_console, ps, "console")
 	RegisterBuiltinsInContext(Builtins_crypto, ps, "crypto")
+	RegisterBuiltinsInContext(Builtins_encoding, ps, "encoding")
 	RegisterBuiltinsInContext(Builtins_math, ps, "math")
 	RegisterBuiltinsInContext(Builtins_os, ps, "os")
 	RegisterBuiltinsInContext(Builtins_pipes, ps, "pipes")
@@ -3331,6 +3381,7 @@ var allBuiltinGroups = []builtinGroup{
 	{"chitosocket", Builtins_chitosocket, false},
 	// Module builtins – in named child context
 	{"crypto", Builtins_crypto, true},
+	{"encoding", Builtins_encoding, true},
 	{"math", Builtins_math, true},
 	{"os", Builtins_os, true},
 	{"pipes", Builtins_pipes, true},

@@ -970,4 +970,67 @@ var builtins_contexts = map[string]*env.Builtin{
 			return *env.NewInteger(old)
 		},
 	},
+
+	// Tests:
+	// equal { c: context { x: 100 } 123 |enter c { .print x } } 123
+	// equal { c: context { x: 100 } 123 |enter c { add x } } 223  
+	// equal { pipes: context { echo: { .print } into-file: { .print } } 123 |enter pipes { .echo .into-file %data.txt } } 123
+	// Args:
+	// * value: Value to inject into the block (like with)
+	// * context: Context to use as parent context during execution (like do\in)
+	// * block: Block of code to execute with both the injected value and specified parent context
+	// Returns:
+	// * result of executing the block with both the injected value and modified parent context
+	"enter": {
+		Argsn: 3,
+		Doc:   "Combines with and do\\in: takes a value to inject, a context as parent, and a block to evaluate with both.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			value := arg0 // First argument: value to inject (like with)
+			
+			switch ctx := arg1.(type) { // Second argument: context (like do\in)
+			case *env.RyeCtx:
+				switch bloc := arg2.(type) { // Third argument: block to execute
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = bloc.Series
+					
+					// First, set up the parent context like do\in does
+					tempCtx := ctx
+					for {
+						// If it's parent is the same as current context is
+						// we set it's parent to our parent, skip our context
+						if tempCtx.Parent == ps.Ctx {
+							tempCtx.Parent = ps.Ctx.Parent
+							break
+						}
+						if tempCtx.Parent != nil {
+							tempCtx = tempCtx.Parent
+						} else {
+							break
+						}
+					}
+					
+					// Save current parent context
+					temp := ps.Ctx.Parent
+					// Set argument context as parent  
+					ps.Ctx.Parent = ctx
+					
+					// Now evaluate the block with value injection like with does
+					EvalBlockInj(ps, value, true)
+					
+					MaybeDisplayFailureOrError(ps, ps.Idx, "enter")
+					
+					// Restore original parent context
+					ps.Ctx.Parent = temp
+					ps.Ser = ser
+					return ps.Res
+					
+				default:
+					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "enter")
+				}
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.ContextType}, "enter")
+			}
+		},
+	},
 }
