@@ -625,7 +625,70 @@ func markdownParagraphText(node *ast.Paragraph, source []byte) string {
 	return buf.String()
 }
 
-func markdownDisplayItems(source string) []env.Object {
+// wrapTextToWidth wraps text to fit within the specified width, properly handling line breaks
+func wrapTextToWidth(text string, width int) []string {
+	if width <= 0 {
+		return []string{text}
+	}
+
+	lines := strings.Split(text, "\n")
+	wrappedLines := make([]string, 0)
+
+	for _, line := range lines {
+		if len(line) <= width {
+			wrappedLines = append(wrappedLines, line)
+			continue
+		}
+
+		// Wrap long lines
+		for len(line) > width {
+			// Find the best break point (space or punctuation)
+			breakPoint := width
+			for i := width - 1; i >= width/2; i-- {
+				if line[i] == ' ' || line[i] == '\t' || line[i] == '-' {
+					breakPoint = i + 1
+					break
+				}
+			}
+
+			wrappedLines = append(wrappedLines, strings.TrimRight(line[:breakPoint], " \t"))
+			line = strings.TrimLeft(line[breakPoint:], " \t")
+		}
+
+		if len(line) > 0 {
+			wrappedLines = append(wrappedLines, line)
+		}
+	}
+
+	return wrappedLines
+}
+
+// MarkdownDisplayItem represents a selectable markdown element with its type and content
+type MarkdownDisplayItem struct {
+	Type         string   // "heading", "paragraph", "code", "list", "quote", "hr", "link"
+	Content      string   // Raw content
+	DisplayLines []string // Formatted lines for display
+	Level        int      // For headings (1-6), or 0 for others
+	Language     string   // For code blocks
+}
+
+// convertMarkdownDisplayItems converts MarkdownDisplayItem slice to interface{} slice for DisplayMarkdownItems
+func convertMarkdownDisplayItems(items []MarkdownDisplayItem) []interface{} {
+	converted := make([]interface{}, len(items))
+	for i, item := range items {
+		itemMap := map[string]interface{}{
+			"Type":         item.Type,
+			"Content":      item.Content,
+			"DisplayLines": item.DisplayLines,
+			"Level":        item.Level,
+			"Language":     item.Language,
+		}
+		converted[i] = itemMap
+	}
+	return converted
+}
+
+func markdownDisplayItems(source string) []MarkdownDisplayItem {
 	sourceBytes := []byte(source)
 	md := goldmark.New(
 		goldmark.WithExtensions(
@@ -636,8 +699,17 @@ func markdownDisplayItems(source string) []env.Object {
 		),
 	)
 
+	// Get terminal width for proper text wrapping
+	size, err := term.GetTerminalSize()
+	width := size.Width
+	if err != nil || width <= 0 {
+		width = 80 // Fallback default
+	}
+	// Reserve some space for display margins and cursor
+	displayWidth := width - 4
+
 	doc := md.Parser().Parse(text.NewReader(sourceBytes))
-	items := make([]env.Object, 0)
+	items := make([]MarkdownDisplayItem, 0)
 
 	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		if !entering {
@@ -648,8 +720,21 @@ func markdownDisplayItems(source string) []env.Object {
 		case *ast.Heading:
 			headingText := strings.TrimSpace(string(node.Text(sourceBytes)))
 			if headingText != "" {
-				label := term.StrBold() + "H" + strconv.Itoa(node.Level) + ": " + headingText + term.StrCloseProps() + "\n"
-				items = append(items, *env.NewString(label))
+				fullHeading := "H" + strconv.Itoa(node.Level) + ": " + headingText
+				// Wrap heading if it's too long
+				wrappedLines := wrapTextToWidth(fullHeading, displayWidth)
+				displayLines := make([]string, len(wrappedLines))
+				for i, line := range wrappedLines {
+					displayLines[i] = term.StrBold() + line + term.StrCloseProps()
+				}
+				
+				item := MarkdownDisplayItem{
+					Type:         "heading",
+					Content:      headingText,
+					DisplayLines: displayLines,
+					Level:        node.Level,
+				}
+				items = append(items, item)
 			}
 		case *ast.Paragraph:
 			child := node.FirstChild()
@@ -660,23 +745,188 @@ func markdownDisplayItems(source string) []env.Object {
 					if linkText == "" {
 						linkText = destination
 					}
-					items = append(items, *env.NewString(fmt.Sprintf("Link: %s -> %s\n", linkText, destination)))
+					linkLine := fmt.Sprintf("Link: %s -> %s", linkText, destination)
+					// Wrap link if it's too long
+					wrappedLines := wrapTextToWidth(linkLine, displayWidth)
+					
+					item := MarkdownDisplayItem{
+						Type:         "link",
+						Content:      destination,
+						DisplayLines: wrappedLines,
+					}
+					items = append(items, item)
 					return ast.WalkSkipChildren, nil
 				}
 			}
 
 			paragraph := markdownParagraphText(node, sourceBytes)
 			if paragraph == "" {
-				items = append(items, *env.NewString("\n"))
+				item := MarkdownDisplayItem{
+					Type:         "paragraph",
+					Content:      "",
+					DisplayLines: []string{""},
+				}
+				items = append(items, item)
 				return ast.WalkContinue, nil
 			}
-			items = append(items, *env.NewString(paragraph + "\n"))
+			
+			// Remove trailing newline for wrapping
+			paragraph = strings.TrimRight(paragraph, "\n")
+			
+			// Wrap paragraph text to fit terminal width
+			wrappedLines := wrapTextToWidth(paragraph, displayWidth)
+			
+			item := MarkdownDisplayItem{
+				Type:         "paragraph",
+				Content:      paragraph,
+				DisplayLines: wrappedLines,
+			}
+			items = append(items, item)
+		case *ast.CodeBlock, *ast.FencedCodeBlock:
+			// Handle code blocks
+			var content string
+			var language string
+			if fenced, ok := node.(*ast.FencedCodeBlock); ok {
+				language = string(fenced.Language(sourceBytes))
+				var buf bytes.Buffer
+				for i := 0; i < fenced.Lines().Len(); i++ {
+					line := fenced.Lines().At(i)
+					buf.Write(line.Value(sourceBytes))
+				}
+				content = buf.String()
+			} else if codeBlock, ok := node.(*ast.CodeBlock); ok {
+				var buf bytes.Buffer
+				for i := 0; i < codeBlock.Lines().Len(); i++ {
+					line := codeBlock.Lines().At(i)
+					buf.Write(line.Value(sourceBytes))
+				}
+				content = buf.String()
+			}
+			
+			if content != "" {
+				codeLines := strings.Split(strings.TrimRight(content, "\n"), "\n")
+				displayLines := make([]string, len(codeLines))
+				for i, line := range codeLines {
+					// Don't wrap code lines, just truncate if too long
+					if len(line) > displayWidth {
+						line = line[:displayWidth-3] + "..."
+					}
+					displayLines[i] = "  " + line // Indent code
+				}
+				
+				item := MarkdownDisplayItem{
+					Type:         "code",
+					Content:      content,
+					DisplayLines: displayLines,
+					Language:     language,
+				}
+				items = append(items, item)
+			}
+		case *ast.List:
+			// Handle lists as complete blocks - collect all list items
+			var listItems []string
+			var listContent strings.Builder
+			
+			for c := node.FirstChild(); c != nil; c = c.NextSibling() {
+				if listItem, ok := c.(*ast.ListItem); ok {
+					var itemText bytes.Buffer
+					for ic := listItem.FirstChild(); ic != nil; ic = ic.NextSibling() {
+						if para, ok := ic.(*ast.Paragraph); ok {
+							for pc := para.FirstChild(); pc != nil; pc = pc.NextSibling() {
+								if text, ok := pc.(*ast.Text); ok {
+									itemText.Write(text.Text(sourceBytes))
+								}
+							}
+						}
+					}
+					
+					if itemText.Len() > 0 {
+						itemContent := itemText.String()
+						listItems = append(listItems, itemContent)
+						listContent.WriteString("• " + itemContent + "\n")
+					}
+				}
+			}
+			
+			if len(listItems) > 0 {
+				displayLines := make([]string, 0)
+				for _, itemContent := range listItems {
+					prefix := "• "
+					itemWidth := displayWidth - len(prefix)
+					wrappedLines := wrapTextToWidth(itemContent, itemWidth)
+					
+					for i, line := range wrappedLines {
+						if i == 0 {
+							displayLines = append(displayLines, prefix+line)
+						} else {
+							displayLines = append(displayLines, "  "+line)
+						}
+					}
+				}
+				
+				item := MarkdownDisplayItem{
+					Type:         "list",
+					Content:      strings.TrimRight(listContent.String(), "\n"),
+					DisplayLines: displayLines,
+				}
+				items = append(items, item)
+			}
+			
+			return ast.WalkSkipChildren, nil
+		case *ast.Blockquote:
+			// Handle blockquotes
+			var buf bytes.Buffer
+			for c := node.FirstChild(); c != nil; c = c.NextSibling() {
+				if para, ok := c.(*ast.Paragraph); ok {
+					for pc := para.FirstChild(); pc != nil; pc = pc.NextSibling() {
+						if text, ok := pc.(*ast.Text); ok {
+							buf.Write(text.Text(sourceBytes))
+						}
+					}
+				}
+			}
+			
+			if buf.Len() > 0 {
+				quoteText := strings.TrimSpace(buf.String())
+				prefix := "> "
+				quoteWidth := displayWidth - len(prefix)
+				wrappedLines := wrapTextToWidth(quoteText, quoteWidth)
+				
+				displayLines := make([]string, len(wrappedLines))
+				for i, line := range wrappedLines {
+					displayLines[i] = prefix + line
+				}
+				
+				item := MarkdownDisplayItem{
+					Type:         "quote",
+					Content:      quoteText,
+					DisplayLines: displayLines,
+				}
+				items = append(items, item)
+			}
+		case *ast.ThematicBreak:
+			// Handle horizontal rules
+			ruler := strings.Repeat("─", min(displayWidth, 40))
+			item := MarkdownDisplayItem{
+				Type:         "hr",
+				Content:      "---",
+				DisplayLines: []string{ruler},
+			}
+			items = append(items, item)
 		}
 
 		return ast.WalkContinue, nil
 	})
 
 	return items
+}
+
+// Helper function for min
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 var Builtins_markdown = map[string]*env.Builtin{
