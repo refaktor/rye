@@ -1663,6 +1663,622 @@ func DisplayTextArea(width, height int, text string) (env.Object, bool) {
 	}
 }
 
+// DisplayMarkdown provides an interactive display for markdown content with proper terminal-aware rendering
+func DisplayMarkdown(items []env.Object, idx *env.Idxs) (env.Object, bool) {
+	mode := 0 // 0 - human, 1 - dev
+	totalItems := len(items)
+	size, err := GetTerminalSize()
+	height := size.Height
+	if err != nil {
+		height = 20 // Fallback default
+	}
+	pageSize := height - 4 // Reserve lines for prompts/instructions
+	if pageSize < 1 {
+		pageSize = 1
+	}
+	totalPages := (totalItems + pageSize - 1) / pageSize // Ceiling division
+	if totalPages == 0 {
+		totalPages = 1
+	}
+
+	// If totalPages <= 1, use inline interactive mode
+	if totalPages <= 1 {
+		HideCur()
+		curr := 0
+		moveUp := 0
+
+		defer func() {
+			ShowCur()
+		}()
+
+	INLINE_DODO:
+		if moveUp > 0 {
+			CurUp(moveUp)
+		}
+		SaveCurPos()
+
+		totalLines := 0
+		// Print all items with cursor highlighting
+		for i, v := range items {
+			ClearLine()
+			if i == curr {
+				ColorBrGreen()
+				Bold()
+				termPrint("» ")
+			} else {
+				termPrint("  ")
+			}
+			
+			var valueStr string
+			switch ob := v.(type) {
+			case env.Object:
+				if mode == 0 {
+					valueStr = ob.Print(*idx)
+				} else {
+					valueStr = ob.Inspect(*idx)
+				}
+			default:
+				valueStr = fmt.Sprint(ob)
+			}
+			termPrintln(valueStr)
+			// Count the actual number of lines this entry takes (including newlines in the value)
+			totalLines += strings.Count(valueStr, "\n") + 1
+			CloseProps()
+		}
+
+		moveUp = totalLines
+
+		for {
+			ascii, keyCode, err := GetChar()
+
+			if (ascii == 3 || ascii == 27) || err != nil {
+				return *env.NewBlock(*env.NewTSeries(items)), true // Return full block on Ctrl+C or Esc
+			}
+
+			if ascii == 13 {
+				if curr < totalItems {
+					return items[curr], false // Return selected item on Enter
+				}
+				return nil, true
+			}
+
+			if ascii == 77 || ascii == 109 { // 'm' or 'M' for mode toggle
+				mode = 1 - mode
+				goto INLINE_DODO
+			}
+
+			if keyCode == 40 { // Down arrow
+				curr++
+				if curr >= totalItems {
+					curr = 0 // Wrap to top
+				}
+				goto INLINE_DODO
+			} else if keyCode == 38 { // Up arrow
+				curr--
+				if curr < 0 {
+					curr = totalItems - 1 // Wrap to bottom
+				}
+				goto INLINE_DODO
+			}
+		}
+	}
+
+	// Full-screen paginated mode for blocks that need pagination
+	HideCur()
+	currentPage := 0
+	localCurr := 0
+	moveUp := 0
+
+DODO:
+	if moveUp > 0 {
+		CurUp(moveUp)
+	}
+	SaveCurPos()
+	start := currentPage * pageSize
+	end := start + pageSize
+	if end > totalItems {
+		end = totalItems
+	}
+
+	totalLines := 0
+
+	// Print the current page of items
+	for i := 0; i < pageSize; i++ {
+		ClearLine()
+		globalIndex := start + i
+		if globalIndex < end {
+			item := items[globalIndex]
+			if i == localCurr {
+				ColorBrGreen()
+				Bold()
+				termPrint("» ")
+			} else {
+				termPrint("  ")
+			}
+			
+			var valueStr string
+			switch ob := item.(type) {
+			case env.Object:
+				if mode == 0 {
+					valueStr = ob.Print(*idx)
+				} else {
+					valueStr = ob.Inspect(*idx)
+				}
+			default:
+				valueStr = fmt.Sprint(ob)
+			}
+			termPrintln(valueStr)
+			// Count the actual number of lines this entry takes
+			totalLines += strings.Count(valueStr, "\n") + 1
+			CloseProps()
+		} else {
+			// Empty line for incomplete pages
+			termPrintln("")
+			totalLines++
+		}
+	}
+
+	// Footer with navigation info
+	termPrintln(fmt.Sprintf("Page %d/%d | ↑/↓: navigate, Enter: select, n/p: page, m: mode, Esc: exit", 
+		currentPage+1, totalPages))
+	totalLines++
+
+	moveUp = totalLines
+
+	for {
+		ascii, keyCode, err := GetChar()
+
+		if (ascii == 3 || ascii == 27) || err != nil {
+			ShowCur()
+			return *env.NewBlock(*env.NewTSeries(items)), true // Return full block on Ctrl+C or Esc
+		}
+
+		if ascii == 13 { // Enter key
+			globalIndex := start + localCurr
+			if globalIndex < totalItems {
+				ShowCur()
+				return items[globalIndex], false // Return selected item
+			}
+		}
+
+		// Mode toggle
+		if ascii == 77 || ascii == 109 { // 'm' or 'M' for mode toggle
+			mode = 1 - mode
+			goto DODO
+		}
+
+		// Page navigation
+		if ascii == 110 || ascii == 78 { // 'n' or 'N' for next page
+			if currentPage < totalPages-1 {
+				currentPage++
+				localCurr = 0
+				goto DODO
+			}
+		}
+		
+		if ascii == 112 || ascii == 80 { // 'p' or 'P' for previous page
+			if currentPage > 0 {
+				currentPage--
+				localCurr = 0
+				goto DODO
+			}
+		}
+
+		// Item navigation within current page
+		maxLocalIndex := end - start - 1
+		if keyCode == 40 { // Down arrow
+			if localCurr < maxLocalIndex {
+				localCurr++
+			} else {
+				// Wrap to next page if possible, or to top of current page
+				if currentPage < totalPages-1 {
+					currentPage++
+					localCurr = 0
+				} else {
+					localCurr = 0 // Wrap to top of current page
+				}
+			}
+			goto DODO
+		} else if keyCode == 38 { // Up arrow
+			if localCurr > 0 {
+				localCurr--
+			} else {
+				// Wrap to previous page if possible, or to bottom of current page
+				if currentPage > 0 {
+					currentPage--
+					// Set cursor to last item of previous page
+					prevPageStart := currentPage * pageSize
+					prevPageEnd := prevPageStart + pageSize
+					if prevPageEnd > totalItems {
+						prevPageEnd = totalItems
+					}
+					localCurr = prevPageEnd - prevPageStart - 1
+				} else {
+					localCurr = maxLocalIndex // Wrap to bottom of current page
+				}
+			}
+			goto DODO
+		}
+	}
+}
+
 // GetChar and GetChar2 functions are implemented in platform-specific files:
 // - term_unix.go for Unix/Linux systems
 // - term_windows.go for Windows systems
+
+// DisplayMarkdownItems displays markdown items with proper block selection and type+content return
+func DisplayMarkdownItems(items interface{}, idx *env.Idxs) (env.Object, bool) {
+	// Convert items to proper type - we expect []MarkdownDisplayItem but work with interface{}
+	var markdownItems []interface{}
+	
+	// Handle the interface{} input - it should be a slice of MarkdownDisplayItem
+	if slice, ok := items.([]interface{}); ok {
+		markdownItems = slice
+	} else {
+		// Fallback for unexpected types
+		return nil, true
+	}
+	
+	totalItems := len(markdownItems)
+	if totalItems == 0 {
+		return nil, true
+	}
+	
+	size, err := GetTerminalSize()
+	height := size.Height
+	if err != nil {
+		height = 20 // Fallback default
+	}
+	pageSize := height - 4 // Reserve lines for prompts/instructions
+	if pageSize < 1 {
+		pageSize = 1
+	}
+
+	// Calculate display lines needed
+	totalDisplayLines := 0
+	itemDisplayCounts := make([]int, totalItems)
+	
+	for i, item := range markdownItems {
+		// Extract display lines from the item using reflection or type assertion
+		if itemMap, ok := item.(map[string]interface{}); ok {
+			if displayLines, ok := itemMap["DisplayLines"].([]string); ok {
+				itemDisplayCounts[i] = len(displayLines)
+				totalDisplayLines += len(displayLines)
+			} else {
+				itemDisplayCounts[i] = 1
+				totalDisplayLines++
+			}
+		} else {
+			itemDisplayCounts[i] = 1
+			totalDisplayLines++
+		}
+	}
+
+	// Determine if we need pagination based on total display lines vs page size
+	totalDisplayLinesWithSpacing := totalDisplayLines + (totalItems - 1) // Add spacing between items
+	needsPagination := totalDisplayLinesWithSpacing > pageSize
+	
+	// Calculate pages needed (for display purposes)
+	totalPages := (totalDisplayLinesWithSpacing + pageSize - 1) / pageSize
+	if totalPages == 0 {
+		totalPages = 1
+	}
+
+	// If content fits on one page, use inline interactive mode
+	if !needsPagination {
+		HideCur()
+		curr := 0
+		moveUp := 0
+
+		defer func() {
+			ShowCur()
+		}()
+
+	INLINE_DODO:
+		if moveUp > 0 {
+			CurUp(moveUp)
+		}
+		SaveCurPos()
+
+		currentLine := 0
+		// Print all items with cursor highlighting
+		for i, item := range markdownItems {
+			isSelected := (i == curr)
+			
+			// Extract item data
+			var displayLines []string
+			
+			if itemMap, ok := item.(map[string]interface{}); ok {
+				if dl, ok := itemMap["DisplayLines"].([]string); ok {
+					displayLines = dl
+				}
+			}
+			
+			// Display the item
+			for lineIdx, line := range displayLines {
+				ClearLine()
+				
+				// Show selection indicator on first line of item
+				if lineIdx == 0 {
+					if isSelected {
+						ColorBrGreen()
+						Bold()
+						termPrint("» ")
+					} else {
+						termPrint("  ")
+					}
+				} else {
+					// Continuation lines get indented
+					termPrint("  ")
+				}
+				
+				termPrintln(line)
+				CloseProps()
+				currentLine++
+			}
+			
+			// Add empty line after each item except the last
+			if i < totalItems-1 && len(displayLines) > 0 {
+				ClearLine()
+				termPrintln("")
+				currentLine++
+			}
+		}
+
+		moveUp = currentLine
+
+		for {
+			ascii, keyCode, err := GetChar()
+
+			if (ascii == 3 || ascii == 27) || err != nil {
+				return nil, true // Escape on Ctrl+C or Esc
+			}
+
+			if ascii == 13 {
+				// Return a block with type and content
+				if curr < totalItems {
+					item := markdownItems[curr]
+					if itemMap, ok := item.(map[string]interface{}); ok {
+						itemType := "text"
+						content := ""
+						
+						if t, ok := itemMap["Type"].(string); ok {
+							itemType = t
+						}
+						if c, ok := itemMap["Content"].(string); ok {
+							content = c
+						}
+						
+						// Return a block with [type content]
+						series := env.NewTSeries([]env.Object{*env.NewString(itemType), *env.NewString(content)})
+						return *env.NewBlock(*series), false
+					}
+				}
+				return nil, true
+			}
+
+			if keyCode == 40 { // Down arrow
+				curr++
+				if curr >= totalItems {
+					curr = 0 // Wrap to top
+				}
+				goto INLINE_DODO
+			} else if keyCode == 38 { // Up arrow
+				curr--
+				if curr < 0 {
+					curr = totalItems - 1 // Wrap to bottom
+				}
+				goto INLINE_DODO
+			}
+		}
+	}
+
+	// Full-screen paginated mode for markdown that needs pagination
+	HideCur()
+	currentPage := 0
+	localCurr := 0 // Current selection within visible items on page
+	moveUp := 0
+
+DODO:
+	if moveUp > 0 {
+		CurUp(moveUp)
+	}
+	SaveCurPos()
+
+	// Simple item-based pagination
+	// Calculate which items fit on current page based on their total display lines
+	visibleItems := make([]int, 0)
+	currentLines := 0
+	start := 0
+	
+	// Find the starting item for this page by skipping previous pages
+	skipLines := currentPage * pageSize
+	currentDisplayLine := 0
+	
+	// Find start item
+	for i := 0; i < totalItems; i++ {
+		itemLinesWithSpacing := itemDisplayCounts[i]
+		if i < totalItems-1 {
+			itemLinesWithSpacing++ // Add spacing
+		}
+		
+		if currentDisplayLine + itemLinesWithSpacing <= skipLines {
+			currentDisplayLine += itemLinesWithSpacing
+			start = i + 1
+		} else {
+			break
+		}
+	}
+	
+	// Find items that fit on current page
+	currentLines = 0
+	for i := start; i < totalItems && currentLines < pageSize; i++ {
+		itemLines := itemDisplayCounts[i]
+		spacingLine := 0
+		if i < totalItems-1 {
+			spacingLine = 1
+		}
+		
+		if currentLines + itemLines + spacingLine <= pageSize {
+			visibleItems = append(visibleItems, i)
+			currentLines += itemLines + spacingLine
+		} else {
+			break
+		}
+	}
+	
+	displayedItems := len(visibleItems)
+	
+	// Ensure localCurr is within bounds
+	if localCurr >= displayedItems && displayedItems > 0 {
+		localCurr = displayedItems - 1
+	}
+
+	// Clear page
+	for i := 0; i < pageSize; i++ {
+		ClearLine()
+		termPrintln("")
+	}
+	
+	// Reset position and render content
+	CurUp(pageSize)
+	currentLineInPage := 0
+	
+	for idx, itemIndex := range visibleItems {
+		if currentLineInPage >= pageSize {
+			break
+		}
+		
+		isSelected := (idx == localCurr)
+		item := markdownItems[itemIndex]
+		
+		// Extract item data
+		var displayLines []string
+		if itemMap, ok := item.(map[string]interface{}); ok {
+			if dl, ok := itemMap["DisplayLines"].([]string); ok {
+				displayLines = dl
+			}
+		}
+		
+		// Display the item
+		for lineIdx, line := range displayLines {
+			if currentLineInPage >= pageSize {
+				break // Stop if we run out of space
+			}
+			
+			ClearLine()
+			
+			// Show selection indicator on first line of item
+			if lineIdx == 0 {
+				if isSelected {
+					ColorBrGreen()
+					Bold()
+					termPrint("» ")
+				} else {
+					termPrint("  ")
+				}
+			} else {
+				// Continuation lines get indented
+				termPrint("  ")
+			}
+			
+			termPrintln(line)
+			CloseProps()
+			currentLineInPage++
+		}
+		
+		// Add spacing line after each item except the last on page
+		if idx < len(visibleItems)-1 && currentLineInPage < pageSize {
+			ClearLine()
+			termPrintln("")
+			currentLineInPage++
+		}
+	}
+
+	// Move to position for footer
+	for currentLineInPage < pageSize {
+		CurDown(1)
+		currentLineInPage++
+	}
+
+	// Print footer showing page info
+	termPrintln(fmt.Sprintf("Page %d/%d (n=next, p=prev, Enter=select)", currentPage+1, totalPages))
+	moveUp = pageSize + 1
+
+	defer func() {
+		ShowCur()
+	}()
+
+	for {
+		ascii, keyCode, err := GetChar()
+
+		if (ascii == 3 || ascii == 27) || err != nil {
+			return nil, true
+		}
+
+		if ascii == 13 {
+			if localCurr < displayedItems {
+				globalIndex := visibleItems[localCurr]
+				item := markdownItems[globalIndex]
+				if itemMap, ok := item.(map[string]interface{}); ok {
+					itemType := "text"
+					content := ""
+					
+					if t, ok := itemMap["Type"].(string); ok {
+						itemType = t
+					}
+					if c, ok := itemMap["Content"].(string); ok {
+						content = c
+					}
+					
+					// Return a block with [type content]
+					series := env.NewTSeries([]env.Object{*env.NewString(itemType), *env.NewString(content)})
+					return *env.NewBlock(*series), false
+				}
+			}
+			return nil, true
+		}
+
+		if ascii == 110 || ascii == 78 { // 'n' or 'N'
+			if currentPage < totalPages-1 {
+				currentPage++
+				localCurr = 0
+				goto DODO
+			}
+		} else if ascii == 112 || ascii == 80 { // 'p' or 'P'
+			if currentPage > 0 {
+				currentPage--
+				localCurr = 0
+				goto DODO
+			}
+		}
+
+		if keyCode == 40 { // Down arrow
+			localCurr++
+			if localCurr >= displayedItems {
+				if currentPage < totalPages-1 {
+					currentPage++
+					localCurr = 0
+				} else {
+					currentPage = 0
+					localCurr = 0
+				}
+			}
+			goto DODO
+		} else if keyCode == 38 { // Up arrow
+			localCurr--
+			if localCurr < 0 {
+				if currentPage > 0 {
+					currentPage--
+					localCurr = 0
+					goto DODO
+				} else {
+					currentPage = totalPages - 1
+					localCurr = 0
+					goto DODO
+				}
+			}
+			goto DODO
+		}
+	}
+}
