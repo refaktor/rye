@@ -7,6 +7,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -1828,6 +1829,121 @@ var Builtins_io = map[string]*env.Builtin{
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tail-file//Close")
+			}
+		},
+	},
+
+	//
+	// ##### Unix Domain Socket Operations ##### "Unix domain socket operations for IPC"
+	//
+	// Args:
+	// * path: uri representing the Unix socket path to connect to
+	// Returns:
+	// * native unix-connection object
+	"unix-uri//Open": {
+		Argsn: 1,
+		Doc:   "Opens a connection to a Unix domain socket.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.Uri:
+				conn, err := net.Dial("unix", s.Path)
+				if err != nil {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Error connecting to Unix socket: "+err.Error(), "unix-uri//Open")
+				}
+				return *env.NewNative(ps.Idx, conn, "unix-connection")
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "unix-uri//Open")
+			}
+		},
+	},
+
+	// Args:
+	// * connection: native unix-connection object
+	// * data: string to write to the socket
+	// Returns:
+	// * the connection object if successful (allows chaining)
+	"unix-connection//Write": {
+		Argsn: 2,
+		Doc:   "Writes data to a Unix domain socket connection.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch conn := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(conn.GetKind()) != "unix-connection" {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Expected unix-connection object", "unix-connection//Write")
+				}
+				switch data := arg1.(type) {
+				case env.String:
+					_, err := conn.Value.(net.Conn).Write([]byte(data.Value))
+					if err != nil {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, "Error writing to Unix socket: "+err.Error(), "unix-connection//Write")
+					}
+					return arg0 // Return the connection for chaining
+				default:
+					ps.FailureFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "unix-connection//Write")
+				}
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "unix-connection//Write")
+			}
+		},
+	},
+
+	// Args:
+	// * connection: native unix-connection object
+	// Returns:
+	// * string containing data read from the socket
+	"unix-connection//Read": {
+		Argsn: 1,
+		Doc:   "Reads data from a Unix domain socket connection.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch conn := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(conn.GetKind()) != "unix-connection" {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Expected unix-connection object", "unix-connection//Read")
+				}
+				buf := make([]byte, 1024)
+				n, err := conn.Value.(net.Conn).Read(buf)
+				if err != nil {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Error reading from Unix socket: "+err.Error(), "unix-connection//Read")
+				}
+				return *env.NewString(string(buf[:n]))
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "unix-connection//Read")
+			}
+		},
+	},
+
+	// Args:
+	// * connection: native unix-connection object
+	// Returns:
+	// * empty string if successful
+	"unix-connection//Close": {
+		Argsn: 1,
+		Doc:   "Closes a Unix domain socket connection.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch conn := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(conn.GetKind()) != "unix-connection" {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Expected unix-connection object", "unix-connection//Close")
+				}
+				err := conn.Value.(net.Conn).Close()
+				if err != nil {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, err.Error(), "unix-connection//Close")
+				}
+				return *env.NewString("")
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "unix-connection//Close")
 			}
 		},
 	},
