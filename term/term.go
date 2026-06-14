@@ -1708,7 +1708,7 @@ func DisplayMarkdown(items []env.Object, idx *env.Idxs) (env.Object, bool) {
 			} else {
 				termPrint("  ")
 			}
-			
+
 			var valueStr string
 			switch ob := v.(type) {
 			case env.Object:
@@ -1795,7 +1795,7 @@ DODO:
 			} else {
 				termPrint("  ")
 			}
-			
+
 			var valueStr string
 			switch ob := item.(type) {
 			case env.Object:
@@ -1819,7 +1819,7 @@ DODO:
 	}
 
 	// Footer with navigation info
-	termPrintln(fmt.Sprintf("Page %d/%d | ↑/↓: navigate, Enter: select, n/p: page, m: mode, Esc: exit", 
+	termPrintln(fmt.Sprintf("Page %d/%d | ↑/↓: navigate, Enter: select, n/p: page, m: mode, Esc: exit",
 		currentPage+1, totalPages))
 	totalLines++
 
@@ -1855,7 +1855,7 @@ DODO:
 				goto DODO
 			}
 		}
-		
+
 		if ascii == 112 || ascii == 80 { // 'p' or 'P' for previous page
 			if currentPage > 0 {
 				currentPage--
@@ -1910,7 +1910,7 @@ DODO:
 func DisplayMarkdownItems(items interface{}, idx *env.Idxs) (env.Object, bool) {
 	// Convert items to proper type - we expect []MarkdownDisplayItem but work with interface{}
 	var markdownItems []interface{}
-	
+
 	// Handle the interface{} input - it should be a slice of MarkdownDisplayItem
 	if slice, ok := items.([]interface{}); ok {
 		markdownItems = slice
@@ -1918,12 +1918,12 @@ func DisplayMarkdownItems(items interface{}, idx *env.Idxs) (env.Object, bool) {
 		// Fallback for unexpected types
 		return nil, true
 	}
-	
+
 	totalItems := len(markdownItems)
 	if totalItems == 0 {
 		return nil, true
 	}
-	
+
 	size, err := GetTerminalSize()
 	height := size.Height
 	if err != nil {
@@ -1937,7 +1937,7 @@ func DisplayMarkdownItems(items interface{}, idx *env.Idxs) (env.Object, bool) {
 	// Calculate display lines needed
 	totalDisplayLines := 0
 	itemDisplayCounts := make([]int, totalItems)
-	
+
 	for i, item := range markdownItems {
 		// Extract display lines from the item using reflection or type assertion
 		if itemMap, ok := item.(map[string]interface{}); ok {
@@ -1957,7 +1957,7 @@ func DisplayMarkdownItems(items interface{}, idx *env.Idxs) (env.Object, bool) {
 	// Determine if we need pagination based on total display lines vs page size
 	totalDisplayLinesWithSpacing := totalDisplayLines + (totalItems - 1) // Add spacing between items
 	needsPagination := totalDisplayLinesWithSpacing > pageSize
-	
+
 	// Calculate pages needed (for display purposes)
 	totalPages := (totalDisplayLinesWithSpacing + pageSize - 1) / pageSize
 	if totalPages == 0 {
@@ -1984,20 +1984,20 @@ func DisplayMarkdownItems(items interface{}, idx *env.Idxs) (env.Object, bool) {
 		// Print all items with cursor highlighting
 		for i, item := range markdownItems {
 			isSelected := (i == curr)
-			
+
 			// Extract item data
 			var displayLines []string
-			
+
 			if itemMap, ok := item.(map[string]interface{}); ok {
 				if dl, ok := itemMap["DisplayLines"].([]string); ok {
 					displayLines = dl
 				}
 			}
-			
+
 			// Display the item
 			for lineIdx, line := range displayLines {
 				ClearLine()
-				
+
 				// Show selection indicator on first line of item
 				if lineIdx == 0 {
 					if isSelected {
@@ -2011,12 +2011,12 @@ func DisplayMarkdownItems(items interface{}, idx *env.Idxs) (env.Object, bool) {
 					// Continuation lines get indented
 					termPrint("  ")
 				}
-				
+
 				termPrintln(line)
 				CloseProps()
 				currentLine++
 			}
-			
+
 			// Add empty line after each item except the last
 			if i < totalItems-1 && len(displayLines) > 0 {
 				ClearLine()
@@ -2041,14 +2041,14 @@ func DisplayMarkdownItems(items interface{}, idx *env.Idxs) (env.Object, bool) {
 					if itemMap, ok := item.(map[string]interface{}); ok {
 						itemType := "text"
 						content := ""
-						
+
 						if t, ok := itemMap["Type"].(string); ok {
 							itemType = t
 						}
 						if c, ok := itemMap["Content"].(string); ok {
 							content = c
 						}
-						
+
 						// Return a block with [type content]
 						series := env.NewTSeries([]env.Object{*env.NewString(itemType), *env.NewString(content)})
 						return *env.NewBlock(*series), false
@@ -2090,26 +2090,26 @@ DODO:
 	visibleItems := make([]int, 0)
 	currentLines := 0
 	start := 0
-	
+
 	// Find the starting item for this page by skipping previous pages
 	skipLines := currentPage * pageSize
 	currentDisplayLine := 0
-	
+
 	// Find start item
 	for i := 0; i < totalItems; i++ {
 		itemLinesWithSpacing := itemDisplayCounts[i]
 		if i < totalItems-1 {
 			itemLinesWithSpacing++ // Add spacing
 		}
-		
-		if currentDisplayLine + itemLinesWithSpacing <= skipLines {
+
+		if currentDisplayLine+itemLinesWithSpacing <= skipLines {
 			currentDisplayLine += itemLinesWithSpacing
 			start = i + 1
 		} else {
 			break
 		}
 	}
-	
+
 	// Find items that fit on current page
 	currentLines = 0
 	for i := start; i < totalItems && currentLines < pageSize; i++ {
@@ -2118,17 +2118,17 @@ DODO:
 		if i < totalItems-1 {
 			spacingLine = 1
 		}
-		
-		if currentLines + itemLines + spacingLine <= pageSize {
+
+		if currentLines+itemLines+spacingLine <= pageSize {
 			visibleItems = append(visibleItems, i)
 			currentLines += itemLines + spacingLine
 		} else {
 			break
 		}
 	}
-	
+
 	displayedItems := len(visibleItems)
-	
+
 	// Ensure localCurr is within bounds
 	if localCurr >= displayedItems && displayedItems > 0 {
 		localCurr = displayedItems - 1
@@ -2139,19 +2139,19 @@ DODO:
 		ClearLine()
 		termPrintln("")
 	}
-	
+
 	// Reset position and render content
 	CurUp(pageSize)
 	currentLineInPage := 0
-	
+
 	for idx, itemIndex := range visibleItems {
 		if currentLineInPage >= pageSize {
 			break
 		}
-		
+
 		isSelected := (idx == localCurr)
 		item := markdownItems[itemIndex]
-		
+
 		// Extract item data
 		var displayLines []string
 		if itemMap, ok := item.(map[string]interface{}); ok {
@@ -2159,15 +2159,15 @@ DODO:
 				displayLines = dl
 			}
 		}
-		
+
 		// Display the item
 		for lineIdx, line := range displayLines {
 			if currentLineInPage >= pageSize {
 				break // Stop if we run out of space
 			}
-			
+
 			ClearLine()
-			
+
 			// Show selection indicator on first line of item
 			if lineIdx == 0 {
 				if isSelected {
@@ -2181,12 +2181,16 @@ DODO:
 				// Continuation lines get indented
 				termPrint("  ")
 			}
-			
+
+			if isSelected {
+				ColorBrGreen()
+			}
+
 			termPrintln(line)
 			CloseProps()
 			currentLineInPage++
 		}
-		
+
 		// Add spacing line after each item except the last on page
 		if idx < len(visibleItems)-1 && currentLineInPage < pageSize {
 			ClearLine()
@@ -2223,14 +2227,14 @@ DODO:
 				if itemMap, ok := item.(map[string]interface{}); ok {
 					itemType := "text"
 					content := ""
-					
+
 					if t, ok := itemMap["Type"].(string); ok {
 						itemType = t
 					}
 					if c, ok := itemMap["Content"].(string); ok {
 						content = c
 					}
-					
+
 					// Return a block with [type content]
 					series := env.NewTSeries([]env.Object{*env.NewString(itemType), *env.NewString(content)})
 					return *env.NewBlock(*series), false

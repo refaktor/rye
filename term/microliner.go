@@ -459,6 +459,7 @@ func (s *MLState) tabComplete(p []rune, line []rune, pos int, mode int) ([]rune,
 	
 	// Extract the current word being completed
 	s.currentTabWord = s.extractCurrentWord(string(line), pos)
+	fmt.Printf("Tab completion started for: '%s'\n", s.currentTabWord)
 	
 	defer func() {
 		// Always clear the flag and suggestion space when exiting tab completion
@@ -542,12 +543,13 @@ func (s *MLState) tabComplete(p []rune, line []rune, pos int, mode int) ([]rune,
 		}
 		// Check for Ctrl+X to display word info while in tab completion
 		if next.Ctrl && strings.ToLower(next.Key) == "x" {
+			s.sendBack("\n") // Move to a new line first
+			fmt.Printf("Ctrl+X triggered! Word: '%s', Has state: %v\n", s.currentTabWord, s.programState != nil)
 			if s.programState != nil && s.currentTabWord != "" {
 				// Display word info without exiting tab completion
-				s.sendBack("\n") // Move to a new line
 				
 				// Get word information
-				wordInfo := findWordInfo(s.programState, s.currentTabWord)
+				wordInfo := FindWordInfo(s.programState, s.currentTabWord)
 				if wordInfo != "" {
 					fmt.Print(wordInfo)
 				} else {
@@ -1826,7 +1828,7 @@ startOfHere:
 						s.sendBack("\n") // Move to a new line
 						
 						// Get word information
-						wordInfo := findWordInfo(s.programState, s.currentTabWord)
+						wordInfo := FindWordInfo(s.programState, s.currentTabWord)
 						if wordInfo != "" {
 							fmt.Print(wordInfo)
 						} else {

@@ -10,8 +10,8 @@ import (
 	"github.com/refaktor/rye/loader"
 )
 
-// findWordInfo searches for documentation about a word in RYE_HOME/info/*.info.rye files
-func findWordInfo(ps *env.ProgramState, word string) string {
+// FindWordInfo searches for documentation about a word in RYE_HOME/info/*.info.rye files
+func FindWordInfo(ps *env.ProgramState, word string) string {
 	if word == "" {
 		return ""
 	}
