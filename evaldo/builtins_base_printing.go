@@ -67,8 +67,8 @@ func displayRyeValue(ps *env.ProgramState, arg0 env.Object, interactive bool) (e
 			if len(items) == 0 {
 				return bloc, ""
 			}
-			mdBlock := env.NewBlock(*env.NewTSeries(items))
-			obj, esc := term.DisplayBlock(*mdBlock, ps.Idx)
+			convertedItems := convertMarkdownDisplayItems(items)
+			obj, esc := term.DisplayMarkdownItems(convertedItems, ps.Idx)
 			if !esc {
 				return obj, ""
 			}
@@ -77,8 +77,8 @@ func displayRyeValue(ps *env.ProgramState, arg0 env.Object, interactive bool) (e
 			if len(items) == 0 {
 				return bloc, ""
 			}
-			mdBlock := env.NewBlock(*env.NewTSeries(items))
-			obj, esc := term.DisplayBlock(*mdBlock, ps.Idx)
+			convertedItems := convertMarkdownDisplayItems(items)
+			obj, esc := term.DisplayMarkdownItems(convertedItems, ps.Idx)
 			if !esc {
 				return obj, ""
 			}

@@ -560,7 +560,7 @@ func isCursorAtBottom() bool { // TODO --- doesn't seem to work and probably don
 	return true || os.Getenv("TERM_LINES") != "" && os.Getenv("TERM_LINES") == os.Getenv("TERM_ROW")
 }
 
-func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool, localHist bool) { // here because of some odd options we were experimentally adding
+func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool, localHist bool, histFile string) { // here because of some odd options we were experimentally adding
 	// Configure log to not include date/time prefix for cleaner output
 	log.SetFlags(0)
 
@@ -652,8 +652,14 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool, localHist
 
 	// Improved error handling for history file operations
 	histFn := history_fn
-	if localHist {
+	if histFile != "" {
+		histFn = histFile
+		log.Printf("Using custom history file: %s", histFn)
+	} else if localHist {
 		histFn = "local_rye_history"
+		log.Printf("Using local history file: %s", histFn)
+	} else {
+		log.Printf("Using default history file: %s", histFn)
 	}
 
 	f, err := os.Open(histFn)

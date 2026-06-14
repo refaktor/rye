@@ -6,6 +6,7 @@ package evaldo
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/muesli/reflow/indent"
@@ -848,6 +849,73 @@ var Builtins_term = map[string]*env.Builtin{
 			default:
 				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "spin-it")
 			}
+		},
+	},
+
+	// Tests:
+	// pane "Title" "Content line 1\nContent line 2"
+	// Args:
+	// * title: String for the header title
+	// * content: String content to display in the pane
+	// Returns:
+	// * Integer 1 (success indicator)
+	"pane": {
+		Argsn: 2,
+		Doc:   "Displays content in a bordered pane with a title header.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			title, ok1 := arg0.(env.String)
+			if !ok1 {
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "pane")
+			}
+			content, ok2 := arg1.(env.String)
+			if !ok2 {
+				return MakeArgError(ps, 2, []env.Type{env.StringType}, "pane")
+			}
+
+			// Split content into lines
+			lines := strings.Split(content.Value, "\n")
+
+			// Calculate the width needed
+			maxContentWidth := 0
+			for _, line := range lines {
+				if len(line) > maxContentWidth {
+					maxContentWidth = len(line)
+				}
+			}
+
+			// Title width with padding: "─ title ─"
+			titleWidth := len(title.Value) + 4 // "─ " + title + " ─"
+
+			// Choose the larger of content width and title width, with minimum padding
+			paneWidth := maxContentWidth + 2 // content + 2 spaces padding
+			if titleWidth > paneWidth {
+				paneWidth = titleWidth
+			}
+			if paneWidth < 10 { // minimum width
+				paneWidth = 10
+			}
+
+			// Build the pane
+			// Top border with title
+			titlePadding := paneWidth - len(title.Value) - 4 // subtract "─ title ─"
+			leftPadding := titlePadding / 2
+			rightPadding := titlePadding - leftPadding
+
+			topBorder := "╭" + strings.Repeat("─", leftPadding) + "─ " + title.Value + " ─" + strings.Repeat("─", rightPadding) + "╮"
+			fmt.Println(topBorder)
+
+			// Content lines
+			for _, line := range lines {
+				contentPadding := paneWidth - len(line)
+				rightContentPadding := contentPadding
+				fmt.Printf("│%s%s│\n", line, strings.Repeat(" ", rightContentPadding))
+			}
+
+			// Bottom border
+			bottomBorder := "╰" + strings.Repeat("─", paneWidth) + "╯"
+			fmt.Println(bottomBorder)
+
+			return *env.NewInteger(1)
 		},
 	},
 }

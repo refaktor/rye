@@ -476,45 +476,197 @@ var Builtins_os = map[string]*env.Builtin{
 	},
 
 	// Args:
-	// * filter: word 'dirs' or 'files' to filter by type, string for partial name matching, or regexp to match names
+	// * filter: file-uri to list directory, word 'dirs' or 'files' to filter by type, string for partial name matching, or regexp to match names
 	// Returns:
-	// * block of uris representing filtered files or directories in the current directory
+	// * block of uris representing filtered files or directories in the specified directory or current directory
 	"ls\\": {
 		Argsn: 1,
-		Doc:   "Lists files or directories in the current directory based on filter. Use 'dirs' for directories only, 'files' for files only, a string for partial name matching, or a regexp to match names.",
+		Doc:   "Lists files or directories with absolute paths when possible. If argument is a file-uri, lists that directory (or returns failure if not a directory). Otherwise filters current directory: 'dirs' for directories only, 'files' for files only, a string for partial name matching, or a regexp to match names.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			files, err := os.ReadDir(".")
+			var targetDir string = "."
+			var doFiltering bool = true
+			var filterArg env.Object = arg0
+
+			// Check if argument is a file-uri
+			if uri, ok := arg0.(env.Uri); ok {
+				targetPath := resolvePath(ps.WorkingPath, uri.GetPath())
+				
+				// Check if path exists and is a directory
+				info, err := os.Stat(targetPath)
+				if err != nil {
+					if os.IsNotExist(err) {
+						return MakeBuiltinError(ps, fmt.Sprintf("path doesn't exist: %s", uri.GetPath()), "ls\\")
+					}
+					if os.IsPermission(err) {
+						return MakeBuiltinError(ps, fmt.Sprintf("permission denied: %s", uri.GetPath()), "ls\\")
+					}
+					return MakeBuiltinError(ps, fmt.Sprintf("error accessing path %s: %s", uri.GetPath(), err.Error()), "ls\\")
+				}
+				
+				if !info.IsDir() {
+					return MakeBuiltinError(ps, fmt.Sprintf("not a directory (is file): %s", uri.GetPath()), "ls\\")
+				}
+				
+				targetDir = targetPath
+				doFiltering = false
+			}
+
+			files, err := os.ReadDir(targetDir)
 			if err != nil {
 				return MakeBuiltinError(ps, "Error reading directory:"+err.Error(), "ls\\")
 			}
 
 			var items []env.Object
 
-			switch filterArg := arg0.(type) {
-			case env.Word:
-				filter := ps.Idx.GetWord(filterArg.Index)
-				if filter != "dirs" && filter != "files" {
-					return MakeBuiltinError(ps, "Word filter must be 'dirs' or 'files'", "ls\\")
-				}
-
+			if !doFiltering {
+				// If we're listing a specific directory, return all files with absolute paths
 				for _, file := range files {
-					include := false
-					if filter == "dirs" {
-						include = file.IsDir()
-					} else if filter == "files" {
-						include = !file.IsDir()
-					}
-
-					if include {
+					absPath, err := filepath.Abs(filepath.Join(targetDir, file.Name()))
+					if err != nil {
+						// Fallback to relative path if absolute path fails
 						items = append(items, *env.NewUri1(ps.Idx, "file://"+file.Name()))
+					} else {
+						items = append(items, *env.NewUri1(ps.Idx, "file://"+absPath))
 					}
 				}
+			} else {
+				// Apply filtering based on the argument type
+				switch filterArg := filterArg.(type) {
+				case env.Word:
+					filter := ps.Idx.GetWord(filterArg.Index)
+					if filter != "dirs" && filter != "files" {
+						return MakeBuiltinError(ps, "Word filter must be 'dirs' or 'files'", "ls\\")
+					}
 
+					for _, file := range files {
+						include := false
+						if filter == "dirs" {
+							include = file.IsDir()
+						} else if filter == "files" {
+							include = !file.IsDir()
+						}
+
+						if include {
+							absPath, err := filepath.Abs(filepath.Join(targetDir, file.Name()))
+							if err != nil {
+								// Fallback to relative path if absolute path fails
+								items = append(items, *env.NewUri1(ps.Idx, "file://"+file.Name()))
+							} else {
+								items = append(items, *env.NewUri1(ps.Idx, "file://"+absPath))
+							}
+						}
+					}
+
+				case env.String:
+					// String does partial matching on file/directory names
+					pattern := filterArg.Value
+					for _, file := range files {
+						if strings.Contains(file.Name(), pattern) {
+							absPath, err := filepath.Abs(filepath.Join(targetDir, file.Name()))
+							if err != nil {
+								// Fallback to relative path if absolute path fails
+								items = append(items, *env.NewUri1(ps.Idx, "file://"+file.Name()))
+							} else {
+								items = append(items, *env.NewUri1(ps.Idx, "file://"+absPath))
+							}
+						}
+					}
+
+				case env.Native:
+					// Check if it's a regexp
+					if ps.Idx.GetWord(filterArg.Kind.Index) != "regexp" {
+						return MakeBuiltinError(ps, "Native object must be a regexp", "ls\\")
+					}
+
+					regex := filterArg.Value.(*regexp.Regexp)
+					for _, file := range files {
+						if regex.MatchString(file.Name()) {
+							absPath, err := filepath.Abs(filepath.Join(targetDir, file.Name()))
+							if err != nil {
+								// Fallback to relative path if absolute path fails
+								items = append(items, *env.NewUri1(ps.Idx, "file://"+file.Name()))
+							} else {
+								items = append(items, *env.NewUri1(ps.Idx, "file://"+absPath))
+							}
+						}
+					}
+
+				default:
+					return MakeArgError(ps, 1, []env.Type{env.UriType, env.WordType, env.StringType, env.NativeType}, "ls\\")
+				}
+			}
+
+			return *env.NewBlock(*env.NewTSeries(items))
+		},
+	},
+
+	// Args:
+	// * none
+	// Returns:
+	// * block of uris representing directories in the current directory
+	"ls\\dirs": {
+		Argsn: 0,
+		Doc:   "Lists only directories in the current directory.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			files, err := os.ReadDir(".")
+			if err != nil {
+				return MakeBuiltinError(ps, "Error reading directory:"+err.Error(), "ls\\dirs")
+			}
+
+			var items []env.Object
+			for _, file := range files {
+				if file.IsDir() {
+					items = append(items, *env.NewUri1(ps.Idx, "file://"+file.Name()))
+				}
+			}
+			return *env.NewBlock(*env.NewTSeries(items))
+		},
+	},
+
+	// Args:
+	// * none
+	// Returns:
+	// * block of uris representing files (non-directories) in the current directory
+	"ls\\files": {
+		Argsn: 0,
+		Doc:   "Lists only files (non-directories) in the current directory.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			files, err := os.ReadDir(".")
+			if err != nil {
+				return MakeBuiltinError(ps, "Error reading directory:"+err.Error(), "ls\\files")
+			}
+
+			var items []env.Object
+			for _, file := range files {
+				if !file.IsDir() {
+					items = append(items, *env.NewUri1(ps.Idx, "file://"+file.Name()))
+				}
+			}
+			return *env.NewBlock(*env.NewTSeries(items))
+		},
+	},
+
+	// Args:
+	// * filter: string for partial name matching, or regexp to match names
+	// Returns:
+	// * block of uris representing filtered directories in the current directory
+	"ls\\dirs\\": {
+		Argsn: 1,
+		Doc:   "Lists directories in the current directory with filtering. Use a string for partial name matching, or a regexp to match names.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			files, err := os.ReadDir(".")
+			if err != nil {
+				return MakeBuiltinError(ps, "Error reading directory:"+err.Error(), "ls\\dirs\\")
+			}
+
+			var items []env.Object
+
+			switch filterArg := arg0.(type) {
 			case env.String:
-				// String does partial matching on file/directory names
+				// String does partial matching on directory names
 				pattern := filterArg.Value
 				for _, file := range files {
-					if strings.Contains(file.Name(), pattern) {
+					if file.IsDir() && strings.Contains(file.Name(), pattern) {
 						items = append(items, *env.NewUri1(ps.Idx, "file://"+file.Name()))
 					}
 				}
@@ -522,21 +674,383 @@ var Builtins_os = map[string]*env.Builtin{
 			case env.Native:
 				// Check if it's a regexp
 				if ps.Idx.GetWord(filterArg.Kind.Index) != "regexp" {
-					return MakeBuiltinError(ps, "Native object must be a regexp", "ls\\")
+					return MakeBuiltinError(ps, "Native object must be a regexp", "ls\\dirs\\")
 				}
 
 				regex := filterArg.Value.(*regexp.Regexp)
 				for _, file := range files {
-					if regex.MatchString(file.Name()) {
+					if file.IsDir() && regex.MatchString(file.Name()) {
 						items = append(items, *env.NewUri1(ps.Idx, "file://"+file.Name()))
 					}
 				}
 
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.WordType, env.StringType, env.NativeType}, "ls\\")
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.NativeType}, "ls\\dirs\\")
 			}
 
 			return *env.NewBlock(*env.NewTSeries(items))
+		},
+	},
+
+	// Args:
+	// * filter: string for partial name matching, or regexp to match names
+	// Returns:
+	// * block of uris representing filtered files (non-directories) in the current directory
+	"ls\\files\\": {
+		Argsn: 1,
+		Doc:   "Lists files (non-directories) in the current directory with filtering. Use a string for partial name matching, or a regexp to match names.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			files, err := os.ReadDir(".")
+			if err != nil {
+				return MakeBuiltinError(ps, "Error reading directory:"+err.Error(), "ls\\files\\")
+			}
+
+			var items []env.Object
+
+			switch filterArg := arg0.(type) {
+			case env.String:
+				// String does partial matching on file names
+				pattern := filterArg.Value
+				for _, file := range files {
+					if !file.IsDir() && strings.Contains(file.Name(), pattern) {
+						items = append(items, *env.NewUri1(ps.Idx, "file://"+file.Name()))
+					}
+				}
+
+			case env.Native:
+				// Check if it's a regexp
+				if ps.Idx.GetWord(filterArg.Kind.Index) != "regexp" {
+					return MakeBuiltinError(ps, "Native object must be a regexp", "ls\\files\\")
+				}
+
+				regex := filterArg.Value.(*regexp.Regexp)
+				for _, file := range files {
+					if !file.IsDir() && regex.MatchString(file.Name()) {
+						items = append(items, *env.NewUri1(ps.Idx, "file://"+file.Name()))
+					}
+				}
+
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.NativeType}, "ls\\files\\")
+			}
+
+			return *env.NewBlock(*env.NewTSeries(items))
+		},
+	},
+
+	// Args:
+	// * path: uri representing source path
+	// * link: uri representing link path to create
+	// Returns:
+	// * link uri if successful
+	// Tags: #file #link
+	"symlink": {
+		Argsn: 2,
+		Doc:   "Creates a symbolic link.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch src := arg0.(type) {
+			case env.Uri:
+				switch link := arg1.(type) {
+				case env.Uri:
+					srcPath := resolvePath(ps.WorkingPath, src.GetPath())
+					linkPath := resolvePath(ps.WorkingPath, link.GetPath())
+					err := os.Symlink(srcPath, linkPath)
+					if err != nil {
+						return MakeBuiltinError(ps, "Error creating symlink: "+err.Error(), "symlink")
+					}
+					return arg1
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.UriType}, "symlink")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "symlink")
+			}
+		},
+	},
+
+	// Args:
+	// * path: uri representing a path to check
+	// Returns:
+	// * boolean: true if path is a symbolic link
+	// Tags: #file #check
+	"is-symlink?": {
+		Argsn: 1,
+		Doc:   "Checks if a path is a symbolic link.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch path := arg0.(type) {
+			case env.Uri:
+				filePath := resolvePath(ps.WorkingPath, path.GetPath())
+				info, err := os.Lstat(filePath) // Use Lstat to not follow symlinks
+				if err != nil {
+					if os.IsNotExist(err) {
+						return *env.NewBoolean(false)
+					}
+					return MakeBuiltinError(ps, "Error checking path: "+err.Error(), "is-symlink?")
+				}
+				return *env.NewBoolean(info.Mode()&os.ModeSymlink != 0)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "is-symlink?")
+			}
+		},
+	},
+
+	// Args:
+	// * path: uri representing a symbolic link
+	// Returns:
+	// * uri representing the target of the symlink
+	// Tags: #file #link
+	"readlink": {
+		Argsn: 1,
+		Doc:   "Reads the target of a symbolic link.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch path := arg0.(type) {
+			case env.Uri:
+				linkPath := resolvePath(ps.WorkingPath, path.GetPath())
+				target, err := os.Readlink(linkPath)
+				if err != nil {
+					return MakeBuiltinError(ps, "Error reading symlink: "+err.Error(), "readlink")
+				}
+				return *env.NewUri1(ps.Idx, "file://"+target)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "readlink")
+			}
+		},
+	},
+
+	// Args:
+	// * path: uri representing file or directory path
+	// * mode: integer representing file mode (e.g., 0755)
+	// Returns:
+	// * path uri if successful
+	// Tags: #file #permissions
+	"chmod": {
+		Argsn: 2,
+		Doc:   "Changes file or directory permissions.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch path := arg0.(type) {
+			case env.Uri:
+				switch mode := arg1.(type) {
+				case env.Integer:
+					filePath := resolvePath(ps.WorkingPath, path.GetPath())
+					err := os.Chmod(filePath, os.FileMode(mode.Value))
+					if err != nil {
+						return MakeBuiltinError(ps, "Error changing permissions: "+err.Error(), "chmod")
+					}
+					return arg0
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "chmod")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "chmod")
+			}
+		},
+	},
+
+	// Args:
+	// * path: uri representing file or directory
+	// Returns:
+	// * string representing the absolute path
+	// Tags: #file #path
+	"abs-path": {
+		Argsn: 1,
+		Doc:   "Returns the absolute path for a given path.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch path := arg0.(type) {
+			case env.Uri:
+				absPath, err := filepath.Abs(resolvePath(ps.WorkingPath, path.GetPath()))
+				if err != nil {
+					return MakeBuiltinError(ps, "Error getting absolute path: "+err.Error(), "abs-path")
+				}
+				return *env.NewUri1(ps.Idx, "file://"+absPath)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "abs-path")
+			}
+		},
+	},
+
+	// Args:
+	// * path: uri representing a path
+	// Returns:
+	// * uri representing the directory containing the path
+	// Tags: #file #path
+	"dirname": {
+		Argsn: 1,
+		Doc:   "Returns the directory part of a path.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch path := arg0.(type) {
+			case env.Uri:
+				dir := filepath.Dir(path.GetPath())
+				return *env.NewUri1(ps.Idx, "file://"+dir)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "dirname")
+			}
+		},
+	},
+
+	// Args:
+	// * path: uri representing a path
+	// Returns:
+	// * string representing the filename part of the path
+	// Tags: #file #path
+	"basename": {
+		Argsn: 1,
+		Doc:   "Returns the filename part of a path.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch path := arg0.(type) {
+			case env.Uri:
+				base := filepath.Base(path.GetPath())
+				return *env.NewString(base)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "basename")
+			}
+		},
+	},
+
+	// Args:
+	// * path: uri representing a file path
+	// Returns:
+	// * string representing the file extension (including the dot)
+	// Tags: #file #path
+	"file-ext": {
+		Argsn: 1,
+		Doc:   "Returns the file extension of a path (including the dot).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch path := arg0.(type) {
+			case env.Uri:
+				ext := filepath.Ext(path.GetPath())
+				return *env.NewString(ext)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-ext")
+			}
+		},
+	},
+
+	// Args:
+	// * paths: uri or block of uris to join
+	// Returns:
+	// * uri representing the joined path
+	// Tags: #file #path
+	"join-path": {
+		Argsn: 1,
+		Doc:   "Joins path elements into a single path.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch paths := arg0.(type) {
+			case env.Block:
+				pathStrs := make([]string, paths.Series.Len())
+				for i := 0; i < paths.Series.Len(); i++ {
+					item := paths.Series.Get(i)
+					switch p := item.(type) {
+					case env.Uri:
+						pathStrs[i] = p.GetPath()
+					case env.String:
+						pathStrs[i] = p.Value
+					default:
+						return MakeBuiltinError(ps, "Block must contain only uris or strings", "join-path")
+					}
+				}
+				joined := filepath.Join(pathStrs...)
+				return *env.NewUri1(ps.Idx, "file://"+joined)
+			case env.Uri:
+				// If single uri passed, just return it
+				return arg0
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType, env.BlockType}, "join-path")
+			}
+		},
+	},
+
+	// Args:
+	// * none
+	// Returns:
+	// * string representing the current user's username
+	// Tags: #system #user
+	"whoami": {
+		Argsn: 0,
+		Doc:   "Returns the current user's username.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			username := os.Getenv("USER")
+			if username == "" {
+				username = os.Getenv("USERNAME") // Windows
+			}
+			if username == "" {
+				return MakeBuiltinError(ps, "Unable to determine username", "whoami")
+			}
+			return *env.NewString(username)
+		},
+	},
+
+	// Args:
+	// * command: string representing the command to check
+	// Returns:
+	// * uri representing the path to the executable, or error if not found
+	// Tags: #system #command
+	"which": {
+		Argsn: 1,
+		Doc:   "Finds the path to an executable command.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cmd := arg0.(type) {
+			case env.String:
+				path, err := findExecutable(cmd.Value)
+				if err != nil {
+					return MakeBuiltinError(ps, "Command not found: "+cmd.Value, "which")
+				}
+				return *env.NewUri1(ps.Idx, "file://"+path)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "which")
+			}
+		},
+	},
+
+	// Args:
+	// * source: uri representing source directory
+	// * destination: uri representing destination directory  
+	// Returns:
+	// * destination uri if successful
+	// Tags: #file #copy #recursive
+	"cp-r": {
+		Argsn: 2,
+		Doc:   "Recursively copies a directory and all its contents.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch src := arg0.(type) {
+			case env.Uri:
+				switch dst := arg1.(type) {
+				case env.Uri:
+					srcPath := resolvePath(ps.WorkingPath, src.GetPath())
+					dstPath := resolvePath(ps.WorkingPath, dst.GetPath())
+					err := copyRecursive(srcPath, dstPath)
+					if err != nil {
+						return MakeBuiltinError(ps, "Error copying recursively: "+err.Error(), "cp-r")
+					}
+					return arg1
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.UriType}, "cp-r")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "cp-r")
+			}
+		},
+	},
+
+	// Args:
+	// * path: uri representing directory path to create
+	// Returns:
+	// * path uri if successful  
+	// Tags: #file #directory
+	"mkdir-p": {
+		Argsn: 1,
+		Doc:   "Creates a directory and any necessary parent directories.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch path := arg0.(type) {
+			case env.Uri:
+				dirPath := resolvePath(ps.WorkingPath, path.GetPath())
+				err := os.MkdirAll(dirPath, 0755)
+				if err != nil {
+					return MakeBuiltinError(ps, "Error creating directory: "+err.Error(), "mkdir-p")
+				}
+				return arg0
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "mkdir-p")
+			}
 		},
 	},
 
@@ -1228,6 +1742,171 @@ var Builtins_os = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	//
+	// ##### Additional OS utilities ##### "Common OS operations made simple"
+	//
+
+	// Gets the size of a file in bytes.
+	// Args:
+	// * path: uri representing the file
+	// Returns:
+	// * integer size in bytes
+	// Tags: #file #size
+	"file-size": {
+		Argsn: 1,
+		Doc:   "Gets the size of a file in bytes.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch path := arg0.(type) {
+			case env.Uri:
+				filePath := resolvePath(ps.WorkingPath, path.GetPath())
+				info, err := os.Stat(filePath)
+				if err != nil {
+					return MakeBuiltinError(ps, "Error getting file size: "+err.Error(), "file-size")
+				}
+				return *env.NewInteger(info.Size())
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-size")
+			}
+		},
+	},
+
+	// Touches a file (creates if doesn't exist, updates access time if exists).
+	// Args:
+	// * path: uri representing the file to touch
+	// Returns:
+	// * path uri if successful
+	// Tags: #file #create
+	"touch": {
+		Argsn: 1,
+		Doc:   "Creates a file if it doesn't exist, or updates its access time if it does.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch path := arg0.(type) {
+			case env.Uri:
+				filePath := resolvePath(ps.WorkingPath, path.GetPath())
+				now := time.Now()
+				err := os.Chtimes(filePath, now, now)
+				if os.IsNotExist(err) {
+					// File doesn't exist, create it
+					file, err := os.Create(filePath)
+					if err != nil {
+						return MakeBuiltinError(ps, "Error creating file: "+err.Error(), "touch")
+					}
+					file.Close()
+				} else if err != nil {
+					return MakeBuiltinError(ps, "Error touching file: "+err.Error(), "touch")
+				}
+				return arg0
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "touch")
+			}
+		},
+	},
+
+	// Creates a hard link to a file.
+	// Args:
+	// * source: uri representing the source file
+	// * link: uri representing the hard link to create
+	// Returns:
+	// * link uri if successful
+	// Tags: #file #link
+	"hardlink": {
+		Argsn: 2,
+		Doc:   "Creates a hard link to a file.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch src := arg0.(type) {
+			case env.Uri:
+				switch link := arg1.(type) {
+				case env.Uri:
+					srcPath := resolvePath(ps.WorkingPath, src.GetPath())
+					linkPath := resolvePath(ps.WorkingPath, link.GetPath())
+					err := os.Link(srcPath, linkPath)
+					if err != nil {
+						return MakeBuiltinError(ps, "Error creating hard link: "+err.Error(), "hardlink")
+					}
+					return arg1
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.UriType}, "hardlink")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "hardlink")
+			}
+		},
+	},
+
+	// Gets file or directory count in a directory.
+	// Args:
+	// * path: uri representing the directory (optional, defaults to current dir)
+	// Returns:
+	// * integer count of items
+	// Tags: #file #count
+	"count-dir": {
+		Argsn: 1,
+		Doc:   "Counts the number of files and directories in a directory.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var dirPath string
+			switch path := arg0.(type) {
+			case env.Uri:
+				dirPath = resolvePath(ps.WorkingPath, path.GetPath())
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "count-dir")
+			}
+
+			files, err := os.ReadDir(dirPath)
+			if err != nil {
+				return MakeBuiltinError(ps, "Error reading directory: "+err.Error(), "count-dir")
+			}
+			return *env.NewInteger(int64(len(files)))
+		},
+	},
+
+	// Gets the current process ID.
+	// Args:
+	// * none
+	// Returns:
+	// * integer process ID
+	// Tags: #system #process
+	"pid": {
+		Argsn: 0,
+		Doc:   "Gets the current process ID.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return *env.NewInteger(int64(os.Getpid()))
+		},
+	},
+
+	// Gets the parent process ID.
+	// Args:
+	// * none
+	// Returns:
+	// * integer parent process ID
+	// Tags: #system #process
+	"ppid": {
+		Argsn: 0,
+		Doc:   "Gets the parent process ID.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return *env.NewInteger(int64(os.Getppid()))
+		},
+	},
+
+	// Sleep for a specified duration.
+	// Args:
+	// * duration: integer seconds to sleep
+	// Returns:
+	// * integer seconds slept
+	// Tags: #system #time
+	"sleep": {
+		Argsn: 1,
+		Doc:   "Sleeps for the specified number of seconds.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch seconds := arg0.(type) {
+			case env.Integer:
+				time.Sleep(time.Duration(seconds.Value) * time.Second)
+				return arg0
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "sleep")
+			}
+		},
+	},
 }
 
 // resolvePath resolves a path - if it's absolute, returns it as-is; if relative, joins with workingPath
@@ -1475,6 +2154,108 @@ func extractZip(srcPath, dstPath string) error {
 			return err
 		}
 	}
+	return nil
+}
+
+// Helper function to find an executable in PATH
+func findExecutable(cmd string) (string, error) {
+	// Check if command is an absolute path
+	if filepath.IsAbs(cmd) {
+		if _, err := os.Stat(cmd); err == nil {
+			return cmd, nil
+		}
+		return "", fmt.Errorf("command not found")
+	}
+
+	// Search in PATH
+	pathEnv := os.Getenv("PATH")
+	if pathEnv == "" {
+		return "", fmt.Errorf("PATH environment variable not set")
+	}
+
+	pathDirs := strings.Split(pathEnv, string(os.PathListSeparator))
+	for _, dir := range pathDirs {
+		if dir == "" {
+			continue
+		}
+		fullPath := filepath.Join(dir, cmd)
+		
+		// Try with common executable extensions on Windows
+		extensions := []string{""}
+		if strings.Contains(strings.ToLower(os.Getenv("OS")), "windows") {
+			extensions = []string{"", ".exe", ".bat", ".cmd", ".com"}
+		}
+		
+		for _, ext := range extensions {
+			testPath := fullPath + ext
+			if info, err := os.Stat(testPath); err == nil && !info.IsDir() {
+				// Check if file is executable (basic check)
+				if info.Mode().Perm()&0111 != 0 || ext != "" {
+					return testPath, nil
+				}
+			}
+		}
+	}
+	return "", fmt.Errorf("command not found in PATH")
+}
+
+// Helper function to recursively copy directories
+func copyRecursive(src, dst string) error {
+	srcInfo, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+
+	if srcInfo.IsDir() {
+		// Create destination directory
+		if err := os.MkdirAll(dst, srcInfo.Mode()); err != nil {
+			return err
+		}
+
+		// Read source directory
+		entries, err := os.ReadDir(src)
+		if err != nil {
+			return err
+		}
+
+		// Copy each entry recursively
+		for _, entry := range entries {
+			srcPath := filepath.Join(src, entry.Name())
+			dstPath := filepath.Join(dst, entry.Name())
+			
+			if err := copyRecursive(srcPath, dstPath); err != nil {
+				return err
+			}
+		}
+	} else {
+		// Copy file
+		srcFile, err := os.Open(src)
+		if err != nil {
+			return err
+		}
+		defer srcFile.Close()
+
+		// Create destination directory if needed
+		if err := os.MkdirAll(filepath.Dir(dst), 0755); err != nil {
+			return err
+		}
+
+		dstFile, err := os.Create(dst)
+		if err != nil {
+			return err
+		}
+		defer dstFile.Close()
+
+		if _, err := io.Copy(dstFile, srcFile); err != nil {
+			return err
+		}
+
+		// Copy permissions
+		if err := os.Chmod(dst, srcInfo.Mode()); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

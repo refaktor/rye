@@ -258,7 +258,9 @@ func evalWord(word env.Word, es *env.ProgramState, val any) (any, env.Object) {
 			return val, nil // TODO ... make error
 		}
 	case "required":
-		if val == nil {
+		if _, ok := val.(*env.Error); ok {
+			return val, *env.NewString("required")
+		} else if val == nil {
 			return val, *env.NewString("required")
 		} else {
 			return val, nil

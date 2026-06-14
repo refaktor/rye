@@ -81,6 +81,22 @@ var ErrorCreationBuiltins = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	// equal { failure "error message" |type? } 'error
+	// equal { failure "error message" |message? } "error message"
+	// equal { failure 404 |status? } 404
+	// Args:
+	// * error_info: String message, Integer code, or block for multiple parameters
+	// Returns:
+	// * error object without setting any flags
+	"empty": {
+		Argsn: 0,
+		Doc:   "Creates an 404 error object without setting any flags.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return MakeRyeError(ps, *env.NewInteger(404), nil)
+		},
+	},
+
+	// Tests:
 	// equal { failure\wrap "outer error" failure "inner error" |message? } "outer error"
 	// equal { failure\wrap "outer error" failure "inner error" |type? } 'error
 	// Args:

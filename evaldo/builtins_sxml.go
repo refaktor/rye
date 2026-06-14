@@ -265,7 +265,7 @@ var Builtins_sxml = map[string]*env.Builtin{
 	// * block: SXML processing block with tag handlers
 	// Returns:
 	// * result of processing the XML
-	"reader//do-sxml": {
+	"reader//Do-sxml": {
 		Argsn: 2,
 		Doc:   "Processes XML using a streaming SAX-like approach with tag handlers.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -278,6 +278,8 @@ var Builtins_sxml = map[string]*env.Builtin{
 			return do_sxml(ps, arg0.(env.Native).Value.(io.Reader), rm)
 		},
 	},
+
+	// TODO ... make a do-sxml function that accepts a string
 
 	// Tests:
 	// ; TODO: method resolution for rye-sxml-start//Attr? not working - needs investigation

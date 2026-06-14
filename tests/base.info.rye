@@ -1107,6 +1107,30 @@ section "Strings " "" {
 	{
 	}
 
+	group "contains\\flag" 
+	"Checks if a block contains a specific flag (long or short), returning true if found or false if not found."
+	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ Block ]
+			2 [ Flagword ]
+		}
+		arg `collection: block of strings to search in`
+		arg `value: Flag value to search for`
+		returns `true if the collection contains the flag in short or long form, false otherwise`
+	}
+
+	{
+		equal { contains\flag "-help -yello -ho" -h|help  } true
+		equal { contains\flag "hello -help ho" -h|help  } true
+		equal { contains\flag "hello yello -ho" -h|help  } false
+		equal { contains\flag "-hello yello ho" -h|help  } false
+	}
+
+	{
+	}
+
 	group "has-suffix" 
 	"Checks if a string ends with a specific suffix, returning true if it does or false if it doesn't."
 	{
@@ -1349,14 +1373,14 @@ section "Strings " "" {
 	}
 
 	group "join" 
-	"Concatenates all strings, numbers or URIs in a block or list into a single string with no separator. If the first element is a URI, returns a URI."
+	"Concatenates all strings, numbers (integers and decimals) or URIs in a block or list into a single string with no separator. If the first element is a URI, returns a URI."
 	{
 		argsn 1
 		pure
 		argtypes {
 			1 [ List Block ]
 		}
-		arg `collection: Block or list of strings, numbers or URIs to join`
+		arg `collection: Block or list of strings, numbers (integers and decimals) or URIs to join`
 		returns `a single string with all values concatenated together, or a URI if first element is a URI`
 	}
 
@@ -1364,6 +1388,7 @@ section "Strings " "" {
 		equal { join { "Mary" "Anne" } } "MaryAnne"
 		equal { join { "Spot" "Fido" "Rex" } } "SpotFidoRex"
 		equal { join { 1 2 3 } } "123"
+		equal { join { 1.5 2.25 3.0 } } "1.5000002.2500003.000000"
 		equal { join { https://example.com/ "path" } |type? } 'uri
 		equal { join { } } ""
 	}
@@ -1372,7 +1397,7 @@ section "Strings " "" {
 	}
 
 	group "join\\with" 
-	"Concatenates all strings or numbers in a block or list into a single string with a specified delimiter between values."
+	"Concatenates all strings, integers or decimals in a block or list into a single string with a specified delimiter between values."
 	{
 		argsn 2
 		pure
@@ -1380,7 +1405,7 @@ section "Strings " "" {
 			1 [ List Block ]
 			2 [ String ]
 		}
-		arg `collection: Block or list of strings or numbers to join`
+		arg `collection: Block or list of strings, integers or decimals to join`
 		arg `delimiter: String to insert between each value`
 		returns `a single string with all values concatenated with the delimiter between them`
 	}
@@ -1389,6 +1414,7 @@ section "Strings " "" {
 		equal { join\with { "Mary" "Anne" } " " } "Mary Anne"
 		equal { join\with { "Spot" "Fido" "Rex" } "/" } "Spot/Fido/Rex"
 		equal { join\with { 1 2 3 } "-" } "1-2-3"
+		equal { join\with { 1.5 2.25 3.0 } "-" } "1.500000-2.250000-3.000000"
 	}
 
 	{
@@ -4850,7 +4876,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	group "bind!" 
-	"Binds a context to a parent context, allowing it to access the parent's values."
+	"Binds a context as a parent context to first context."
 	{
 		argsn 2
 		argtypes {
@@ -4864,6 +4890,68 @@ section "Contexts " "Context related functions" {
 
 	{
 		equal { c: context { y: 123 } cc: bind! context { z: does { y + 234 } } c , cc/z } 357
+	}
+
+	{
+	}
+
+	group "bind" 
+	"Creates a clone of the first context and binds the second context as its parent."
+	{
+		argsn 2
+		argtypes {
+			1 [ Context ]
+			2 [ Context ]
+		}
+		arg `child: Context object to clone and bind`
+		arg `parent: Context object to bind to as parent`
+		returns `a cloned child context with its parent set to the specified parent context`
+	}
+
+	{
+		equal { c: context { x: 123 } p: context { y: 456 } cc: bind c p cc/x } 123
+		equal { c: context { x: 123 } p: context { y: 456 } cc: bind c p cc/y } 456
+		equal { c: context { x: 123 } p: context { y: 456 } cc: bind c p do\inside c { x:: 999 } cc/x } 123 ; clone unchanged
+		equal { c: context { x: 123 } p: context { y: 456 } cc: bind c p do\inside c { x:: 999 } c/x } 999 ; original modified
+	}
+
+	{
+	}
+
+	group "anchor" 
+	"Creates a clone of a context and sets current context as its parent."
+	{
+		argsn 1
+		argtypes {
+			1 [ Context ]
+		}
+		arg `ctx: Context object to clone and anchor to current context`
+		returns `a cloned context with current context set as parent`
+	}
+
+	{
+		equal { c: context { x: 123 } cc: anchor c cc/x } 123
+		equal { c: context { x: 123 } cc: anchor c do\inside c { x:: 999 } cc/x } 123 ; clone unchanged
+		equal { c: context { x: 123 } cc: anchor c do\inside c { x:: 999 } c/x } 999 ; original modified
+	}
+
+	{
+	}
+
+	group "anchor!" 
+	"Sets current context as parent of the given context (modifies the context in place)."
+	{
+		argsn 1
+		argtypes {
+			1 [ Context ]
+		}
+		arg `ctx: Context object to anchor to current context`
+		returns `the modified context with current context set as parent`
+	}
+
+	{
+		equal { c: context { x: 123 } anchor! c c/x } 123
+		equal { c: context { x: 123 } anchor! c do\inside c { x:: 999 } c/x } 999 ; original modified
 	}
 
 	{
@@ -5315,6 +5403,29 @@ section "Contexts " "Context related functions" {
 
 	{
 		equal { max-ops! 100 reset-ops max-ops? } 0
+	}
+
+	{
+	}
+
+	group "enter" 
+	"Combines with and do\\in: takes a value to inject, a context as parent, and a block to evaluate with both."
+	{
+		argsn 3
+		argtypes {
+			2 [ Context ]
+			3 [ Block ]
+		}
+		arg `value: Value to inject into the block (like with)`
+		arg `context: Context to use as parent context during execution (like do\in)`
+		arg `block: Block of code to execute with both the injected value and specified parent context`
+		returns `result of executing the block with both the injected value and modified parent context`
+	}
+
+	{
+		equal { c: context { x: 100 } 123 |enter c { .print x } } 123
+		equal { c: context { x: 100 } 123 |enter c { add x } } 223
+		equal { pipes: context { echo: { .print } into-file: { .print } } 123 |enter pipes { .echo .into-file %data.txt } } 123
 	}
 
 	{
