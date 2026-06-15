@@ -344,10 +344,10 @@ var builtins_string = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
-	// equal { contains\flag "-help -yello -ho" -h|help  } true
-	// equal { contains\flag "hello -help ho" -h|help  } true
-	// equal { contains\flag "hello yello -ho" -h|help  } false
-	// equal { contains\flag "-hello yello ho" -h|help  } false
+	// equal { contains\flag { --help --yello -h } -h|help  } true
+	// equal { contains\flag load "hello --help ho" -h|help  } true
+	// equal { contains\flag { hello yello --ho } -h|help  } false
+	// equal { contains\flag { --hello yello ho } -h|help  } false
 	// Args:
 	// * collection: block of strings to search in
 	// * value: Flag value to search for

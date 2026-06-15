@@ -308,12 +308,12 @@ var builtins_contexts = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { c: context { x: 123 } p: context { y: 456 } cc: bind c p cc/x } 123
-	// equal { c: context { x: 123 } p: context { y: 456 } cc: bind c p cc/y } 456  
-	// equal { c: context { x: 123 } p: context { y: 456 } cc: bind c p do\inside c { x:: 999 } cc/x } 123 ; clone unchanged
-	// equal { c: context { x: 123 } p: context { y: 456 } cc: bind c p do\inside c { x:: 999 } c/x } 999 ; original modified
+	// equal { c: context { x: 123 } p: context { y: 456 } cc: bind c p cc/y } 456
+	// equal { c: context { x:: 123 } p: context { y:: 456 } cc: bind c p do\inside c { x:: 999 } cc/x } 123 ; clone unchanged
+	// equal { c: context { x:: 123 } p: context { y:: 456 } cc: bind c p do\inside c { x:: 999 } c/x } 999 ; original modified
 	// Args:
 	// * child: Context object to clone and bind
-	// * parent: Context object to bind to as parent  
+	// * parent: Context object to bind to as parent
 	// Returns:
 	// * a cloned child context with its parent set to the specified parent context
 	"bind": { // **
@@ -341,8 +341,8 @@ var builtins_contexts = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { c: context { x: 123 } cc: anchor c cc/x } 123
-	// equal { c: context { x: 123 } cc: anchor c do\inside c { x:: 999 } cc/x } 123 ; clone unchanged
-	// equal { c: context { x: 123 } cc: anchor c do\inside c { x:: 999 } c/x } 999 ; original modified
+	// equal { c: context { x:: 123 } cc: anchor c do\inside c { x:: 999 } cc/x } 123 ; clone unchanged
+	// equal { c: context { x:: 123 } cc: anchor c do\inside c { x:: 999 } c/x } 999 ; original modified
 	// Args:
 	// * ctx: Context object to clone and anchor to current context
 	// Returns:
@@ -367,7 +367,7 @@ var builtins_contexts = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { c: context { x: 123 } anchor! c c/x } 123
-	// equal { c: context { x: 123 } anchor! c do\inside c { x:: 999 } c/x } 999 ; original modified
+	// equal { c: context { x:: 123 } anchor! c do\inside c { x:: 999 } c/x } 999 ; original modified
 	// Args:
 	// * ctx: Context object to anchor to current context
 	// Returns:
@@ -972,8 +972,8 @@ var builtins_contexts = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { c: context { x: 100 } 123 |enter c { .print x } } 123
-	// equal { c: context { x: 100 } 123 |enter c { add x } } 223  
+	// equal { c: context { x: 100 } 123 |enter c { x } } 123
+	// equal { c: context { x: 100 } 123 |enter c { + x } } 223
 	// equal { pipes: context { echo: { .print } into-file: { .print } } 123 |enter pipes { .echo .into-file %data.txt } } 123
 	// Args:
 	// * value: Value to inject into the block (like with)
@@ -986,14 +986,14 @@ var builtins_contexts = map[string]*env.Builtin{
 		Doc:   "Combines with and do\\in: takes a value to inject, a context as parent, and a block to evaluate with both.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			value := arg0 // First argument: value to inject (like with)
-			
+
 			switch ctx := arg1.(type) { // Second argument: context (like do\in)
 			case *env.RyeCtx:
 				switch bloc := arg2.(type) { // Third argument: block to execute
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					
+
 					// First, set up the parent context like do\in does
 					tempCtx := ctx
 					for {
@@ -1009,22 +1009,22 @@ var builtins_contexts = map[string]*env.Builtin{
 							break
 						}
 					}
-					
+
 					// Save current parent context
 					temp := ps.Ctx.Parent
-					// Set argument context as parent  
+					// Set argument context as parent
 					ps.Ctx.Parent = ctx
-					
+
 					// Now evaluate the block with value injection like with does
 					EvalBlockInj(ps, value, true)
-					
+
 					MaybeDisplayFailureOrError(ps, ps.Idx, "enter")
-					
+
 					// Restore original parent context
 					ps.Ctx.Parent = temp
 					ps.Ser = ser
 					return ps.Res
-					
+
 				default:
 					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "enter")
 				}
