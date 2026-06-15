@@ -292,19 +292,19 @@ section "SXML " "Streaming, SAX-like XML processing" {
 	{
 		stdout {
 		"<scene><bot>C3PO</bot><bot>R2D2</bot><jedi>Luke</jedi></scene>" |reader |probe
-		|probe |do-sxml { _ [ .prns ] }
+		|probe |Do-sxml { _ [ .prns ] }
 		} "C3PO R2D2 Luke "
 		stdout {
 		"<scene><bot>C3PO</bot><bot>R2D2</bot><jedi>Luke</jedi></scene>" |reader
-		|do-sxml { <bot> { _ [ .prns ] } }
+		|Do-sxml { <bot> { _ [ .prns ] } }
 		} "C3PO R2D2 "
 		stdout {
 		"<scene><ship>XWing</ship><bot>R2D2</bot><jedi>Luke</jedi></scene>" |reader
-		|do-sxml { <bot> <jedi> { _ [ .prns ] } }
+		|Do-sxml { <bot> <jedi> { _ [ .prns ] } }
 		} "R2D2 Luke "
 		stdout {
 		"<scene><xwing><bot>R2D2</bot><person>Luke</person></xwing><destroyer><person>Vader</person></destroyer></scene>" |reader
-		|do-sxml { <xwing> { <person> { _ [ .prns ] } } }
+		|Do-sxml { <xwing> { <person> { _ [ .prns ] } } }
 		} "Luke "
 	}
 

@@ -10,12 +10,14 @@ import (
 	"io"
 	"net"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
 
 	"github.com/atotto/clipboard"
+	"github.com/GianlucaP106/gotmux/gotmux"
 	"github.com/refaktor/go-find"
 	"github.com/refaktor/rye/env"
 
@@ -1904,6 +1906,307 @@ var Builtins_os = map[string]*env.Builtin{
 				return arg0
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "sleep")
+			}
+		},
+	},
+
+	//
+	// ##### TMUX ##### "tmux terminal multiplexer functions using gotmux library"
+	//
+
+	// Args:
+	// * none
+	// Returns:
+	// * boolean indicating if tmux is available
+	// Tags: #tmux #check
+	"tmux-available?": {
+		Argsn: 0,
+		Doc:   "Checks if tmux is available on the system.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			_, err := exec.LookPath("tmux")
+			return *env.NewBoolean(err == nil)
+		},
+	},
+
+	// Args:
+	// * session-name: string name for the new session
+	// Returns:
+	// * native tmux session object
+	// Tags: #tmux #session
+	"tmux-new-session": {
+		Argsn: 1,
+		Doc:   "Creates a new tmux session with the given name using gotmux library.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			tmux, err := gotmux.DefaultTmux()
+			if err != nil {
+				return MakeBuiltinError(ps, "Failed to connect to tmux: "+err.Error(), "tmux-new-session")
+			}
+
+			switch name := arg0.(type) {
+			case env.String:
+				session, err := tmux.NewSession(&gotmux.SessionOptions{
+					Name: name.Value,
+				})
+				if err != nil {
+					return MakeBuiltinError(ps, "Failed to create session: "+err.Error(), "tmux-new-session")
+				}
+				return *env.NewNative(ps.Idx, session, "tmux-session")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "tmux-new-session")
+			}
+		},
+	},
+
+	// Args:
+	// * none
+	// Returns:
+	// * block of native tmux session objects
+	// Tags: #tmux #session #list
+	"tmux-list-sessions": {
+		Argsn: 0,
+		Doc:   "Lists all tmux sessions using gotmux library.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			tmux, err := gotmux.DefaultTmux()
+			if err != nil {
+				return MakeBuiltinError(ps, "Failed to connect to tmux: "+err.Error(), "tmux-list-sessions")
+			}
+
+			sessions, err := tmux.ListSessions()
+			if err != nil {
+				return MakeBuiltinError(ps, "Failed to list sessions: "+err.Error(), "tmux-list-sessions")
+			}
+
+			items := make([]env.Object, len(sessions))
+			for i, session := range sessions {
+				items[i] = *env.NewNative(ps.Idx, session, "tmux-session")
+			}
+			return *env.NewBlock(*env.NewTSeries(items))
+		},
+	},
+
+	// Args:
+	// * session-name: string name of the session to get
+	// Returns:
+	// * native tmux session object
+	// Tags: #tmux #session
+	"tmux-get-session": {
+		Argsn: 1,
+		Doc:   "Gets a tmux session by name using gotmux library.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			tmux, err := gotmux.DefaultTmux()
+			if err != nil {
+				return MakeBuiltinError(ps, "Failed to connect to tmux: "+err.Error(), "tmux-get-session")
+			}
+
+			switch name := arg0.(type) {
+			case env.String:
+				session, err := tmux.GetSessionByName(name.Value)
+				if err != nil {
+					return MakeBuiltinError(ps, "Failed to get session: "+err.Error(), "tmux-get-session")
+				}
+				return *env.NewNative(ps.Idx, session, "tmux-session")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "tmux-get-session")
+			}
+		},
+	},
+
+	// Args:
+	// * session: native tmux session object
+	// Returns:
+	// * native tmux window object
+	// Tags: #tmux #window
+	"tmux-new-window": {
+		Argsn: 1,
+		Doc:   "Creates a new window in the given tmux session.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch sess := arg0.(type) {
+			case env.Native:
+				if session, ok := sess.Value.(*gotmux.Session); ok {
+					window, err := session.New()
+					if err != nil {
+						return MakeBuiltinError(ps, "Failed to create window: "+err.Error(), "tmux-new-window")
+					}
+					return *env.NewNative(ps.Idx, window, "tmux-window")
+				}
+				return MakeBuiltinError(ps, "Expected tmux-session object", "tmux-new-window")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tmux-new-window")
+			}
+		},
+	},
+
+	// Args:
+	// * session: native tmux session object
+	// * window-name: string name for the window
+	// Returns:
+	// * native tmux window object
+	// Tags: #tmux #window
+	"tmux-new-window-named": {
+		Argsn: 2,
+		Doc:   "Creates a new window in the given tmux session with a specific name.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch sess := arg0.(type) {
+			case env.Native:
+				if session, ok := sess.Value.(*gotmux.Session); ok {
+					switch name := arg1.(type) {
+					case env.String:
+						window, err := session.NewWindow(&gotmux.NewWindowOptions{
+							WindowName: name.Value,
+						})
+						if err != nil {
+							return MakeBuiltinError(ps, "Failed to create named window: "+err.Error(), "tmux-new-window-named")
+						}
+						return *env.NewNative(ps.Idx, window, "tmux-window")
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.StringType}, "tmux-new-window-named")
+					}
+				}
+				return MakeBuiltinError(ps, "Expected tmux-session object", "tmux-new-window-named")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tmux-new-window-named")
+			}
+		},
+	},
+
+	// Args:
+	// * session: native tmux session object
+	// Returns:
+	// * block of native tmux window objects
+	// Tags: #tmux #window #list
+	"tmux-list-windows": {
+		Argsn: 1,
+		Doc:   "Lists all windows in the given tmux session.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch sess := arg0.(type) {
+			case env.Native:
+				if session, ok := sess.Value.(*gotmux.Session); ok {
+					windows, err := session.ListWindows()
+					if err != nil {
+						return MakeBuiltinError(ps, "Failed to list windows: "+err.Error(), "tmux-list-windows")
+					}
+					
+					items := make([]env.Object, len(windows))
+					for i, window := range windows {
+						items[i] = *env.NewNative(ps.Idx, window, "tmux-window")
+					}
+					return *env.NewBlock(*env.NewTSeries(items))
+				}
+				return MakeBuiltinError(ps, "Expected tmux-session object", "tmux-list-windows")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tmux-list-windows")
+			}
+		},
+	},
+
+	// Args:
+	// * window: native tmux window object
+	// * index: integer pane index (0-based)
+	// Returns:
+	// * native tmux pane object
+	// Tags: #tmux #pane
+	"tmux-get-pane": {
+		Argsn: 2,
+		Doc:   "Gets a pane from a tmux window by index.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch win := arg0.(type) {
+			case env.Native:
+				if window, ok := win.Value.(*gotmux.Window); ok {
+					switch idx := arg1.(type) {
+					case env.Integer:
+						pane, err := window.GetPaneByIndex(int(idx.Value))
+						if err != nil {
+							return MakeBuiltinError(ps, "Failed to get pane: "+err.Error(), "tmux-get-pane")
+						}
+						return *env.NewNative(ps.Idx, pane, "tmux-pane")
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "tmux-get-pane")
+					}
+				}
+				return MakeBuiltinError(ps, "Expected tmux-window object", "tmux-get-pane")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tmux-get-pane")
+			}
+		},
+	},
+
+	// Args:
+	// * pane: native tmux pane object
+	// Returns:
+	// * native tmux pane object
+	// Tags: #tmux #pane
+	"tmux-split-pane": {
+		Argsn: 1,
+		Doc:   "Splits a tmux pane horizontally.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch p := arg0.(type) {
+			case env.Native:
+				if pane, ok := p.Value.(*gotmux.Pane); ok {
+					err := pane.Split()
+					if err != nil {
+						return MakeBuiltinError(ps, "Failed to split pane: "+err.Error(), "tmux-split-pane")
+					}
+					return arg0
+				}
+				return MakeBuiltinError(ps, "Expected tmux-pane object", "tmux-split-pane")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tmux-split-pane")
+			}
+		},
+	},
+
+	// Args:
+	// * pane: native tmux pane object
+	// * command: string command to send
+	// Returns:
+	// * native tmux pane object
+	// Tags: #tmux #pane #command
+	"tmux-send-keys": {
+		Argsn: 2,
+		Doc:   "Sends keys/command to a tmux pane.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch p := arg0.(type) {
+			case env.Native:
+				if pane, ok := p.Value.(*gotmux.Pane); ok {
+					switch cmd := arg1.(type) {
+					case env.String:
+						err := pane.SendKeys(cmd.Value)
+						if err != nil {
+							return MakeBuiltinError(ps, "Failed to send keys: "+err.Error(), "tmux-send-keys")
+						}
+						return arg0
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.StringType}, "tmux-send-keys")
+					}
+				}
+				return MakeBuiltinError(ps, "Expected tmux-pane object", "tmux-send-keys")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tmux-send-keys")
+			}
+		},
+	},
+
+	// Args:
+	// * session: native tmux session object
+	// Returns:
+	// * native tmux session object
+	// Tags: #tmux #session
+	"tmux-kill-session": {
+		Argsn: 1,
+		Doc:   "Kills/destroys a tmux session.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch sess := arg0.(type) {
+			case env.Native:
+				if session, ok := sess.Value.(*gotmux.Session); ok {
+					err := session.Kill()
+					if err != nil {
+						return MakeBuiltinError(ps, "Failed to kill session: "+err.Error(), "tmux-kill-session")
+					}
+					return arg0
+				}
+				return MakeBuiltinError(ps, "Expected tmux-session object", "tmux-kill-session")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tmux-kill-session")
 			}
 		},
 	},
