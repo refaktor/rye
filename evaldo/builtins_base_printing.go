@@ -304,47 +304,60 @@ var builtins_printing = map[string]*env.Builtin{
 	// equal { format 123 "num: %d" } "num: 123"
 	// equal { format "hello" "%s world" } "hello world"
 	// equal { format 3.14159 "pi: %.2f" } "pi: 3.14"
+	// equal { format 42 http://example.com/items/%d } http://example.com/items/42
+	// equal { format "bob" http://example.com/users/%s } http://example.com/users/bob
 	// Args:
-	// * value: Value to format (string, integer, or decimal)
-	// * format: String containing Go's sprintf format specifiers
+	// * value: Value to format (string, integer, decimal, block, or URI)
+	// * format: String or URI containing Go's sprintf format specifiers
 	// Returns:
-	// * formatted string
+	// * formatted string, or URI with its path formatted (preserving scheme)
 	"format": {
 		Argsn: 2,
-		Doc:   "Formats a value according to Go's sprintf format specifiers, returning the formatted string.",
+		Doc:   "Formats a value according to Go's sprintf format specifiers, returning the formatted string. If the format argument is a URI, the format specifiers are applied to the URI path and a new URI is returned.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var res string
-			switch arg := arg1.(type) {
-			case env.String:
-				switch val := arg0.(type) {
+			doFormat := func(fmtStr string, val env.Object) (string, bool) {
+				switch v := val.(type) {
 				case env.String:
-					res = fmt.Sprintf(arg.Value, val.Value)
+					return fmt.Sprintf(fmtStr, v.Value), true
 				case env.Integer:
-					res = fmt.Sprintf(arg.Value, val.Value)
+					return fmt.Sprintf(fmtStr, v.Value), true
 				case env.Decimal:
-					res = fmt.Sprintf(arg.Value, val.Value)
+					return fmt.Sprintf(fmtStr, v.Value), true
 				case env.Block:
-					series := val.Series
+					series := v.Series
 					vals := make([]interface{}, series.Len())
 					for i, obj := range series.GetAll() {
-						switch v := obj.(type) {
+						switch o := obj.(type) {
 						case env.Integer:
-							vals[i] = v.Value
+							vals[i] = o.Value
 						case env.String:
-							vals[i] = v.Value
+							vals[i] = o.Value
 						case env.Decimal:
-							vals[i] = v.Value
+							vals[i] = o.Value
 						default:
-							vals[i] = v.Print(*ps.Idx)
+							vals[i] = o.Print(*ps.Idx)
 						}
 					}
-					res = fmt.Sprintf(arg.Value, vals...)
+					return fmt.Sprintf(fmtStr, vals...), true
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.StringType, env.DecimalType, env.IntegerType, env.BlockType}, "format")
+					return "", false
+				}
+			}
+			switch arg := arg1.(type) {
+			case env.String:
+				res, ok := doFormat(arg.Value, arg0)
+				if !ok {
+					return MakeArgError(ps, 1, []env.Type{env.StringType, env.DecimalType, env.IntegerType, env.BlockType, env.UriType}, "format")
 				}
 				return *env.NewString(res)
+			case env.Uri:
+				res, ok := doFormat(arg.Path, arg0)
+				if !ok {
+					return MakeArgError(ps, 1, []env.Type{env.StringType, env.DecimalType, env.IntegerType, env.BlockType, env.UriType}, "format")
+				}
+				return *env.NewUri(ps.Idx, arg.Scheme, res)
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.StringType}, "format")
+				return MakeArgError(ps, 2, []env.Type{env.StringType, env.UriType}, "format")
 			}
 		},
 	},

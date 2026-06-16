@@ -795,3 +795,137 @@ func DISABLED_Test_hofs_seek_2(t *testing.T) { // two keys, int as string, pass 
 		t.Error("Expected result value 4")
 	}
 }
+
+// Tests for format builtin with URI values
+// These call builtins_printing["format"].Fn directly (same style as TestBuiltin_inc etc.)
+
+func TestFormat_string_int(t *testing.T) {
+	genv := loader.GetIdxs()
+	builtin := builtins_printing["format"]
+	es := env.NewProgramStateOLD(env.TSeries{}, genv)
+	obj := builtin.Fn(es, *env.NewInteger(123), *env.NewString("num: %d"), nil, nil, nil)
+	if obj.Type() != env.StringType {
+		t.Errorf("Expected String type, got %v", obj.Type())
+	}
+	if obj.(env.String).Value != "num: 123" {
+		t.Errorf("Expected %q, got %q", "num: 123", obj.(env.String).Value)
+	}
+}
+
+func TestFormat_string_str(t *testing.T) {
+	genv := loader.GetIdxs()
+	builtin := builtins_printing["format"]
+	es := env.NewProgramStateOLD(env.TSeries{}, genv)
+	obj := builtin.Fn(es, *env.NewString("hello"), *env.NewString("%s world"), nil, nil, nil)
+	if obj.Type() != env.StringType {
+		t.Errorf("Expected String type, got %v", obj.Type())
+	}
+	if obj.(env.String).Value != "hello world" {
+		t.Errorf("Expected %q, got %q", "hello world", obj.(env.String).Value)
+	}
+}
+
+func TestFormat_string_decimal(t *testing.T) {
+	genv := loader.GetIdxs()
+	builtin := builtins_printing["format"]
+	es := env.NewProgramStateOLD(env.TSeries{}, genv)
+	obj := builtin.Fn(es, *env.NewDecimal(3.14159), *env.NewString("pi: %.2f"), nil, nil, nil)
+	if obj.Type() != env.StringType {
+		t.Errorf("Expected String type, got %v", obj.Type())
+	}
+	if obj.(env.String).Value != "pi: 3.14" {
+		t.Errorf("Expected %q, got %q", "pi: 3.14", obj.(env.String).Value)
+	}
+}
+
+func TestFormat_uri_integer(t *testing.T) {
+	genv := loader.GetIdxs()
+	builtin := builtins_printing["format"]
+	es := env.NewProgramStateOLD(env.TSeries{}, genv)
+	uriArg := env.NewUri1(genv, "http://example.com/items/%d")
+	obj := builtin.Fn(es, *env.NewInteger(42), *uriArg, nil, nil, nil)
+	if obj.Type() != env.UriType {
+		t.Errorf("Expected URI type, got %v (%v)", obj.Type(), obj.Inspect(*genv))
+	}
+	uri := obj.(env.Uri)
+	wantPath := "example.com/items/42"
+	if uri.Path != wantPath {
+		t.Errorf("Expected path %q, got %q", wantPath, uri.Path)
+	}
+	wantScheme := "http"
+	if genv.GetWord(uri.Scheme.Index) != wantScheme {
+		t.Errorf("Expected scheme %q, got %q", wantScheme, genv.GetWord(uri.Scheme.Index))
+	}
+}
+
+func TestFormat_uri_string(t *testing.T) {
+	genv := loader.GetIdxs()
+	builtin := builtins_printing["format"]
+	es := env.NewProgramStateOLD(env.TSeries{}, genv)
+	uriArg := env.NewUri1(genv, "http://example.com/users/%s")
+	obj := builtin.Fn(es, *env.NewString("bob"), *uriArg, nil, nil, nil)
+	if obj.Type() != env.UriType {
+		t.Errorf("Expected URI type, got %v (%v)", obj.Type(), obj.Inspect(*genv))
+	}
+	uri := obj.(env.Uri)
+	wantPath := "example.com/users/bob"
+	if uri.Path != wantPath {
+		t.Errorf("Expected path %q, got %q", wantPath, uri.Path)
+	}
+}
+
+func TestFormat_uri_decimal(t *testing.T) {
+	genv := loader.GetIdxs()
+	builtin := builtins_printing["format"]
+	es := env.NewProgramStateOLD(env.TSeries{}, genv)
+	uriArg := env.NewUri1(genv, "http://example.com/value/%.2f")
+	obj := builtin.Fn(es, *env.NewDecimal(3.14), *uriArg, nil, nil, nil)
+	if obj.Type() != env.UriType {
+		t.Errorf("Expected URI type, got %v (%v)", obj.Type(), obj.Inspect(*genv))
+	}
+	uri := obj.(env.Uri)
+	wantPath := "example.com/value/3.14"
+	if uri.Path != wantPath {
+		t.Errorf("Expected path %q, got %q", wantPath, uri.Path)
+	}
+}
+
+func TestFormat_uri_preserves_scheme(t *testing.T) {
+	genv := loader.GetIdxs()
+	builtin := builtins_printing["format"]
+	es := env.NewProgramStateOLD(env.TSeries{}, genv)
+	uriArg := env.NewUri1(genv, "https://api.example.com/v1/page/%d")
+	obj := builtin.Fn(es, *env.NewInteger(7), *uriArg, nil, nil, nil)
+	if obj.Type() != env.UriType {
+		t.Errorf("Expected URI type, got %v (%v)", obj.Type(), obj.Inspect(*genv))
+	}
+	uri := obj.(env.Uri)
+	wantPath := "api.example.com/v1/page/7"
+	if uri.Path != wantPath {
+		t.Errorf("Expected path %q, got %q", wantPath, uri.Path)
+	}
+	wantScheme := "https"
+	if genv.GetWord(uri.Scheme.Index) != wantScheme {
+		t.Errorf("Expected scheme %q, got %q", wantScheme, genv.GetWord(uri.Scheme.Index))
+	}
+}
+
+func TestFormat_uri_block_multi(t *testing.T) {
+	genv := loader.GetIdxs()
+	builtin := builtins_printing["format"]
+	es := env.NewProgramStateOLD(env.TSeries{}, genv)
+	uriArg := env.NewUri1(genv, "http://example.com/%s/page/%d")
+	blockVal := *env.NewBlock(*env.NewTSeries([]env.Object{
+		*env.NewString("alice"),
+		*env.NewInteger(5),
+	}))
+	obj := builtin.Fn(es, blockVal, *uriArg, nil, nil, nil)
+	if obj.Type() != env.UriType {
+		t.Errorf("Expected URI type, got %v (%v)", obj.Type(), obj.Inspect(*genv))
+	}
+	uri := obj.(env.Uri)
+	wantPath := "example.com/alice/page/5"
+	if uri.Path != wantPath {
+		t.Errorf("Expected path %q, got %q", wantPath, uri.Path)
+	}
+}
