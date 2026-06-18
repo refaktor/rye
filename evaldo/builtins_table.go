@@ -242,6 +242,54 @@ var Builtins_table = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	//  equal { table { 'k 'v } { "a" 1 "b" 2 } |to-dict |-> "a" } 1
+	//  equal { table { 'k 'v } { "x" 100 "y" 200 } |to-dict |type? } 'dict
+	//  equal { table { 'k 'v } { "a" 1 "b" 2 } |to-dict |length? } 2
+	//  equal { table { 'name 'score } { "Alice" 95 "Bob" 87 } |to-dict |-> "Bob" } 87
+	//  error { table { 'a } { 1 2 3 } |to-dict }
+	// Args:
+	//  * table - a two-column table where the first column becomes keys and the second becomes values
+	// Returns:
+	//  * a dict mapping each value in the first column (as string key) to the corresponding value in the second column
+	"to-dict": {
+		Argsn: 1,
+		Doc:   "Creates a dict from a two-column table, using the first column as keys and the second column as values.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var spr *env.Table
+			switch s := arg0.(type) {
+			case env.Table:
+				spr = &s
+			case *env.Table:
+				spr = s
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "to-dict")
+			}
+			if len(spr.Cols) != 2 {
+				return MakeBuiltinError(ps, fmt.Sprintf("to-dict requires a table with exactly 2 columns, got %d", len(spr.Cols)), "to-dict")
+			}
+			data := make(map[string]any, len(spr.Rows))
+			for _, row := range spr.Rows {
+				keyObj := env.ToRyeValue(row.Values[0])
+				var keyStr string
+				switch k := keyObj.(type) {
+				case env.String:
+					keyStr = k.Value
+				case env.Word:
+					keyStr = ps.Idx.GetWord(k.Index)
+				case env.Integer:
+					keyStr = fmt.Sprintf("%d", k.Value)
+				case env.Decimal:
+					keyStr = fmt.Sprintf("%g", k.Value)
+				default:
+					return MakeBuiltinError(ps, fmt.Sprintf("to-dict: key column values must be strings or numbers, got %s", keyObj.Inspect(*ps.Idx)), "to-dict")
+				}
+				data[keyStr] = env.ToRyeValue(row.Values[1])
+			}
+			return *env.NewDict(data)
+		},
+	},
 	//
 	// ##### Filtering #####  "Functions that construct a table."
 	//

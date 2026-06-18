@@ -610,6 +610,68 @@ func DisplayDateInput(initialDate string, right int) (env.Object, bool) {
 	}
 }
 
+// DisplayIntInput displays an interactive date input in format YYYY-MM-DD
+// Allows arrow keys to navigate between fields and increment/decrement values
+// Returns a string in format "YYYY-MM-DD"
+func DisplayIntInput(initialNum string, right int) (env.Object, bool) {
+	// Parse initial date or use current date
+	num := 0
+	if initialNum != "" {
+		num, _ = strconv.Atoi(initialNum)
+	}
+
+	// Helper to display with highlighting
+	display := func() {
+		RestoreCurPos()
+		ColorBrGreen()
+		Bold()
+		termPrint(strconv.Itoa(num))
+		CloseProps()
+	}
+
+	CurRight(right)
+	SaveCurPos()
+	display()
+
+	defer func() {
+		ShowCur()
+	}()
+
+	for {
+		ascii, keyCode, err := GetChar()
+
+		if (ascii == 3 || ascii == 27) || err != nil {
+			termPrintln("")
+			return nil, true
+		}
+
+		if ascii == 13 {
+			termPrintln("")
+			return *env.NewInteger(int64(num)), false
+		}
+
+		if keyCode == 38 { // Up arrow - increment
+			num++
+			if num > 9999 {
+				num = 1
+			}
+			display()
+		} else if keyCode == 40 { // Down arrow - decrement
+			num--
+			if num < 1 {
+				num = 9999
+			}
+			display()
+		} else if ascii >= 48 && ascii <= 57 { // Digit keys 0-9
+			digit := int(ascii - 48)
+			numStr := fmt.Sprintf("%04d", num)
+			numStr = numStr[1:] + strconv.Itoa(digit)
+			num, _ = strconv.Atoi(numStr)
+			display()
+		}
+	}
+}
+
 func DisplayDict(bloc env.Dict, idx *env.Idxs) (env.Object, bool) {
 	HideCur()
 	curr := 0

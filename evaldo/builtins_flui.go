@@ -76,6 +76,24 @@ var Builtins_flui = map[string]*env.Builtin{
 			}
 		},
 	},
+	"input\\integer": {
+		Argsn: 1,
+		Doc:   "Interactive date input in format YYYY-MM-DD. Use arrow keys to navigate between year/month/day fields and increment/decrement values, or type digits. Returns date string. Ctrl+C cancels and returns a failure.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			term.SaveCurPos()
+			switch initialDate := arg0.(type) {
+			case env.String:
+				obj, esc := term.DisplayIntInput(initialDate.Value, 0)
+				if esc {
+					ps.FailureFlag = true
+					return env.NewError("canceled by user")
+				}
+				return obj
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "input\\integer")
+			}
+		},
+	},
 	"datepicker": {
 		Argsn: 1,
 		Doc:   "Interactive date input in format YYYY-MM-DD. Use arrow keys to navigate between year/month/day fields and increment/decrement values, or type digits. Returns date string. Ctrl+C cancels and returns a failure.",
@@ -84,6 +102,24 @@ var Builtins_flui = map[string]*env.Builtin{
 			switch initialDate := arg0.(type) {
 			case env.String:
 				obj, esc := term.DisplayDateInput(initialDate.Value, 0)
+				if esc {
+					ps.FailureFlag = true
+					return env.NewError("canceled by user")
+				}
+				return obj
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "datepicker")
+			}
+		},
+	},
+	"selectbox": {
+		Argsn: 1,
+		Doc:   "Interactive date input in format YYYY-MM-DD. Use arrow keys to navigate between year/month/day fields and increment/decrement values, or type digits. Returns date string. Ctrl+C cancels and returns a failure.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			term.SaveCurPos()
+			switch options := arg0.(type) {
+			case env.Block:
+				obj, esc := term.DisplaySelection(options, ps.Idx, 0)
 				if esc {
 					ps.FailureFlag = true
 					return env.NewError("canceled by user")

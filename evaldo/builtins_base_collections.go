@@ -47,6 +47,57 @@ var builtins_collection = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	// equal { randomize { 1 2 3 } |type? } 'block
+	// equal { randomize { 1 2 3 } |length } 3
+	// equal { randomize { 1 2 3 } |sort } { 1 2 3 }
+	// equal { randomize list { 1 2 3 } |type? } 'list
+	// equal { randomize list { 1 2 3 } |length } 3
+	// equal { randomize list { 1 2 3 } |sort } list { 1 2 3 }
+	// Args:
+	// * collection: Block or list of values to randomize
+	// Returns:
+	// * a new block or list with the same values in a randomized order
+	"randomize": {
+		Argsn: 1,
+		Doc:   "Returns a new block or list with the same values as the input but in a randomized (shuffled) order.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg0.(type) {
+			case env.Block:
+				src := arg.Series.S
+				newl := make([]env.Object, len(src))
+				copy(newl, src)
+				// Fisher-Yates shuffle using crypto/rand
+				for i := len(newl) - 1; i > 0; i-- {
+					jBig, err := rand.Int(rand.Reader, big.NewInt(int64(i+1)))
+					if err != nil {
+						return MakeBuiltinError(ps, err.Error(), "randomize")
+					}
+					j := int(jBig.Int64())
+					newl[i], newl[j] = newl[j], newl[i]
+				}
+				return *env.NewBlock(*env.NewTSeries(newl))
+			case env.List:
+				src := arg.Data
+				newl := make([]any, len(src))
+				copy(newl, src)
+				// Fisher-Yates shuffle using crypto/rand
+				for i := len(newl) - 1; i > 0; i-- {
+					jBig, err := rand.Int(rand.Reader, big.NewInt(int64(i+1)))
+					if err != nil {
+						return MakeBuiltinError(ps, err.Error(), "randomize")
+					}
+					j := int(jBig.Int64())
+					newl[i], newl[j] = newl[j], newl[i]
+				}
+				return *env.NewList(newl)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "randomize")
+			}
+		},
+	},
+
+	// Tests:
 	// equal { unpack { { 123 } { 234 } } } { 123 234 }
 	// equal { unpack { { { 123 } } { 234 } } } { { 123 } 234 }
 	// ; equal { unpack list { list { 1 2 } list { 3 4 } } } list { 1 2 3 4 }

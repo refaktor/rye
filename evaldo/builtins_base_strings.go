@@ -3,6 +3,7 @@ package evaldo
 import (
 	"encoding/base64"
 	"encoding/pem"
+	"net/url"
 
 	"github.com/refaktor/rye/env"
 
@@ -1031,6 +1032,86 @@ var builtins_string = map[string]*env.Builtin{
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType}, "split\\every")
+			}
+		},
+	},
+
+	//
+	// ##### URL Encoding ##### ""
+	//
+	// Tests:
+	// equal { url-encode { name: "John Doe" city: "New York" } } "?city=New+York&name=John+Doe"
+	// equal { url-encode { } } ""
+	// equal { url-encode { q: "hello world" } } "?q=hello+world"
+	// equal { url-encode { a: "foo" b: "bar" } |contains? "a=foo" } 1
+	// equal { url-encode { a: "foo" b: "bar" } |contains? "b=bar" } 1
+	// equal { url-encode { a: "foo" b: "bar" } |first } '?'
+	// equal { url-encode { "my-key" "val" } |contains? "my-key=val" } 1
+	// equal { x: "hello" url-encode { q: x } } "?q=hello"
+	// error { url-encode "not-a-block" }
+	// Args:
+	// * params: Block of name: value pairs where names are set-words or strings and values are strings, integers, decimals, or words (evaluated from context)
+	// Returns:
+	// * URL query string starting with '?' and pairs joined with '&', all special characters percent-encoded
+	"url-encode": {
+		Argsn: 1,
+		Doc:   "Encodes a block of name: value pairs as a URL query string (e.g. ?name=John+Doe&city=New+York), percent-encoding all special characters. Keys can be set-words (name:) or strings (\"name\"), values can be strings, integers, decimals, or words (looked up in context).",
+		Pure:  false,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch blk := arg0.(type) {
+			case env.Block:
+				params := url.Values{}
+				series := blk.Series.S
+				i := 0
+				for i < len(series) {
+					obj := series[i]
+					// resolve the key name — accept set-words (name:) or plain strings ("name")
+					var name string
+					switch sw := obj.(type) {
+					case env.Setword:
+						name = ps.Idx.GetWord(sw.Index)
+					case env.String:
+						name = sw.Value
+					default:
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, "url-encode block keys must be set-words or strings, got: "+obj.Inspect(*ps.Idx), "url-encode")
+					}
+					i++
+					if i >= len(series) {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, "Missing value for key '"+name+"' in url-encode block.", "url-encode")
+					}
+					// resolve the value — if it is a word, look it up in the context
+					valObj := series[i]
+					if word, isWord := valObj.(env.Word); isWord {
+						resolved, found := ps.Ctx.Get(word.Index)
+						if !found {
+							ps.FailureFlag = true
+							return MakeBuiltinError(ps, "url-encode: word '"+ps.Idx.GetWord(word.Index)+"' not found in context.", "url-encode")
+						}
+						valObj = resolved
+					}
+					// accept strings, integers and decimals as values
+					switch val := valObj.(type) {
+					case env.String:
+						params.Add(name, val.Value)
+					case env.Integer:
+						params.Add(name, strconv.FormatInt(val.Value, 10))
+					case env.Decimal:
+						params.Add(name, strconv.FormatFloat(val.Value, 'f', -1, 64))
+					default:
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, "url-encode values must be string, integer or decimal, got: "+valObj.Inspect(*ps.Idx), "url-encode")
+					}
+					i++
+				}
+				if len(params) == 0 {
+					return *env.NewString("")
+				}
+				return *env.NewString("?" + params.Encode())
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "url-encode")
 			}
 		},
 	},
