@@ -893,16 +893,46 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 	var firstVal env.Object
 	found, object, session, failureInfo := findWordValueWithFailureInfo(ps, word)
 	pos := ps.Ser.GetPos()
-	if !found { // look at Generic words, but first check type
-		// fmt.Println(pipeSecond)
+	if !found {
+		// Determine whether this word is capitalized (i.e. a generic-dispatch word).
+		// We extract it once here so both branches (fast-fail and generic) can use it.
+		capitalized := false
+		var rword env.Word
+		switch w := word.(type) {
+		case env.Word:
+			rword = w
+			capitalized = w.Capitalized
+		case env.Dotword:
+			rword = w.ToWord()
+			capitalized = w.Capitalized
+		case env.Opword:
+			rword = w.ToWord()
+			capitalized = w.Capitalized
+		case env.Pipeword:
+			rword = w.ToWord()
+			capitalized = w.Capitalized
+		}
+
+		if !capitalized {
+			// Non-capitalized words only live in context and its parents — no generic lookup.
+			// Fail immediately without consuming any tokens from the stream.
+			ps.ErrorFlag = true
+			if !ps.FailureFlag {
+				ps.Ser.SetPos(pos)
+				err := env.NewError2(5, "Word not found: `"+failureInfo+"`. Check spelling or ensure the word is defined in the current context.")
+				err.CodeBlock = ps.Ser
+				ps.Res = err
+			}
+			return
+		}
+
+		// Capitalized word — generic dispatch path.
+		// Collect the first argument so we can determine its Kind.
 		kind := 0
+		argCollectionFailed := false
 		if leftVal != nil {
 			kind = leftVal.GetKind()
-		}
-		// Track if we failed to collect an argument (e.g., pipeword barrier)
-		// so we can report "Word not found" instead of the collection error
-		argCollectionFailed := false
-		if leftVal == nil && !pipeSecond {
+		} else if !pipeSecond {
 			if !ps.Ser.AtLast() {
 				// Use EvalExpression_CollectArg (not EvalExpression_DispatchType) so that
 				// opwords/dotwords to the right of the first argument are consumed as part
@@ -912,11 +942,11 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 				// only grabbed the bare next atom (%file), giving generic words wrong priority.
 				EvalExpression_CollectArg(ps, true, false)
 				if ps.ReturnFlag || ps.ErrorFlag {
-					// Don't return yet - fall through to "Word not found" error
-					// This handles cases like "undefined_word |print" where pipeword barrier
-					// would otherwise mask the real error
+					// Don't return yet - fall through to "Word not found" error.
+					// This handles cases like "undefined_word |Print" where pipeword barrier
+					// would otherwise mask the real error.
 					argCollectionFailed = true
-					ps.ErrorFlag = false // Clear for now, will be set below if word not found
+					ps.ErrorFlag = false
 				} else {
 					leftVal = ps.Res
 					kind = leftVal.GetKind()
@@ -933,32 +963,10 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 					firstVal = ps.Res
 					kind = firstVal.GetKind()
 				}
-				// fmt.Println("pipeSecond kind")
 			}
 		}
-		// fmt.Println(kind)
-		// Extract the word index regardless of the concrete word type.
-		// Opwords and Pipewords arriving through OptionallyEvalExpressionRight are already
-		// converted via .ToWord(), but Dotwords (and Opwords/Pipewords when they appear as
-		// the first token of an expression in EvalExpression_DispatchType) come in as their
-		// raw types and must also be handled here so that generic method lookup works for them.
-		var rword env.Word
-		var ok bool
-		switch w := word.(type) {
-		case env.Word:
-			rword = w
-			ok = true
-		case env.Dotword:
-			rword = w.ToWord()
-			ok = true
-		case env.Opword:
-			rword = w.ToWord()
-			ok = true
-		case env.Pipeword:
-			rword = w.ToWord()
-			ok = true
-		}
-		if ok && leftVal != nil && ps.Ctx.Kind.Index != -1 && !argCollectionFailed { // don't use generic words if context kind is -1 --- TODO temporary solution to isolates, think about it more
+
+		if leftVal != nil && ps.Ctx.Kind.Index != -1 && !argCollectionFailed { // don't use generic words if context kind is -1 --- TODO temporary solution to isolates, think about it more
 			object, found = ps.Gen.Get(kind, rword.Index)
 		}
 	}

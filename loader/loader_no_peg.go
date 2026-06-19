@@ -1510,8 +1510,9 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 	case NPEG_TOKEN_DICT_BBLOCK_START:
 		return p.parseBlock(9)
 	case NPEG_TOKEN_WORD:
-		idx := p.wordIndex.IndexWord(p.currentToken.Value)
-		return *env.NewWord(idx), nil
+		word := p.currentToken.Value
+		idx := p.wordIndex.IndexWord(word)
+		return *env.NewWordC(idx, len(word) > 0 && word[0] >= 'A' && word[0] <= 'Z'), nil
 	case NPEG_TOKEN_SETWORD:
 		word := p.currentToken.Value
 		idx := p.wordIndex.IndexWord(word[:len(word)-1])
@@ -1550,7 +1551,8 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 			}
 			idx = p.wordIndex.IndexWord(word)
 		}
-		return *env.NewOpword(idx, force), nil
+		capitalized := len(word) > 0 && word[0] >= 'A' && word[0] <= 'Z'
+		return *env.NewOpwordC(idx, force, capitalized), nil
 	case NPEG_TOKEN_DOTWORD:
 		// Dotwords are method-style operators like .add, .upper, .concat, .+, .*
 		word := p.currentToken.Value[1:] // Strip the leading '.'
@@ -1571,7 +1573,8 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 			}
 			idx = p.wordIndex.IndexWord(word)
 		}
-		return *env.NewDotword(idx, force), nil
+		capitalized := len(word) > 0 && word[0] >= 'A' && word[0] <= 'Z'
+		return *env.NewDotwordC(idx, force, capitalized), nil
 	case NPEG_TOKEN_PIPEWORD:
 		var word string
 		if p.currentToken.Value != "|" {
@@ -1590,7 +1593,8 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 			}
 			idx = p.wordIndex.IndexWord(word)
 		}
-		return *env.NewPipeword(idx, force), nil
+		capitalized := len(word) > 0 && word[0] >= 'A' && word[0] <= 'Z'
+		return *env.NewPipewordC(idx, force, capitalized), nil
 	case NPEG_TOKEN_ONECHARPIPE:
 		word := p.currentToken.Value
 		idx := p.wordIndex.IndexWord("_" + word)
