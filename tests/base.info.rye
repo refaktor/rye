@@ -1517,6 +1517,35 @@ section "Strings " "" {
 
 }
 
+section "URL Encoding " "" {
+	group "url-encode" 
+	"Encodes a block of name: value pairs as a URL query string (e.g. ?name=John+Doe&city=New+York), percent-encoding all special characters. Keys can be set-words (name:) or strings (\"name\"), values can be strings, integers, decimals, or words (looked up in context)."
+	{
+		argsn 1
+		argtypes {
+			1 [ Block ]
+		}
+		arg `params: Block of name: value pairs where names are set-words or strings and values are strings, integers, decimals, or words (evaluated from context)`
+		returns `URL query string starting with '?' and pairs joined with '&', all special characters percent-encoded`
+	}
+
+	{
+		equal { url-encode { name: "John Doe" city: "New York" } } "?city=New+York&name=John+Doe"
+		equal { url-encode { } } ""
+		equal { url-encode { q: "hello world" } } "?q=hello+world"
+		equal { url-encode { a: "foo" b: "bar" } |contains "a=foo" } 1
+		equal { url-encode { a: "foo" b: "bar" } |contains "b=bar" } 1
+		equal { url-encode { a: "foo" b: "bar" } |first } "?"
+		equal { url-encode { "my-key" "val" } |contains "my-key=val" } 1
+		equal { x: "hello" url-encode { q: x } } "?q=hello"
+		error { url-encode "not-a-block" }
+	}
+
+	{
+	}
+
+}
+
 section "Date and Time " "" {
 	group "unix-micro?" 
 	"Converts a time object to Unix time in microseconds (microseconds since January 1, 1970 UTC)."
@@ -2026,6 +2055,30 @@ section "Collections " "" {
 	{
 		equal { random { 1 2 3 } |type? } 'integer
 		equal { random { 1 2 3 } |contains* { 1 2 3 } } true
+	}
+
+	{
+	}
+
+	group "randomize" 
+	"Returns a new block or list with the same values as the input but in a randomized (shuffled) order."
+	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ Block List ]
+		}
+		arg `collection: Block or list of values to randomize`
+		returns `a new block or list with the same values in a randomized order`
+	}
+
+	{
+		equal { randomize { 1 2 3 } |type? } 'block
+		equal { randomize { 1 2 3 } |length? } 3
+		equal { randomize { 1 2 3 } |sort } { 1 2 3 }
+		equal { randomize list { 1 2 3 } |type? } 'list
+		equal { randomize list { 1 2 3 } |length? } 3
+		equal { randomize list { 1 2 3 } |sort } list { 1 2 3 }
 	}
 
 	{
@@ -2848,7 +2901,7 @@ section "Collections " "" {
 	}
 
 	group "max-idx?" 
-	"Returns the maximum valid index in a collection (length - 1)."
+	"Returns the maximum valid index in a collection (length? - 1)."
 	{
 		argsn 1
 		argtypes {
@@ -3080,7 +3133,7 @@ section "Collections " "" {
 			2 [ Block List ]
 		}
 		arg `collection1: First block or list`
-		arg `collection2: Second block or list (must be same length as first)`
+		arg `collection2: Second block or list (must be same length? as first)`
 		returns `a block of blocks, where each inner block contains paired elements from both collections`
 	}
 
@@ -7685,22 +7738,24 @@ section "Printing " "Functions for displaying and formatting values" {
 	}
 
 	group "format" 
-	"Formats a value according to Go's sprintf format specifiers, returning the formatted string."
+	"Formats a value according to Go's sprintf format specifiers, returning the formatted string. If the format argument is a URI, the format specifiers are applied to the URI path and a new URI is returned."
 	{
 		argsn 2
 		argtypes {
-			1 [ String Decimal Integer Block ]
-			2 [ String ]
+			1 [ String Decimal Integer Block Uri ]
+			2 [ String Uri ]
 		}
-		arg `value: Value to format (string, integer, or decimal)`
-		arg `format: String containing Go's sprintf format specifiers`
-		returns `formatted string`
+		arg `value: Value to format (string, integer, decimal, block, or URI)`
+		arg `format: String or URI containing Go's sprintf format specifiers`
+		returns `formatted string, or URI with its path formatted (preserving scheme)`
 	}
 
 	{
 		equal { format 123 "num: %d" } "num: 123"
 		equal { format "hello" "%s world" } "hello world"
 		equal { format 3.14159 "pi: %.2f" } "pi: 3.14"
+		equal { format 42 http://example.com/items/%d } http://example.com/items/42
+		equal { format "bob" http://example.com/users/%s } http://example.com/users/bob
 	}
 
 	{

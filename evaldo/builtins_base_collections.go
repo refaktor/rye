@@ -48,10 +48,10 @@ var builtins_collection = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { randomize { 1 2 3 } |type? } 'block
-	// equal { randomize { 1 2 3 } |length } 3
+	// equal { randomize { 1 2 3 } |length? } 3
 	// equal { randomize { 1 2 3 } |sort } { 1 2 3 }
 	// equal { randomize list { 1 2 3 } |type? } 'list
-	// equal { randomize list { 1 2 3 } |length } 3
+	// equal { randomize list { 1 2 3 } |length? } 3
 	// equal { randomize list { 1 2 3 } |sort } list { 1 2 3 }
 	// Args:
 	// * collection: Block or list of values to randomize
@@ -2617,7 +2617,7 @@ var builtins_collection = map[string]*env.Builtin{
 	// * integer index of the last element in the collection
 	"max-idx?": { // **
 		Argsn: 1,
-		Doc:   "Returns the maximum valid index in a collection (length - 1).",
+		Doc:   "Returns the maximum valid index in a collection (length? - 1).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -3012,7 +3012,7 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { try { zip { } { } } |type? } 'error
 	// Args:
 	// * collection1: First block or list
-	// * collection2: Second block or list (must be same length as first)
+	// * collection2: Second block or list (must be same length? as first)
 	// Returns:
 	// * a block of blocks, where each inner block contains paired elements from both collections
 	"zip": { // **
