@@ -355,7 +355,7 @@ func (i Boolean) Trace(msg string) {
 }
 
 func (i Boolean) GetKind() int {
-	return int(BooleanType)
+	return 0
 }
 
 func (i Boolean) Equal(o Object) bool {
@@ -403,7 +403,7 @@ func (i Integer) Trace(msg string) {
 }
 
 func (i Integer) GetKind() int {
-	return int(IntegerType)
+	return 0
 }
 
 func (i Integer) Equal(o Object) bool {
@@ -448,7 +448,7 @@ func (i Decimal) Trace(msg string) {
 }
 
 func (i Decimal) GetKind() int {
-	return int(DecimalType)
+	return 0
 }
 
 func (i Decimal) Equal(o Object) bool {
@@ -522,7 +522,7 @@ func (i Complex) Trace(msg string) {
 }
 
 func (i Complex) GetKind() int {
-	return int(ComplexType)
+	return 0
 }
 
 func (i Complex) Equal(o Object) bool {
@@ -586,7 +586,7 @@ func (i Markdown) Trace(msg string) {
 }
 
 func (i Markdown) GetKind() int {
-	return int(MarkdownType)
+	return 0
 }
 
 func (i Markdown) Equal(o Object) bool {
@@ -631,7 +631,7 @@ func (i String) Trace(msg string) {
 }
 
 func (i String) GetKind() int {
-	return int(StringType)
+	return 0
 }
 
 func (i String) Equal(o Object) bool {
@@ -691,7 +691,7 @@ func (i Date) Trace(msg string) {
 }
 
 func (i Date) GetKind() int {
-	return int(DateType)
+	return 0
 }
 
 func (i Date) Equal(o Object) bool {
@@ -840,7 +840,7 @@ func (i Email) Trace(msg string) {
 }
 
 func (i Email) GetKind() int {
-	return int(EmailType)
+	return 0
 }
 
 func (i Email) Equal(o Object) bool {
@@ -922,7 +922,7 @@ func (i Block) Trace(msg string) {
 }
 
 func (i Block) GetKind() int {
-	return int(BlockType)
+	return 0
 }
 
 func (i Block) Equal(o Object) bool {
@@ -1043,7 +1043,7 @@ func (i Word) Trace(msg string) {
 }
 
 func (i Word) GetKind() int {
-	return int(WordType)
+	return 0
 }
 
 func (i Word) Equal(o Object) bool {
@@ -1088,7 +1088,7 @@ func (i Setword) Trace(msg string) {
 }
 
 func (i Setword) GetKind() int {
-	return int(SetwordType)
+	return 0
 }
 
 func (i Setword) Equal(o Object) bool {
@@ -1133,7 +1133,7 @@ func (i LSetword) Trace(msg string) {
 }
 
 func (i LSetword) GetKind() int {
-	return int(LSetwordType)
+	return 0
 }
 
 func (i LSetword) Equal(o Object) bool {
@@ -1178,7 +1178,7 @@ func (i Modword) Trace(msg string) {
 }
 
 func (i Modword) GetKind() int {
-	return int(ModwordType)
+	return 0
 }
 
 func (i Modword) Equal(o Object) bool {
@@ -1223,7 +1223,7 @@ func (i LModword) Trace(msg string) {
 }
 
 func (i LModword) GetKind() int {
-	return int(LModwordType)
+	return 0
 }
 
 func (i LModword) Equal(o Object) bool {
@@ -1279,7 +1279,7 @@ func (i Opword) ToWord() Word {
 }
 
 func (i Opword) GetKind() int {
-	return int(OpwordType)
+	return 0
 }
 
 func (i Opword) Equal(o Object) bool {
@@ -1340,7 +1340,7 @@ func (i Dotword) ToWord() Word {
 }
 
 func (i Dotword) GetKind() int {
-	return int(DotwordType)
+	return 0
 }
 
 func (i Dotword) Equal(o Object) bool {
@@ -1401,7 +1401,7 @@ func (i Pipeword) ToWord() Word {
 }
 
 func (i Pipeword) GetKind() int {
-	return int(PipewordType)
+	return 0
 }
 
 func (i Pipeword) Equal(o Object) bool {
@@ -1455,7 +1455,7 @@ func (i Tagword) ToWord() Word {
 }
 
 func (i Tagword) GetKind() int {
-	return int(TagwordType)
+	return 0
 }
 
 func (i Tagword) Equal(o Object) bool {
@@ -1510,7 +1510,7 @@ func (i Xword) ToWord() Word {
 }
 
 func (i Xword) GetKind() int {
-	return int(XwordType)
+	return 0
 }
 
 func (i Xword) Equal(o Object) bool {
@@ -1559,7 +1559,7 @@ func (i EXword) ToWord() Word {
 }
 
 func (i EXword) GetKind() int {
-	return int(EXwordType)
+	return 0
 }
 
 func (i EXword) Equal(o Object) bool {
@@ -1608,7 +1608,7 @@ func (i Kindword) ToWord() Word {
 }
 
 func (i Kindword) GetKind() int {
-	return int(KindwordType)
+	return 0
 }
 
 func (i Kindword) Equal(o Object) bool {
@@ -1657,7 +1657,7 @@ func (i Getword) ToWord() Word {
 }
 
 func (i Getword) GetKind() int {
-	return int(GetwordType)
+	return 0
 }
 
 func (i Getword) Equal(o Object) bool {
@@ -1706,7 +1706,7 @@ func (i Genword) ToWord() Word {
 }
 
 func (i Genword) GetKind() int {
-	return int(GenwordType)
+	return 0
 }
 
 func (i Genword) Equal(o Object) bool {
@@ -1744,7 +1744,7 @@ func (i Comma) Trace(msg string) {
 }
 
 func (i Comma) GetKind() int {
-	return int(CommaType)
+	return 0
 }
 
 func (i Comma) Equal(o Object) bool {
@@ -1783,7 +1783,7 @@ func (i Void) Trace(msg string) {
 }
 
 func (i Void) GetKind() int {
-	return int(VoidType)
+	return 0
 }
 
 func (i Void) Equal(o Object) bool {
@@ -1866,7 +1866,7 @@ func (i Function) Trace(msg string) {
 }
 
 func (i Function) GetKind() int {
-	return int(FunctionType)
+	return 0
 }
 
 func (i Function) Equal(o Object) bool {
@@ -1960,7 +1960,7 @@ func (i Builtin) Trace(msg string) {
 }
 
 func (i Builtin) GetKind() int {
-	return int(BuiltinType)
+	return 0
 }
 
 func (i Builtin) Equal(o Object) bool {
@@ -2029,7 +2029,7 @@ func (b CachedBuiltin) Trace(msg string) {
 }
 
 func (b CachedBuiltin) GetKind() int {
-	return int(CachedBuiltinType)
+	return 0
 }
 
 func (b CachedBuiltin) Equal(o Object) bool {
@@ -2213,7 +2213,7 @@ func (i Argword) Trace(msg string) {
 }
 
 func (i Argword) GetKind() int {
-	return int(WordType)
+	return 0
 }
 
 func (i Argword) Equal(o Object) bool {
@@ -2283,7 +2283,7 @@ func (i CPath) Trace(msg string) {
 }
 
 func (i CPath) GetKind() int {
-	return int(CPathType)
+	return 0
 }
 
 func NewCPath2(mode int, w1 Word, w2 Word) *CPath {
@@ -2367,7 +2367,7 @@ func (i Bytes) Trace(msg string) {
 }
 
 func (i Bytes) GetKind() int {
-	return int(BytesType)
+	return 0
 }
 
 func (i Bytes) Equal(o Object) bool {
