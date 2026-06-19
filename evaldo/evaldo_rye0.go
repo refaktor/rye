@@ -269,10 +269,11 @@ func Rye0_EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, to
 	var firstVal env.Object
 	found, object, session := Rye0_findWordValue(ps, word)
 	pos := ps.Ser.GetPos()
+	// kind is hoisted so the error branch can inspect it after the !found block.
+	kind := 0
 
 	if !found {
 		// Determine the kind for generic word lookup
-		kind := 0
 		if leftVal != nil {
 			kind = leftVal.GetKind()
 		}
@@ -327,7 +328,18 @@ func Rye0_EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, to
 	} else {
 		if !ps.FailureFlag {
 			ps.Ser.SetPos(pos)
-			setError(ps, "Word not found: "+word.Print(*ps.Idx))
+			wordStr := word.Print(*ps.Idx)
+			if leftVal != nil && kind == 0 {
+				// First arg has no Kind — report that instead of "word not found".
+				argType := ps.Idx.GetWord(int(leftVal.Type()))
+				setError(ps, "Generic word `"+wordStr+"`: first argument of type '"+argType+"' has no Kind determined. Uri, Context, and Native values must have a named Kind before generic methods can be dispatched on them.")
+			} else if leftVal != nil && kind != 0 {
+				// First arg has a named Kind, but the word isn't defined for it.
+				kindName := ps.Idx.GetWord(kind)
+				setError(ps, "Generic word `"+wordStr+"` is not defined for Kind '"+kindName+"'. No implementation of `"+wordStr+"` is registered under the '"+kindName+"' namespace.")
+			} else {
+				setError(ps, "Word not found: "+wordStr)
+			}
 		} else {
 			ps.ErrorFlag = true
 		}
@@ -340,11 +352,19 @@ func Rye0_EvalGenword(ps *env.ProgramState, word env.Genword, leftVal env.Object
 	Rye0_EvalExpression_DispatchType(ps)
 
 	var arg0 = ps.Res
-	object, found := ps.Gen.Get(arg0.GetKind(), word.Index)
+	arg0Kind := arg0.GetKind()
+	object, found := ps.Gen.Get(arg0Kind, word.Index)
 	if found {
 		return Rye0_EvalObject(ps, object, arg0, toLeft, nil, false, nil)
 	} else {
-		setError(ps, "Generic word not found: "+word.Print(*ps.Idx))
+		wordName := word.Print(*ps.Idx)
+		if arg0Kind == 0 {
+			argType := ps.Idx.GetWord(int(arg0.Type()))
+			setError(ps, "Generic word `"+wordName+"`: first argument of type '"+argType+"' has no Kind determined. Uri, Context, and Native values must have a named Kind before generic methods can be dispatched on them.")
+		} else {
+			kindName := ps.Idx.GetWord(arg0Kind)
+			setError(ps, "Generic word `"+wordName+"` is not defined for Kind '"+kindName+"'. No implementation of `"+wordName+"` is registered under the '"+kindName+"' namespace.")
+		}
 		return ps
 	}
 }
