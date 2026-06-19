@@ -891,18 +891,50 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 
 	// LOCAL FIRST -- try finding a word locally
 	var firstVal env.Object
+	var argCollectionError env.Object // holds the error from a failed arg collection (for capitalized generic words)
+	var genericKind int               // kind used for generic dispatch (hoisted so the error branch can inspect it)
 	found, object, session, failureInfo := findWordValueWithFailureInfo(ps, word)
 	pos := ps.Ser.GetPos()
-	if !found { // look at Generic words, but first check type
-		// fmt.Println(pipeSecond)
-		kind := 0
-		if leftVal != nil {
-			kind = leftVal.GetKind()
+	if !found {
+		// Determine whether this word is capitalized (i.e. a generic-dispatch word).
+		// We extract it once here so both branches (fast-fail and generic) can use it.
+		capitalized := false
+		var rword env.Word
+		switch w := word.(type) {
+		case env.Word:
+			rword = w
+			capitalized = w.Capitalized
+		case env.Dotword:
+			rword = w.ToWord()
+			capitalized = w.Capitalized
+		case env.Opword:
+			rword = w.ToWord()
+			capitalized = w.Capitalized
+		case env.Pipeword:
+			rword = w.ToWord()
+			capitalized = w.Capitalized
 		}
-		// Track if we failed to collect an argument (e.g., pipeword barrier)
-		// so we can report "Word not found" instead of the collection error
+
+		if !capitalized {
+			// Non-capitalized words only live in context and its parents — no generic lookup.
+			// Fail immediately without consuming any tokens from the stream.
+			ps.ErrorFlag = true
+			if !ps.FailureFlag {
+				ps.Ser.SetPos(pos)
+				err := env.NewError2(5, "Word not found: `"+failureInfo+"`. Check spelling or ensure the word is defined in the current context.")
+				err.CodeBlock = ps.Ser
+				ps.Res = err
+			}
+			return
+		}
+
+		// Capitalized word — generic dispatch path.
+		// Collect the first argument so we can determine its Kind.
+		kind := &genericKind
 		argCollectionFailed := false
-		if leftVal == nil && !pipeSecond {
+		if leftVal != nil {
+			*kind = leftVal.GetKind()
+		} else if !pipeSecond {
 			if !ps.Ser.AtLast() {
 				// Use EvalExpression_CollectArg (not EvalExpression_DispatchType) so that
 				// opwords/dotwords to the right of the first argument are consumed as part
@@ -912,14 +944,15 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 				// only grabbed the bare next atom (%file), giving generic words wrong priority.
 				EvalExpression_CollectArg(ps, true, false)
 				if ps.ReturnFlag || ps.ErrorFlag {
-					// Don't return yet - fall through to "Word not found" error
-					// This handles cases like "undefined_word |print" where pipeword barrier
-					// would otherwise mask the real error
+					// Don't return yet - fall through to "Word not found" error.
+					// This handles cases like "undefined_word |Print" where pipeword barrier
+					// would otherwise mask the real error.
 					argCollectionFailed = true
-					ps.ErrorFlag = false // Clear for now, will be set below if word not found
+					argCollectionError = ps.Res // preserve the real error (e.g. "urix not found")
+					ps.ErrorFlag = false
 				} else {
 					leftVal = ps.Res
-					kind = leftVal.GetKind()
+					*kind = leftVal.GetKind()
 				}
 			}
 		}
@@ -928,38 +961,17 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 				EvalExpression_CollectArg(ps, true, false)
 				if ps.ReturnFlag || ps.ErrorFlag {
 					argCollectionFailed = true
+					argCollectionError = ps.Res // preserve the real error
 					ps.ErrorFlag = false
 				} else {
 					firstVal = ps.Res
-					kind = firstVal.GetKind()
+					*kind = firstVal.GetKind()
 				}
-				// fmt.Println("pipeSecond kind")
 			}
 		}
-		// fmt.Println(kind)
-		// Extract the word index regardless of the concrete word type.
-		// Opwords and Pipewords arriving through OptionallyEvalExpressionRight are already
-		// converted via .ToWord(), but Dotwords (and Opwords/Pipewords when they appear as
-		// the first token of an expression in EvalExpression_DispatchType) come in as their
-		// raw types and must also be handled here so that generic method lookup works for them.
-		var rword env.Word
-		var ok bool
-		switch w := word.(type) {
-		case env.Word:
-			rword = w
-			ok = true
-		case env.Dotword:
-			rword = w.ToWord()
-			ok = true
-		case env.Opword:
-			rword = w.ToWord()
-			ok = true
-		case env.Pipeword:
-			rword = w.ToWord()
-			ok = true
-		}
-		if ok && leftVal != nil && ps.Ctx.Kind.Index != -1 && !argCollectionFailed { // don't use generic words if context kind is -1 --- TODO temporary solution to isolates, think about it more
-			object, found = ps.Gen.Get(kind, rword.Index)
+
+		if leftVal != nil && ps.Ctx.Kind.Index != -1 && !argCollectionFailed { // don't use generic words if context kind is -1 --- TODO temporary solution to isolates, think about it more
+			object, found = ps.Gen.Get(*kind, rword.Index)
 		}
 	}
 
@@ -974,9 +986,37 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 		ps.ErrorFlag = true
 		if !ps.FailureFlag {
 			ps.Ser.SetPos(pos)
-			err := env.NewError2(5, "Word not found: `"+failureInfo+"`. Check spelling or ensure the word is defined in the current context.")
-			err.CodeBlock = ps.Ser
-			ps.Res = err
+			// If arg collection failed, the real error is about the argument (e.g. "urix"),
+			// not about the generic word (e.g. "Get"). Propagate the arg's error directly.
+			if argCollectionError != nil {
+				if errObj, ok := argCollectionError.(env.Error); ok {
+					errObj.CodeBlock = ps.Ser
+					ps.Res = errObj
+				} else {
+					ps.Res = argCollectionError
+				}
+			} else if leftVal != nil && genericKind == 0 {
+				// The first argument was collected successfully but its Kind is not determined
+				// (it is a Uri, Context, Native, Dict, List, or Error without a named Kind set).
+				// Generic dispatch looks up methods by Kind, so without a Kind there is nothing
+				// to find — reporting "word not found: `Get`" would be misleading here.
+				argType := ps.Idx.GetWord(int(leftVal.Type()))
+				err := env.NewError2(5, "Generic word `"+failureInfo+"`: first argument of type '"+argType+"' has no Kind determined. Uri, Context, and Native values must have a named Kind before generic methods can be dispatched on them.")
+				err.CodeBlock = ps.Ser
+				ps.Res = err
+			} else if leftVal != nil && genericKind != 0 {
+				// The first argument has a named Kind, but the generic word is not defined
+				// under that Kind's namespace. This means the word exists as a concept
+				// (e.g. Get) but there is no implementation registered for this Kind.
+				kindName := ps.Idx.GetWord(genericKind)
+				err := env.NewError2(5, "Generic word `"+failureInfo+"` is not defined for Kind '"+kindName+"'. No implementation of `"+failureInfo+"` is registered under the '"+kindName+"' namespace.")
+				err.CodeBlock = ps.Ser
+				ps.Res = err
+			} else {
+				err := env.NewError2(5, "Word not found: `"+failureInfo+"`. Check spelling or ensure the word is defined in the current context.")
+				err.CodeBlock = ps.Ser
+				ps.Res = err
+			}
 		}
 		return
 	}
@@ -993,13 +1033,21 @@ func EvalGenword(ps *env.ProgramState, word env.Genword, leftVal env.Object, toL
 	}
 
 	var arg0 = ps.Res
-	object, found := ps.Gen.Get(arg0.GetKind(), word.Index)
+	arg0Kind := arg0.GetKind()
+	object, found := ps.Gen.Get(arg0Kind, word.Index)
 	if found {
 		EvalObject(ps, object, arg0, toLeft, nil, false, nil, false, false) //ww0128a *
 		return
 	} else {
 		ps.ErrorFlag = true
-		ps.Res = env.NewError("Generic word not found: " + word.Print(*ps.Idx) + ". No implementation found for the given argument type.")
+		wordName := word.Print(*ps.Idx)
+		if arg0Kind == 0 {
+			argType := ps.Idx.GetWord(int(arg0.Type()))
+			ps.Res = env.NewError2(5, "Generic word `"+wordName+"`: first argument of type '"+argType+"' has no Kind determined. Uri, Context, and Native values must have a named Kind before generic methods can be dispatched on them.")
+		} else {
+			kindName := ps.Idx.GetWord(arg0Kind)
+			ps.Res = env.NewError2(5, "Generic word `"+wordName+"` is not defined for Kind '"+kindName+"'. No implementation of `"+wordName+"` is registered under the '"+kindName+"' namespace.")
+		}
 		return
 	}
 }

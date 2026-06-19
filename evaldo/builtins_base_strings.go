@@ -1043,10 +1043,10 @@ var builtins_string = map[string]*env.Builtin{
 	// equal { url-encode { name: "John Doe" city: "New York" } } "?city=New+York&name=John+Doe"
 	// equal { url-encode { } } ""
 	// equal { url-encode { q: "hello world" } } "?q=hello+world"
-	// equal { url-encode { a: "foo" b: "bar" } |contains? "a=foo" } 1
-	// equal { url-encode { a: "foo" b: "bar" } |contains? "b=bar" } 1
-	// equal { url-encode { a: "foo" b: "bar" } |first } '?'
-	// equal { url-encode { "my-key" "val" } |contains? "my-key=val" } 1
+	// equal { url-encode { a: "foo" b: "bar" } |contains "a=foo" } 1
+	// equal { url-encode { a: "foo" b: "bar" } |contains "b=bar" } 1
+	// equal { url-encode { a: "foo" b: "bar" } |first } "?"
+	// equal { url-encode { "my-key" "val" } |contains "my-key=val" } 1
 	// equal { x: "hello" url-encode { q: x } } "?q=hello"
 	// error { url-encode "not-a-block" }
 	// Args:

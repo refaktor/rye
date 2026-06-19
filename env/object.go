@@ -355,7 +355,7 @@ func (i Boolean) Trace(msg string) {
 }
 
 func (i Boolean) GetKind() int {
-	return int(BooleanType)
+	return 0
 }
 
 func (i Boolean) Equal(o Object) bool {
@@ -403,7 +403,7 @@ func (i Integer) Trace(msg string) {
 }
 
 func (i Integer) GetKind() int {
-	return int(IntegerType)
+	return 0
 }
 
 func (i Integer) Equal(o Object) bool {
@@ -448,7 +448,7 @@ func (i Decimal) Trace(msg string) {
 }
 
 func (i Decimal) GetKind() int {
-	return int(DecimalType)
+	return 0
 }
 
 func (i Decimal) Equal(o Object) bool {
@@ -522,7 +522,7 @@ func (i Complex) Trace(msg string) {
 }
 
 func (i Complex) GetKind() int {
-	return int(ComplexType)
+	return 0
 }
 
 func (i Complex) Equal(o Object) bool {
@@ -586,7 +586,7 @@ func (i Markdown) Trace(msg string) {
 }
 
 func (i Markdown) GetKind() int {
-	return int(MarkdownType)
+	return 0
 }
 
 func (i Markdown) Equal(o Object) bool {
@@ -631,7 +631,7 @@ func (i String) Trace(msg string) {
 }
 
 func (i String) GetKind() int {
-	return int(StringType)
+	return 0
 }
 
 func (i String) Equal(o Object) bool {
@@ -691,7 +691,7 @@ func (i Date) Trace(msg string) {
 }
 
 func (i Date) GetKind() int {
-	return int(DateType)
+	return 0
 }
 
 func (i Date) Equal(o Object) bool {
@@ -723,14 +723,14 @@ func NewUri1(index *Idxs, path string) *Uri {
 		idxSch := index.IndexWord(scheme)
 		kind := scheme + "-uri"
 		idxKind := index.IndexWord(kind)
-		return &Uri{Word{idxSch}, path, Word{idxKind}}
+		return &Uri{Word{idxSch, false}, path, Word{idxKind, false}}
 	}
 
 	scheme := scheme2[0]
 	idxSch := index.IndexWord(scheme)
 	kind := scheme + "-uri"
 	idxKind := index.IndexWord(kind)
-	return &Uri{Word{idxSch}, scheme2[1], Word{idxKind}}
+	return &Uri{Word{idxSch, false}, scheme2[1], Word{idxKind, false}}
 }
 
 func NewFileUri(index *Idxs, path string) *Uri {
@@ -738,7 +738,7 @@ func NewFileUri(index *Idxs, path string) *Uri {
 	idxSch := index.IndexWord(scheme)
 	kind := scheme + "-uri"
 	idxKind := index.IndexWord(kind)
-	nat := Uri{Word{idxSch}, path, Word{idxKind}}
+	nat := Uri{Word{idxSch, false}, path, Word{idxKind, false}}
 	return &nat
 }
 
@@ -755,7 +755,7 @@ func NewUri(index *Idxs, scheme Word, path string) *Uri {
 		path2 = path
 	}
 
-	return &Uri{scheme, path2, Word{idx}}
+	return &Uri{scheme, path2, Word{idx, false}}
 }
 
 func (i Uri) GetPath() string {
@@ -840,7 +840,7 @@ func (i Email) Trace(msg string) {
 }
 
 func (i Email) GetKind() int {
-	return int(EmailType)
+	return 0
 }
 
 func (i Email) Equal(o Object) bool {
@@ -922,7 +922,7 @@ func (i Block) Trace(msg string) {
 }
 
 func (i Block) GetKind() int {
-	return int(BlockType)
+	return 0
 }
 
 func (i Block) Equal(o Object) bool {
@@ -1011,11 +1011,17 @@ func (b Block) DeepCopy() Object {
 //
 
 type Word struct {
-	Index int
+	Index       int
+	Capitalized bool
 }
 
 func NewWord(val int) *Word {
-	nat := Word{val}
+	nat := Word{val, false}
+	return &nat
+}
+
+func NewWordC(val int, capitalized bool) *Word {
+	nat := Word{val, capitalized}
 	return &nat
 }
 
@@ -1037,7 +1043,7 @@ func (i Word) Trace(msg string) {
 }
 
 func (i Word) GetKind() int {
-	return int(WordType)
+	return 0
 }
 
 func (i Word) Equal(o Object) bool {
@@ -1082,7 +1088,7 @@ func (i Setword) Trace(msg string) {
 }
 
 func (i Setword) GetKind() int {
-	return int(SetwordType)
+	return 0
 }
 
 func (i Setword) Equal(o Object) bool {
@@ -1127,7 +1133,7 @@ func (i LSetword) Trace(msg string) {
 }
 
 func (i LSetword) GetKind() int {
-	return int(LSetwordType)
+	return 0
 }
 
 func (i LSetword) Equal(o Object) bool {
@@ -1172,7 +1178,7 @@ func (i Modword) Trace(msg string) {
 }
 
 func (i Modword) GetKind() int {
-	return int(ModwordType)
+	return 0
 }
 
 func (i Modword) Equal(o Object) bool {
@@ -1217,7 +1223,7 @@ func (i LModword) Trace(msg string) {
 }
 
 func (i LModword) GetKind() int {
-	return int(LModwordType)
+	return 0
 }
 
 func (i LModword) Equal(o Object) bool {
@@ -1236,12 +1242,18 @@ func (i LModword) Dump(e Idxs) string {
 //
 
 type Opword struct {
-	Index int
-	Force int
+	Index       int
+	Force       int
+	Capitalized bool
 }
 
 func NewOpword(index, force int) *Opword {
-	nat := Opword{index, force}
+	nat := Opword{index, force, false}
+	return &nat
+}
+
+func NewOpwordC(index, force int, capitalized bool) *Opword {
+	nat := Opword{index, force, capitalized}
 	return &nat
 }
 
@@ -1263,11 +1275,11 @@ func (i Opword) Trace(msg string) {
 }
 
 func (i Opword) ToWord() Word {
-	return Word{i.Index}
+	return Word{i.Index, i.Capitalized}
 }
 
 func (i Opword) GetKind() int {
-	return int(OpwordType)
+	return 0
 }
 
 func (i Opword) Equal(o Object) bool {
@@ -1291,12 +1303,18 @@ func (i Opword) Dump(e Idxs) string {
 //
 
 type Dotword struct {
-	Index int
-	Force int
+	Index       int
+	Force       int
+	Capitalized bool
 }
 
 func NewDotword(index, force int) *Dotword {
-	nat := Dotword{index, force}
+	nat := Dotword{index, force, false}
+	return &nat
+}
+
+func NewDotwordC(index, force int, capitalized bool) *Dotword {
+	nat := Dotword{index, force, capitalized}
 	return &nat
 }
 
@@ -1318,11 +1336,11 @@ func (i Dotword) Trace(msg string) {
 }
 
 func (i Dotword) ToWord() Word {
-	return Word{i.Index}
+	return Word{i.Index, i.Capitalized}
 }
 
 func (i Dotword) GetKind() int {
-	return int(DotwordType)
+	return 0
 }
 
 func (i Dotword) Equal(o Object) bool {
@@ -1346,12 +1364,18 @@ func (i Dotword) Dump(e Idxs) string {
 //
 
 type Pipeword struct {
-	Index int
-	Force int
+	Index       int
+	Force       int
+	Capitalized bool
 }
 
 func NewPipeword(index, force int) *Pipeword {
-	nat := Pipeword{index, force}
+	nat := Pipeword{index, force, false}
+	return &nat
+}
+
+func NewPipewordC(index, force int, capitalized bool) *Pipeword {
+	nat := Pipeword{index, force, capitalized}
 	return &nat
 }
 
@@ -1373,11 +1397,11 @@ func (i Pipeword) Trace(msg string) {
 }
 
 func (i Pipeword) ToWord() Word {
-	return Word{i.Index}
+	return Word{i.Index, i.Capitalized}
 }
 
 func (i Pipeword) GetKind() int {
-	return int(PipewordType)
+	return 0
 }
 
 func (i Pipeword) Equal(o Object) bool {
@@ -1427,11 +1451,11 @@ func (i Tagword) Trace(msg string) {
 }
 
 func (i Tagword) ToWord() Word {
-	return Word(i)
+	return Word{i.Index, false}
 }
 
 func (i Tagword) GetKind() int {
-	return int(TagwordType)
+	return 0
 }
 
 func (i Tagword) Equal(o Object) bool {
@@ -1486,7 +1510,7 @@ func (i Xword) ToWord() Word {
 }
 
 func (i Xword) GetKind() int {
-	return int(XwordType)
+	return 0
 }
 
 func (i Xword) Equal(o Object) bool {
@@ -1531,11 +1555,11 @@ func (i EXword) Trace(msg string) {
 }
 
 func (i EXword) ToWord() Word {
-	return Word(i)
+	return Word{i.Index, false}
 }
 
 func (i EXword) GetKind() int {
-	return int(EXwordType)
+	return 0
 }
 
 func (i EXword) Equal(o Object) bool {
@@ -1580,11 +1604,11 @@ func (i Kindword) Trace(msg string) {
 }
 
 func (i Kindword) ToWord() Word {
-	return Word(i)
+	return Word{i.Index, false}
 }
 
 func (i Kindword) GetKind() int {
-	return int(KindwordType)
+	return 0
 }
 
 func (i Kindword) Equal(o Object) bool {
@@ -1629,11 +1653,11 @@ func (i Getword) Trace(msg string) {
 }
 
 func (i Getword) ToWord() Word {
-	return Word(i)
+	return Word{i.Index, false}
 }
 
 func (i Getword) GetKind() int {
-	return int(GetwordType)
+	return 0
 }
 
 func (i Getword) Equal(o Object) bool {
@@ -1678,11 +1702,11 @@ func (i Genword) Trace(msg string) {
 }
 
 func (i Genword) ToWord() Word {
-	return Word(i)
+	return Word{i.Index, false}
 }
 
 func (i Genword) GetKind() int {
-	return int(GenwordType)
+	return 0
 }
 
 func (i Genword) Equal(o Object) bool {
@@ -1720,7 +1744,7 @@ func (i Comma) Trace(msg string) {
 }
 
 func (i Comma) GetKind() int {
-	return int(CommaType)
+	return 0
 }
 
 func (i Comma) Equal(o Object) bool {
@@ -1759,7 +1783,7 @@ func (i Void) Trace(msg string) {
 }
 
 func (i Void) GetKind() int {
-	return int(VoidType)
+	return 0
 }
 
 func (i Void) Equal(o Object) bool {
@@ -1842,7 +1866,7 @@ func (i Function) Trace(msg string) {
 }
 
 func (i Function) GetKind() int {
-	return int(FunctionType)
+	return 0
 }
 
 func (i Function) Equal(o Object) bool {
@@ -1936,7 +1960,7 @@ func (i Builtin) Trace(msg string) {
 }
 
 func (i Builtin) GetKind() int {
-	return int(BuiltinType)
+	return 0
 }
 
 func (i Builtin) Equal(o Object) bool {
@@ -2005,7 +2029,7 @@ func (b CachedBuiltin) Trace(msg string) {
 }
 
 func (b CachedBuiltin) GetKind() int {
-	return int(CachedBuiltinType)
+	return 0
 }
 
 func (b CachedBuiltin) Equal(o Object) bool {
@@ -2189,7 +2213,7 @@ func (i Argword) Trace(msg string) {
 }
 
 func (i Argword) GetKind() int {
-	return int(WordType)
+	return 0
 }
 
 func (i Argword) Equal(o Object) bool {
@@ -2247,7 +2271,7 @@ func (o CPath) GetWordNumber(i int) Word {
 		// Fall through to default case if Cnt < 3
 	}
 	// Return Word with index 0 for out of bounds or invalid cases
-	return Word{0}
+	return Word{0, false}
 }
 
 func (b CPath) Print(e Idxs) string {
@@ -2259,7 +2283,7 @@ func (i CPath) Trace(msg string) {
 }
 
 func (i CPath) GetKind() int {
-	return int(CPathType)
+	return 0
 }
 
 func NewCPath2(mode int, w1 Word, w2 Word) *CPath {
@@ -2343,7 +2367,7 @@ func (i Bytes) Trace(msg string) {
 }
 
 func (i Bytes) GetKind() int {
-	return int(BytesType)
+	return 0
 }
 
 func (i Bytes) Equal(o Object) bool {
@@ -2415,7 +2439,7 @@ type Native struct {
 
 func NewNative(index *Idxs, val any, kind string) *Native {
 	idx := index.IndexWord(kind)
-	nat := Native{val, Word{idx}}
+	nat := Native{val, Word{idx, false}}
 	return &nat
 }
 
@@ -2475,7 +2499,7 @@ type Dict struct {
 }
 
 func NewDict(data map[string]any) *Dict {
-	return &Dict{data, Word{0}}
+	return &Dict{data, Word{0, false}}
 }
 
 func MergeTwoDicts(base Dict, toAdd Dict) Dict {
@@ -2486,7 +2510,7 @@ func MergeTwoDicts(base Dict, toAdd Dict) Dict {
 	for k, v := range toAdd.Data {
 		data[k] = v
 	}
-	return Dict{data, Word{0}}
+	return Dict{data, Word{0, false}}
 }
 
 func MergeDictAndBlock(base Dict, updatesBlock TSeries, idx *Idxs) Dict {
@@ -2510,7 +2534,7 @@ func MergeDictAndBlock(base Dict, updatesBlock TSeries, idx *Idxs) Dict {
 			data[idx.GetWord(k.Index)] = val
 		}
 	}
-	return Dict{data, Word{0}}
+	return Dict{data, Word{0, false}}
 
 }
 
@@ -2531,7 +2555,7 @@ func NewDictFromSeries(block TSeries, idx *Idxs) Dict {
 			data[idx.GetWord(k.Index)] = val
 		}
 	}
-	return Dict{data, Word{0}}
+	return Dict{data, Word{0, false}}
 }
 
 func (i Dict) Type() Type {
@@ -2659,7 +2683,7 @@ type List struct {
 }
 
 func NewList(data []any) *List {
-	return &List{data, Word{0}}
+	return &List{data, Word{0, false}}
 }
 
 func RyeToRaw(res Object, idx *Idxs) any { // TODO -- MOVE TO UTIL ... provide reverse named symmetrically
@@ -3063,7 +3087,7 @@ func NewVector(vec govector.Vector) *Vector {
 	//if err != nil {
 	//	return MakeError(env1, err.Error())
 	//}
-	return &Vector{vec, Word{0}}
+	return &Vector{vec, Word{0, false}}
 }
 
 func ArrayFloat32FromSeries(block TSeries) []float32 {
@@ -3087,7 +3111,7 @@ func NewVectorFromSeries(block TSeries) *Vector {
 	if err != nil {
 		return nil
 	}
-	return &Vector{vec, Word{0}}
+	return &Vector{vec, Word{0, false}}
 }
 
 func (i Vector) Type() Type {
@@ -3170,7 +3194,7 @@ func NewMatrix(rows, cols int) *Matrix {
 		Data: make([]float64, rows*cols),
 		Rows: rows,
 		Cols: cols,
-		Kind: Word{0},
+		Kind: Word{0, false},
 	}
 }
 
@@ -3183,7 +3207,7 @@ func NewMatrixWithData(rows, cols int, data []float64) *Matrix {
 		Data: data,
 		Rows: rows,
 		Cols: cols,
-		Kind: Word{0},
+		Kind: Word{0, false},
 	}
 }
 

@@ -75,6 +75,28 @@ section "Constructors " "Functions that construct a table." {
 	{
 	}
 
+	group "to-dict" 
+	"Creates a dict from a two-column table, using the first column as keys and the second column as values."
+	{
+		argsn 1
+		argtypes {
+			1 [ Table ]
+		}
+		arg `table - a two-column table where the first column becomes keys and the second becomes values`
+		returns `a dict mapping each value in the first column (as string key) to the corresponding value in the second column`
+	}
+
+	{
+		equal { table { 'k 'v } { "a" 1 "b" 2 } |to-dict |-> "a" } 1
+		equal { table { 'k 'v } { "x" 100 "y" 200 } |to-dict |type? } 'dict
+		equal { table { 'k 'v } { "a" 1 "b" 2 } |to-dict |length? } 2
+		equal { table { 'name 'score } { "Alice" 95 "Bob" 87 } |to-dict |-> "Bob" } 87
+		error { table { 'a } { 1 2 3 } |to-dict }
+	}
+
+	{
+	}
+
 }
 
 section "Filtering " "Functions that construct a table." {
