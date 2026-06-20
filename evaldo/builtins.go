@@ -35,7 +35,7 @@ func MakeError(env1 *env.ProgramState, msg string) *env.Error {
 
 func MakeBuiltinError(env1 *env.ProgramState, msg string, fn string) *env.Error {
 	env1.FailureFlag = true
-	err := env.NewError(msg + " In builtin `" + fn + "`")
+	err := env.NewError("`" + fn + "`: " + msg)
 	err.CodeBlock = env1.Ser
 	return err
 }
@@ -73,6 +73,23 @@ func NameOfRyeType(t env.Type) string {
 	return env.NativeTypes[t]
 }
 
+func ordinal(n int) string {
+	switch n {
+	case 1:
+		return "first"
+	case 2:
+		return "second"
+	case 3:
+		return "third"
+	case 4:
+		return "fourth"
+	case 5:
+		return "fifth"
+	default:
+		return strconv.Itoa(n) + "th"
+	}
+}
+
 func MakeArgErrorMessage(N int, allowedTypes []env.Type, fn string) string {
 	types := ""
 	for i, tt := range allowedTypes {
@@ -86,9 +103,7 @@ func MakeArgErrorMessage(N int, allowedTypes []env.Type, fn string) string {
 			types += "UNKNOWN_TYPE"
 		}
 	}
-	// Format function name with red badge style
-	formattedFn := "`" + fn + "`"
-	return "builtin " + formattedFn + " requires argument " + strconv.Itoa(N) + " to be: " + types + "."
+	return "`" + fn + "`: " + ordinal(N) + " argument must be: " + types + "."
 }
 
 func MakeArgError(env1 *env.ProgramState, N int, typ []env.Type, fn string) *env.Error {
@@ -100,7 +115,7 @@ func MakeArgError(env1 *env.ProgramState, N int, typ []env.Type, fn string) *env
 
 func MakeNeedsThawedArgError(env1 *env.ProgramState, fn string) *env.Error {
 	env1.FailureFlag = true
-	err := env.NewError("builtin `" + fn + "` requires a thawed table as the first argument")
+	err := env.NewError("`" + fn + "`: first argument must be a thawed table.")
 	err.CodeBlock = env1.Ser
 	return err
 }
@@ -108,7 +123,7 @@ func MakeNeedsThawedArgError(env1 *env.ProgramState, fn string) *env.Error {
 func MakeNativeArgError(env1 *env.ProgramState, N int, knd []string, fn string) *env.Error {
 	env1.FailureFlag = true
 	kinds := strings.Join(knd, ", ")
-	err := env.NewError("Function " + fn + " requires native argument " + strconv.Itoa(N) + " to be of kind	: " + kinds + ".")
+	err := env.NewError("`" + fn + "`: " + ordinal(N) + " argument must be native of kind: " + kinds + ".")
 	err.CodeBlock = env1.Ser
 	return err
 }

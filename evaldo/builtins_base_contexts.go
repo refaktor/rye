@@ -130,7 +130,7 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Tests:
 	// equal { c: context\pure { x: 123 } c/x } 123
 	// ; error { y: 123 c: context\pure { x: y } } ; y not accessible in pure context
-	// equal { c: context\pure { x: add 10 5 } c/x } 15
+	// equal { c: context\pure { x: _+ 10 5 } c/x } 15
 	// Args:
 	// * block: Block of expressions to evaluate in a new pure context
 	// Returns:
