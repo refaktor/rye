@@ -1268,7 +1268,7 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 					block1 := block.(env.Block)
 					es = env.AddToProgramState(es, block1.Series, genv)
 					evaldo.Eval(es)
-					evaldo.MaybeDisplayFailureOrError(es, es.Idx, "preload")
+					evaldo.MaybeDisplayFailureOrError(es, es.Idx, "preload here")
 				}
 			}
 		} else {

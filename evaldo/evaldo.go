@@ -474,7 +474,7 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 	object := ps.Ser.Pop()
 	if object == nil {
 		ps.ErrorFlag = true
-			ps.Res = env.NewError("Expected Rye value but reached end of block.")
+		ps.Res = env.NewError("Expected Rye value but reached end of block.")
 		return
 	}
 
@@ -1452,7 +1452,7 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 			ps.ErrorFlag = true
 		}
 	}
-	MaybeDisplayFailureOrError(ps, ps.Idx, "Call func collect args")
+	MaybeDisplayFailureOrError(ps, ps.Idx, "func. call arg collection")
 	if ps.ErrorFlag || ps.FailureFlag {
 		ps.Ctx = env0
 		ps.Ser = ser0
@@ -1535,7 +1535,7 @@ func CallFunctionArgs1(fn env.Function, ps *env.ProgramState, arg0 env.Object, c
 	}
 	psX.Ser.SetPos(0)
 	EvalBlockInj(psX, arg0, true)
-	MaybeDisplayFailureOrError(psX, psX.Idx, "call func args 1")
+	MaybeDisplayFailureOrError(psX, psX.Idx, "func. call first arg")
 	if psX.ErrorFlag || psX.FailureFlag {
 		ps.Res = psX.Res
 		ps.ErrorFlag = psX.ErrorFlag
@@ -1598,7 +1598,7 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	}
 	psX.Ser.SetPos(0)
 	EvalBlockInj(psX, arg0, true)
-	MaybeDisplayFailureOrError(psX, psX.Idx, "call func args 2")
+	MaybeDisplayFailureOrError(psX, psX.Idx, "func. call second arg.")
 	if psX.ErrorFlag || psX.FailureFlag {
 		ps.Res = psX.Res
 		ps.ErrorFlag = psX.ErrorFlag
@@ -1671,7 +1671,7 @@ func CallFunctionArgs4(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 		ps.FailureFlag = psX.FailureFlag
 		return
 	}
-	MaybeDisplayFailureOrError(psX, psX.Idx, "call func args 4")
+	MaybeDisplayFailureOrError(psX, psX.Idx, "func. call fourth arg.")
 	if psX.ForcedResult != nil {
 		ps.Res = psX.ForcedResult
 		psX.ForcedResult = nil
@@ -1742,7 +1742,7 @@ func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, a
 		ps.FailureFlag = psX.FailureFlag
 		return
 	}
-	MaybeDisplayFailureOrError(psX, psX.Idx, "call func args N")
+	MaybeDisplayFailureOrError(psX, psX.Idx, "func. call N args")
 	if psX.ForcedResult != nil {
 		ps.Res = psX.ForcedResult
 		psX.ForcedResult = nil
@@ -2228,11 +2228,11 @@ func FormatBacktickQuotes(message string) string {
 		if message[i] == '`' {
 			if inQuote {
 				// Closing backtick - add reset and restore bold red
-				result.WriteString(" \x1b[0m\x1b[31m")
+				result.WriteString("\x1b[0m\x1b[31m")
 				inQuote = false
 			} else {
 				// Opening backtick - add magenta background, white text
-				result.WriteString("\x1b[40m\x1b[31m ")
+				result.WriteString("\x1b[40m\x1b[31m")
 				inQuote = true
 			}
 		} else {
@@ -2249,16 +2249,17 @@ func DisplayEnhancedError(es *env.ProgramState, genv *env.Idxs, tag string, topL
 	// Only display if SkipFlag is not set (prevents duplicate error display)
 	if !es.SkipFlag {
 		// Red background banner for runtime errors
-		fmt.Print("\x1b[41m\x1b[30m RUNTIME ERROR:\x1b[0m " + tag + "\n") // Magenta background, black text
+		fmt.Print("\x1b[41m\x1b[30m RUNTIME ERROR:\x1b[0m " + tag + "\n\n") // Magenta background, black text
 
 		// Bold red for error message, with backtick-quoted text highlighted
-		fmt.Print("\x1b[1;31m") // Bold red
+		fmt.Print("\x1b[31m") // Bold red
 		errorMsg := es.Res.Print(*genv)
 		fmt.Println(FormatBacktickQuotes(errorMsg))
 		fmt.Print("\x1b[0m") // Reset
 
 		// Get location information from the current block
 		displayBlockWithErrorPosition(es, genv)
+		fmt.Print("\n") // Reset
 	}
 }
 
