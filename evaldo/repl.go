@@ -367,7 +367,7 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 		//     with e.g. "|fix { fallback }" or "|check "wrap""
 		// (c) neither — success: display result and update prevResult normally
 		if es.ErrorFlag {
-			MaybeDisplayFailureOrError2(es, genv, "Rye console line", true, false)
+			MaybeDisplayFailureOrError2(es, genv, "console line", true, false)
 		} else if es.FailureFlag {
 			displayReplFailureWarning(es, genv)
 			r.prevResult = es.Res // keep error object so next line can |fix / |check it

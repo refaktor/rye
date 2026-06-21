@@ -200,19 +200,19 @@ func EvalExpression(ps *env.ProgramState, inj env.Object, injnow bool, limited b
 			switch next := ps.Ser.Peek().(type) {
 			case env.Pipeword:
 				ps.ErrorFlag = true
-				ps.Res = env.NewError("Pipeword barrier encountered while collecting an argument. The previous expression is incomplete.")
+				ps.Res = env.NewError("Pipeword used before previous expression completed.")
 				return injnow
 			case env.CachedBuiltin:
 				// CachedBuiltin with Pipeword mode should also be a barrier
 				if next.Mode == env.CachedModePipeword {
 					ps.ErrorFlag = true
-					ps.Res = env.NewError("Pipeword barrier encountered while collecting an argument. The previous expression is incomplete.")
+					ps.Res = env.NewError("Pipeword used before previous expression completed.")
 					return injnow
 				}
 			case env.CPath:
 				if next.Mode == 2 {
 					ps.ErrorFlag = true
-					ps.Res = env.NewError("Pipeword barrier encountered while collecting an argument. The previous expression is incomplete.")
+					ps.Res = env.NewError("Pipeword used before previous expression completed.")
 					return injnow
 				}
 			}
@@ -390,7 +390,7 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 		if ps.AllowMod {
 			ok := ps.Ctx.Mod(idx, ps.Res)
 			if !ok {
-				ps.Res = env.NewError("Cannot modify constant `" + ps.Idx.GetWord(idx) + "`, use `var` to declare it as a variable")
+				ps.Res = env.NewError("`" + ps.Idx.GetWord(idx) + "` is a constant, use `var` to make it a variable")
 				ps.FailureFlag = true
 				ps.ErrorFlag = true
 				return
@@ -398,7 +398,7 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 		} else {
 			ok := ps.Ctx.SetNew(idx, ps.Res, ps.Idx)
 			if !ok {
-				ps.Res = env.NewError("Can't set already set word `" + ps.Idx.GetWord(idx) + "`, try using modword")
+				ps.Res = env.NewError("`" + ps.Idx.GetWord(idx) + "` is a constant, use `var` to make it a variable")
 				ps.FailureFlag = true
 				ps.ErrorFlag = true
 				return
@@ -427,12 +427,12 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 				}
 			}
 		case env.ModErrConstant:
-			ps.Res = env.NewError("Cannot modify constant `" + ps.Idx.GetWord(idx) + "`. Use `var` to declare it as a variable.")
+			ps.Res = env.NewError("`" + ps.Idx.GetWord(idx) + "` is a constant, use `var` to make it a variable.")
 			ps.FailureFlag = true
 			ps.ErrorFlag = true
 			return
 		case env.ModErrTypeMismatch:
-			ps.Res = env.NewError("Cannot change type of variable `" + ps.Idx.GetWord(idx) + "` from `" + ps.Idx.GetWord(int(existingType)) + "` to `" + ps.Idx.GetWord(int(ps.Res.Type())) + "`.")
+			ps.Res = env.NewError("Cannot change type of `" + ps.Idx.GetWord(idx) + "` from `" + ps.Idx.GetWord(int(existingType)) + "` to `" + ps.Idx.GetWord(int(ps.Res.Type())) + "`.")
 			ps.FailureFlag = true
 			ps.ErrorFlag = true
 			return
@@ -474,7 +474,7 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 	object := ps.Ser.Pop()
 	if object == nil {
 		ps.ErrorFlag = true
-		ps.Res = env.NewError("Expected Rye value but reached the end of the block. Check for missing values or incomplete expressions.")
+		ps.Res = env.NewError("Expected Rye value but reached end of block.")
 		return
 	}
 
@@ -620,17 +620,17 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 		// A dotword appearing at the start of an expression has no left-hand value — error.
 		// Valid use is always after a value (via OptionallyEvalExpressionRight), e.g. `1 .add 2`.
 		ps.ErrorFlag = true
-		ps.Res = env.NewError("Dotword `." + ps.Idx.GetWord(object.(env.Dotword).Index) + "` used without a left-hand value. A dotword must follow an expression that produces a value (e.g. `1 .add 2`, not `.add 2`).")
+		ps.Res = env.NewError("Dotword `." + ps.Idx.GetWord(object.(env.Dotword).Index) + "` requires a value on the left.")
 		return
 	case env.OpwordType:
 		// An opword appearing at the start of an expression has no left-hand value — error.
 		ps.ErrorFlag = true
-		ps.Res = env.NewError("Opword `" + ps.Idx.GetWord(object.(env.Opword).Index) + "` used without a left-hand value. An opword must follow an expression that produces a value (e.g. `1 + 2`, not `+ 2`).")
+		ps.Res = env.NewError("Opword `" + ps.Idx.GetWord(object.(env.Opword).Index) + "` requires a value on the left.")
 		return
 	case env.PipewordType:
 		// A pipeword appearing at the start of an expression has no left-hand value — error.
 		ps.ErrorFlag = true
-		ps.Res = env.NewError("Pipeword `|" + ps.Idx.GetWord(object.(env.Pipeword).Index) + "` used without a left-hand value. A pipeword must follow an expression that produces a value (e.g. `1 |add`, not `|add`).")
+		ps.Res = env.NewError("Pipeword `|" + ps.Idx.GetWord(object.(env.Pipeword).Index) + "` requires a value on the left.")
 		return
 	// this functions works when there is no left value, so these should cause an error (20260224)
 	// case env.LSetwordType, env.LModwordType, env.OpCPathType, env.PipeCPathType:
@@ -650,15 +650,15 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 		case env.CachedModeOpword:
 			// Opword at start of expression is an error (no left value)
 			ps.ErrorFlag = true
-			ps.Res = env.NewError("Cached opword used without a left-hand value.")
+			ps.Res = env.NewError("Cached opword requires a value on the left.")
 		case env.CachedModePipeword:
 			// Pipeword at start of expression is an error (no left value)
 			ps.ErrorFlag = true
-			ps.Res = env.NewError("Cached pipeword used without a left-hand value.")
+			ps.Res = env.NewError("Cached pipeword requires a value on the left.")
 		case env.CachedModeDotword:
 			// Dotword at start of expression is an error (no left value)
 			ps.ErrorFlag = true
-			ps.Res = env.NewError("Cached dotword used without a left-hand value.")
+			ps.Res = env.NewError("Cached dotword requires a value on the left.")
 		}
 		return
 	case env.VarBuiltinType:
@@ -669,11 +669,11 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 		return
 	case env.CommaType:
 		ps.ErrorFlag = true
-		ps.Res = env.NewError("Expression guard (comma) found inside an expression. Commas can only be used between block-level expressions, not within expressions.")
+		ps.Res = env.NewError("Comma inside an expression. Commas can only appear between top-level expressions.")
 		return
 	case env.ErrorType:
 		ps.ErrorFlag = true
-		ps.Res = env.NewError("Error object encountered in code block. This usually indicates a previous error that wasn't properly handled.")
+		ps.Res = env.NewError("Error value in code block.")
 		return
 	default:
 		ps.Res = object
@@ -882,7 +882,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 			return
 		} else {
 			ps.ErrorFlag = true
-			err := env.NewError2(5, "Word not found: `"+failureInfo+"`. Check spelling or ensure the word is defined in the current context.")
+			err := env.NewError2(5, "Word not found: `"+failureInfo+"`.")
 			err.CodeBlock = ps.Ser
 			ps.Res = err
 			return
@@ -921,7 +921,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 			ps.ErrorFlag = true
 			if !ps.FailureFlag {
 				ps.Ser.SetPos(pos)
-				err := env.NewError2(5, "Word not found: `"+failureInfo+"`. Check spelling or ensure the word is defined in the current context.")
+				err := env.NewError2(5, "Word not found: `"+failureInfo+"`.")
 				err.CodeBlock = ps.Ser
 				ps.Res = err
 			}
@@ -1013,7 +1013,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 				err.CodeBlock = ps.Ser
 				ps.Res = err
 			} else {
-				err := env.NewError2(5, "Word not found: `"+failureInfo+"`. Check spelling or ensure the word is defined in the current context.")
+				err := env.NewError2(5, "Word not found: `"+failureInfo+"`.")
 				err.CodeBlock = ps.Ser
 				ps.Res = err
 			}
@@ -1062,7 +1062,7 @@ func EvalGetword(ps *env.ProgramState, word env.Getword, leftVal env.Object, toL
 		return
 	} else {
 		ps.ErrorFlag = true
-		ps.Res = env.NewError("Word not found: " + word.Print(*ps.Idx) + ". Get-word (?) requires the word to be defined in the current context.")
+		ps.Res = env.NewError("Word not found: `" + word.Print(*ps.Idx) + "`.")
 		return
 	}
 }
@@ -1120,14 +1120,14 @@ func EvalSetword(ps *env.ProgramState, word env.Setword) {
 	if ps.AllowMod {
 		ok := ps.Ctx.Mod(idx, ps.Res)
 		if !ok {
-			ps.Res = env.NewError("Cannot modify constant `" + ps.Idx.GetWord(idx) + "`. Use `var` to declare it as a variable, or use modword `::` if it's already a variable.")
+			ps.Res = env.NewError("`" + ps.Idx.GetWord(idx) + "` is a constant, use `var` to make it a variable.")
 			ps.FailureFlag = true
 			ps.ErrorFlag = true
 		}
 	} else {
 		ok := ps.Ctx.SetNew(idx, ps.Res, ps.Idx)
 		if !ok {
-			ps.Res = env.NewError("Cannot set word `" + ps.Idx.GetWord(idx) + "` because it's already set. Use modword `::` to modify an existing word, or use a different name.")
+			ps.Res = env.NewError("`" + ps.Idx.GetWord(idx) + "` is already set, use modword `::` to modify it.")
 			ps.FailureFlag = true
 			ps.ErrorFlag = true
 		}
@@ -1452,7 +1452,7 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 			ps.ErrorFlag = true
 		}
 	}
-	MaybeDisplayFailureOrError(ps, ps.Idx, "Call func collect args")
+	MaybeDisplayFailureOrError(ps, ps.Idx, "func. call arg collection")
 	if ps.ErrorFlag || ps.FailureFlag {
 		ps.Ctx = env0
 		ps.Ser = ser0
@@ -1535,7 +1535,7 @@ func CallFunctionArgs1(fn env.Function, ps *env.ProgramState, arg0 env.Object, c
 	}
 	psX.Ser.SetPos(0)
 	EvalBlockInj(psX, arg0, true)
-	MaybeDisplayFailureOrError(psX, psX.Idx, "call func args 1")
+	MaybeDisplayFailureOrError(psX, psX.Idx, "func. call first arg")
 	if psX.ErrorFlag || psX.FailureFlag {
 		ps.Res = psX.Res
 		ps.ErrorFlag = psX.ErrorFlag
@@ -1598,7 +1598,7 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	}
 	psX.Ser.SetPos(0)
 	EvalBlockInj(psX, arg0, true)
-	MaybeDisplayFailureOrError(psX, psX.Idx, "call func args 2")
+	MaybeDisplayFailureOrError(psX, psX.Idx, "func. call second arg.")
 	if psX.ErrorFlag || psX.FailureFlag {
 		ps.Res = psX.Res
 		ps.ErrorFlag = psX.ErrorFlag
@@ -1671,7 +1671,7 @@ func CallFunctionArgs4(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 		ps.FailureFlag = psX.FailureFlag
 		return
 	}
-	MaybeDisplayFailureOrError(psX, psX.Idx, "call func args 4")
+	MaybeDisplayFailureOrError(psX, psX.Idx, "func. call fourth arg.")
 	if psX.ForcedResult != nil {
 		ps.Res = psX.ForcedResult
 		psX.ForcedResult = nil
@@ -1742,7 +1742,7 @@ func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, a
 		ps.FailureFlag = psX.FailureFlag
 		return
 	}
-	MaybeDisplayFailureOrError(psX, psX.Idx, "call func args N")
+	MaybeDisplayFailureOrError(psX, psX.Idx, "func. call N args")
 	if psX.ForcedResult != nil {
 		ps.Res = psX.ForcedResult
 		psX.ForcedResult = nil
@@ -2228,11 +2228,11 @@ func FormatBacktickQuotes(message string) string {
 		if message[i] == '`' {
 			if inQuote {
 				// Closing backtick - add reset and restore bold red
-				result.WriteString(" \x1b[0m\x1b[31m")
+				result.WriteString("\x1b[0m\x1b[31m")
 				inQuote = false
 			} else {
 				// Opening backtick - add magenta background, white text
-				result.WriteString("\x1b[40m\x1b[31m ")
+				result.WriteString("\x1b[40m\x1b[31m")
 				inQuote = true
 			}
 		} else {
@@ -2249,16 +2249,17 @@ func DisplayEnhancedError(es *env.ProgramState, genv *env.Idxs, tag string, topL
 	// Only display if SkipFlag is not set (prevents duplicate error display)
 	if !es.SkipFlag {
 		// Red background banner for runtime errors
-		fmt.Print("\x1b[41m\x1b[30m RUNTIME ERROR:\x1b[0m " + tag + "\n") // Magenta background, black text
+		fmt.Print("\x1b[41m\x1b[30m RUNTIME ERROR:\x1b[0m " + tag + "\n\n") // Magenta background, black text
 
 		// Bold red for error message, with backtick-quoted text highlighted
-		fmt.Print("\x1b[1;31m") // Bold red
+		fmt.Print("\x1b[31m") // Bold red
 		errorMsg := es.Res.Print(*genv)
 		fmt.Println(FormatBacktickQuotes(errorMsg))
 		fmt.Print("\x1b[0m") // Reset
 
 		// Get location information from the current block
 		displayBlockWithErrorPosition(es, genv)
+		fmt.Print("\n") // Reset
 	}
 }
 
