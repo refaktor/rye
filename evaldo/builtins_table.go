@@ -2685,31 +2685,31 @@ var Builtins_table = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//  equal { `a,b\n1,2\n3,4` |parse\csv\ "," |length? } 2
-	//  equal { `a;b\n1;2\n3;4` |parse\csv\ ";" |column? "a" } { "1" "3" }
+	//  equal { `a,b\n1,2\n3,4` |parse\csv\separator "," |length? } 2
+	//  equal { `a;b\n1;2\n3;4` |parse\csv\separator ";" |column? "a" } { "1" "3" }
 	// Args:
 	// * csv-string - string containing CSV data
 	// * separator - single character separator
 	// Tags: #table #parsing #csv
-	"parse\\csv\\": {
+	"parse\\csv\\separator": {
 		Argsn: 2,
-		Doc:   "Parses a CSV string to a table datatype with custom separator.",
+		Doc:   "Parses a CSV string to a table datatype with a custom separator character.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch csvData := arg0.(type) {
 			case env.String:
 				switch separator := arg1.(type) {
 				case env.String:
-					csvReader := csv.NewReader(strings.NewReader(csvData.Value))
 					if len(separator.Value) != 1 {
-						return MakeBuiltinError(ps, "Separator must be exactly 1 character long", "parse\\csv\\")
+						return MakeBuiltinError(ps, "Separator must be exactly 1 character long", "parse\\csv\\separator")
 					}
+					csvReader := csv.NewReader(strings.NewReader(csvData.Value))
 					csvReader.Comma = rune(separator.Value[0])
 					rows, err := csvReader.ReadAll()
 					if err != nil {
-						return MakeBuiltinError(ps, "Unable to parse string as CSV: "+err.Error(), "parse\\csv\\")
+						return MakeBuiltinError(ps, "Unable to parse string as CSV: "+err.Error(), "parse\\csv\\separator")
 					}
 					if len(rows) == 0 {
-						return MakeBuiltinError(ps, "CSV data is empty", "parse\\csv\\")
+						return MakeBuiltinError(ps, "CSV data is empty", "parse\\csv\\separator")
 					}
 					spr := env.NewTable(rows[0])
 					if len(rows) > 1 {
@@ -2723,10 +2723,10 @@ var Builtins_table = map[string]*env.Builtin{
 					}
 					return *spr
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "parse\\csv\\")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "parse\\csv\\separator")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "parse\\csv\\")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "parse\\csv\\separator")
 			}
 		},
 	},

@@ -834,9 +834,12 @@ func (l *Lexer) readWord() NoPEGToken {
 	return l.makeToken(NPEG_TOKEN_WORD, l.input[l.tokenStart:l.pos])
 }
 
-// readString reads a string token
+// readString reads a string token.
+// Backtick-delimited strings (`) may span multiple lines.
+// Double-quote-delimited strings (") must not contain unescaped newlines.
 func (l *Lexer) readString() NoPEGToken {
 	delimiter := l.ch
+	multiline := delimiter == '`'
 	l.readChar() // Skip opening quote
 
 	for l.ch != 0 && l.ch != delimiter {
@@ -849,6 +852,11 @@ func (l *Lexer) readString() NoPEGToken {
 				l.readChar()
 			}
 		} else {
+			// For double-quoted strings, an unescaped newline is an error
+			if !multiline && (l.ch == '\n' || l.ch == '\r') {
+				errMsg := fmt.Sprintf("Unescaped newline in double-quoted string starting at line %d, column %d. Use backtick-delimited strings for multiline content, or escape newlines as \\n.", l.startLine, l.startCol)
+				return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, ERR_UNKNOWN)
+			}
 			l.readChar()
 		}
 	}

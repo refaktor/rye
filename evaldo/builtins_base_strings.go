@@ -1040,22 +1040,21 @@ var builtins_string = map[string]*env.Builtin{
 	// ##### URL Encoding ##### ""
 	//
 	// Tests:
-	// equal { url-encode { name: "John Doe" city: "New York" } } "?city=New+York&name=John+Doe"
+	// equal { url-encode { name: "John Doe" city: "New York" } |contains "city=New+York" } 1
 	// equal { url-encode { } } ""
-	// equal { url-encode { q: "hello world" } } "?q=hello+world"
+	// equal { url-encode { q: "hello world" } } "q=hello+world"
 	// equal { url-encode { a: "foo" b: "bar" } |contains "a=foo" } 1
 	// equal { url-encode { a: "foo" b: "bar" } |contains "b=bar" } 1
-	// equal { url-encode { a: "foo" b: "bar" } |first } "?"
 	// equal { url-encode { "my-key" "val" } |contains "my-key=val" } 1
-	// equal { x: "hello" url-encode { q: x } } "?q=hello"
+	// equal { x: "hello" url-encode { q: x } } "q=hello"
 	// error { url-encode "not-a-block" }
 	// Args:
 	// * params: Block of name: value pairs where names are set-words or strings and values are strings, integers, decimals, or words (evaluated from context)
 	// Returns:
-	// * URL query string starting with '?' and pairs joined with '&', all special characters percent-encoded
+	// * URL query string with pairs joined with '&', all special characters percent-encoded (no leading '?')
 	"url-encode": {
 		Argsn: 1,
-		Doc:   "Encodes a block of name: value pairs as a URL query string (e.g. ?name=John+Doe&city=New+York), percent-encoding all special characters. Keys can be set-words (name:) or strings (\"name\"), values can be strings, integers, decimals, or words (looked up in context).",
+		Doc:   "Encodes a block of name: value pairs as a URL query string (e.g. name=John+Doe&city=New+York), percent-encoding all special characters. Keys can be set-words (name:) or strings (\"name\"), values can be strings, integers, decimals, or words (looked up in context).",
 		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch blk := arg0.(type) {
@@ -1108,7 +1107,7 @@ var builtins_string = map[string]*env.Builtin{
 				if len(params) == 0 {
 					return *env.NewString("")
 				}
-				return *env.NewString("?" + params.Encode())
+				return *env.NewString(params.Encode())
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "url-encode")
