@@ -1226,14 +1226,19 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { tail { 1 2 } 5 } { 1 2 }
 	// equal { tail vector { 1.0 2.0 3.0 4.0 } 2 |first } 3.0
 	// equal { tail matrix { 3 2 } { 1.0 2.0 3.0 4.0 5.0 6.0 } 2 |rows? } 2
+	// equal { tail { 1 2 3 4 5 } -1 } { 2 3 4 5 }
+	// equal { tail { 1 2 3 4 5 } -2 } { 3 4 5 }
+	// equal { tail "abcde" -1 } "bcde"
+	// equal { tail "abcde" -2 } "cde"
+	// equal { tail list { 1 2 3 4 5 } -1 } list { 2 3 4 5 }
 	// Args:
 	// * collection: Block, list, string, table, vector or matrix to get the last items from
-	// * n: Number of items to retrieve from the end
+	// * n: Number of items to retrieve from the end; if negative, all but the first |n| items
 	// Returns:
-	// * a new collection containing the last n items (for matrix: last n rows)
+	// * a new collection containing the last n items (for matrix: last n rows), or all except the first |n| if n is negative
 	"tail": { // **
 		Argsn: 2,
-		Doc:   "Creates a new collection with the last n items from the input collection.",
+		Doc:   "Creates a new collection with the last n items from the input collection, or all but the first |n| items if n is negative.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch num := arg1.(type) {
 			case env.Integer:
@@ -1243,6 +1248,13 @@ var builtins_collection = map[string]*env.Builtin{
 					if len(s1.Series.S) == 0 {
 						return *env.NewBlock(*env.NewTSeries([]env.Object{}))
 					}
+					if numVal < 0 {
+						startIdx := -numVal
+						if startIdx > len(s1.Series.S) {
+							startIdx = len(s1.Series.S)
+						}
+						return *env.NewBlock(*env.NewTSeries(s1.Series.S[startIdx:]))
+					}
 					if len(s1.Series.S) < numVal {
 						numVal = len(s1.Series.S)
 					}
@@ -1250,6 +1262,13 @@ var builtins_collection = map[string]*env.Builtin{
 				case env.List:
 					if len(s1.Data) == 0 {
 						return *env.NewList([]any{})
+					}
+					if numVal < 0 {
+						startIdx := -numVal
+						if startIdx > len(s1.Data) {
+							startIdx = len(s1.Data)
+						}
+						return *env.NewList(s1.Data[startIdx:])
 					}
 					if len(s1.Data) < numVal {
 						numVal = len(s1.Data)
@@ -1260,6 +1279,13 @@ var builtins_collection = map[string]*env.Builtin{
 					if len(str) == 0 {
 						return *env.NewString("")
 					}
+					if numVal < 0 {
+						startIdx := -numVal
+						if startIdx > len(str) {
+							startIdx = len(str)
+						}
+						return *env.NewString(string(str[startIdx:]))
+					}
 					if len(str) < numVal {
 						numVal = len(str)
 					}
@@ -1269,17 +1295,49 @@ var builtins_collection = map[string]*env.Builtin{
 					if len(str) == 0 {
 						return *env.NewSecret("")
 					}
+					if numVal < 0 {
+						startIdx := -numVal
+						if startIdx > len(str) {
+							startIdx = len(str)
+						}
+						return *env.NewSecret(string(str[startIdx:]))
+					}
 					if len(str) < numVal {
 						numVal = len(str)
 					}
 					return *env.NewSecret(string(str[len(str)-numVal:]))
 				case env.Table:
 					nspr := env.NewTable(s1.Cols)
+					if len(s1.Rows) == 0 {
+						nspr.Rows = []env.TableRow{}
+						return *nspr
+					}
+					if numVal < 0 {
+						startIdx := -numVal
+						if startIdx > len(s1.Rows) {
+							startIdx = len(s1.Rows)
+						}
+						nspr.Rows = s1.Rows[startIdx:]
+						return *nspr
+					}
+					if len(s1.Rows) < numVal {
+						numVal = len(s1.Rows)
+					}
 					nspr.Rows = s1.Rows[len(s1.Rows)-numVal:]
 					return *nspr
 				case env.Vector:
 					if len(s1.Value) == 0 {
 						return *env.NewVector([]float64{})
+					}
+					if numVal < 0 {
+						startIdx := -numVal
+						if startIdx > len(s1.Value) {
+							startIdx = len(s1.Value)
+						}
+						count := len(s1.Value) - startIdx
+						newData := make([]float64, count)
+						copy(newData, s1.Value[startIdx:])
+						return *env.NewVector(newData)
 					}
 					if len(s1.Value) < numVal {
 						numVal = len(s1.Value)
@@ -1290,6 +1348,16 @@ var builtins_collection = map[string]*env.Builtin{
 				case env.Matrix:
 					if s1.Rows == 0 {
 						return *env.NewMatrix(0, s1.Cols)
+					}
+					if numVal < 0 {
+						startRow := -numVal
+						if startRow > s1.Rows {
+							startRow = s1.Rows
+						}
+						count := s1.Rows - startRow
+						newData := make([]float64, count*s1.Cols)
+						copy(newData, s1.Data[startRow*s1.Cols:])
+						return *env.NewMatrixWithData(count, s1.Cols, newData)
 					}
 					if s1.Rows < numVal {
 						numVal = s1.Rows

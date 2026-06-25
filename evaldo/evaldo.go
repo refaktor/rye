@@ -1001,7 +1001,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 				// Generic dispatch looks up methods by Kind, so without a Kind there is nothing
 				// to find — reporting "word not found: `Get`" would be misleading here.
 				argType := ps.Idx.GetWord(int(leftVal.Type()))
-				err := env.NewError2(5, "Generic word `"+failureInfo+"`: first argument of type '"+argType+"' has no Kind determined. Uri, Context, and Native values must have a named Kind before generic methods can be dispatched on them.")
+				err := env.NewError2(5, "Generic method `"+failureInfo+"`: first argument of type `"+argType+"` has no Kind determined. Methods dispatch on kinds.")
 				err.CodeBlock = ps.Ser
 				ps.Res = err
 			} else if leftVal != nil && genericKind != 0 {
@@ -1009,7 +1009,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 				// under that Kind's namespace. This means the word exists as a concept
 				// (e.g. Get) but there is no implementation registered for this Kind.
 				kindName := ps.Idx.GetWord(genericKind)
-				err := env.NewError2(5, "Generic word `"+failureInfo+"` is not defined for Kind '"+kindName+"'. No implementation of `"+failureInfo+"` is registered under the '"+kindName+"' namespace.")
+				err := env.NewError2(5, "Generic method `"+failureInfo+"` is not defined for Kind `"+kindName+"`. Use .lg and .kind? to get more info.")
 				err.CodeBlock = ps.Ser
 				ps.Res = err
 			} else {
@@ -1043,10 +1043,10 @@ func EvalGenword(ps *env.ProgramState, word env.Genword, leftVal env.Object, toL
 		wordName := word.Print(*ps.Idx)
 		if arg0Kind == 0 {
 			argType := ps.Idx.GetWord(int(arg0.Type()))
-			ps.Res = env.NewError2(5, "Generic word `"+wordName+"`: first argument of type '"+argType+"' has no Kind determined. Uri, Context, and Native values must have a named Kind before generic methods can be dispatched on them.")
+			ps.Res = env.NewError2(5, "Generic method `"+wordName+"`: first argument of type `"+argType+"` has no Kind determined. Methods dispatch on kinds.")
 		} else {
 			kindName := ps.Idx.GetWord(arg0Kind)
-			ps.Res = env.NewError2(5, "Generic word `"+wordName+"` is not defined for Kind '"+kindName+"'. No implementation of `"+wordName+"` is registered under the '"+kindName+"' namespace.")
+			ps.Res = env.NewError2(5, "Generic method `"+wordName+"` is not defined for Kind `"+kindName+"`. Use .lg and .kind? to get more info.")
 		}
 		return
 	}
