@@ -3155,6 +3155,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltinsInContext(Builtins_mcp, ps, "mcp")
 	RegisterBuiltins2(Builtins_mqtt, ps, "mqtt")
 	RegisterBuiltins2(Builtins_chitosocket, ps, "chitosocket")
+	RegisterBuiltins2(Builtins_rclone, ps, "rclone")
 	RegisterBuiltins2(builtins_trees, ps, "trees")
 	// RegisterBuiltinsInContext(Builtins_git, ps, "git")
 	// temporarily removed RegisterBuiltinsInContext(Builtins_docker, ps, "docker")
@@ -3394,6 +3395,7 @@ var allBuiltinGroups = []builtinGroup{
 	{"console", Builtins_console, false},
 	{"mqtt", Builtins_mqtt, false},
 	{"chitosocket", Builtins_chitosocket, false},
+	{"rclone", Builtins_rclone, false},
 	// Module builtins – in named child context
 	{"crypto", Builtins_crypto, true},
 	{"encoding", Builtins_encoding, true},
