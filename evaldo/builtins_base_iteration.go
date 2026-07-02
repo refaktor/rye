@@ -1905,14 +1905,17 @@ var builtins_iteration = map[string]*env.Builtin{
 	//  equal { try { seek { 1 2 3 4 } { > 5 } } |type? } 'error
 	//  equal { try { seek list { 1 2 3 4 } { > 5 } } |type? } 'error
 	//  equal { try { seek "1234" { .integer > 5 } } |type? } 'error
+	//  equal { seek { 1 2 3 4 } ?is-even } 2
+	//  equal { seek list { 1 2 3 4 } ?is-even } 2
+	//  equal { is-even: fn { x } { x .is-even } , seek { 1 2 3 4 } ?is-even } 2
 	// Args:
 	// * series: Block, List, or String to search through
-	// * code: Block or Builtin that returns true when the desired value is found
+	// * code: Block, Builtin, or Function that returns true when the desired value is found
 	// Returns:
 	// * first value for which the code returns true, error if none found
 	"seek": { // **
 		Argsn: 2,
-		Doc:   "Seek over a series until a Block of code returns True and return the value.",
+		Doc:   "Seek over a series until a Block of code, Builtin, or Function returns True and return the value.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var ll []any
@@ -1937,7 +1940,7 @@ var builtins_iteration = map[string]*env.Builtin{
 				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "seek")
 			}
 			switch block := arg1.(type) {
-			case env.Block, env.Builtin:
+			case env.Block, env.Builtin, env.Function:
 				switch block := block.(type) {
 				case env.Block:
 					// Pre-resolve builtins in the code block for faster execution
@@ -1959,7 +1962,7 @@ var builtins_iteration = map[string]*env.Builtin{
 							ps.Ser = ser
 							return ps.Res
 						}
-						if util.IsTruthy(ps.Res) { // todo -- move these to util or something
+						if util.IsTruthy(ps.Res) {
 							ps.Ser = ser
 							return env.ToRyeValue(item)
 						}
@@ -1981,16 +1984,31 @@ var builtins_iteration = map[string]*env.Builtin{
 						if ps.ErrorFlag || ps.ReturnFlag {
 							return ps.Res
 						}
-						if util.IsTruthy(res) { // todo -- move these to util or something
+						if util.IsTruthy(res) {
 							return env.ToRyeValue(item)
 						}
 					}
-				default:
-					ps.ErrorFlag = true
-					return MakeBuiltinError(ps, "Second argument should be block, builtin (or function).", "seek")
+				case env.Function:
+					for i := 0; i < llen; i++ {
+						var item any
+						if modeObj == 1 {
+							item = ll[i]
+						} else if modeObj == 2 {
+							item = lo[i]
+						} else {
+							item = *env.NewString(string(ls[i]))
+						}
+						CallFunctionArgsN(block, ps, ps.Ctx, env.ToRyeValue(item))
+						if ps.ErrorFlag || ps.ReturnFlag {
+							return ps.Res
+						}
+						if util.IsTruthy(ps.Res) {
+							return env.ToRyeValue(item)
+						}
+					}
 				}
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType}, "seek")
+				return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType, env.FunctionType}, "seek")
 			}
 			return MakeBuiltinError(ps, "No element found.", "seek")
 		},
