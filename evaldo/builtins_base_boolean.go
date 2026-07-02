@@ -238,7 +238,7 @@ var builtins_boolean = map[string]*env.Builtin{
 	// * block: Block of expressions to evaluate with the provided value injected
 	// Returns:
 	// * the first truthy result of applying an expression to the value, or the last result if none are truthy
-	"any\\with": {
+	"_any\\with": { // Doesn't seem to work well , for second expression or expression not taking in arguments
 		Argsn: 2,
 		Doc:   "Applies each expression in the block to the provided value until a truthy result is found and returns it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

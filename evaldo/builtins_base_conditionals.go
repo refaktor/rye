@@ -140,6 +140,145 @@ var builtins_conditionals = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	// equal  { 10 .when { > 5 } { + 3 } } 13
+	// equal  { 10 .when { < 5 } { + 3 } } 10
+	// Args:
+	// * value: Value to inject into both condition and action blocks
+	// * condition: Block that evaluates to a truthy/falsy value with the injected value
+	// * action: Block to execute if condition is truthy, with the injected value
+	// Returns:
+	// * the value of the evaluated action block if condition is truthy or the original injected value if condition is falsy
+	"^when": { // **
+		Argsn: 3,
+		Doc:   "Conditionally executes an action block if a condition block evaluates to true, injecting the same value into both blocks and returning the value of the action block if the condition is truthy or the original value otherwise.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// function accepts 3 args: arg0 is the value to inject, arg1 is the condition block, arg2 is the action block
+
+			// Check if the second argument is a block (condition block)
+			switch condBlock := arg1.(type) {
+			case env.Block:
+				// Check if the third argument is a block (action block)
+				switch actionBlock := arg2.(type) {
+				case env.Block:
+					// Store current series
+					ser := ps.Ser
+
+					// Set series to condition block and evaluate it with the value injected
+					ps.Ser = condBlock.Series
+					EvalBlockInj(ps, arg0, true)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "when")
+					if ps.ErrorFlag || ps.ReturnFlag {
+						ps.Ser = ser
+						return ps.Res
+					}
+
+					// Check if the result is truthy
+					if util.IsTruthy(ps.Res) {
+						// Set series to action block and evaluate it with the value injected
+						ps.Ser = actionBlock.Series
+						EvalBlockInj(ps, arg0, true)
+						MaybeDisplayFailureOrError(ps, ps.Idx, "when")
+						if ps.ErrorFlag || ps.ReturnFlag {
+							ps.Ser = ser
+							return ps.Res
+						}
+						ps.ReturnFlag = true
+					} else {
+						ps.Res = arg0
+					}
+
+					// Restore original series
+					ps.Ser = ser
+
+					// Return the original value regardless of the evaluation result
+					return ps.Res
+				default:
+					// If the third argument is not a block, return an error
+					ps.FailureFlag = true
+					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "when")
+				}
+			default:
+				// If the second argument is not a block, return an error
+				ps.FailureFlag = true
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "when")
+			}
+		},
+	},
+
+	// Tests:
+	// equal  { 10 .whether { > 5 } { + 3 } { - 3 } } 13
+	// equal  { 2 .whether { > 5 } { + 3 } { - 3 } } -1
+	// equal  { 10 .whether { > 5 } { "big" } { "small" } } "big"
+	// equal  { 2 .whether { > 5 } { "big" } { "small" } } "small"
+	// Args:
+	// * value: Value to inject into the condition block and the chosen action block
+	// * condition: Block that evaluates to a truthy/falsy value with the injected value
+	// * true-block: Block to execute if condition is truthy, with the value injected
+	// * false-block: Block to execute if condition is falsy, with the value injected
+	// Returns:
+	// * result of the true-block if condition is truthy, result of the false-block otherwise
+	"whether": { // **
+		Argsn: 4,
+		Doc:   "Evaluates a condition block with the injected value and executes either the true or false block accordingly, returning the result. Like when with an else branch.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// function accepts 4 args: arg0 is the value, arg1 is the condition block,
+			// arg2 is the true-block, arg3 is the false-block
+
+			// Check if the second argument is a block (condition block)
+			switch condBlock := arg1.(type) {
+			case env.Block:
+				// Check if the third argument is a block (true-block)
+				switch trueBlock := arg2.(type) {
+				case env.Block:
+					// Check if the fourth argument is a block (false-block)
+					switch falseBlock := arg3.(type) {
+					case env.Block:
+						// Store current series
+						ser := ps.Ser
+
+						// Evaluate the condition block with the value injected
+						ps.Ser = condBlock.Series
+						EvalBlockInj(ps, arg0, true)
+						MaybeDisplayFailureOrError(ps, ps.Idx, "whether")
+						if ps.ErrorFlag || ps.ReturnFlag {
+							ps.Ser = ser
+							return ps.Res
+						}
+
+						// Choose and evaluate the appropriate branch
+						if util.IsTruthy(ps.Res) {
+							ps.Ser = trueBlock.Series
+						} else {
+							ps.Ser = falseBlock.Series
+						}
+						EvalBlockInj(ps, arg0, true)
+						MaybeDisplayFailureOrError(ps, ps.Idx, "whether")
+						if ps.ErrorFlag || ps.ReturnFlag {
+							ps.Ser = ser
+							return ps.Res
+						}
+
+						// Restore original series and return result
+						ps.Ser = ser
+						return ps.Res
+					default:
+						ps.FailureFlag = true
+						return MakeArgError(ps, 4, []env.Type{env.BlockType}, "whether")
+					}
+				default:
+					ps.FailureFlag = true
+					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "whether")
+				}
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "whether")
+			}
+		},
+	},
+
+	// Tests:
 	// equal  { x: does { ^if true { 222 } 555 } x } 222
 	// equal  { x: does { ^if false { 333 } 444 } x } 444
 	// Args:

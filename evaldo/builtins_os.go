@@ -16,8 +16,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/atotto/clipboard"
 	"github.com/GianlucaP106/gotmux/gotmux"
+	"github.com/atotto/clipboard"
 	"github.com/refaktor/go-find"
 	"github.com/refaktor/rye/env"
 
@@ -492,7 +492,7 @@ var Builtins_os = map[string]*env.Builtin{
 			// Check if argument is a file-uri
 			if uri, ok := arg0.(env.Uri); ok {
 				targetPath := resolvePath(ps.WorkingPath, uri.GetPath())
-				
+
 				// Check if path exists and is a directory
 				info, err := os.Stat(targetPath)
 				if err != nil {
@@ -504,11 +504,11 @@ var Builtins_os = map[string]*env.Builtin{
 					}
 					return MakeBuiltinError(ps, fmt.Sprintf("error accessing path %s: %s", uri.GetPath(), err.Error()), "ls\\")
 				}
-				
+
 				if !info.IsDir() {
 					return MakeBuiltinError(ps, fmt.Sprintf("not a directory (is file): %s", uri.GetPath()), "ls\\")
 				}
-				
+
 				targetDir = targetPath
 				doFiltering = false
 			}
@@ -1005,7 +1005,7 @@ var Builtins_os = map[string]*env.Builtin{
 
 	// Args:
 	// * source: uri representing source directory
-	// * destination: uri representing destination directory  
+	// * destination: uri representing destination directory
 	// Returns:
 	// * destination uri if successful
 	// Tags: #file #copy #recursive
@@ -1036,7 +1036,7 @@ var Builtins_os = map[string]*env.Builtin{
 	// Args:
 	// * path: uri representing directory path to create
 	// Returns:
-	// * path uri if successful  
+	// * path uri if successful
 	// Tags: #file #directory
 	"mkdir-p": {
 		Argsn: 1,
@@ -2085,7 +2085,7 @@ var Builtins_os = map[string]*env.Builtin{
 					if err != nil {
 						return MakeBuiltinError(ps, "Failed to list windows: "+err.Error(), "tmux-list-windows")
 					}
-					
+
 					items := make([]env.Object, len(windows))
 					for i, window := range windows {
 						items[i] = *env.NewNative(ps.Idx, window, "tmux-window")
@@ -2207,6 +2207,155 @@ var Builtins_os = map[string]*env.Builtin{
 				return MakeBuiltinError(ps, "Expected tmux-session object", "tmux-kill-session")
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tmux-kill-session")
+			}
+		},
+	},
+
+	// NET relaated
+
+	//
+	// ##### Network Interface Functions ##### "Inspecting local network interfaces."
+	//
+
+	// Tests:
+	// ; equal { net-interface-by-name "lo" |type? } 'native
+	// ; error { net-interface-by-name "no-such-iface-xyz" }
+	// Args:
+	// * name: String name of the network interface (e.g., "eth0", "tailscale0", "lo")
+	// Returns:
+	// * native net-iface object representing the interface, or error if not found
+	"net-interface?": {
+		Argsn: 1,
+		Doc:   "Looks up a network interface by name and returns it as a native object.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch name := arg0.(type) {
+			case env.String:
+				iface, err := net.InterfaceByName(name.Value)
+				if err != nil {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, err.Error(), "net-interface?")
+				}
+				return *env.NewNative(ps.Idx, iface, "net-iface")
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "net-interface?")
+			}
+		},
+	},
+
+	// Example:
+	// ; iface: net-interface-by-name "lo"
+	// ; addrs: iface .Addrs?
+	// Args:
+	// * iface: Native net-iface object
+	// Returns:
+	// * block of native net-addr objects assigned to the interface, or error
+	"net-iface//Addrs?": {
+		Argsn: 1,
+		Doc:   "Returns a block of network addresses assigned to the interface.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch iface := arg0.(type) {
+			case env.Native:
+				addrs, err := iface.Value.(*net.Interface).Addrs()
+				if err != nil {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, err.Error(), "net-iface//Addrs?")
+				}
+				items := make([]env.Object, len(addrs))
+				for i, addr := range addrs {
+					items[i] = *env.NewNative(ps.Idx, addr, "net-addr")
+				}
+				return *env.NewBlock(*env.NewTSeries(items))
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "net-iface//Addrs?")
+			}
+		},
+	},
+
+	// Example:
+	// ; addr: iface .Addrs? |first
+	// ; ipnet: addr .IPNet?
+	// Args:
+	// * addr: Native net-addr object (from net-iface//Addrs)
+	// Returns:
+	// * native net-ipnet object if the address is an IP network, or failure if it is
+	//   a plain net.Addr (e.g., a point-to-point address not yet assigned)
+	"net-addr//IPNet?": {
+		Argsn: 1,
+		Doc:   "Type-asserts a network address to *net.IPNet (CIDR form). Returns failure if the address is not an IP network.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch addr := arg0.(type) {
+			case env.Native:
+				ipnet, ok := addr.Value.(net.Addr).(*net.IPNet)
+				if !ok {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Address is not an *net.IPNet.", "net-addr//IPNet?")
+				}
+				return *env.NewNative(ps.Idx, ipnet, "net-ipnet")
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "net-addr//IPNet?")
+			}
+		},
+	},
+
+	// Example:
+	// ; ipnet .Loopback?  ; returns true for 127.0.0.1/8
+	// Args:
+	// * ipnet: Native net-ipnet object
+	// Returns:
+	// * boolean – true if the IP is a loopback address, false otherwise
+	"net-ipnet//Loopback?": {
+		Argsn: 1,
+		Doc:   "Reports whether the IP address in the IPNet is a loopback address.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch ipnet := arg0.(type) {
+			case env.Native:
+				return *env.NewBoolean(ipnet.Value.(*net.IPNet).IP.IsLoopback())
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "net-ipnet//Loopback?")
+			}
+		},
+	},
+
+	// Example:
+	// ; ipnet .IPv4?  ; returns true when the address is an IPv4 address
+	// Args:
+	// * ipnet: Native net-ipnet object
+	// Returns:
+	// * boolean – true if the IP address is IPv4, false if it is IPv6-only
+	"net-ipnet//IPv4?": {
+		Argsn: 1,
+		Doc:   "Reports whether the IP address in the IPNet is an IPv4 address (IP.To4() != nil).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch ipnet := arg0.(type) {
+			case env.Native:
+				return *env.NewBoolean(ipnet.Value.(*net.IPNet).IP.To4() != nil)
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "net-ipnet//IPv4?")
+			}
+		},
+	},
+
+	// Example:
+	// ; ipnet .IP-string?  ; returns "100.64.0.1"
+	// Args:
+	// * ipnet: Native net-ipnet object
+	// Returns:
+	// * string representation of the IP address (without the prefix length)
+	"net-ipnet//IP-string?": {
+		Argsn: 1,
+		Doc:   "Returns the IP address contained in the IPNet as a dotted-decimal (or colon-separated) string.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch ipnet := arg0.(type) {
+			case env.Native:
+				return *env.NewString(ipnet.Value.(*net.IPNet).IP.String())
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "net-ipnet//IP-string")
 			}
 		},
 	},
@@ -2482,13 +2631,13 @@ func findExecutable(cmd string) (string, error) {
 			continue
 		}
 		fullPath := filepath.Join(dir, cmd)
-		
+
 		// Try with common executable extensions on Windows
 		extensions := []string{""}
 		if strings.Contains(strings.ToLower(os.Getenv("OS")), "windows") {
 			extensions = []string{"", ".exe", ".bat", ".cmd", ".com"}
 		}
-		
+
 		for _, ext := range extensions {
 			testPath := fullPath + ext
 			if info, err := os.Stat(testPath); err == nil && !info.IsDir() {
@@ -2525,7 +2674,7 @@ func copyRecursive(src, dst string) error {
 		for _, entry := range entries {
 			srcPath := filepath.Join(src, entry.Name())
 			dstPath := filepath.Join(dst, entry.Name())
-			
+
 			if err := copyRecursive(srcPath, dstPath); err != nil {
 				return err
 			}
