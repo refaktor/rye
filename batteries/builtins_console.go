@@ -5,6 +5,7 @@ package batteries
 import (
 	"fmt"
 
+	"github.com/refaktor/rye/console"
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
 )
@@ -56,7 +57,7 @@ var Builtins_console = map[string]*env.Builtin{
 						}
 					}
 				*/
-				evaldo.DoRyeRepl(ps, "rye", evaldo.ShowResults, false, "")
+			console.DoRyeRepl(ps, "rye", evaldo.ShowResults, false, "")
 				fmt.Println("-------------------------------------------------------------")
 				ps.Ser = ser
 				return ps.Res

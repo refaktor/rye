@@ -24,6 +24,7 @@ import (
 
 	"github.com/refaktor/rye/contrib"
 	"github.com/refaktor/rye/batteries"
+	ryeconsole "github.com/refaktor/rye/console"
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
 	"github.com/refaktor/rye/loader"
@@ -1111,7 +1112,7 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 		//		evaldo.MaybeDisplayFailureOrError(ps, ps.Idx, "main rye file #2")
 
 		if interactive {
-			evaldo.DoRyeRepl(ps, "rye", evaldo.ShowResults, *localhist, *histfile)
+			ryeconsole.DoRyeRepl(ps, "rye", evaldo.ShowResults, *localhist, *histfile)
 		} else {
 			if file == "" && evaldo.ShowResults { // TODO -- move this to some instance ... to ProgramState? or is more of a ReplState?
 				fmt.Println(ps.Res.Print(*ps.Idx))
@@ -1310,9 +1311,9 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 		}
 
 		// Start dual REPL
-		evaldo.DoRyeDualRepl(es, rightEs, lang, evaldo.ShowResults)
+		ryeconsole.DoRyeDualRepl(es, rightEs, lang, evaldo.ShowResults)
 	} else {
-		evaldo.DoRyeRepl(es, lang, evaldo.ShowResults, *localhist, *histfile)
+		ryeconsole.DoRyeRepl(es, lang, evaldo.ShowResults, *localhist, *histfile)
 	}
 }
 

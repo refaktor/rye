@@ -2619,15 +2619,15 @@ var builtins_collection = map[string]*env.Builtin{
 				return *env.NewBoolean(len(s1.Rows) == 0)
 			case *env.Table:
 				return *env.NewBoolean(len(s1.Rows) == 0)
-			case *env.PersistentTable:
-				return *env.NewBoolean(s1.Length() == 0)
+			// case *env.PersistentTable: // TODO: PersistentTable removed temporarily
+			// 	return *env.NewBoolean(s1.Length() == 0)
 			case *env.RyeCtx:
 				return *env.NewBoolean(s1.GetWords(*ps.Idx).Series.Len() == 0)
 			case env.Vector:
 				return *env.NewBoolean(s1.Value.Len() == 0)
 			default:
 				// fmt.Println(s1)
-				return MakeArgError(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.TableType, env.PersistentTableType, env.VectorType}, "is-empty")
+				return MakeArgError(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.TableType, /*env.PersistentTableType,*/ env.VectorType}, "is-empty")
 			}
 		},
 	},
@@ -2660,8 +2660,8 @@ var builtins_collection = map[string]*env.Builtin{
 				return *env.NewInteger(int64(len(s1.Rows)))
 			case *env.Table:
 				return *env.NewInteger(int64(len(s1.Rows)))
-			case *env.PersistentTable:
-				return *env.NewInteger(int64(s1.Length()))
+			// case *env.PersistentTable: // TODO: PersistentTable removed temporarily
+			// 	return *env.NewInteger(int64(s1.Length()))
 			case *env.RyeCtx:
 				return *env.NewInteger(int64(s1.GetWords(*ps.Idx).Series.Len()))
 			case env.Vector:
@@ -2670,7 +2670,7 @@ var builtins_collection = map[string]*env.Builtin{
 				return *env.NewInteger(int64(len(s1.Value)))
 			default:
 				// fmt.Println(s1)
-				return MakeArgError(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.TableType, env.PersistentTableType, env.VectorType, env.BytesType}, "length?")
+				return MakeArgError(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.TableType, /*env.PersistentTableType,*/ env.VectorType, env.BytesType}, "length?")
 			}
 		},
 	},
@@ -2700,15 +2700,15 @@ var builtins_collection = map[string]*env.Builtin{
 				return *env.NewInteger(int64(len(s1.Rows) - 1))
 			case *env.Table:
 				return *env.NewInteger(int64(len(s1.Rows) - 1))
-			case *env.PersistentTable:
-				return *env.NewInteger(int64(s1.Length() - 1))
+			// case *env.PersistentTable: // TODO: PersistentTable removed temporarily
+			// 	return *env.NewInteger(int64(s1.Length() - 1))
 			case *env.RyeCtx:
 				return *env.NewInteger(int64(s1.GetWords(*ps.Idx).Series.Len() - 1))
 			case env.Vector:
 				return *env.NewInteger(int64(s1.Value.Len() - 1))
 			default:
 				// fmt.Println(s1)
-				return MakeArgError(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.TableType, env.PersistentTableType, env.VectorType}, "length?")
+				return MakeArgError(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.TableType, /*env.PersistentTableType,*/ env.VectorType}, "length?")
 			}
 		},
 	},

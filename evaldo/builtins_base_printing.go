@@ -16,8 +16,9 @@ import (
 	"github.com/refaktor/rye/util"
 )
 
-// displayRyeValue handles the display of Rye values, supporting both interactive and non-interactive modes
-func displayRyeValue(ps *env.ProgramState, arg0 env.Object, interactive bool) (env.Object, string) {
+// DisplayRyeValue handles the display of Rye values, supporting both interactive and non-interactive modes.
+// Exported so the console package can reference it via evaldo.DisplayRyeValue.
+func DisplayRyeValue(ps *env.ProgramState, arg0 env.Object, interactive bool) (env.Object, string) {
 	if interactive {
 		// Full interactive mode - use terminal display functions for navigation
 		term.SaveCurPos()
@@ -678,7 +679,7 @@ var builtins_printing = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Interactively displays a value (Block, Dict, Table, TableRow, or Markdown) in the terminal with navigation capabilities.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			result, _ := displayRyeValue(ps, arg0, true)
+			result, _ := DisplayRyeValue(ps, arg0, true)
 			return result
 		},
 	},
