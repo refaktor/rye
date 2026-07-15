@@ -47,7 +47,7 @@ func EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) {
 	case env.Rye2Dialect:
 		EvalBlockInj_Rye2(ps, inj, injnow)
 	case env.EyrDialect:
-		Eyr_EvalBlockInside(ps, inj, injnow) // TODO ps.Stack is already in ps ... refactor
+		BatteryEyrEvalBlockInsideHook(ps, inj, injnow) // TODO ps.Stack is already in ps ... refactor
 	case env.Rye0Dialect:
 		Rye0_EvalBlockInj(ps, inj, injnow) // TODO ps.Stack is already in ps ... refactor
 	case env.Rye00Dialect:

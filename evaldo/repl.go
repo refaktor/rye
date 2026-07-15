@@ -335,7 +335,7 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 			es.InErrHandler = false
 		} else if r.dialect == "eyr" {
 			es.Dialect = env.EyrDialect
-			Eyr_EvalBlock(es, true)
+			BatteryEyrEvalBlockHook(es, true)
 		} else if r.dialect == "math" {
 			idxx, _ := es.Idx.GetIndex("math")
 			s1, ok := es.Ctx.Get(idxx)
@@ -346,14 +346,14 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 					// return s1
 				}
 			}
-			res := DialectMath(es, block1)
+			res := BatteryDialectMathHook(es, block1)
 			switch block := res.(type) {
 			case env.Block:
 				//stack := env.NewEyrStack()
 				es.ResetStack()
 				ser := es.Ser
 				es.Ser = block.Series
-				Eyr_EvalBlock(es, false)
+				BatteryEyrEvalBlockHook(es, false)
 				es.Ser = ser
 			}
 		} else {

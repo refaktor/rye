@@ -1,0 +1,68 @@
+//go:build !b_norepl && !wasm && !js
+
+package batteries
+
+import (
+	"fmt"
+
+	"github.com/refaktor/rye/env"
+	"github.com/refaktor/rye/evaldo"
+)
+
+var Builtins_console = map[string]*env.Builtin{
+
+	//
+	// ##### Console ##### "Interactive debugging console functions"
+	//
+	// Example: enter-console "debug"
+	// Args:
+	// * name: String name for the console session
+	// Returns:
+	// * the last result from the console session
+	"enter-console": {
+		Argsn: 1,
+		Doc:   "Stops execution and gives you an interactive Rye console to test code in the current environment.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch name := arg0.(type) {
+			case env.String:
+				ser := ps.Ser
+				/* ps.Ser = bloc.Series
+				evaldo.Eval(ps)
+				ps.Ser = ser */
+				//reader := bufio.NewReader(os.Stdin)
+
+				fmt.Println("Welcome to console: \033[1m" + name.Value + "\033[0m")
+				fmt.Println("* use \033[1mlc\033[0m to list current context")
+				fmt.Println("-------------------------------------------------------------")
+				/*
+					for {
+						fmt.Print("{ rye dropin }")
+						text, _ := reader.ReadString('\n')
+						//fmt.Println(1111)
+						// convert CRLF to LF
+						text = strings.Replace(text, "\n", "", -1)
+						//fmt.Println(1111)
+						if strings.Compare("(lc)", text) == 0 {
+							fmt.Println(ps.Ctx.Print(*ps.Idx))
+						} else if strings.Compare("(r)", text) == 0 {
+							ps.Ser = ser
+							return ps.Res
+						} else {
+							// fmt.Println(1111)
+							block, genv := loader.LoadString("{ " + text + " }")
+							ps := env.AddToProgramState(ps, block.Series, genv)
+							evaldo.Eval(ps)
+							fmt.Println(ps.Res.Inspect(*ps.Idx))
+						}
+					}
+				*/
+				evaldo.DoRyeRepl(ps, "rye", evaldo.ShowResults, false, "")
+				fmt.Println("-------------------------------------------------------------")
+				ps.Ser = ser
+				return ps.Res
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType}, "enter-console")
+			}
+		},
+	},
+}

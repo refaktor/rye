@@ -1274,7 +1274,7 @@ var builtins = map[string]*env.Builtin{
 			case env.Kind:
 				switch dict := arg1.(type) {
 				case env.Dict:
-					obj := BuiValidate(ps, dict, spec.Spec)
+					obj := BatteryValidateHook(ps, dict, spec.Spec)
 					switch obj1 := obj.(type) {
 					case env.Dict:
 						ctx := util.Dict2Context(ps, obj1)
@@ -1285,7 +1285,7 @@ var builtins = map[string]*env.Builtin{
 					}
 				case *env.RyeCtx:
 					if spec.HasConverter(dict.Kind.Index) {
-						obj := BuiConvert(ps, dict, spec.Converters[dict.Kind.Index])
+						obj := BatteryConvertHook(ps, dict, spec.Converters[dict.Kind.Index])
 						switch ctx := obj.(type) {
 						case *env.RyeCtx:
 							ctx.Kind = spec.Kind
@@ -2080,13 +2080,13 @@ var builtins = map[string]*env.Builtin{
 					ps.ErrorFlag = true
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do\\inside")
 				}
-			case *PersistentCtx:
+			case PersistentCtxInterface:
 				switch bloc := arg1.(type) {
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
 					// Use a special evaluation function for PersistentCtx
-					EvalBlockInPersistentCtx(ps, ctx)
+					BatteryEvalInPersistentCtxHook(ps, ctx)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "do\\inside")
 					ps.Ser = ser
 					return ps.Res
@@ -3088,13 +3088,14 @@ func isTruthy(arg env.Object) env.Object {
 }
 */
 
+// RegisterBuiltins registers the base (core language) builtins only.
+// For the full standard set including batteries, also call batteries.RegisterBatteries(ps).
 func RegisterBuiltins(ps *env.ProgramState) {
 	BuiltinNames = make(map[string]int)
 	RegisterBuiltins2(builtins, ps, "base")
 	RegisterBuiltins2(builtins_boolean, ps, "base")
 	RegisterBuiltins2(builtins_numbers, ps, "base")
 	RegisterBuiltins2(builtins_mth, ps, "base")
-	RegisterBuiltins2(builtins_complex, ps, "base")
 	RegisterBuiltins2(builtins_time, ps, "base")
 	RegisterBuiltins2(builtins_string, ps, "base")
 	RegisterBuiltins2(builtins_collection, ps, "base")
@@ -3104,74 +3105,9 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(builtins_types, ps, "base")
 	RegisterBuiltins2(builtins_iteration, ps, "base")
 	RegisterBuiltins2(builtins_contexts, ps, "base")
-	RegisterBuiltins2(builtins_persistent_contexts, ps, "base")
 	RegisterBuiltins2(builtins_functions, ps, "base")
-	RegisterBuiltins2(builtins_unique, ps, "base")
-	// already in base_functions RegisterBuiltins2(builtins_apply, ps, "base")
-	RegisterBuiltins2(Builtins_error_creation, ps, "error-creation")
-	RegisterBuiltins2(Builtins_error_inspection, ps, "error-inspection")
-	RegisterBuiltins2(Builtins_error_handling, ps, "error-handling")
-	RegisterBuiltins2(Builtins_match, ps, "match")
-	RegisterBuiltins2(Builtins_table, ps, "table")
-	RegisterBuiltins2(Builtins_vector, ps, "vector")
-	RegisterBuiltins2(Builtins_matrix, ps, "matrix")
-	RegisterBuiltins2(Builtins_io, ps, "io")
-	RegisterBuiltins2(Builtins_cmd, ps, "cmd")
-	RegisterBuiltins2(Builtins_regexp, ps, "regexp")
-	RegisterBuiltins2(Builtins_validation, ps, "validation")
-	RegisterBuiltins2(Builtins_cli, ps, "cli")
-	RegisterBuiltins2(Builtins_conversion, ps, "conversion")
-	RegisterBuiltins2(Builtins_web, ps, "web")
-	RegisterBuiltins2(Builtins_markdown, ps, "markdown")
-	RegisterBuiltins2(Builtins_sxml, ps, "sxml")
-	RegisterBuiltins2(Builtins_html, ps, "html")
-	RegisterBuiltins2(Builtins_json, ps, "json")
-	RegisterBuiltins2(Builtins_bson, ps, "bson")
-	RegisterBuiltins2(Builtins_stackless, ps, "stackless")
-	RegisterBuiltins2(Builtins_eyr, ps, "eyr")
-	RegisterBuiltins2(Builtins_goroutines, ps, "goroutines")
-	RegisterBuiltins2(Builtins_msgdispatcher, ps, "msgdispatcher")
-	RegisterBuiltins2(Builtins_http, ps, "http")
-	RegisterBuiltins2(Builtins_sqlite, ps, "sqlite")
-	RegisterBuiltins2(Builtins_psql, ps, "psql")
-	RegisterBuiltins2(Builtins_mysql, ps, "mysql")
-	RegisterBuiltins2(Builtins_email, ps, "email")
-	RegisterBuiltins2(Builtins_imap, ps, "imap")
-	RegisterBuiltins2(Builtins_structures, ps, "structs")
-	RegisterBuiltins2(Builtins_smtpd, ps, "smtpd")
-	RegisterBuiltins2(Builtins_mail, ps, "mail")
-	RegisterBuiltins2(Builtins_ssh, ps, "ssh")
-	RegisterBuiltins2(Builtins_bcrypt, ps, "bcrypt")
-	RegisterBuiltins2(Builtins_console, ps, "console")
-	RegisterBuiltinsInContext(Builtins_crypto, ps, "crypto")
-	RegisterBuiltinsInContext(Builtins_encoding, ps, "encoding")
-	RegisterBuiltinsInContext(Builtins_math, ps, "math")
-	RegisterBuiltinsInContext(Builtins_os, ps, "os")
-	RegisterBuiltinsInContext(Builtins_pipes, ps, "pipes")
-	RegisterBuiltinsInContext(Builtins_term, ps, "term")
-	RegisterBuiltinsInContext(Builtins_termstr, ps, "termstr")
-	RegisterBuiltinsInContext(Builtins_tui, ps, "tui")
-	RegisterBuiltinsInContext(Builtins_telegrambot, ps, "telegram")
-	RegisterBuiltinsInContext(Builtins_mcp, ps, "mcp")
-	RegisterBuiltins2(Builtins_mqtt, ps, "mqtt")
-	RegisterBuiltins2(Builtins_chitosocket, ps, "chitosocket")
-	RegisterBuiltins2(builtins_trees, ps, "trees")
-	// RegisterBuiltinsInContext(Builtins_git, ps, "git")
-	// temporarily removed RegisterBuiltinsInContext(Builtins_docker, ps, "docker")
-	RegisterBuiltinsInContext(Builtins_prometheus, ps, "prometheus")
-	RegisterBuiltinsInContext(Builtins_echarts, ps, "echarts")
-	RegisterBuiltinsInContext(Builtins_flui, ps, "flui")
-	RegisterBuiltins2(Builtins_js_interop, ps, "jsinterop")
-	// RegisterBuiltinsInContext(Builtins_flui_v2, ps, "flui2")
-	// ## Archived modules
-	// RegisterBuiltins2(Builtins_gtk, ps, "gtk")
-	// RegisterBuiltins2(Builtins_nats, ps, "nats")
-	// RegisterBuiltins2(Builtins_qframe, ps, "qframe")
-	// RegisterBuiltins2(Builtins_nng, ps, "nng")
-	// RegisterBuiltins2(Builtins_raylib, ps, "raylib")
-	// RegisterBuiltins2(Builtins_cayley, ps, "cayley")
 
-	// Execute initialization code after everything is loaded but before any custom code is evaluated
+	// Execute initialization code after base builtins are loaded
 	executeInitializationCode(ps)
 }
 
@@ -3343,7 +3279,6 @@ var allBuiltinGroups = []builtinGroup{
 	{"base", builtins_boolean, false},
 	{"base", builtins_numbers, false},
 	{"base", builtins_mth, false},
-	{"base", builtins_complex, false},
 	{"base", builtins_time, false},
 	{"base", builtins_string, false},
 	{"base", builtins_collection, false},
@@ -3353,64 +3288,9 @@ var allBuiltinGroups = []builtinGroup{
 	{"base", builtins_types, false},
 	{"base", builtins_iteration, false},
 	{"base", builtins_contexts, false},
-	{"base", builtins_persistent_contexts, false},
 	{"base", builtins_functions, false},
-	// Error handling
-	{"error-creation", Builtins_error_creation, false},
-	{"error-inspection", Builtins_error_inspection, false},
-	{"error-handling", Builtins_error_handling, false},
-	// Module builtins – flat
-	{"match", Builtins_match, false},
-	{"table", Builtins_table, false},
-	{"vector", Builtins_vector, false},
-	{"matrix", Builtins_matrix, false},
-	{"io", Builtins_io, false},
-	{"cmd", Builtins_cmd, false},
-	{"regexp", Builtins_regexp, false},
-	{"validation", Builtins_validation, false},
-	{"cli", Builtins_cli, false},
-	{"conversion", Builtins_conversion, false},
-	{"web", Builtins_web, false},
-	{"markdown", Builtins_markdown, false},
-	{"sxml", Builtins_sxml, false},
-	{"html", Builtins_html, false},
-	{"json", Builtins_json, false},
-	{"bson", Builtins_bson, false},
-	{"stackless", Builtins_stackless, false},
-	{"eyr", Builtins_eyr, false},
-	{"goroutines", Builtins_goroutines, false},
-	{"msgdispatcher", Builtins_msgdispatcher, false},
-	{"http", Builtins_http, false},
-	{"sqlite", Builtins_sqlite, false},
-	{"psql", Builtins_psql, false},
-	{"mysql", Builtins_mysql, false},
-	{"email", Builtins_email, false},
-	{"imap", Builtins_imap, false},
-	{"structs", Builtins_structures, false},
-	{"smtpd", Builtins_smtpd, false},
-	{"mail", Builtins_mail, false},
-	{"ssh", Builtins_ssh, false},
-	{"bcrypt", Builtins_bcrypt, false},
-	{"console", Builtins_console, false},
-	{"mqtt", Builtins_mqtt, false},
-	{"chitosocket", Builtins_chitosocket, false},
-	// Module builtins – in named child context
-	{"crypto", Builtins_crypto, true},
-	{"encoding", Builtins_encoding, true},
-	{"math", Builtins_math, true},
-	{"os", Builtins_os, true},
-	{"pipes", Builtins_pipes, true},
-	{"term", Builtins_term, true},
-	{"termstr", Builtins_termstr, true},
-	{"tui", Builtins_tui, true},
-	{"telegram", Builtins_telegrambot, true},
-	{"mcp", Builtins_mcp, true},
-	// {"git", Builtins_git, true},
-	// {"docker", Builtins_docker, true},
-	{"prometheus", Builtins_prometheus, true},
-	{"echarts", Builtins_echarts, true},
-	{"flui", Builtins_flui, true},
-	{"js", Builtins_js_interop, true},
+	// NOTE: Battery groups (match, io, http, sqlite, etc.) are registered via
+	// batteries.RegisterBatteries(ps) — see the batteries/ package.
 }
 
 // RegisterBuiltinGroups registers all builtins belonging to the named groups.

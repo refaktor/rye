@@ -63,22 +63,20 @@ func displayRyeValue(ps *env.ProgramState, arg0 env.Object, interactive bool) (e
 				return obj, ""
 			}
 		case env.Markdown:
-			items := markdownDisplayItems(bloc.Value)
+			items := BatteryMarkdownDisplayHook(bloc.Value)
 			if len(items) == 0 {
 				return bloc, ""
 			}
-			convertedItems := convertMarkdownDisplayItems(items)
-			obj, esc := term.DisplayMarkdownItems(convertedItems, ps.Idx)
+			obj, esc := term.DisplayMarkdownItems(items, ps.Idx)
 			if !esc {
 				return obj, ""
 			}
 		case *env.Markdown:
-			items := markdownDisplayItems(bloc.Value)
+			items := BatteryMarkdownDisplayHook(bloc.Value)
 			if len(items) == 0 {
 				return bloc, ""
 			}
-			convertedItems := convertMarkdownDisplayItems(items)
-			obj, esc := term.DisplayMarkdownItems(convertedItems, ps.Idx)
+			obj, esc := term.DisplayMarkdownItems(items, ps.Idx)
 			if !esc {
 				return obj, ""
 			}

@@ -1,0 +1,295 @@
+//go:build !no_sqlite
+// +build !no_sqlite
+
+package batteries
+
+// import "C"
+
+import (
+	"database/sql"
+	"fmt"
+
+	"github.com/refaktor/rye/env"
+	"github.com/refaktor/rye/evaldo"
+
+	_ "github.com/glebarez/sqlite"
+)
+
+var Builtins_sqlite = map[string]*env.Builtin{
+
+	//
+	// ##### SQLite ##### "SQLite database functions"
+	//
+	// Example:
+	//  db: Open sqlite://mydata.db
+	//  db .Exec "CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, age INTEGER)"
+	//  db .Exec { INSERT INTO users ( name , age ) VALUES ( "Alice" , 30 ) }
+	//  db .Query { SELECT * FROM users WHERE age > 25 } |print
+	//  name: "Bob"
+	//  db .Exec { INSERT INTO users ( name , age ) VALUES ( ?name , 42 ) }
+	//
+	// Tests:
+	// equal { Open sqlite://test.db |type? } 'native
+	// Args:
+	// * uri: path to SQLite database file
+	// Returns:
+	// * native SQLite database connection
+	"sqlite-uri//Open": {
+		Argsn: 1,
+		Doc:   "Opens a connection to a SQLite database file.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch str := arg0.(type) {
+			case env.Uri:
+				db, err := sql.Open("sqlite", str.GetPath()) // TODO -- we need to make path parser in URI then this will be path
+				if err != nil {
+					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Error opening SQLite: %v", err.Error()), "sqlite-uri//Open")
+				}
+				// sql.Open doesn't actually connect, we need to ping to verify the connection
+				if err := db.Ping(); err != nil {
+					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Error connecting to SQLite: %v", err.Error()), "sqlite-uri//Open")
+				}
+				return *env.NewNative(ps.Idx, db, "Rye-sqlite")
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType}, "sqlite-uri//Open")
+			}
+
+		},
+	},
+
+	// Tests:
+	// equal { table { "name" "age" } { "Bob" 25 "Alice" 30 } |htmlize |type? } 'string
+	// Args:
+	// * table: table to convert to HTML
+	// Returns:
+	// * string containing HTML representation of the table
+	"htmlize": {
+		Argsn: 1,
+		Doc:   "Converts a table to HTML format.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch str := arg0.(type) {
+			case env.Table:
+				return *env.NewString(str.ToHtml())
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "htmlize")
+			}
+
+		},
+	},
+
+	// Tests:
+	// equal { Open sqlite://test.db |Exec "CREATE TABLE IF NOT EXISTS test (id INTEGER, name TEXT)" |type? } 'native
+	// Args:
+	// * db: SQLite database connection
+	// * sql: SQL statement as string or block
+	// Returns:
+	// * database connection
+	"Rye-sqlite//Exec": {
+		Argsn: 2,
+		Doc:   "Executes a SQL statement that doesn't return rows.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var sqlstr string
+			var vals []any
+			switch db1 := arg0.(type) {
+			case env.Native:
+				switch str := arg1.(type) {
+				case env.Block:
+					//fmt.Println("BLOCK ****** *****")
+					ser := ps.Ser
+					ps.Ser = str.Series
+					values := make([]any, 0)
+					_, vals = SQL_EvalBlock(ps, MODE_SQLITE, values)
+					sqlstr = ps.Res.(env.String).Value
+					ps.Ser = ser
+				case env.String:
+					sqlstr = str.Value
+				default:
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.BlockType, env.StringType}, "Rye-sqlite//Exec")
+				}
+				if sqlstr != "" {
+					db2 := db1.Value.(*sql.DB)
+					_, err := db2.Exec(sqlstr, vals...)
+					if err != nil {
+						return evaldo.MakeBuiltinError(ps, err.Error(), "Rye-sqlite//Exec")
+					}
+					// rows, err := db1.Value.(*sql.DB).Query(sqlstr, vals...)
+					return arg0
+				} else {
+					return evaldo.MakeBuiltinError(ps, "sql string not found.", "Rye-sqlite//Exec")
+				}
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-sqlite//Exec")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { Open sqlite://test.db |Query "SELECT * FROM test" |type? } 'table
+	// Args:
+	// * db: SQLite database connection
+	// * sql: SQL query as string or block
+	// Returns:
+	// * table containing query results
+	"Rye-sqlite//Query": {
+		Argsn: 2,
+		Doc:   "Executes a SQL query and returns results as a table.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var sqlstr string
+			var vals []any
+			switch db1 := arg0.(type) {
+			case env.Native:
+				switch str := arg1.(type) {
+				case env.Block:
+					//fmt.Println("BLOCK ****** *****")
+					ser := ps.Ser
+					ps.Ser = str.Series
+					values := make([]any, 0)
+					_, vals = SQL_EvalBlock(ps, MODE_SQLITE, values)
+					sqlstr = ps.Res.(env.String).Value
+					ps.Ser = ser
+				case env.String:
+					sqlstr = str.Value
+				default:
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.BlockType, env.StringType}, "Rye-sqlite//Query")
+				}
+				if sqlstr != "" {
+					rows, err := db1.Value.(*sql.DB).Query(sqlstr, vals...)
+					if err != nil {
+						return evaldo.MakeBuiltinError(ps, err.Error(), "Rye-sqlite//Query")
+					}
+					columns, _ := rows.Columns()
+					spr := env.NewTable(columns)
+					// result := make([]map[string]any, 0)
+					if err != nil {
+						fmt.Println(err.Error())
+					} else {
+						cols, _ := rows.Columns()
+						for rows.Next() {
+							var sr env.TableRow
+							columns := make([]any, len(cols))
+							columnPointers := make([]any, len(cols))
+							for i := range columns {
+								columnPointers[i] = &columns[i]
+							}
+
+							// TODO Scan the result into the column pointers...
+							if err := rows.Scan(columnPointers...); err != nil {
+								return env.NewError(err.Error())
+							}
+
+							// Create our map, and retrieve the value for each column from the pointers slice,
+							// storing it in the map with the name of the column as the key.
+							m := make(map[string]any)
+							for i, colName := range cols {
+								val := columnPointers[i].(*any)
+								// Convert nil (SQL NULL) values to Void{} for proper Rye handling
+								var ryeVal env.Object
+								if *val == nil {
+									ryeVal = env.Void{}
+								} else {
+									ryeVal = env.ToRyeValue(*val)
+								}
+								m[colName] = ryeVal
+								sr.Values = append(sr.Values, ryeVal)
+								sr.Uplink = spr
+							}
+							spr.AddRow(sr)
+							// result = append(result, m)
+							// Outputs: map[columnName:value columnName2:value2 columnName3:value3 ...]
+						}
+						rows.Close() //good habit to close
+						//fmt.Println("+++++")
+						//fmt.Print(result)
+						// return *env.NewNative(ps.Idx, *spr, "Rye-table")
+						return *spr
+					}
+					return evaldo.MakeBuiltinError(ps, "Empty SQL.", "Rye-sqlite//Query")
+				} else {
+					return evaldo.MakeBuiltinError(ps, "Sql string not found.", "Rye-sqlite//Query")
+				}
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-sqlite//Query")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { id: 123 Open sqlite://test.db |Show-SQL { SELECT * FROM test WHERE id = ?id } |type? } 'string
+	// Args:
+	// * db: SQLite database connection
+	// * sql: SQL query as string or block
+	// Returns:
+	// * string containing the generated SQL with parameters
+	"Rye-sqlite//Show-SQL": {
+		Argsn: 2,
+		Doc:   "Generates and returns the SQL string without executing it.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var sqlstr string
+			var vals []any
+			switch arg0.(type) {
+			case env.Native:
+				switch str := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = str.Series
+					values := make([]any, 0)
+					_, vals = SQL_EvalBlock(ps, MODE_SQLITE, values)
+					sqlstr = ps.Res.(env.String).Value
+					ps.Ser = ser
+				case env.String:
+					sqlstr = str.Value
+				default:
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.BlockType, env.StringType}, "Rye-sqlite//Show-SQL")
+				}
+				if sqlstr != "" {
+					// If there are parameters, show them as comments
+					if len(vals) > 0 {
+						result := sqlstr + "\n-- Parameters: "
+						for i, val := range vals {
+							if i > 0 {
+								result += ", "
+							}
+							result += fmt.Sprintf("? = %v", val)
+						}
+						return *env.NewString(result)
+					}
+					return *env.NewString(sqlstr)
+				} else {
+					return evaldo.MakeBuiltinError(ps, "Empty SQL.", "Rye-sqlite//Show-SQL")
+				}
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-sqlite//Show-SQL")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { db: Open sqlite://test.db db .Close |type? } 'integer
+	// Args:
+	// * db: SQLite database connection
+	// Returns:
+	// * integer 1 on successful close, error otherwise
+	"Rye-sqlite//Close": {
+		Argsn: 1,
+		Doc:   "Closes the SQLite database connection.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch db := arg0.(type) {
+			case env.Native:
+				sqliteKind, _ := ps.Idx.GetIndex("Rye-sqlite")
+				if db.Kind.Index != sqliteKind {
+					return evaldo.MakeBuiltinError(ps, "Expected SQLite database connection.", "Rye-sqlite//Close")
+				}
+				sqlDB, ok := db.Value.(*sql.DB)
+				if !ok {
+					return evaldo.MakeBuiltinError(ps, "Invalid database connection.", "Rye-sqlite//Close")
+				}
+				err := sqlDB.Close()
+				if err != nil {
+					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Error closing database: %v", err.Error()), "Rye-sqlite//Close")
+				}
+				return *env.NewInteger(1)
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-sqlite//Close")
+			}
+		},
+	},
+}

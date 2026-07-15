@@ -11,6 +11,7 @@ import (
 	"strings"
 	"syscall/js"
 
+	"github.com/refaktor/rye/batteries"
 	"github.com/refaktor/rye/contrib"
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
@@ -262,6 +263,7 @@ func InitRyeShell(this js.Value, args []js.Value) any {
 	// fmt.Println("INITIALIZATION")
 	ps := env.NewProgramState()
 	evaldo.RegisterBuiltins(ps)
+	batteries.RegisterBatteries(ps)
 	contrib.RegisterBuiltins(ps, &evaldo.BuiltinNames)
 
 	/* bu := env.NewBuiltin(func(ps env.ProgramState, a1 env.Object, a2 env.Object, a3 env.Object, a4 env.Object, a5 env.Object) {
@@ -375,6 +377,7 @@ func RyeEvalString(this js.Value, args []js.Value) any {
 	case env.Block:
 		es := env.NewProgramStateOLD(val.Series, genv)
 		evaldo.RegisterBuiltins(es)
+		batteries.RegisterBatteries(es)
 		contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
 
 		if subc {
