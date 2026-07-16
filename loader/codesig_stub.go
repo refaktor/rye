@@ -1,4 +1,5 @@
-//go:build tinygo
+//go:build tinygo || no_baseio
+// +build tinygo no_baseio
 
 package loader
 

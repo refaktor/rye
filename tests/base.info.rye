@@ -180,7 +180,7 @@ section "Boolean " "Functions that work with true and false values." {
 	{
 	}
 
-	group "any\\with" 
+	group "_any\\with" 
 	"Applies each expression in the block to the provided value until a truthy result is found and returns it."
 	{
 		argsn 2
@@ -1519,25 +1519,24 @@ section "Strings " "" {
 
 section "URL Encoding " "" {
 	group "url-encode" 
-	"Encodes a block of name: value pairs as a URL query string (e.g. ?name=John+Doe&city=New+York), percent-encoding all special characters. Keys can be set-words (name:) or strings (\"name\"), values can be strings, integers, decimals, or words (looked up in context)."
+	"Encodes a block of name: value pairs as a URL query string (e.g. name=John+Doe&city=New+York), percent-encoding all special characters. Keys can be set-words (name:) or strings (\"name\"), values can be strings, integers, decimals, or words (looked up in context)."
 	{
 		argsn 1
 		argtypes {
 			1 [ Block ]
 		}
 		arg `params: Block of name: value pairs where names are set-words or strings and values are strings, integers, decimals, or words (evaluated from context)`
-		returns `URL query string starting with '?' and pairs joined with '&', all special characters percent-encoded`
+		returns `URL query string with pairs joined with '&', all special characters percent-encoded (no leading '?')`
 	}
 
 	{
-		equal { url-encode { name: "John Doe" city: "New York" } } "?city=New+York&name=John+Doe"
+		equal { url-encode { name: "John Doe" city: "New York" } |contains "city=New+York" } 1
 		equal { url-encode { } } ""
-		equal { url-encode { q: "hello world" } } "?q=hello+world"
+		equal { url-encode { q: "hello world" } } "q=hello+world"
 		equal { url-encode { a: "foo" b: "bar" } |contains "a=foo" } 1
 		equal { url-encode { a: "foo" b: "bar" } |contains "b=bar" } 1
-		equal { url-encode { a: "foo" b: "bar" } |first } "?"
 		equal { url-encode { "my-key" "val" } |contains "my-key=val" } 1
-		equal { x: "hello" url-encode { q: x } } "?q=hello"
+		equal { x: "hello" url-encode { q: x } } "q=hello"
 		error { url-encode "not-a-block" }
 	}
 
@@ -2409,7 +2408,7 @@ section "Collections " "" {
 	}
 
 	group "tail" 
-	"Creates a new collection with the last n items from the input collection."
+	"Creates a new collection with the last n items from the input collection, or all but the first |n| items if n is negative."
 	{
 		argsn 2
 		argtypes {
@@ -2417,8 +2416,8 @@ section "Collections " "" {
 			2 [ Integer ]
 		}
 		arg `collection: Block, list, string, table, vector or matrix to get the last items from`
-		arg `n: Number of items to retrieve from the end`
-		returns `a new collection containing the last n items (for matrix: last n rows)`
+		arg `n: Number of items to retrieve from the end; if negative, all but the first |n| items`
+		returns `a new collection containing the last n items (for matrix: last n rows), or all except the first |n| if n is negative`
 	}
 
 	{
@@ -2428,6 +2427,11 @@ section "Collections " "" {
 		equal { tail { 1 2 } 5 } { 1 2 }
 		equal { tail vector { 1.0 2.0 3.0 4.0 } 2 |first } 3.0
 		equal { tail matrix { 3 2 } { 1.0 2.0 3.0 4.0 5.0 6.0 } 2 |rows? } 2
+		equal { tail { 1 2 3 4 5 } -1 } { 2 3 4 5 }
+		equal { tail { 1 2 3 4 5 } -2 } { 3 4 5 }
+		equal { tail "abcde" -1 } "bcde"
+		equal { tail "abcde" -2 } "cde"
+		equal { tail list { 1 2 3 4 5 } -1 } list { 2 3 4 5 }
 	}
 
 	{
@@ -2859,7 +2863,7 @@ section "Collections " "" {
 	{
 		argsn 1
 		argtypes {
-			2 [ String Dict List Block Table PersistentTable Vector ]
+			2 [ String Dict List Block Table Vector ]
 		}
 		arg `collection: String, block, dict, list, table, context or vector to check`
 		returns `boolean true if the collection is empty, false otherwise`
@@ -2881,7 +2885,7 @@ section "Collections " "" {
 	{
 		argsn 1
 		argtypes {
-			2 [ String Dict List Block Table PersistentTable Vector Bytes ]
+			2 [ String Dict List Block Table Vector Bytes ]
 		}
 		arg `collection: String, block, dict, list, table, context, vector or bytes to measure`
 		returns `integer count of elements in the collection`
@@ -2905,7 +2909,7 @@ section "Collections " "" {
 	{
 		argsn 1
 		argtypes {
-			2 [ String Dict List Block Table PersistentTable Vector ]
+			2 [ String Dict List Block Table Vector ]
 		}
 		arg `collection: String, block, dict, list, table, context or vector to measure`
 		returns `integer index of the last element in the collection`
@@ -3437,840 +3441,8 @@ section "Collections " "" {
 
 }
 
-section "Vector " "Vector operations" {
-	group "vector" 
-	"Creates a vector from a block of numbers."
-	{
-		argsn 1
-		argtypes {
-			1 [ Block ]
-		}
-		arg `block: block of numbers to convert to a vector`
-		returns `vector object`
-	}
-
-	{
-		equal { vector [ 1 2 3 ] |type? } 'vector
-		equal { vector [ 1 2 3 ] |length? } 3
-	}
-
-	{
-	}
-
-	group "normalize" 
-	"Calculates the L2 norm (Euclidean length) of a vector."
-	{
-		argsn 1
-		argtypes {
-			1 [ Vector ]
-		}
-		arg `vector: vector object to normalize`
-		returns `decimal representing the L2 norm (Euclidean length) of the vector`
-	}
-
-	{
-		equal { vector [ 3 4 ] |normalize } 5.0
-	}
-
-	{
-	}
-
-	group "std-deviation" 
-	"Calculates the standard deviation of a vector's elements."
-	{
-		argsn 1
-		argtypes {
-			1 [ Vector ]
-		}
-		arg `vector: vector object`
-		returns `decimal representing the standard deviation of the vector elements`
-	}
-
-	{
-		equal { cc math , vector [ 1 2 3 4 5 ] |std-deviation |round\to 2 } 1.58
-	}
-
-	{
-	}
-
-	group "cosine-similarity" 
-	"Calculates the cosine similarity between two vectors."
-	{
-		argsn 2
-		argtypes {
-			1 [ Vector ]
-			2 [ Vector ]
-		}
-		arg `vector1: first vector object`
-		arg `vector2: second vector object`
-		returns `decimal representing the cosine similarity between the two vectors`
-	}
-
-	{
-		equal { cosine-similarity vector [ 1 0 ] vector [ 0 1 ] } 0.0
-		equal { cosine-similarity vector [ 1 1 ] vector [ 1 1 ] } 1.0
-	}
-
-	{
-	}
-
-	group "correlation" 
-	"Calculates the correlation coefficient between two vectors."
-	{
-		argsn 2
-		argtypes {
-			1 [ Vector ]
-			2 [ Vector ]
-		}
-		arg `vector1: first vector object`
-		arg `vector2: second vector object`
-		returns `decimal representing the correlation coefficient between the two vectors`
-	}
-
-	{
-		equal { correlation vector [ 1 2 3 4 5 ] vector [ 1 2 3 4 5 ] } 1.0
-		equal { correlation vector [ 1 2 3 4 5 ] vector [ 5 4 3 2 1 ] } -1.0
-	}
-
-	{
-	}
-
-	group "dot-product" 
-	"Calculates the dot product between two vectors."
-	{
-		argsn 2
-		argtypes {
-			1 [ Vector ]
-			2 [ Vector ]
-		}
-		arg `vector1: first vector object`
-		arg `vector2: second vector object`
-		returns `decimal representing the dot product of the two vectors`
-	}
-
-	{
-		equal { dot-product vector [ 1 2 3 ] vector [ 4 5 6 ] } 32.0
-	}
-
-	{
-	}
-
-	group "euclidean-distance" 
-	"Calculates the Euclidean distance between two vectors. Useful for K-Means clustering."
-	{
-		argsn 2
-		argtypes {
-			1 [ Vector ]
-			2 [ Vector ]
-		}
-		arg `vector1: first vector object`
-		arg `vector2: second vector object`
-		returns `decimal representing the Euclidean distance between the two vectors`
-	}
-
-	{
-		equal { euclidean-distance vector [ 0 0 ] vector [ 3 4 ] } 5.0
-		equal { euclidean-distance vector [ 1 2 3 ] vector [ 1 2 3 ] } 0.0
-	}
-
-	{
-	}
-
-	group "mean-vectors" 
-	"Calculates the element-wise mean of multiple vectors. Useful for creating 'Master Anchors'."
-	{
-		argsn 1
-		argtypes {
-			1 [ Block ]
-		}
-		arg `block: block of vectors to average`
-		returns `new vector representing the element-wise mean of all input vectors`
-	}
-
-	{
-		equal { mean-vectors [ vector [ 1 2 ] vector [ 3 4 ] ] |block } { 2.0 3.0 }
-	}
-
-	{
-	}
-
-	group "unit-vector" 
-	"Returns a new normalized vector (length = 1). Essential for consistent dot products and overlays."
-	{
-		argsn 1
-		argtypes {
-			1 [ Vector ]
-		}
-		arg `vector: vector object to normalize`
-		returns `new vector with length 1 (unit vector)`
-	}
-
-	{
-		equal { vector [ 3 4 ] |unit-vector |normalize } 1.0
-	}
-
-	{
-	}
-
-	group "project-vector" 
-	"Projects vector onto another vector. Answers: 'How much of this vector is in the direction of another?'"
-	{
-		argsn 2
-		argtypes {
-			1 [ Vector ]
-			2 [ Vector ]
-		}
-		arg `vector1: vector to project`
-		arg `vector2: vector to project onto`
-		returns `new vector representing the projection of vector1 onto vector2`
-	}
-
-	{
-		equal { vector [ 3 4 ] |project-vector vector [ 1 0 ] |block } { 3.0 0.0 }
-	}
-
-	{
-	}
-
-	group "reject-vector" 
-	"Removes projection from vector. Use this to 'subtract' a concept direction from a vector."
-	{
-		argsn 2
-		argtypes {
-			1 [ Vector ]
-			2 [ Vector ]
-		}
-		arg `vector1: vector to reject from`
-		arg `vector2: vector representing the direction to remove`
-		returns `new vector with the projection onto vector2 removed`
-	}
-
-	{
-		equal { vector [ 3 4 ] |reject-vector vector [ 1 0 ] |block } { 0.0 4.0 }
-	}
-
-	{
-	}
-
-}
-
-section "Matrix " "Matrix operations for 2D numerical data" {
-	group "matrix\\zeros" 
-	"Creates a new matrix with the given dimensions, initialized to zeros."
-	{
-		argsn 2
-		argtypes {
-			1 [ Integer ]
-			2 [ Integer ]
-		}
-		arg `rows: number of rows`
-		arg `cols: number of columns`
-		returns `a new zero-initialized matrix`
-	}
-
-	{
-		equal { matrix\zeros 3 4 |type? } 'matrix
-		equal { matrix\zeros 2 3 |rows? } 2
-		equal { matrix\zeros 2 3 |cols? } 3
-	}
-
-	{
-	}
-
-	group "matrix" 
-	"Creates a matrix from a shape block and a data block."
-	{
-		argsn 2
-		argtypes {
-			1 [ Block ]
-			2 [ Block ]
-		}
-		arg `shape: block with { rows cols }`
-		arg `data: block of decimal values in row-major order`
-		returns `a new matrix with the given data`
-	}
-
-	{
-		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-get 1 2 } 6.0
-	}
-
-	{
-	}
-
-	group "matrix\\randn" 
-	"Creates a matrix with random normal values (mean 0, std 1)."
-	{
-		argsn 2
-		argtypes {
-			1 [ Integer ]
-			2 [ Integer ]
-		}
-		arg `rows: number of rows`
-		arg `cols: number of columns`
-		returns `a new matrix with random normal values (mean 0, std 1)`
-	}
-
-	{
-		equal { matrix\randn 3 4 |rows? } 3
-		equal { matrix\randn 3 4 |cols? } 4
-	}
-
-	{
-	}
-
-	group "matrix\\ones" 
-	"Creates a matrix filled with ones."
-	{
-		argsn 2
-		argtypes {
-			1 [ Integer ]
-			2 [ Integer ]
-		}
-		arg `rows: number of rows`
-		arg `cols: number of columns`
-		returns `a new matrix filled with ones`
-	}
-
-	{
-		equal { matrix\ones 2 3 |mat-get 0 0 } 1.0
-		equal { matrix\ones 2 3 |mat-get 1 2 } 1.0
-	}
-
-	{
-	}
-
-	group "matrix\\eye" 
-	"Creates an identity matrix of size n×n."
-	{
-		argsn 1
-		argtypes {
-			1 [ Integer ]
-		}
-		arg `n: size of the identity matrix`
-		returns `an n×n identity matrix`
-	}
-
-	{
-		equal { matrix\eye 3 |mat-get 0 0 } 1.0
-		equal { matrix\eye 3 |mat-get 0 1 } 0.0
-		equal { matrix\eye 3 |mat-get 1 1 } 1.0
-	}
-
-	{
-	}
-
-	group "shape?" 
-	"Returns the shape of a matrix as { rows cols }."
-	{
-		argsn 1
-		argtypes {
-			1 [ Matrix ]
-		}
-		arg `mat: matrix`
-		returns `block with { rows cols }`
-	}
-
-	{
-		equal { matrix\zeros 3 4 |shape? } { 3 4 }
-	}
-
-	{
-	}
-
-	group "rows?" 
-	"Returns the number of rows in a matrix."
-	{
-		argsn 1
-		argtypes {
-			1 [ Matrix ]
-		}
-		arg `mat: matrix`
-		returns `number of rows`
-	}
-
-	{
-		equal { matrix\zeros 3 4 |rows? } 3
-	}
-
-	{
-	}
-
-	group "cols?" 
-	"Returns the number of columns in a matrix."
-	{
-		argsn 1
-		argtypes {
-			1 [ Matrix ]
-		}
-		arg `mat: matrix`
-		returns `number of columns`
-	}
-
-	{
-		equal { matrix\zeros 3 4 |cols? } 4
-	}
-
-	{
-	}
-
-	group "mat-get" 
-	"Gets the element at the specified row and column (0-indexed)."
-	{
-		argsn 3
-		argtypes {
-			1 [ Matrix ]
-			2 [ Integer ]
-			3 [ Integer ]
-		}
-		arg `mat: matrix`
-		arg `row: row index (0-based)`
-		arg `col: column index (0-based)`
-		returns `the element at (row, col)`
-	}
-
-	{
-		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-get 0 1 } 2.0
-		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-get 1 0 } 4.0
-	}
-
-	{
-	}
-
-	group "mat-set!" 
-	"Sets the element at the specified row and column (0-indexed). Modifies matrix in place."
-	{
-		argsn 4
-		argtypes {
-			1 [ Matrix ]
-			2 [ Integer ]
-			3 [ Integer ]
-			4 [ Decimal Integer ]
-		}
-		arg `mat: matrix (modified in place)`
-		arg `row: row index (0-based)`
-		arg `col: column index (0-based)`
-		arg `val: value to set`
-		returns `the modified matrix`
-	}
-
-	{
-		equal { m: matrix\zeros 2 2 , mat-set! m 0 1 5.0 , mat-get m 0 1 } 5.0
-	}
-
-	{
-	}
-
-	group "mat-row" 
-	"Returns a row of the matrix as a vector."
-	{
-		argsn 2
-		argtypes {
-			1 [ Matrix ]
-			2 [ Integer ]
-		}
-		arg `mat: matrix`
-		arg `row: row index (0-based)`
-		returns `the row as a vector`
-	}
-
-	{
-		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-row 0 |type? } 'vector
-	}
-
-	{
-	}
-
-	group "mat-col" 
-	"Returns a column of the matrix as a vector."
-	{
-		argsn 2
-		argtypes {
-			1 [ Matrix ]
-			2 [ Integer ]
-		}
-		arg `mat: matrix`
-		arg `col: column index (0-based)`
-		returns `the column as a vector`
-	}
-
-	{
-		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-col 1 |type? } 'vector
-	}
-
-	{
-	}
-
-	group "mat-transpose" 
-	"Returns the transpose of a matrix."
-	{
-		argsn 1
-		argtypes {
-			1 [ Matrix ]
-		}
-		arg `mat: matrix`
-		returns `transposed matrix`
-	}
-
-	{
-		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-transpose |shape? } { 3 2 }
-		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-transpose |mat-get 0 1 } 4.0
-	}
-
-	{
-	}
-
-	group "mat-mul" 
-	"Matrix multiplication. A (m×n) × B (n×p) = C (m×p)."
-	{
-		argsn 2
-		argtypes {
-			1 [ Matrix ]
-			2 [ Matrix Vector ]
-		}
-		arg `A: left matrix (m×n)`
-		arg `B: right matrix (n×p)`
-		returns `result matrix (m×p)`
-	}
-
-	{
-		equal { A: matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } , B: matrix { 3 2 } { 1.0 2.0 3.0 4.0 5.0 6.0 } , mat-mul A B |shape? } { 2 2 }
-		equal { A: matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } , B: matrix { 3 2 } { 1.0 2.0 3.0 4.0 5.0 6.0 } , mat-mul A B |mat-get 0 0 } 22.0
-	}
-
-	{
-	}
-
-	group "mat-hadamard" 
-	"Element-wise (Hadamard) multiplication of two matrices. In the future, could have a dedicated .* operator."
-	{
-		argsn 2
-		argtypes {
-			1 [ Matrix ]
-			2 [ Matrix ]
-		}
-		arg `A: first matrix`
-		arg `B: second matrix (same dimensions)`
-		returns `element-wise product`
-	}
-
-	{
-		equal { A: matrix\ones 2 2 , B: matrix\ones 2 2 , mat-hadamard A B |mat-get 0 0 } 1.0
-	}
-
-	{
-	}
-
-	group "mat-add" 
-	"Element-wise addition of two matrices. In the future, could have a dedicated .+ operator."
-	{
-		argsn 2
-		argtypes {
-			1 [ Matrix ]
-			2 [ Matrix ]
-		}
-		arg `A: first matrix`
-		arg `B: second matrix (same dimensions)`
-		returns `element-wise sum`
-	}
-
-	{
-		equal { A: matrix\ones 2 2 , B: matrix\ones 2 2 , mat-add A B |mat-get 0 0 } 2.0
-	}
-
-	{
-	}
-
-	group "mat-sub" 
-	"Element-wise subtraction of two matrices. In the future, could have a dedicated .- operator."
-	{
-		argsn 2
-		argtypes {
-			1 [ Matrix ]
-			2 [ Matrix ]
-		}
-		arg `A: first matrix`
-		arg `B: second matrix (same dimensions)`
-		returns `element-wise difference`
-	}
-
-	{
-		equal { A: matrix\ones 2 2 , B: matrix\ones 2 2 , mat-sub A B |mat-get 0 0 } 0.0
-	}
-
-	{
-	}
-
-	group "mat-scale" 
-	"Multiplies all elements of a matrix by a scalar."
-	{
-		argsn 2
-		argtypes {
-			1 [ Matrix ]
-			2 [ Decimal Integer ]
-		}
-		arg `mat: matrix`
-		arg `scalar: number to multiply by`
-		returns `scaled matrix`
-	}
-
-	{
-		equal { matrix\ones 2 2 |mat-scale 3.0 |mat-get 0 0 } 3.0
-	}
-
-	{
-	}
-
-	group "mat-sum-rows" 
-	"Returns a vector containing the sum of each row."
-	{
-		argsn 1
-		argtypes {
-			1 [ Matrix ]
-		}
-		arg `mat: matrix`
-		returns `vector with sum of each row`
-	}
-
-	{
-		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-sum-rows |type? } 'vector
-	}
-
-	{
-	}
-
-	group "mat-sum-cols" 
-	"Returns a vector containing the sum of each column."
-	{
-		argsn 1
-		argtypes {
-			1 [ Matrix ]
-		}
-		arg `mat: matrix`
-		returns `vector with sum of each column`
-	}
-
-	{
-		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-sum-cols |type? } 'vector
-	}
-
-	{
-	}
-
-	group "mat-max-rows" 
-	"Returns a vector containing the maximum of each row."
-	{
-		argsn 1
-		argtypes {
-			1 [ Matrix ]
-		}
-		arg `mat: matrix`
-		returns `vector with max of each row`
-	}
-
-	{
-		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-max-rows |type? } 'vector
-	}
-
-	{
-	}
-
-	group "mat-max-cols" 
-	"Returns a vector containing the maximum of each column."
-	{
-		argsn 1
-		argtypes {
-			1 [ Matrix ]
-		}
-		arg `mat: matrix`
-		returns `vector with max of each column`
-	}
-
-	{
-		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-max-cols |type? } 'vector
-	}
-
-	{
-	}
-
-	group "mat-to-block" 
-	"Converts a matrix to a block of blocks (each row is a block)."
-	{
-		argsn 1
-		argtypes {
-			1 [ Matrix ]
-		}
-		arg `mat: matrix`
-		returns `block of blocks (each inner block is a row)`
-	}
-
-	{
-		equal { matrix { 2 2 } { 1.0 2.0 3.0 4.0 } |mat-to-block |length? } 2
-	}
-
-	{
-	}
-
-	group "block-to-mat" 
-	"Converts a block of blocks (rows) to a matrix."
-	{
-		argsn 1
-		argtypes {
-			1 [ Block ]
-		}
-		arg `block: block of blocks (each inner block is a row)`
-		returns `matrix`
-	}
-
-	{
-		equal { { { 1.0 2.0 } { 3.0 4.0 } } |block-to-mat |shape? } { 2 2 }
-	}
-
-	{
-	}
-
-	group "vector-to-mat" 
-	"Converts a vector to a matrix. Use 'row for 1×n or 'col for n×1."
-	{
-		argsn 2
-		argtypes {
-			1 [ Vector ]
-			2 [ Word ]
-		}
-		arg `vec: vector`
-		arg `orientation: 'row or 'col`
-		returns `matrix (1×n or n×1)`
-	}
-
-	{
-		equal { vector { 1.0 2.0 3.0 } |vector-to-mat 'row |shape? } { 1 3 }
-		equal { vector { 1.0 2.0 3.0 } |vector-to-mat 'col |shape? } { 3 1 }
-	}
-
-	{
-	}
-
-	group "mat-slice" 
-	"Extracts a sub-matrix. Row and column ranges are { start end } (inclusive, 0-indexed)."
-	{
-		argsn 3
-		argtypes {
-			1 [ Matrix ]
-			2 [ Block ]
-			3 [ Block ]
-		}
-		arg `mat: matrix`
-		arg `row-range: { start end } (inclusive)`
-		arg `col-range: { start end } (inclusive)`
-		returns `sub-matrix`
-	}
-
-	{
-		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-slice { 0 1 } { 1 2 } |shape? } { 2 2 }
-	}
-
-	{
-	}
-
-	group "mat-softmax" 
-	"Applies softmax to each column of the matrix. Returns a new matrix."
-	{
-		argsn 1
-		argtypes {
-			1 [ Matrix ]
-		}
-		arg `matrix: input matrix`
-		returns `a new matrix with softmax applied to each column`
-	}
-
-	{
-		equal { matrix { 2 2 } { 1.0 2.0 3.0 4.0 } |mat-softmax |mat-get 0 0 |> 0.1 } true
-	}
-
-	{
-	}
-
-	group "mat-set-col!" 
-	"Sets a column of the matrix from a vector or block. Mutates in place."
-	{
-		argsn 3
-		argtypes {
-			1 [ Matrix ]
-			2 [ Integer ]
-			3 [ Vector Block ]
-		}
-		arg `matrix: matrix to modify`
-		arg `col: column index (0-based)`
-		arg `values: vector or block of values`
-		returns `the modified matrix`
-	}
-
-	{
-		equal { m: matrix\zeros 3 2 , mat-set-col! m 0 vector { 1.0 2.0 3.0 } , mat-get m 1 0 } 2.0
-	}
-
-	{
-	}
-
-	group "vec-add" 
-	"Adds two vectors element-wise. Returns a new vector."
-	{
-		argsn 2
-		argtypes {
-			1 [ Vector ]
-			2 [ Vector ]
-		}
-		arg `v1: first vector`
-		arg `v2: second vector`
-		returns `a new vector with element-wise sum`
-	}
-
-	{
-		equal { vec-add vector { 1.0 2.0 } vector { 3.0 4.0 } |first } 4.0
-	}
-
-	{
-	}
-
-	group "vec-sub" 
-	"Subtracts two vectors element-wise (v1 - v2). Returns a new vector."
-	{
-		argsn 2
-		argtypes {
-			1 [ Vector ]
-			2 [ Vector ]
-		}
-		arg `v1: first vector`
-		arg `v2: second vector`
-		returns `a new vector with element-wise difference (v1 - v2)`
-	}
-
-	{
-		equal { vec-sub vector { 5.0 3.0 } vector { 1.0 2.0 } |first } 4.0
-	}
-
-	{
-	}
-
-	group "vec-to-block" 
-	"Converts a vector to a block of decimal values."
-	{
-		argsn 1
-		argtypes {
-			1 [ Vector ]
-		}
-		arg `v: vector to convert`
-		returns `a block containing the vector values as decimals`
-	}
-
-	{
-		equal { vec-to-block vector { 1.0 2.0 3.0 } |second } 2.0
-	}
-
-	{
-	}
-
-}
-
+Error parsing Go code: open ../evaldo/builtins_vector.go: no such file or directory
+Error parsing Go code: open ../evaldo/builtins_matrix.go: no such file or directory
 section "Types and Kinds " "" {
 	group "integer" 
 	"Tries to change a Rye value (like string) to integer."
@@ -5534,6 +4706,56 @@ section "Flow control " "Functions for conditional execution and branching logic
 	{
 	}
 
+	group "^when" 
+	"Conditionally executes an action block if a condition block evaluates to true, injecting the same value into both blocks and returning the value of the action block if the condition is truthy or the original value otherwise."
+	{
+		argsn 3
+		pure
+		argtypes {
+			2 [ Block ]
+			3 [ Block ]
+		}
+		arg `value: Value to inject into both condition and action blocks`
+		arg `condition: Block that evaluates to a truthy/falsy value with the injected value`
+		arg `action: Block to execute if condition is truthy, with the injected value`
+		returns `the value of the evaluated action block if condition is truthy or the original injected value if condition is falsy`
+	}
+
+	{
+		equal  { 10 .when { > 5 } { + 3 } } 13
+		equal  { 10 .when { < 5 } { + 3 } } 10
+	}
+
+	{
+	}
+
+	group "whether" 
+	"Evaluates a condition block with the injected value and executes either the true or false block accordingly, returning the result. Like when with an else branch."
+	{
+		argsn 4
+		pure
+		argtypes {
+			2 [ Block ]
+			3 [ Block ]
+			4 [ Block ]
+		}
+		arg `value: Value to inject into the condition block and the chosen action block`
+		arg `condition: Block that evaluates to a truthy/falsy value with the injected value`
+		arg `true-block: Block to execute if condition is truthy, with the value injected`
+		arg `false-block: Block to execute if condition is falsy, with the value injected`
+		returns `result of the true-block if condition is truthy, result of the false-block otherwise`
+	}
+
+	{
+		equal  { 10 .whether { > 5 } { + 3 } { - 3 } } 13
+		equal  { 2 .whether { > 5 } { + 3 } { - 3 } } -1
+		equal  { 10 .whether { > 5 } { "big" } { "small" } } "big"
+		equal  { 2 .whether { > 5 } { "big" } { "small" } } "small"
+	}
+
+	{
+	}
+
 	group "^if" 
 	"Conditional that sets the return flag when true, allowing early return from a function when the condition is a boolean."
 	{
@@ -6243,16 +5465,16 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	group "seek" 
-	"Seek over a series until a Block of code returns True and return the value."
+	"Seek over a series until a Block of code, Builtin, or Function returns True and return the value."
 	{
 		argsn 2
 		pure
 		argtypes {
 			1 [ Block List String ]
-			2 [ Block Builtin ]
+			2 [ Block Builtin Function ]
 		}
 		arg `series: Block, List, or String to search through`
-		arg `code: Block or Builtin that returns true when the desired value is found`
+		arg `code: Block, Builtin, or Function that returns true when the desired value is found`
 		returns `first value for which the code returns true, error if none found`
 	}
 
@@ -6263,6 +5485,9 @@ section "Iteration " "Functions for iterating over collections and executing cod
 		equal { try { seek { 1 2 3 4 } { > 5 } } |type? } 'error
 		equal { try { seek list { 1 2 3 4 } { > 5 } } |type? } 'error
 		equal { try { seek "1234" { .integer > 5 } } |type? } 'error
+		equal { seek { 1 2 3 4 } ?is-even } 2
+		equal { seek list { 1 2 3 4 } ?is-even } 2
+		equal { is-even: fn { x } { x .is-even } , seek { 1 2 3 4 } ?is-even } 2
 	}
 
 	{
@@ -6835,36 +6060,6 @@ section "Other " "..." {
 	{
 	}
 
-	group "save\\current" 
-	"Saves current state of the program to a file."
-	{
-		pure
-		arg `None`
-		returns `Integer 1 on success`
-	}
-
-	{
-		equal  { save\current |type? } 'integer
-	}
-
-	{
-	}
-
-	group "save\\current\\secure" 
-	"Saves current state of the program to a file with password protection."
-	{
-		pure
-		arg `None`
-		returns `Integer 1 on success`
-	}
-
-	{
-		; equal  { save\current\secure |type? } 'integer
-	}
-
-	{
-	}
-
 	group "doc!" 
 	"Sets docstring of the current context."
 	{
@@ -7074,50 +6269,14 @@ section "Other " "..." {
 	{
 	}
 
-	group "file-uri//Import" 
-	"Imports a file, loads and does it from script local path."
-	{
-		argsn 1
-		argtypes {
-			1 [ Uri ]
-		}
-		arg `uri: URI of the file to import and execute`
-		returns `result of executing the imported file`
-	}
-
-	{
-		; import file://test.rye  ; imports and executes test.rye
-	}
-
-	{
-	}
-
-	group "file-uri//Import\\live" 
-	"Imports a file, loads and does it from script local path."
-	{
-		argsn 1
-		argtypes {
-			1 [ Uri ]
-		}
-		arg `uri: URI of the file to import, execute, and watch for changes`
-		returns `result of executing the imported file`
-	}
-
-	{
-		; import\live file://test.rye  ; imports, executes, and watches test.rye for changes
-	}
-
-	{
-	}
-
 	group "load" 
 	"Loads a string into Rye values."
 	{
 		argsn 1
 		argtypes {
-			1 [ String Uri ]
+			1 [ String ]
 		}
-		arg `source: String containing Rye code or URI of file to load`
+		arg `source: String containing Rye code to load`
 		returns `Block containing the parsed Rye values`
 	}
 
@@ -7129,31 +6288,15 @@ section "Other " "..." {
 	{
 	}
 
-	group "file-uri//Load" 
-	"Loads a string into Rye values."
-	{
-		argsn 1
-		argtypes {
-			1 [ String Uri ]
-		}
-		arg `source: String containing Rye code or URI of file to load`
-		returns `Block containing the parsed Rye values`
-	}
-
-	{
-		; equal  { load " 1 2 3 " |third } 3
-		; equal  { load "{ 1 2 3 }" |first |third } 3
-	}
-
-	{
-	}
-
 	group "load\\mod" 
 	"Loads a string into Rye values. During load it allows modification of words."
 	{
 		argsn 1
+		argtypes {
+			1 [ String ]
+		}
 		arg `source: String containing Rye code or URI of file to load with modification allowed`
-		returns `Block containing the parsed Rye values`
+		returns `Block containing the parsed Rye valuesload\mod — string-only; file URI variant moved to builtins_baseio.go as "load\\mod\\file"`
 	}
 
 	{
@@ -7167,8 +6310,11 @@ section "Other " "..." {
 	"Loads a string into Rye values. During load it allows modification of words."
 	{
 		argsn 1
-		arg `source: String containing Rye code or URI of file to load with modification allowed and file watching`
-		returns `Block containing the parsed Rye values`
+		argtypes {
+			1 [ String ]
+		}
+		arg `source: String containing Rye code to load with modification allowed and file watching`
+		returns `Block containing the parsed Rye valuesload\live — string-only; file URI variant moved to builtins_baseio.go`
 	}
 
 	{
@@ -7351,40 +6497,6 @@ section "Other " "..." {
 	{
 	}
 
-	group "scmd" 
-	"Execute a shell command and return its exit status code."
-	{
-		argsn 1
-		argtypes {
-			1 [ String ]
-		}
-	}
-
-	{
-		equal { scmd `echo "hello"` } 0
-		equal { scmd `exit 1` } 1
-		equal { scmd `exit 42` } 42
-	}
-
-	{
-	}
-
-	group "scmd\\capture" 
-	"Execute a shell command and capture the output, return it as string"
-	{
-		argsn 1
-		argtypes {
-			1 [ String ]
-		}
-	}
-
-	{
-		equal { scmd\capture `echo "hello"` } "hello\n"
-	}
-
-	{
-	}
-
 	group "rye" 
 	""
 	{
@@ -7392,24 +6504,6 @@ section "Other " "..." {
 
 	{
 		equal { rye .type? } 'native
-	}
-
-	{
-	}
-
-	group "Rye-itself//History?" 
-	"Returns a block of the last N lines from REPL history."
-	{
-		argsn 2
-		argtypes {
-			1 [ Integer ]
-		}
-		arg `n: Integer specifying how many history lines to return`
-		returns `Block of strings containing the last N lines of REPL history`
-	}
-
-	{
-		; equal { rye .history 5 |length? } 5
 	}
 
 	{
@@ -8024,782 +7118,6 @@ section "Printing " "Functions for displaying and formatting values" {
 	{
 	}
 
-	group "capture-stdout" 
-	"Executes a block of code while capturing all output to stdout, returning the captured output as a string."
-	{
-		argsn 1
-		argtypes {
-			1 [ Block ]
-		}
-		arg `block: Block of code to execute with captured stdout`
-		returns `string containing all output captured during block execution`
-	}
-
-	{
-		equal { capture-stdout { print "hello" } } "hello\n"
-		equal { capture-stdout { loop 3 { prns "x" } } } "x x x "
-	}
-
-	{
-	}
-
 }
 
-section "Default" "" {
-	group "fail" 
-	"Creates an error and sets the failure flag, but continues execution (unlike ^fail)."
-	{
-		argsn 1
-		arg `error_info: String message, Integer code, or block for multiple parameters`
-		returns `error object and sets the failure flag`
-	}
-
-	{
-		equal { try { fail "error message" } |type? } 'error
-		equal { try { fail "error message" } |message? } "error message"
-		equal { try { fail 404 } |status? } 404
-	}
-
-	{
-	}
-
-	group "^fail" 
-	"Creates an error and immediately returns from the current function with failure state."
-	{
-		argsn 1
-		arg `error_info: String message, Integer code, or block for multiple parameters`
-		returns `error object and sets both failure and return flags`
-	}
-
-	{
-		equal { ff:: fn { } { ^fail "error message" } ff |disarm |type? } 'error
-		equal { ff:: fn { } { ^fail "error message" } ff |disarm |message? } "error message"
-		equal { ff:: fn { } { ^fail 404 } ff |disarm |status? } 404
-		equal { ff:: fn { } { ^fail 'user-error } ff |disarm  |kind? } 'user-error
-	}
-
-	{
-	}
-
-	group "refail" 
-	"Re-raises an existing error with additional context. TODO -- duplicate of check"
-	{
-		argsn 2
-		argtypes {
-			1 [ Error ]
-		}
-	}
-
-	{
-	}
-
-	{
-	}
-
-	group "failure" 
-	"Creates an error object without setting any flags (unlike fail and ^fail)."
-	{
-		argsn 1
-		arg `error_info: String message, Integer code, or block for multiple parameters`
-		returns `error object without setting any flags`
-	}
-
-	{
-		equal { failure "error message" |type? } 'error
-		equal { failure "error message" |message? } "error message"
-		equal { failure 404 |status? } 404
-	}
-
-	{
-	}
-
-	group "empty" 
-	"Creates an 404 error object without setting any flags."
-	{
-		arg `error_info: String message, Integer code, or block for multiple parameters`
-		returns `error object without setting any flags`
-	}
-
-	{
-		equal { failure "error message" |type? } 'error
-		equal { failure "error message" |message? } "error message"
-		equal { failure 404 |status? } 404
-	}
-
-	{
-	}
-
-	group "failure\\wrap" 
-	"Creates a new error that wraps an existing error, allowing for error chaining."
-	{
-		argsn 2
-		argtypes {
-			2 [ Error ]
-		}
-		arg `error_info: String message, Integer code, or block for multiple parameters`
-		arg `error: Error object to wrap`
-		returns `new error object that wraps the provided error`
-	}
-
-	{
-		equal { failure\wrap "outer error" failure "inner error" |message? } "outer error"
-		equal { failure\wrap "outer error" failure "inner error" |type? } 'error
-	}
-
-	{
-	}
-
-	group "is-error" 
-	"Returns true if the value is an error, false otherwise."
-	{
-		argsn 1
-		arg `value: Any value to check`
-		returns `boolean true if the value is an error, false otherwise`
-	}
-
-	{
-		equal { is-error failure "test" } true
-		equal { is-error 123 } false
-	}
-
-	{
-	}
-
-	group "error-kind?" 
-	"Returns the kind of an error, or void if not an error."
-	{
-		argsn 1
-		arg `value: Any value to check`
-		returns `the kind of the error as a word, or void if not an error`
-	}
-
-	{
-		equal { error-kind? failure { 'syntax-error 404 "Syntax error" } } 'syntax-error
-		equal { error-kind? 123 } _
-	}
-
-	{
-	}
-
-	group "is-error-of-kind" 
-	"Returns true if the value is an error of the specified kind, false otherwise."
-	{
-		argsn 2
-		argtypes {
-			2 [ Word Tagword ]
-		}
-		arg `error: Error object to check`
-		arg `kind: Word or tagword representing the error kind to check against`
-		returns `boolean true if the error is of the specified kind, false otherwise`
-	}
-
-	{
-		equal { is-error-of-kind failure { 'syntax-error 404 "Syntax error" } 'syntax-error } true
-		equal { is-error-of-kind failure { 'syntax-error 404 "Syntax error" } 'runtime-error } false
-	}
-
-	{
-	}
-
-	group "cause?" 
-	"Extracts the root cause from an error chain by traversing the Parent references."
-	{
-		argsn 1
-		argtypes {
-			1 [ Error ]
-		}
-		arg `error: Error object to extract the root cause from`
-		returns `the root cause error from an error chain`
-	}
-
-	{
-		equal { cause? failure\wrap "outer error" failure "inner error" |message? } "inner error"
-		equal { cause? failure "single error" |message? } "single error"
-	}
-
-	{
-	}
-
-	group "status?" 
-	"Extracts the numeric status code from an error object."
-	{
-		argsn 1
-		argtypes {
-			1 [ Error ]
-		}
-		arg `error: Error object to extract status code from`
-		returns `integer status code of the error`
-	}
-
-	{
-		equal { failure 404 |status? } 404
-		equal { failure "message" |status? } 0
-		error { "not an error" |status? }
-	}
-
-	{
-	}
-
-	group "message?" 
-	"Extracts the message string from an error object."
-	{
-		argsn 1
-		argtypes {
-			1 [ Error ]
-		}
-		arg `error: Error object to extract message from`
-		returns `string message of the error`
-	}
-
-	{
-		equal { failure "error message" |message? } "error message"
-		equal { failure 404 |message? } ""
-		error { "not an error" |message? }
-	}
-
-	{
-	}
-
-	group "details?" 
-	"Extracts additional details from an error object as a dictionary."
-	{
-		argsn 1
-		argtypes {
-			1 [ Error ]
-		}
-		arg `error: Error object to extract additional details from`
-		returns `dictionary containing any additional values stored in the error`
-	}
-
-	{
-		; equal { failure { "code" 404 "info" "Not Found" } |details? |type? } 'dict
-		; equal { failure { "code" 404 "info" "Not Found" } |details? .code } 404
-		error { "not an error" |details? }
-	}
-
-	{
-	}
-
-	group "has-failed" 
-	"Tests if a value is an error object, returning true for errors and false for non-errors."
-	{
-		argsn 1
-		arg `value: Any value to check`
-		returns `boolean true if the value is an error, false otherwise`
-	}
-
-	{
-		equal { has-failed failure "error" } true
-		equal { has-failed "not an error" } false
-		equal { has-failed 123 } false
-		equal { has-failed try { fail "error" } } true
-	}
-
-	{
-	}
-
-	group "is-failure" 
-	"Checks if a value is a failure/error type. Unlike has-failed, this doesn't accept failures - the value must already be disarmed."
-	{
-		argsn 1
-		arg `value: Any value to check (must already be disarmed if it was a failure)`
-		returns `boolean true if the value is an error type, false otherwise`
-	}
-
-	{
-		equal { try { fail "error" } |disarm |is-failure } true
-		equal { failure "error" |is-failure } true
-		equal { 123 |is-failure } false
-		equal { "hello" |is-failure } false
-	}
-
-	{
-	}
-
-	group "is-success" 
-	"Returns true for any value that is not a failure/error type. The opposite of is-failure."
-	{
-		argsn 1
-		arg `value: Any value to check (must already be disarmed if it was a failure)`
-		returns `boolean true if the value is not an error type, false if it is an error`
-	}
-
-	{
-		equal { 123 |is-success } true
-		equal { "hello" |is-success } true
-		equal { { 1 2 3 } |is-success } true
-		equal { failure "error" |is-success } false
-		equal { try { fail "error" } |disarm |is-success } false
-	}
-
-	{
-	}
-
-	group "disarm" 
-	"Clears the failure flag while preserving the error object, allowing error inspection without propagation."
-	{
-		argsn 1
-		arg `error: Error object to disarm`
-		returns `the original error object, but clears the failure flag`
-	}
-
-	{
-		equal { try { fail "error" |disarm } |type? } 'error
-		equal { try { fail "error" |disarm |message? } } "error"
-		equal { try { fail "error" } |has-failed } true
-		equal { try { fail "error" |disarm } |has-failed } true
-	}
-
-	{
-	}
-
-	group "check" 
-	"Checks if a value is in failure state and wraps it with a new error if so, otherwise returns the original value."
-	{
-		argsn 2
-		arg `value: Value to check for failure state`
-		arg `error_info: Error information to use if value is in failure state`
-		returns `original value if not in failure state, or a new error wrapping the original error`
-	}
-
-	{
-		equal { 5 |check "Value must be positive" } 5
-		equal { try { fail "Original error" |check "Wrapped error" } |message? } "Wrapped error"
-		equal { try { fail "Original error" |check "Wrapped error" } |details? |type? } 'dict
-	}
-
-	{
-	}
-
-	group "^check" 
-	"Like 'check' but also sets the return flag to immediately exit the current function."
-	{
-		argsn 2
-		arg `value: Value to check for failure state`
-		arg `error_info: Error information to use if value is in failure state`
-		returns `original value if not in failure state, or immediately returns from function with a new error`
-	}
-
-	{
-		equal { fn { x } { x |^check "Error in function" } |apply [ 5 ] } 5
-		equal { ff: fn { x } { fail "Original" |^check "Wrapped" } ff 5 |disarm |message? } "Wrapped"
-	}
-
-	{
-	}
-
-	group "^ensure" 
-	"Checks if a value is truthy and returns it if so, otherwise creates an error and immediately returns from the function."
-	{
-		argsn 2
-		arg `condition: Value to test for truthiness`
-		arg `error_info: Error information to use if condition is not truthy`
-		returns `condition value if truthy, or immediately returns from function with an error`
-	}
-
-	{
-		equal { fn { x } { x > 0 |^ensure "Must be positive" } |apply [ 5 ] } true
-		equal { ff:: fn { x } { x > 0 |^ensure "Must be positive" } ff -1 |disarm |message? } "Must be positive"
-	}
-
-	{
-	}
-
-	group "ensure" 
-	"Checks if a value is truthy and returns it if so, otherwise creates an error with the failure flag set."
-	{
-		argsn 2
-		arg `condition: Value to test for truthiness`
-		arg `error_info: Error information to use if condition is not truthy`
-		returns `condition value if truthy, or creates an error with failure flag set`
-	}
-
-	{
-		equal { 5 > 0 |ensure "Must be positive" } true
-		equal { try { -1 > 0 |ensure "Must be positive" } |message? } "Must be positive"
-	}
-
-	{
-	}
-
-	group "requires-one-of" 
-	"Validates that a value matches one of the provided options, failing with a descriptive error if not."
-	{
-		argsn 2
-		argtypes {
-			2 [ Block ]
-		}
-		arg `value: Value to check against valid options`
-		arg `options: Block containing valid values`
-		returns `original value if it matches one of the options, or creates an error with failure flag set`
-	}
-
-	{
-		equal { "a" |requires-one-of { "a" "b" "c" } } "a"
-		equal { "b" |requires-one-of { "a" "b" "c" } } "b"
-		equal { try { "x" |requires-one-of { "a" "b" "c" } } |message? |contains "must be one of" } true
-		equal { try { "x" |requires-one-of { "a" "b" "c" } } |message? |contains "[String: x]" } true
-		equal { try { 5 |requires-one-of { 1 2 3 } } |message? |contains "5" } true
-	}
-
-	{
-	}
-
-	group "^requires-one-of" 
-	"Validates that a value matches one of the provided options, failing with a descriptive error if not."
-	{
-		argsn 2
-		argtypes {
-			2 [ Block ]
-		}
-		arg `value: Value to check against valid options`
-		arg `options: Block containing valid values`
-		returns `original value if it matches one of the options, or creates an error with failure flag set`
-	}
-
-	{
-		equal { "a" |requires-one-of { "a" "b" "c" } } "a"
-		equal { "b" |requires-one-of { "a" "b" "c" } } "b"
-		equal { try { "x" |requires-one-of { "a" "b" "c" } } |message? |contains "must be one of" } true
-		equal { try { "x" |requires-one-of { "a" "b" "c" } } |message? |contains "[String: x]" } true
-		equal { try { 5 |requires-one-of { 1 2 3 } } |message? |contains "5" } true
-	}
-
-	{
-	}
-
-	group "ensure\\with" 
-	"Injects a value into a validation block and returns the value if the block is truthy, otherwise creates an error."
-	{
-		argsn 3
-		argtypes {
-			2 [ Block ]
-		}
-		arg `value: Value to inject into the validation block`
-		arg `block: Block that receives the value and returns truthy/falsy result`
-		arg `error_info: Error information to use if block returns falsy`
-		returns `original value if block returns truthy, or creates an error with failure flag set`
-	}
-
-	{
-		equal { dict { "status" 200 } |ensure\with { -> "status" = 200 } "status check failed" } dict { "status" 200 }
-		equal { try { dict { "status" 404 } |ensure\with { -> "status" = 200 } "status check failed" } |message? } "status check failed"
-	}
-
-	{
-	}
-
-	group "^ensure\\with" 
-	"Like ensure\\with but also sets the return flag to immediately exit the current function."
-	{
-		argsn 3
-		argtypes {
-			2 [ Block ]
-		}
-		arg `value: Value to inject into the validation block`
-		arg `block: Block that receives the value and returns truthy/falsy result`
-		arg `error_info: Error information to use if block returns falsy`
-		returns `original value if block returns truthy, or immediately returns from function with an error`
-	}
-
-	{
-		; equal { fn { req } { req |^ensure\with { .Status? = 200 } "request failed" } |apply [ Request "GET" "http://example.com" ] } Request "GET" "http://example.com"
-		equal { ff:: fn { val } { val |^ensure\with { -> "status" = 200 } "status check failed" } ff dict { "status" 404 } |disarm |message? } "status check failed"
-	}
-
-	{
-	}
-
-	group "fix" 
-	"Handles errors by executing a block if the value is in failure state, clearing the failure flag."
-	{
-		argsn 2
-		argtypes {
-			2 [ Block ]
-		}
-		arg `value: Value to check for failure state`
-		arg `handler: Block to execute if value is in failure state`
-		returns `original value if not in failure state, or result of executing the handler block`
-	}
-
-	{
-		equal { 5 |fix { + 10 } } 5
-		equal { try { fail "error" |fix { "fixed" } } } "fixed"
-		equal { try { fail "error" |fix { fail "new error" } } |message? } "new error"
-	}
-
-	{
-	}
-
-	group "^fix" 
-	"Like 'fix' but also sets the return flag to immediately exit the current function with the handler result."
-	{
-		argsn 2
-		argtypes {
-			2 [ Block ]
-		}
-		arg `value: Value to check for failure state`
-		arg `handler: Block to execute if value is in failure state`
-		returns `original value if not in failure state, or immediately returns from function with handler result`
-	}
-
-	{
-		equal { fn { x } { x |^fix { "fixed" } } |apply [ 5 ] } 5
-		equal { ff:: fn { x } { fail "error" |^fix { "fixed" } } ff 5 } "fixed"
-	}
-
-	{
-	}
-
-	group "fix\\either" 
-	"Executes one of two blocks depending on whether the value is in failure state."
-	{
-		argsn 3
-		argtypes {
-			2 [ Block ]
-			3 [ Block ]
-		}
-		arg `value: Value to check for failure state`
-		arg `error_handler: Block to execute if value is in failure state`
-		arg `success_handler: Block to execute if value is not in failure state`
-		returns `result of executing the appropriate handler block`
-	}
-
-	{
-		equal { fix\either failure "error" { "fixed" } { "not fixed" } } "fixed"
-		equal { fix\either 5 { "fixed" } { "not fixed" } } "not fixed"
-	}
-
-	{
-	}
-
-	group "fix\\else" 
-	"Executes a block if the value is not in failure state, otherwise returns the original value."
-	{
-		argsn 2
-		argtypes {
-			2 [ Block ]
-		}
-		arg `value: Value to check for failure state`
-		arg `success_handler: Block to execute if value is not in failure state`
-		returns `result of executing the success handler if value is not in failure state, or the original value`
-	}
-
-	{
-		equal { 5 |fix\else { "not fixed" } } "not fixed"
-		equal { try { fail "error" |fix\else { "not fixed" } } |message? } "error"
-	}
-
-	{
-	}
-
-	group "fix\\continue" 
-	"Executes one of two blocks depending on whether the value is in failure state, like an error-handling if/else."
-	{
-		argsn 3
-		argtypes {
-			2 [ Block ]
-			3 [ Block ]
-		}
-		arg `value: Value to check for failure state`
-		arg `error_handler: Block to execute if value is in failure state`
-		arg `success_handler: Block to execute if value is not in failure state`
-		returns `result of executing the appropriate handler block`
-	}
-
-	{
-		equal { 5 |fix\continue { "error handler" } { "success handler" } } "success handler"
-		equal { try { fail "error" |fix\continue { "error handler" } { "success handler" } } } "error handler"
-	}
-
-	{
-	}
-
-	group "continue" 
-	"Executes a block only if the value is not in failure state, opposite of 'fix'."
-	{
-		argsn 2
-		argtypes {
-			2 [ Block ]
-		}
-		arg `value: Value to check for failure state`
-		arg `block: Block to execute if value is not in failure state`
-		returns `result of executing the block if value is not in failure state, or the original value`
-	}
-
-	{
-		equal { 5 |continue { + 10 } } 15
-		equal { try { fail "error" |continue { + 10 } } } failure "error"
-	}
-
-	{
-	}
-
-	group "^fix\\match" 
-	"Error handling switch that matches error codes with handler blocks and sets the return flag."
-	{
-		argsn 2
-		argtypes {
-			2 [ Block ]
-		}
-		arg `error: Error object to match against`
-		arg `cases: Block containing error codes and corresponding handler blocks`
-		returns `result of executing the matching handler block, or the original error if no match`
-	}
-
-	{
-		equal { ^fix\match failure 404 { 404 { "Not Found" } 500 { "Server Error" } } } "Not Found"
-		equal { ^fix\match failure 500 { 404 { "Not Found" } 500 { "Server Error" } } } "Server Error"
-		equal { ^fix\match failure 403 { 404 { "Not Found" } 500 { "Server Error" } _ { "Unknown Error" } } } "Unknown Error"
-	}
-
-	{
-	}
-
-	group "try" 
-	"Takes a block of code and does (runs) it."
-	{
-		argsn 1
-		pure
-		argtypes {
-			1 [ Block ]
-		}
-	}
-
-	{
-		equal  { try { 123 + 123 } } 246
-		equal  { try { 123 + "asd" } |type? } 'error
-		equal  { try { 123 + } |type? } 'error
-		equal  { try { fail "oops" } |message? } "oops"
-	}
-
-	{
-	}
-
-	group "try-all" 
-	"Executes a block and returns a result tuple [success, result], where success is true if no error occurred."
-	{
-		argsn 1
-		pure
-		argtypes {
-			1 [ Block ]
-		}
-		arg `block: Block of code to execute`
-		returns `a block containing [success, result], where success is true if no error occurred`
-	}
-
-	{
-		equal { try-all { 1 + 2 } } [ true 3 ]
-		equal { try-all { fail "custom error" } |first } false
-	}
-
-	{
-	}
-
-	group "try\\in" 
-	"Takes a Context and a Block. It Does a block inside a given Context."
-	{
-		argsn 2
-		argtypes {
-			1 [ Context ]
-			2 [ Block ]
-		}
-	}
-
-	{
-		equal  { c: context { x: 100 } try\in c { x * 9.99 } } 999.0
-		equal  { c: context { x:: 100 } try\in c { inc! 'x } } 101
-		equal  { c: context { x:: 100 } try\in c { x:: 200 , x } } 200
-		equal  { c: context { x:: 100 } try\in c { x:: 200 } c/x } 200
-		equal  { c: context { x: 100 } try\in c { inc! 'y } |type? } 'error
-	}
-
-	{
-	}
-
-	group "finally" 
-	"Executes a block and ensures another block is executed afterward, regardless of errors."
-	{
-		argsn 2
-		argtypes {
-			1 [ Block ]
-			2 [ Block ]
-		}
-		arg `main-block: Block of code to execute`
-		arg `finally-block: Block to execute afterward, regardless of errors`
-		returns `result of the main block, preserving any failure state`
-	}
-
-	{
-		equal { finally { 1 + 2 } { print "cleanup" } } 3
-		equal { try { finally { fail "error" } { print "cleanup" } } |message? } "error"
-	}
-
-	{
-	}
-
-	group "retry" 
-	"Executes a block and retries it up to N times if it results in a failure."
-	{
-		argsn 2
-		argtypes {
-			1 [ Integer ]
-			2 [ Block ]
-		}
-		arg `retries: Integer number of retries to attempt`
-		arg `block: Block of code to execute and potentially retry`
-		returns `result of the block if successful, or the last failure if all retries fail`
-	}
-
-	{
-		; equal { retry 3 { fail 101 } |disarm |type? } 'error
-		; equal { retry 3 { fail 101 } |disarm |status? } 101
-		equal { retry 3 { 10 + 1 } } 11
-	}
-
-	{
-	}
-
-	group "persist" 
-	"Executes a block repeatedly until it succeeds (no failure), then returns the successful result. Gives up after 1000 attempts."
-	{
-		argsn 1
-		argtypes {
-			1 [ Block ]
-		}
-		arg `block: Block of code to execute repeatedly until it succeeds`
-		returns `result of the block when it finally succeeds (no failure), or error if 1000 attempts exceeded`
-	}
-
-	{
-		equal { persist { 10 + 1 } } 11
-		; equal { counter:: 0 persist { counter:: counter + 1 , either counter > 3 { counter } { fail "not ready" } } } 4
-		error { persist { fail "always fails" } }
-	}
-
-	{
-	}
-
-	group "timeout" 
-	"Executes a block of code with a timeout, failing if execution exceeds the specified duration in milliseconds."
-	{
-		argsn 2
-		argtypes {
-			1 [ Integer ]
-			2 [ Block ]
-		}
-		arg `ms: Integer timeout duration in milliseconds`
-		arg `block: Block of code to execute with a timeout`
-		returns `result of the block if it completes within the timeout, or a timeout error`
-	}
-
-	{
-		equal { timeout 5000 { "ok" } } "ok"
-		equal { try { timeout 100 { sleep 1000 , "ok" } } |message? |contains "timed out" } true
-	}
-
-	{
-	}
-
-}
-
+Error parsing Go code: open ../evaldo/builtins_error_handling.go: no such file or directory

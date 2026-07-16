@@ -7,7 +7,7 @@
 // Build & run:
 //
 //	cd embed/example
-//	go run -tags "no_persistent no_table no_vector" main.go
+//	go run -tags "no_baseio,no_vector" main.go
 package main
 
 import (

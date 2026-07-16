@@ -1,4 +1,4 @@
-//go:build wasm || b_wasm
+//go:build wasm || b_wasm || no_baseio
 
 package env
 

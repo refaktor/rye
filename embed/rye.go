@@ -3,20 +3,17 @@
 //
 // # Build tags
 //
-// This sub-module is always built with the three tags below, which exclude
+// This sub-module is always built with the two tags below, which exclude
 // optional heavy batteries from the dependency graph:
 //
-//	no_persistent  – exclude badger-backed persistent contexts
-//	no_table       – exclude excelize-backed spreadsheet tables
-//	no_vector      – exclude govector / primes math extensions
+//	no_baseio  – exclude OS/filesystem/terminal I/O builtins and their deps
+//	             (fsnotify, keyboard, seccomp, landlock, yaml, …)
+//	no_vector  – exclude govector / primes math extensions
 //
 // The only external dependencies added to a consuming project are:
 //
-//	golang.org/x/term    – terminal state queries
-//	golang.org/x/sync    – errgroup (used in builtins_base_printing)
-//	golang.org/x/text    – unicode case-folding (used in builtins_base_strings)
-//	golang.org/x/crypto  – PBKDF2 (used in util/securesave)
-//	golang.org/x/sys     – indirect (required by term and crypto)
+//	golang.org/x/text    – unicode case-folding (builtins_base_strings)
+//	golang.org/x/crypto  – PBKDF2 (util/securesave)
 //
 // # Quick start
 //
@@ -51,12 +48,16 @@ type Engine struct {
 }
 
 // New creates an Engine pre-loaded with all base Rye builtins
-// (arithmetic, strings, collections, control flow, I/O, …).
+// (arithmetic, strings, collections, control flow, …) but WITHOUT OS-level
+// I/O (no file access, no shell commands, no os.Exit, no os.Args).
+// This keeps the embedded sandbox safe by default.
+// If you need file/shell access in the embedded engine, call
+// evaldo.RegisterBaseIOBuiltins(engine.ProgramState()) after New().
 // Register additional Go functions with [Engine.RegisterBuiltin].
 func New() *Engine {
 	block, idxs := loader.LoadStringNoPEG("", false)
 	ps := env.NewProgramStateOLD(block.(env.Block).Series, idxs)
-	evaldo.RegisterBuiltins(ps)
+	evaldo.RegisterBaseBuiltins(ps)
 	return &Engine{ps: ps}
 }
 
@@ -102,16 +103,31 @@ func (e *Engine) RegisterBuiltinDoc(name string, argCount int, doc string, fn Bu
 // Setting and getting Rye words from Go
 // ---------------------------------------------------------------------------
 
-// SetWord injects a Rye word into the current context.
-// This is convenient for passing Go values to a script before evaluation.
+// SetWord injects a Rye word as a constant into the current context.
+// The word cannot be modified by Rye scripts (it is not a variable).
+// Use [Engine.SetVar] when you need the script to be able to modify the value.
 //
 // Example:
 //
 //	engine.SetWord("port", *env.NewInteger(8080))
-//	engine.Eval(`print "listening on port" + to-string port`)
+//	engine.Eval(`print "listening on port" + string port`)
 func (e *Engine) SetWord(name string, val env.Object) {
 	idx := e.ps.Idx.IndexWord(name)
 	e.ps.Ctx.Set(idx, val)
+}
+
+// SetVar injects a Rye word as a mutable variable into the current context.
+// Unlike [Engine.SetWord], the Rye script can modify this value using the
+// modword operator (word::).
+//
+// Example:
+//
+//	engine.SetVar("score", *env.NewInteger(0))
+//	engine.Eval(`score:: score + 10`)   // score is now 10
+//	val, _ := engine.GetWord("score")
+func (e *Engine) SetVar(name string, val env.Object) {
+	idx := e.ps.Idx.IndexWord(name)
+	e.ps.Ctx.SetVar(idx, val)
 }
 
 // GetWord retrieves the value of a Rye word from the current context.
@@ -242,11 +258,12 @@ func (e *Engine) EvalBool(code string) (bool, error) {
 // ---------------------------------------------------------------------------
 
 // Reset re-initialises the engine with a fresh context and re-registers all
-// base Rye builtins.  Custom builtins registered with RegisterBuiltin are
+// base Rye builtins (no OS I/O, matching the behaviour of [New]).
+// Custom builtins registered with RegisterBuiltin are
 // removed — call RegisterBuiltin again to re-add them, or use [New] to
 // create a fresh engine.
 func (e *Engine) Reset() {
 	block, idxs := loader.LoadStringNoPEG("", false)
 	e.ps = env.NewProgramStateOLD(block.(env.Block).Series, idxs)
-	evaldo.RegisterBuiltins(e.ps)
+	evaldo.RegisterBaseBuiltins(e.ps)
 }
