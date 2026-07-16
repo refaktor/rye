@@ -540,7 +540,7 @@ var Builtins_js_interop = map[string]*env.Builtin{
 				} else {
 					result = env.NewVoid()
 				}
-				CallFunctionWithArgs(callback, ps, ps.Ctx, result)
+				evaldo.CallFunctionWithArgs(callback, ps, ps.Ctx, result)
 				return nil
 			})
 
@@ -552,7 +552,7 @@ var Builtins_js_interop = map[string]*env.Builtin{
 				if len(args) > 0 {
 					msg = args[0].String()
 				}
-				CallFunctionWithArgs(callback, ps, ps.Ctx, env.String{Value: "Error: " + msg})
+				evaldo.CallFunctionWithArgs(callback, ps, ps.Ctx, env.String{Value: "Error: " + msg})
 				return nil
 			})
 
