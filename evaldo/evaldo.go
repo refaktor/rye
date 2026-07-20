@@ -2474,6 +2474,35 @@ func MaybeDisplayFailureOrError2(es *env.ProgramState, genv *env.Idxs, tag strin
 	// fmt.Println(es.InErrHandler, es.ErrorFlag, es.FailureFlag, topLevel)
 	// WOWOWOWO
 	if !es.InErrHandler && es.ErrorFlag {
+		// If a Capture block is registered, run it with the error injected.
+		// If the block itself completes without error, suppress the normal error display.
+		if es.CaptureBlock != nil {
+			captureBlock := es.CaptureBlock
+			es.CaptureBlock = nil // consume the capture block so it only fires once
+
+			capturedErr := es.Res  // the error value to inject
+
+			// Reset error state so the capture block evaluates cleanly
+			es.ErrorFlag = false
+			es.FailureFlag = false
+
+			// Save and restore the code-position series around the capture block
+			originalSer := es.Ser
+			es.Ser = captureBlock.Series
+			EvalBlockInj(es, capturedErr, true)
+			es.Ser = originalSer
+
+			// If the capture block itself errored, fall through to normal display
+			if !es.ErrorFlag {
+				if topLevel {
+					es.SkipFlag = false
+				}
+				return
+			}
+			// Capture block itself produced an error — restore captured error as Res
+			// and fall through to normal error display below
+		}
+
 		// Use the enhanced error reporting with source location
 		DisplayEnhancedError(es, genv, tag, topLevel)
 

@@ -2282,6 +2282,28 @@ var builtins = map[string]*env.Builtin{
 	// Rye-itself//args?, Args?, Args\raw?, History? moved to builtins_baseio.go
 
 	// Tests:
+	// stdout { rye .Capture { .disarm .print } 1 / 0 } "Error: { message: division by zero  }\n"
+	// stdout { rye .Capture { .disarm .print } "ok" } ""
+	// Args:
+	// * rye-itself: The rye native object (passed via dot-word dispatch)
+	// * block: Block of code to execute with the captured error injected when an error bubbles to top-level
+	// Returns:
+	// * The rye-itself native (so the chain continues cleanly)
+	"Rye-itself//Capture": {
+		Argsn: 2,
+		Doc:   "Registers a capture block that will be executed with the error injected if an unhandled error bubbles to the top of the program. The error value is injected as the first value (use .disarm, .print, etc.).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg1.(type) {
+			case env.Block:
+				ps.CaptureBlock = &bloc
+				return arg0
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "Rye-itself//Capture")
+			}
+		},
+	},
+
+	// Tests:
 	// equal { x:: 123 defer { x:: 345 } x } 123
 	// stdout { ff:: fn { } { var 'x 123 defer { print 234 } x } , ff } "234\n"
 	// equal { ff:: fn { } { x:: 123 defer { x:: 234 } x + 111 } , ff } 234 ; the result of defer expression is returned TODO, change this
