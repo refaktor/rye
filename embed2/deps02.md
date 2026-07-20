@@ -1,1 +1,0 @@
-read {OUT-1} and answer me this ... couldn't embed2 just include rye/env rye/loader rye/evaldo rye/base separately and by this exclude many dependencies that are there because of main rye (repl, main rye binary options like
