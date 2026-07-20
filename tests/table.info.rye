@@ -3,10 +3,6 @@ section "Constructors " "Functions that construct a table." {
 	"Creates a table by accepting block of column names and flat block of values"
 	{
 		argsn 2
-		argtypes {
-			1 [ Block ]
-			2 [ Block ]
-		}
 		arg `columns`
 		arg `data`
 	}
@@ -41,9 +37,6 @@ section "Constructors " "Functions that construct a table." {
 	"Creates a table by accepting a block or list of rows"
 	{
 		argsn 2
-		argtypes {
-			2 [ Block List ]
-		}
 		arg `columns - names of the columns`
 		arg `data - block or list of rows (each row is a block or list)`
 	}
@@ -60,9 +53,6 @@ section "Constructors " "Functions that construct a table." {
 	"Creates a table by accepting block or list of dicts"
 	{
 		argsn 1
-		argtypes {
-			1 [ Block List ]
-		}
 		arg `data`
 	}
 
@@ -79,9 +69,6 @@ section "Constructors " "Functions that construct a table." {
 	"Creates a dict from a two-column table, using the first column as keys and the second column as values."
 	{
 		argsn 1
-		argtypes {
-			1 [ Table ]
-		}
 		arg `table - a two-column table where the first column becomes keys and the second becomes values`
 		returns `a dict mapping each value in the first column (as string key) to the corresponding value in the second column`
 	}
@@ -104,10 +91,6 @@ section "Filtering " "Functions that construct a table." {
 	"Returns table of rows where specific colum is equal to given value."
 	{
 		argsn 3
-		argtypes {
-			1 [ Table ]
-			2 [ Word String ]
-		}
 		arg `sheet`
 		arg `column`
 		arg `value`
@@ -125,10 +108,6 @@ section "Filtering " "Functions that construct a table." {
 	"Returns table of rows where specific colum is not equal to given value."
 	{
 		argsn 3
-		argtypes {
-			1 [ Table ]
-			2 [ Word String ]
-		}
 		arg `sheet`
 		arg `column`
 		arg `value`
@@ -146,10 +125,6 @@ section "Filtering " "Functions that construct a table." {
 	"Returns table of rows where specific colum is void."
 	{
 		argsn 2
-		argtypes {
-			1 [ Table ]
-			2 [ Word String ]
-		}
 		arg `sheet`
 		arg `column`
 		arg `Tags: #filter #tables`
@@ -166,11 +141,6 @@ section "Filtering " "Functions that construct a table." {
 	"Returns table of rows where a specific colum matches a regex."
 	{
 		argsn 3
-		argtypes {
-			1 [ Table ]
-			2 [ Native Word String ]
-			3 [ Native ]
-		}
 		arg `sheet`
 		arg `column`
 		arg `regexp`
@@ -188,11 +158,6 @@ section "Filtering " "Functions that construct a table." {
 	"Returns table of rows where specific colum contains a given string value."
 	{
 		argsn 3
-		argtypes {
-			1 [ Table ]
-			2 [ Word String ]
-			3 [ String ]
-		}
 		arg `sheet`
 		arg `column`
 		arg `substring`
@@ -212,11 +177,6 @@ sheet .where-contains 'name "nn"
 	"Returns table of rows where specific colum does not contain a given string value."
 	{
 		argsn 3
-		argtypes {
-			1 [ Table ]
-			2 [ Word String ]
-			3 [ String ]
-		}
 		arg `sheet`
 		arg `column`
 		arg `substring`
@@ -236,10 +196,6 @@ sheet .where-not-contains 'name "nn"
 	"Returns table of rows where specific colum is greater than given value."
 	{
 		argsn 3
-		argtypes {
-			1 [ Table ]
-			2 [ Word String ]
-		}
 		arg `sheet`
 		arg `column`
 		arg `value`
@@ -259,10 +215,6 @@ sheet .where-greater 'age 29
 	"Returns table of rows where specific colum is lesser than given value."
 	{
 		argsn 3
-		argtypes {
-			1 [ Table ]
-			2 [ Word String ]
-		}
 		arg `sheet`
 		arg `column`
 		arg `value`
@@ -280,10 +232,6 @@ sheet .where-greater 'age 29
 	"Returns table of rows where specific colum is between given values."
 	{
 		argsn 4
-		argtypes {
-			1 [ Table ]
-			2 [ Word String ]
-		}
 		arg `sheet`
 		arg `column`
 		arg `lower-limit`
@@ -302,10 +250,6 @@ sheet .where-greater 'age 29
 	"Returns table of rows where specific colum is between given values (inclusive)."
 	{
 		argsn 4
-		argtypes {
-			1 [ Table ]
-			2 [ Word String ]
-		}
 		arg `sheet`
 		arg `column`
 		arg `lower-limit`
@@ -324,11 +268,6 @@ sheet .where-greater 'age 29
 	"Returns table of rows where specific colum value is found in block of values."
 	{
 		argsn 3
-		argtypes {
-			1 [ Table ]
-			2 [ Word String ]
-			3 [ Block ]
-		}
 		arg `sheet`
 		arg `column`
 		arg `values-filtered-for`
@@ -348,11 +287,6 @@ sheet .where-greater 'age 29
 	"Returns table of rows where specific colum value is not found in block of values."
 	{
 		argsn 3
-		argtypes {
-			1 [ Table ]
-			2 [ Word String ]
-			3 [ Block ]
-		}
 		arg `sheet`
 		arg `column`
 		arg `values-filtered-for`
@@ -372,11 +306,6 @@ sheet .where-greater 'age 29
 	"Returns table of rows where code block evaluates to true for the column value."
 	{
 		argsn 3
-		argtypes {
-			1 [ Table ]
-			2 [ Word String Block ]
-			3 [ Block Builtin Function ]
-		}
 		arg `table`
 		arg `column - column name (word or string) or block of column names`
 		arg `code - block that receives column value (or has columns as words) and returns truthy/falsy`
@@ -400,10 +329,6 @@ table { "a" "b" } { 1 10 2 20 3 30 } |where { 'a 'b } { ( a + b ) > 25 }
 	"Returns table with duplicate rows removed based on specified column(s)."
 	{
 		argsn 2
-		argtypes {
-			1 [ Table ]
-			2 [ Word String Block ]
-		}
 		arg `table`
 		arg `column - column name (word or string) or block of column names`
 		arg `Tags: #filter #tables`
@@ -423,10 +348,6 @@ table { "a" "b" } { 1 10 1 20 2 10 } |distinct { 'a 'b }
 	"Returns table with void values in specified column replaced with given value."
 	{
 		argsn 3
-		argtypes {
-			1 [ Table ]
-			2 [ Word String ]
-		}
 		arg `table`
 		arg `column - column name (word or string)`
 		arg `value - value to replace void with`
@@ -446,11 +367,6 @@ table { "a" "b" } { 1 10 1 20 2 10 } |distinct { 'a 'b }
 	"Returns count of rows where code block evaluates to true for the column value."
 	{
 		argsn 3
-		argtypes {
-			1 [ Table ]
-			2 [ Word String Block ]
-			3 [ Block Builtin Function ]
-		}
 		arg `table`
 		arg `column - column name (word or string) or block of column names`
 		arg `code - block that receives column value and returns truthy/falsy`
@@ -474,10 +390,6 @@ section "Row level functions " "Functions that construct a table." {
 	"Returns a table with new-row added to it"
 	{
 		argsn 2
-		argtypes {
-			1 [ Table ]
-			2 [ Block List ]
-		}
 		arg `sheet`
 		arg `new-row`
 	}
@@ -495,9 +407,6 @@ section "Row level functions " "Functions that construct a table." {
 	"Get rows as a native. This value can be used in `add-rows` and `add-rows!`"
 	{
 		argsn 1
-		argtypes {
-			1 [ Table ]
-		}
 		arg `sheet`
 	}
 
@@ -514,10 +423,6 @@ section "Row level functions " "Functions that construct a table." {
 	"Add one or more rows to a table"
 	{
 		argsn 2
-		argtypes {
-			1 [ Table ]
-			2 [ Block Native ]
-		}
 		arg `sheet - the sheet that is getting rows added to it`
 		arg `rows - a block containing one or more rows worth of values, or a TableRow Native value`
 	}
@@ -540,10 +445,6 @@ section "Row level functions " "Functions that construct a table." {
 	"Add one or more rows to a table ref"
 	{
 		argsn 2
-		argtypes {
-			1 [ Table PersistentTable ]
-			2 [ Block Native ]
-		}
 		arg `sheet - the reference to the sheet that is getting rows added to it`
 		arg `rows - a block containing one or more rows worth of values, or a TableRow Native value`
 		arg `Tags: #spreasheet #mutation`
@@ -563,10 +464,6 @@ section "Row level functions " "Functions that construct a table." {
 	"Update the row at the given index."
 	{
 		argsn 3
-		argtypes {
-			2 [ Integer ]
-			3 [ Function Dict TableRow ]
-		}
 		arg `sheet-ref - A ref to a table`
 		arg `idx - the index of the row to update, 1-based`
 		arg `updater - One of either a function, a dict, or a Table Row`
@@ -594,10 +491,6 @@ section "Row level functions " "Functions that construct a table." {
 	"Remove a row from a table by index"
 	{
 		argsn 2
-		argtypes {
-			1 [ Table ]
-			2 [ Block Native ]
-		}
 		arg `sheet-ref`
 		arg `row-idx - Index of row to remove, 1-based`
 		arg `Tags: #table #mutation`
@@ -621,9 +514,6 @@ section "Column level functions " "Functions that construct a table." {
 	"Returns table with just given columns. Use lsetwords (:newName) to rename the previous column."
 	{
 		argsn 2
-		argtypes {
-			1 [ Block Table ]
-		}
 	}
 
 	{
@@ -638,9 +528,6 @@ section "Column level functions " "Functions that construct a table." {
 	"Gets the column names (header) as block."
 	{
 		argsn 1
-		argtypes {
-			1 [ Table ]
-		}
 	}
 
 	{
@@ -655,10 +542,6 @@ section "Column level functions " "Functions that construct a table." {
 	"Gets all values of a column as a block."
 	{
 		argsn 2
-		argtypes {
-			1 [ Table ]
-			2 [ Word String ]
-		}
 	}
 
 	{
@@ -673,10 +556,6 @@ section "Column level functions " "Functions that construct a table." {
 	"Remove a column from a table. Returns new table"
 	{
 		argsn 2
-		argtypes {
-			1 [ Table ]
-			2 [ Word String Block ]
-		}
 	}
 
 	{
@@ -691,10 +570,6 @@ section "Column level functions " "Functions that construct a table." {
 	"Remove a column from a table. Returns new table"
 	{
 		argsn 3
-		argtypes {
-			1 [ Table ]
-			2 [ Word Block ]
-		}
 	}
 
 	{
@@ -709,12 +584,6 @@ section "Column level functions " "Functions that construct a table." {
 	"Adds a new column to table. Changes in-place and returns the new table."
 	{
 		argsn 4
-		argtypes {
-			1 [ Table ]
-			2 [ Word ]
-			3 [ Block ]
-			4 [ Block ]
-		}
 	}
 
 	{
@@ -731,10 +600,6 @@ section "Column level functions " "Functions that construct a table." {
 	"Updates all cells in a column by applying a function that receives the cell value and the row."
 	{
 		argsn 3
-		argtypes {
-			2 [ Word String ]
-			3 [ Function ]
-		}
 		arg `table-ref - a reference to the table to update`
 		arg `column-name - name of the column to update (word or string)`
 		arg `fn - function that accepts (cell, row) and returns the new cell value`
@@ -753,11 +618,6 @@ section "Column level functions " "Functions that construct a table." {
 	"Adds a new column to table with the given data. Returns the modified table."
 	{
 		argsn 3
-		argtypes {
-			1 [ Table ]
-			2 [ Word String ]
-			3 [ Block List ]
-		}
 		arg `table - the table to add a column to`
 		arg `column-name - name of the new column (word or string)`
 		arg `data - block or list containing values for the new column (must match number of rows)`
@@ -779,11 +639,6 @@ section "Miscelaneous " "" {
 	"Sorts row by given column, changes table in place."
 	{
 		argsn 3
-		argtypes {
-			1 [ Table ]
-			2 [ Word ]
-			3 [ Word ]
-		}
 	}
 
 	{
@@ -798,11 +653,6 @@ section "Miscelaneous " "" {
 	"Sorts row by given column, changes table in place."
 	{
 		argsn 3
-		argtypes {
-			1 [ Table ]
-			2 [ Word ]
-			3 [ Word ]
-		}
 	}
 
 	{
@@ -817,10 +667,6 @@ section "Miscelaneous " "" {
 	"Creates an index for all values in the provided columns. Changes in-place and returns the new table."
 	{
 		argsn 2
-		argtypes {
-			1 [ Table ]
-			2 [ Block ]
-		}
 	}
 
 	{
@@ -835,9 +681,6 @@ section "Miscelaneous " "" {
 	"Returns the columns that are indexed in a table."
 	{
 		argsn 1
-		argtypes {
-			1 [ Table ]
-		}
 	}
 
 	{
@@ -852,10 +695,6 @@ section "Miscelaneous " "" {
 	"Takes a table and tries to determine and change the types of columns."
 	{
 		argsn 2
-		argtypes {
-			1 [ Table ]
-			2 [ Decimal ]
-		}
 	}
 
 	{
@@ -870,12 +709,6 @@ section "Miscelaneous " "" {
 	"Left joins two tables on the given columns."
 	{
 		argsn 4
-		argtypes {
-			1 [ Table ]
-			2 [ Table ]
-			3 [ Word String ]
-			4 [ Word String ]
-		}
 	}
 
 	{
@@ -900,12 +733,6 @@ section "Miscelaneous " "" {
 	"Inner joins two tables on the given columns."
 	{
 		argsn 4
-		argtypes {
-			1 [ Table ]
-			2 [ Table ]
-			3 [ Word String ]
-			4 [ Word String ]
-		}
 	}
 
 	{
@@ -930,11 +757,6 @@ section "Miscelaneous " "" {
 	"Groups a table by the given column(s) and (optional) aggregations."
 	{
 		argsn 3
-		argtypes {
-			1 [ Table ]
-			2 [ Word String Block ]
-			3 [ Block ]
-		}
 	}
 
 	{
@@ -1014,9 +836,6 @@ section "Loading and saving " "Functions that construct a table." {
 	"Loads a .csv file to a table datatype."
 	{
 		argsn 1
-		argtypes {
-			1 [ Uri ]
-		}
 		arg `file-uri - location of csv file to load`
 		arg `Tags: #table #loading #csv`
 	}
@@ -1042,10 +861,6 @@ section "Loading and saving " "Functions that construct a table." {
 	"Loads a .csv file to a table datatype."
 	{
 		argsn 2
-		argtypes {
-			1 [ Uri ]
-			2 [ String ]
-		}
 		arg `file-uri - location of csv file to load`
 		arg `Tags: #table #loading #csv`
 	}
@@ -1068,9 +883,6 @@ spr1 = spr2
 	"Loads a .csv file to a table datatype."
 	{
 		argsn 1
-		argtypes {
-			1 [ Uri ]
-		}
 		arg `file-uri - location of csv file to load`
 	}
 
@@ -1092,10 +904,6 @@ spr1 = spr2
 	"Saves a table to a .csv file."
 	{
 		argsn 2
-		argtypes {
-			1 [ Uri ]
-			2 [ Table ]
-		}
 		arg `file-uri - where to save the sheet as a .csv file`
 		arg `table    - the table to save`
 		arg `Tags: #table #saving #csv`
@@ -1119,10 +927,6 @@ spr1 = spr2
 	"Saves a table to a .tsv file."
 	{
 		argsn 2
-		argtypes {
-			1 [ Uri ]
-			2 [ Table ]
-		}
 		arg `file-uri - where to save the sheet as a .tsv file`
 		arg `table    - the table to save`
 		arg `Tags: #table #saving #tsv`
@@ -1146,9 +950,6 @@ spr1 = spr2
 	"Loads the first sheet in an .xlsx file to a Table."
 	{
 		argsn 1
-		argtypes {
-			1 [ Uri ]
-		}
 		arg `file-uri - location of xlsx file to load`
 		arg `Tags: #table #loading #xlsx`
 	}
@@ -1171,10 +972,6 @@ spr1 = spr2
 	"Saves a Table to a .xlsx file."
 	{
 		argsn 2
-		argtypes {
-			1 [ Uri ]
-			2 [ Table ]
-		}
 		arg `file-uri - where to save the table as a .xlsx file`
 		arg `table    - the table to save`
 		arg `Tags: #table #saving #xlsx`
@@ -1198,10 +995,6 @@ spr1 = spr2
 	"Creates a persistent table using BadgerDB for storage"
 	{
 		argsn 3
-		argtypes {
-			2 [ String ]
-			3 [ String ]
-		}
 		arg `columns - block of column names`
 		arg `db-path - path to BadgerDB database`
 		arg `table-name - name of the table`
@@ -1218,9 +1011,6 @@ spr1 = spr2
 	"Closes the BadgerDB connection for a persistent table"
 	{
 		argsn 1
-		argtypes {
-			1 [ PersistentTable ]
-		}
 		arg `persistent-table - the persistent table to close`
 	}
 
@@ -1236,9 +1026,6 @@ spr1 = spr2
 	"Parses a CSV string to a table datatype."
 	{
 		argsn 1
-		argtypes {
-			1 [ String ]
-		}
 		arg `csv-string - string containing CSV data`
 		arg `Tags: #table #parsing #csv`
 	}
@@ -1251,22 +1038,18 @@ spr1 = spr2
 	{
 	}
 
-	group "parse\\csv\\" 
-	"Parses a CSV string to a table datatype with custom separator."
+	group "parse\\csv\\separator" 
+	"Parses a CSV string to a table datatype with a custom separator character."
 	{
 		argsn 2
-		argtypes {
-			1 [ String ]
-			2 [ String ]
-		}
 		arg `csv-string - string containing CSV data`
 		arg `separator - single character separator`
 		arg `Tags: #table #parsing #csv`
 	}
 
 	{
-		equal { `a,b\n1,2\n3,4` |parse\csv\ "," |length? } 2
-		equal { `a;b\n1;2\n3;4` |parse\csv\ ";" |column? "a" } { "1" "3" }
+		equal { `a,b\n1,2\n3,4` |parse\csv\separator "," |length? } 2
+		equal { `a;b\n1;2\n3;4` |parse\csv\separator ";" |column? "a" } { "1" "3" }
 	}
 
 	{
@@ -1276,9 +1059,6 @@ spr1 = spr2
 	"Parses a TSV (tab-separated values) string to a table datatype."
 	{
 		argsn 1
-		argtypes {
-			1 [ String ]
-		}
 		arg `tsv-string - string containing TSV (tab-separated values) data`
 		arg `Tags: #table #parsing #tsv`
 	}
@@ -1295,9 +1075,6 @@ spr1 = spr2
 	"Converts a table to a CSV string."
 	{
 		argsn 1
-		argtypes {
-			1 [ Table ]
-		}
 		arg `table - the table to convert to CSV string`
 		arg `Tags: #table #formatting #csv`
 	}
@@ -1314,9 +1091,6 @@ spr1 = spr2
 	"Converts a table to a TSV string."
 	{
 		argsn 1
-		argtypes {
-			1 [ Table ]
-		}
 		arg `table - the table to convert to TSV string`
 		arg `Tags: #table #formatting #tsv`
 	}
@@ -1333,9 +1107,6 @@ equal { table { "name" "age" } { "Jim" 30 "Jane" 25 } |format\tsv |split "\n" |l
 	"Parses an xlsx binary string or bytes into a table (first sheet)."
 	{
 		argsn 1
-		argtypes {
-			1 [ String Bytes ]
-		}
 		arg `data - the string with xlsx binary data or bytes native value`
 		arg `Tags: #table #parsing #xlsx`
 	}
@@ -1350,9 +1121,6 @@ equal { table { "name" "age" } { "Jim" 30 "Jane" 25 } |format\tsv |split "\n" |l
 	"Converts a table to an XLSX as bytes native value."
 	{
 		argsn 1
-		argtypes {
-			1 [ Table ]
-		}
 		arg `table - the table to convert to XLSX bytes`
 		arg `Tags: #table #formatting #xlsx`
 	}

@@ -1,8 +1,8 @@
 ; Bad-token tests — near-valid inputs that MUST produce parse errors.
 ;
 ; Helper functions:
-;   must-fail "label" "input"           — asserts load fails with an error
-;   must-parse "label" "input" 'type   — asserts load succeeds and first token is that type
+;   must-fail "label" "input"           — asserts Load fails with an error
+;   must-parse "label" "input" 'type   — asserts Load succeeds and first token is that type
 ;
 ; All tokens in Rye MUST be separated by whitespace from adjacent tokens.
 ; These tests verify the parser enforces that rule strictly.

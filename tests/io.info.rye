@@ -3,9 +3,6 @@ section "Console IO " "Console input and output functions" {
 	"Prompts for and reads user input from the console."
 	{
 		argsn 1
-		argtypes {
-			1 [ String ]
-		}
 		arg `prompt: string to display as a prompt`
 		returns `string containing the user's input`
 	}
@@ -39,9 +36,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Opens a file for reading."
 	{
 		argsn 1
-		argtypes {
-			1 [ Uri ]
-		}
 		arg `path: uri representing the file to open`
 		returns `native file object`
 	}
@@ -58,9 +52,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Opens a file for appending."
 	{
 		argsn 1
-		argtypes {
-			1 [ Uri ]
-		}
 		arg `path: uri representing the file to open for appending`
 		returns `native writer object`
 	}
@@ -77,9 +68,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Creates a new file."
 	{
 		argsn 1
-		argtypes {
-			1 [ Uri ]
-		}
 		arg `path: uri representing the file to create`
 		returns `native file object`
 	}
@@ -96,9 +84,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Gets the extension of a file."
 	{
 		argsn 1
-		argtypes {
-			1 [ Uri String ]
-		}
 		arg `path: uri or string representing a file path`
 		returns `string containing the file extension (including the dot)`
 	}
@@ -116,9 +101,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Gets the filename with extension from a file path."
 	{
 		argsn 1
-		argtypes {
-			1 [ Uri ]
-		}
 		arg `path: uri representing a file path`
 		returns `string containing the filename with extension`
 	}
@@ -134,9 +116,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Gets the filename without extension from a file path."
 	{
 		argsn 1
-		argtypes {
-			1 [ Uri ]
-		}
 		arg `path: uri representing a file path`
 		returns `string containing the filename without extension`
 	}
@@ -152,9 +131,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Gets the directory path from a file path."
 	{
 		argsn 1
-		argtypes {
-			1 [ Uri ]
-		}
 		arg `path: uri representing a file path`
 		returns `string containing the directory path`
 	}
@@ -170,9 +146,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Splits a file path into its components."
 	{
 		argsn 1
-		argtypes {
-			1 [ Uri ]
-		}
 		arg `path: uri representing a file path`
 		returns `block of strings containing path components`
 	}
@@ -187,9 +160,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Checks if a file path is absolute."
 	{
 		argsn 1
-		argtypes {
-			1 [ Uri ]
-		}
 		arg `path: uri representing a file path`
 		returns `boolean indicating whether the path is absolute`
 	}
@@ -204,9 +174,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Checks if a file exists."
 	{
 		argsn 1
-		argtypes {
-			1 [ Uri ]
-		}
 		arg `path: uri representing a file path`
 		returns `boolean indicating whether the file exists`
 	}
@@ -223,9 +190,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Deletes a file."
 	{
 		argsn 1
-		argtypes {
-			1 [ Uri ]
-		}
 		arg `path: uri representing a file path to delete`
 		returns `true if the file was successfully deleted`
 	}
@@ -240,9 +204,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Creates a new reader from file object."
 	{
 		argsn 1
-		argtypes {
-			1 [ Native ]
-		}
 		arg `source: file object to read from`
 		returns `native reader object`
 	}
@@ -258,9 +219,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Creates a new reader from file object."
 	{
 		argsn 1
-		argtypes {
-			1 [ Native ]
-		}
 		arg `source: file object to read from`
 		returns `native reader object`
 	}
@@ -276,9 +234,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Creates a new reader from a file uri/path."
 	{
 		argsn 1
-		argtypes {
-			1 [ Uri ]
-		}
 		arg `source: file uri to read from`
 		returns `native reader object`
 	}
@@ -294,9 +249,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Creates a new reader from a string."
 	{
 		argsn 1
-		argtypes {
-			1 [ String ]
-		}
 		arg `source: string to read from`
 		returns `native reader object`
 	}
@@ -351,9 +303,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Reads all content from a reader as a string."
 	{
 		argsn 1
-		argtypes {
-			1 [ Native ]
-		}
 		arg `reader: native reader object`
 		returns `string containing all content from the reader`
 	}
@@ -369,9 +318,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Closes a reader if it implements io.Closer."
 	{
 		argsn 1
-		argtypes {
-			1 [ Native ]
-		}
 		arg `reader: native reader object`
 		returns `empty string if successful`
 	}
@@ -386,10 +332,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Copies all content from a reader to a writer."
 	{
 		argsn 2
-		argtypes {
-			1 [ Native ]
-			2 [ Native ]
-		}
 		arg `reader: native reader object`
 		arg `writer: native writer object`
 		returns `the reader object if successful`
@@ -405,10 +347,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Copies content from a file to a writer."
 	{
 		argsn 2
-		argtypes {
-			1 [ Native ]
-			2 [ Native ]
-		}
 		arg `file: native file object`
 		arg `writer: native writer object`
 		returns `the file object if successful`
@@ -424,9 +362,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Gets file information (stat) for a file."
 	{
 		argsn 1
-		argtypes {
-			1 [ Native ]
-		}
 		arg `file: native file object`
 		returns `native file-info object`
 	}
@@ -442,9 +377,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Gets the size of a file in bytes."
 	{
 		argsn 1
-		argtypes {
-			1 [ Native ]
-		}
 		arg `file-info: native file-info object`
 		returns `integer representing the file size in bytes`
 	}
@@ -460,9 +392,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Reads the entire content of a file as a string."
 	{
 		argsn 1
-		argtypes {
-			1 [ Native ]
-		}
 		arg `file: native file object`
 		returns `string containing the entire file content`
 	}
@@ -478,9 +407,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Seeks to the end of a file."
 	{
 		argsn 1
-		argtypes {
-			1 [ Native ]
-		}
 		arg `file: native file object`
 		returns `the same file object with position set to end of file`
 	}
@@ -495,10 +421,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Writes a string directly to a file object."
 	{
 		argsn 2
-		argtypes {
-			1 [ Native ]
-			2 [ String ]
-		}
 		arg `file: native file object`
 		arg `content: string to write to the file`
 		returns `the file object if successful (allows chaining)`
@@ -514,9 +436,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Closes an open file."
 	{
 		argsn 1
-		argtypes {
-			1 [ Native ]
-		}
 		arg `file: native file object`
 		returns `empty string if successful`
 	}
@@ -532,9 +451,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Reads the entire content of a file as a string."
 	{
 		argsn 1
-		argtypes {
-			1 [ Uri ]
-		}
 		arg `path: uri representing the file to read`
 		returns `string containing the entire file content`
 	}
@@ -550,9 +466,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Reads the entire content of a file as bytes."
 	{
 		argsn 1
-		argtypes {
-			1 [ Uri ]
-		}
 		arg `path: uri representing the file to read`
 		returns `native bytes object containing the file content`
 	}
@@ -568,9 +481,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Reads a file and returns its content as a block of lines."
 	{
 		argsn 1
-		argtypes {
-			1 [ Uri ]
-		}
 		arg `path: uri representing the file to read`
 		returns `block of strings, each representing a line from the file`
 	}
@@ -586,10 +496,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Writes content to a file."
 	{
 		argsn 2
-		argtypes {
-			1 [ Uri ]
-			2 [ String Native ]
-		}
 		arg `path: uri representing the file to write to`
 		arg `content: string or bytes to write to the file`
 		returns `the content that was written`
@@ -606,10 +512,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Writes bytes to a file."
 	{
 		argsn 2
-		argtypes {
-			1 [ Native ]
-			2 [ String ]
-		}
 		arg `bytes: Go-bytes native value to write`
 		arg `path: string path to the file to write`
 		returns `integer 1 if successful`
@@ -625,10 +527,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Appends two byte arrays into one."
 	{
 		argsn 2
-		argtypes {
-			1 [ Bytes ]
-			2 [ Bytes ]
-		}
 		arg `bytes1: first Go-bytes native value`
 		arg `bytes2: second Go-bytes native value`
 		returns `combined bytes as a native bytes object`
@@ -644,9 +542,6 @@ section "File Operations " "File system operations and file manipulation" {
 	"Writes a string to a writer."
 	{
 		argsn 2
-		argtypes {
-			1 [ Native String ]
-		}
 		arg `writer: native writer object`
 		arg `content: string to write`
 		returns `the writer object if successful`
@@ -665,9 +560,6 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	"Opens a HTTPS GET request and returns a reader for the response body."
 	{
 		argsn 1
-		argtypes {
-			1 [ Native ]
-		}
 		arg `url: uri representing the HTTPS URL to request`
 		returns `native reader object for the response body`
 	}
@@ -682,9 +574,6 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	"Makes a HTTPS GET request and returns the response body as a string."
 	{
 		argsn 1
-		argtypes {
-			1 [ Uri ]
-		}
 		arg `url: uri representing the HTTPS URL to request`
 		returns `string containing the response body`
 	}
@@ -699,11 +588,6 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	"Makes a HTTPS POST request and returns the response body as a string."
 	{
 		argsn 3
-		argtypes {
-			1 [ Uri ]
-			2 [ String ]
-			3 [ Word String ]
-		}
 		arg `url: uri representing the HTTPS URL to request`
 		arg `data: string containing the request body`
 		arg `content-type: word specifying the content type (e.g., 'json', 'text')`
@@ -720,9 +604,6 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	"Makes a HTTP GET request and returns the response body as a string."
 	{
 		argsn 1
-		argtypes {
-			1 [ Uri ]
-		}
 		arg `url: uri representing the HTTP URL to request`
 		returns `string containing the response body`
 	}
@@ -737,11 +618,6 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	"Makes a HTTP POST request and returns the response body as a string."
 	{
 		argsn 3
-		argtypes {
-			1 [ Uri ]
-			2 [ String ]
-			3 [ Word ]
-		}
 		arg `url: uri representing the HTTP URL to request`
 		arg `data: string containing the request body`
 		arg `content-type: word specifying the content type (e.g., 'json', 'text')`
@@ -758,11 +634,6 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	"Creates a new HTTPS request object."
 	{
 		argsn 3
-		argtypes {
-			1 [ Uri ]
-			2 [ Word ]
-			3 [ String ]
-		}
 		arg `url: uri representing the HTTPS URL to request`
 		arg `method: word specifying the HTTP method (e.g., 'GET', 'POST', 'PUT', 'DELETE')`
 		arg `data: string containing the request body`
@@ -779,11 +650,6 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	"Sets a header on a HTTPS request."
 	{
 		argsn 3
-		argtypes {
-			1 [ Native ]
-			2 [ Word ]
-			3 [ String ]
-		}
 		arg `request: native https-request object`
 		arg `name: word representing the header name`
 		arg `value: string containing the header value`
@@ -800,11 +666,6 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	"Sets Basic Authentication on a HTTPS request."
 	{
 		argsn 3
-		argtypes {
-			1 [ Native ]
-			2 [ String ]
-			3 [ String ]
-		}
 		arg `request: native https-request object`
 		arg `username: string containing the username`
 		arg `password: string containing the password`
@@ -821,9 +682,6 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	"Executes a HTTPS request and returns the response object. Always returns the response regardless of status code (200, 404, 500, etc.) - use Status? to check the code."
 	{
 		argsn 1
-		argtypes {
-			1 [ Native ]
-		}
 		arg `request: native https-request object`
 		returns `native https-response object (always returns response regardless of status code)`
 	}
@@ -838,9 +696,6 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	"Gets a reader for the HTTPS response body that can be used with io.Copy."
 	{
 		argsn 1
-		argtypes {
-			1 [ Native ]
-		}
 		arg `response: native https-response object`
 		returns `native reader object for the response body`
 	}
@@ -855,9 +710,6 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	"Reads the body of a HTTPS response as a string."
 	{
 		argsn 1
-		argtypes {
-			1 [ Native ]
-		}
 		arg `response: native https-response object`
 		returns `string containing the response body`
 	}
@@ -872,9 +724,6 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	"Closes the HTTPS response body to free network resources."
 	{
 		argsn 1
-		argtypes {
-			1 [ Native ]
-		}
 		arg `response: native https-response object`
 		returns `empty string if close succeeds`
 	}
@@ -892,10 +741,6 @@ section "Email Operations " "Email sending and SMTP communication" {
 	"Sends an email to the specified address."
 	{
 		argsn 2
-		argtypes {
-			1 [ Email ]
-			2 [ String ]
-		}
 		arg `to: email address to send to`
 		arg `message: string containing the email message`
 		returns `integer 1 if successful`
@@ -914,9 +759,6 @@ section "FTP Operations " "File Transfer Protocol operations and connections" {
 	"Opens a connection to an FTP server."
 	{
 		argsn 1
-		argtypes {
-			1 [ Uri String ]
-		}
 		arg `server: uri representing the FTP server to connect to`
 		returns `native ftp-connection object`
 	}
@@ -931,9 +773,6 @@ section "FTP Operations " "File Transfer Protocol operations and connections" {
 	"Logs in to an FTP server connection."
 	{
 		argsn 3
-		argtypes {
-			1 [ Uri String ]
-		}
 		arg `connection: native ftp-connection object`
 		arg `username: string containing the username`
 		arg `password: string containing the password`
@@ -950,9 +789,6 @@ section "FTP Operations " "File Transfer Protocol operations and connections" {
 	"Retrieves a file from an FTP server."
 	{
 		argsn 2
-		argtypes {
-			1 [ Uri String ]
-		}
 		arg `connection: native ftp-connection object`
 		arg `path: string containing the path of the file to retrieve`
 		returns `native reader object for the retrieved file`
@@ -968,9 +804,6 @@ section "FTP Operations " "File Transfer Protocol operations and connections" {
 	"Closes an FTP server connection."
 	{
 		argsn 1
-		argtypes {
-			1 [ Native ]
-		}
 		arg `connection: native ftp-connection object`
 		returns `integer 1 for successerror if close fails`
 	}
@@ -988,11 +821,6 @@ section "File Monitoring " "File watching and tailing operations" {
 	"Tails a file, following it for new content. Used for monitoring log files."
 	{
 		argsn 3
-		argtypes {
-			1 [ Uri String ]
-			2 [ Boolean ]
-			3 [ Boolean ]
-		}
 		arg `path: uri or string representing the file to tail`
 		arg `follow: boolean indicating whether to follow the file for new content`
 		arg `reopen: boolean indicating whether to reopen the file if it's rotated`
@@ -1009,9 +837,6 @@ section "File Monitoring " "File watching and tailing operations" {
 	"Reads the next line from a tailed file. Blocks until a line is available."
 	{
 		argsn 1
-		argtypes {
-			1 [ Native ]
-		}
 		arg `tail: native tail-file object`
 		returns `string containing the next line from the file, or nil if no more lines`
 	}
@@ -1026,9 +851,6 @@ section "File Monitoring " "File watching and tailing operations" {
 	"Closes a tailed file, stopping the monitoring."
 	{
 		argsn 1
-		argtypes {
-			1 [ Native ]
-		}
 		arg `tail: native tail-file object`
 		returns `empty string if successful`
 	}
@@ -1046,9 +868,6 @@ section "Unix Domain Socket Operations " "Unix domain socket operations for IPC"
 	"Opens a connection to a Unix domain socket."
 	{
 		argsn 1
-		argtypes {
-			1 [ Uri ]
-		}
 		arg `path: uri representing the Unix socket path to connect to`
 		returns `native unix-connection object`
 	}
@@ -1063,10 +882,6 @@ section "Unix Domain Socket Operations " "Unix domain socket operations for IPC"
 	"Writes data to a Unix domain socket connection."
 	{
 		argsn 2
-		argtypes {
-			1 [ Native ]
-			2 [ String ]
-		}
 		arg `connection: native unix-connection object`
 		arg `data: string to write to the socket`
 		returns `the connection object if successful (allows chaining)`
@@ -1082,9 +897,6 @@ section "Unix Domain Socket Operations " "Unix domain socket operations for IPC"
 	"Reads data from a Unix domain socket connection."
 	{
 		argsn 1
-		argtypes {
-			1 [ Native ]
-		}
 		arg `connection: native unix-connection object`
 		returns `string containing data read from the socket`
 	}
@@ -1099,9 +911,6 @@ section "Unix Domain Socket Operations " "Unix domain socket operations for IPC"
 	"Closes a Unix domain socket connection."
 	{
 		argsn 1
-		argtypes {
-			1 [ Native ]
-		}
 		arg `connection: native unix-connection object`
 		returns `empty string if successful`
 	}
@@ -1119,9 +928,6 @@ section "Command Operations " "Running other programs" {
 	"Create a command."
 	{
 		argsn 1
-		argtypes {
-			1 [ Block List ]
-		}
 		arg `command: block or list containing a command arguments`
 		returns `native command object`
 	}
@@ -1280,9 +1086,6 @@ section "SQLite " "SQLite database functions" {
 	"Opens a connection to a SQLite database file."
 	{
 		argsn 1
-		argtypes {
-			1 [ Uri ]
-		}
 		arg `uri: path to SQLite database file`
 		returns `native SQLite database connection`
 	}
@@ -1305,9 +1108,6 @@ db .Exec { INSERT INTO users ( name , age ) VALUES ( ?name , 42 ) }
 	"Converts a table to HTML format."
 	{
 		argsn 1
-		argtypes {
-			1 [ Table ]
-		}
 		arg `table: table to convert to HTML`
 		returns `string containing HTML representation of the table`
 	}
@@ -1323,10 +1123,6 @@ db .Exec { INSERT INTO users ( name , age ) VALUES ( ?name , 42 ) }
 	"Executes a SQL statement that doesn't return rows."
 	{
 		argsn 2
-		argtypes {
-			1 [ Native ]
-			2 [ Block String ]
-		}
 		arg `db: SQLite database connection`
 		arg `sql: SQL statement as string or block`
 		returns `database connection`
@@ -1343,10 +1139,6 @@ db .Exec { INSERT INTO users ( name , age ) VALUES ( ?name , 42 ) }
 	"Executes a SQL query and returns results as a table."
 	{
 		argsn 2
-		argtypes {
-			1 [ Native ]
-			2 [ Block String ]
-		}
 		arg `db: SQLite database connection`
 		arg `sql: SQL query as string or block`
 		returns `table containing query results`
@@ -1363,10 +1155,6 @@ db .Exec { INSERT INTO users ( name , age ) VALUES ( ?name , 42 ) }
 	"Generates and returns the SQL string without executing it."
 	{
 		argsn 2
-		argtypes {
-			1 [ Native ]
-			2 [ Block String ]
-		}
 		arg `db: SQLite database connection`
 		arg `sql: SQL query as string or block`
 		returns `string containing the generated SQL with parameters`
@@ -1383,9 +1171,6 @@ db .Exec { INSERT INTO users ( name , age ) VALUES ( ?name , 42 ) }
 	"Closes the SQLite database connection."
 	{
 		argsn 1
-		argtypes {
-			1 [ Native ]
-		}
 		arg `db: SQLite database connection`
 		returns `integer 1 on successful close, error otherwise`
 	}
@@ -1404,9 +1189,6 @@ section "PostgreSQL " "" {
 	"Opens a connection to a PostgreSQL database."
 	{
 		argsn 1
-		argtypes {
-			1 [ Uri ]
-		}
 		arg `uri: PostgreSQL connection string URI (format: postgres://username:password@host:port/database)`
 		returns `native PostgreSQL database connection (type: "Rye-psql")error if connection fails`
 	}
@@ -1422,10 +1204,6 @@ section "PostgreSQL " "" {
 	"Executes a SQL statement that modifies data (INSERT, UPDATE, DELETE)."
 	{
 		argsn 2
-		argtypes {
-			1 [ Native ]
-			2 [ Block String ]
-		}
 		arg `db: PostgreSQL database connection (type: "Rye-psql")`
 		arg `sql: SQL statement as string or block (for data modification: INSERT, UPDATE, DELETE)`
 		returns `integer number of rows affectederror if execution fails`
@@ -1444,10 +1222,6 @@ section "PostgreSQL " "" {
 	"Executes a SQL query and returns results as a table."
 	{
 		argsn 2
-		argtypes {
-			1 [ Native ]
-			2 [ Block String ]
-		}
 		arg `db: PostgreSQL database connection (type: "Rye-psql")`
 		arg `sql: SQL query as string or block (SELECT statements)`
 		returns `table containing query results (SQL NULL values converted to Void{})error if query fails or returns no data`
@@ -1465,10 +1239,6 @@ db .Query "SELECT * FROM test"
 	"Generates and returns the SQL string without executing it."
 	{
 		argsn 2
-		argtypes {
-			1 [ Native ]
-			2 [ Block String ]
-		}
 		arg `db: PostgreSQL database connection (type: "Rye-psql")`
 		arg `sql: SQL query as string or block (for debugging/inspection)`
 		returns `string containing the generated SQL with parameters (includes parameter comments if present)error if SQL is empty`
@@ -1487,9 +1257,6 @@ Open postgres://user:pass@localhost:5432/dbname
 	"Closes the PostgreSQL database connection."
 	{
 		argsn 1
-		argtypes {
-			1 [ Native ]
-		}
 		arg `db: PostgreSQL database connection`
 		returns `integer 1 on successful close, error otherwise`
 	}
@@ -1507,9 +1274,6 @@ section "MySQL " "MySQL database functions" {
 	"Opens a connection to a MySQL database."
 	{
 		argsn 1
-		argtypes {
-			1 [ Uri ]
-		}
 		arg `uri: MySQL connection string URI`
 		returns `native MySQL database connection`
 	}
@@ -1525,10 +1289,6 @@ section "MySQL " "MySQL database functions" {
 	"Opens a connection to a MySQL database with separate password parameter."
 	{
 		argsn 2
-		argtypes {
-			1 [ Uri ]
-			2 [ String ]
-		}
 		arg `uri: MySQL connection string URI without password`
 		arg `password: Password for the database connection`
 		returns `native MySQL database connection`
@@ -1545,10 +1305,6 @@ section "MySQL " "MySQL database functions" {
 	"Executes a SQL statement that modifies data (INSERT, UPDATE, DELETE)."
 	{
 		argsn 2
-		argtypes {
-			1 [ Native ]
-			2 [ Block String ]
-		}
 		arg `db: MySQL database connection`
 		arg `sql: SQL statement as string or block`
 		returns `integer 1 if rows were affected, error otherwise`
@@ -1566,10 +1322,6 @@ section "MySQL " "MySQL database functions" {
 	"Executes a SQL query and returns results as a table."
 	{
 		argsn 2
-		argtypes {
-			1 [ Native ]
-			2 [ Block String ]
-		}
 		arg `db: MySQL database connection`
 		arg `sql: SQL query as string or block`
 		returns `table containing query results`
@@ -1588,9 +1340,6 @@ db .Query { SELECT * FROM test where id = ?id }
 	"Closes the MySQL database connection."
 	{
 		argsn 1
-		argtypes {
-			1 [ Native ]
-		}
 		arg `db: MySQL database connection`
 		returns `integer 1 on successful close, error otherwise`
 	}

@@ -19,6 +19,11 @@ func init() {
 // NoInspectMode controls whether to exit immediately on error without showing debugging options
 var NoInspectMode bool
 
+// OfferDebuggingOptionsHook is a function variable that can be set by the console package
+// to provide interactive debugging options. It defaults to a no-op, which is the correct
+// behaviour for embedded/WASM/b_norepl builds that never import the console package.
+var OfferDebuggingOptionsHook func(es *env.ProgramState, genv *env.Idxs, tag string) = func(es *env.ProgramState, genv *env.Idxs, tag string) {}
+
 // EvalBlock is the main entry point for evaluating a block of code.
 // Called from: Throughout the codebase - main evaluation loops, builtins, function calls
 // Purpose: Dispatches to the appropriate dialect-specific evaluator (Rye2, Eyr, Rye0, Rye00)
@@ -47,7 +52,7 @@ func EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) {
 	case env.Rye2Dialect:
 		EvalBlockInj_Rye2(ps, inj, injnow)
 	case env.EyrDialect:
-		Eyr_EvalBlockInside(ps, inj, injnow) // TODO ps.Stack is already in ps ... refactor
+		BatteryEyrEvalBlockInsideHook(ps, inj, injnow) // TODO ps.Stack is already in ps ... refactor
 	case env.Rye0Dialect:
 		Rye0_EvalBlockInj(ps, inj, injnow) // TODO ps.Stack is already in ps ... refactor
 	case env.Rye00Dialect:
@@ -2474,9 +2479,9 @@ func MaybeDisplayFailureOrError2(es *env.ProgramState, genv *env.Idxs, tag strin
 
 		es.SkipFlag = true
 
-		// Offer debugging options to the user
+		// Offer debugging options to the user (via hook - set by console package to avoid circular import)
 		if fileMode {
-			OfferDebuggingOptions(es, genv, tag)
+			OfferDebuggingOptionsHook(es, genv, tag)
 		}
 
 		// es.SkipFlag = false

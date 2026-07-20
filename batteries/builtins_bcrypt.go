@@ -1,0 +1,110 @@
+//go:build !no_bcrypt
+// +build !no_bcrypt
+
+package batteries
+
+import (
+	"crypto/rand"
+	"encoding/hex"
+
+	"github.com/refaktor/rye/env"
+	"github.com/refaktor/rye/evaldo"
+
+	"golang.org/x/crypto/bcrypt"
+)
+
+func __bcrypt_hash(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+	switch str := arg0.(type) {
+	case env.String:
+		bytes, err := bcrypt.GenerateFromPassword([]byte(str.Value), bcrypt.DefaultCost)
+		if err != nil {
+			ps.FailureFlag = true
+			return evaldo.MakeBuiltinError(ps, "Problem in hashing.", "__bcrypt_hash")
+		}
+		return env.NewString(string(bytes))
+	default:
+		ps.FailureFlag = true
+		return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType}, "__bcrypt_hash")
+	}
+}
+
+func __bcrypt_check(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+	switch password := arg1.(type) {
+	case env.String:
+		switch hash := arg0.(type) {
+		case env.String:
+			err := bcrypt.CompareHashAndPassword([]byte(hash.Value), []byte(password.Value))
+			if err == nil {
+				return env.NewInteger(1)
+			} else {
+				return env.NewInteger(0)
+			}
+		default:
+			ps.FailureFlag = true
+			return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType}, "__bcrypt_check")
+		}
+	default:
+		ps.FailureFlag = true
+		return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "__bcrypt_check")
+	}
+}
+
+func __generate_token(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+	switch n := arg0.(type) {
+	case env.Integer:
+		b := make([]byte, n.Value)
+		if _, err := rand.Read(b); err != nil {
+			return evaldo.MakeBuiltinError(ps, "Problem reading random stream.", "__generate_token")
+		}
+		return env.NewString(hex.EncodeToString(b))
+	default:
+		ps.FailureFlag = true
+		return evaldo.MakeArgError(ps, 1, []env.Type{env.IntegerType}, "__generate_token")
+	}
+}
+
+var Builtins_bcrypt = map[string]*env.Builtin{
+
+	//
+	// ##### Bcrypt ##### "Functions for bcrypt password hashing and token generation"
+	//
+	// Example: bcrypt-hash "mypassword"
+	// Args:
+	// * password: String to hash
+	// Returns:
+	// * string containing the bcrypt hash of the password
+	"bcrypt-hash": {
+		Argsn: 1,
+		Doc:   "Generates a bcrypt hash from a password string.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __bcrypt_hash(ps, arg0, arg1, arg2, arg3, arg4)
+		},
+	},
+
+	// Example: bcrypt-check hashed-password "mypassword"
+	// Args:
+	// * hash: String containing the bcrypt hash
+	// * password: Plain text password to compare
+	// Returns:
+	// * integer 1 if the password matches the hash, 0 otherwise
+	"bcrypt-check": {
+		Argsn: 2,
+		Doc:   "Compares a bcrypt hash with a plain text password.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __bcrypt_check(ps, arg0, arg1, arg2, arg3, arg4)
+		},
+	},
+
+	// Example: generate-token 32
+	// Args:
+	// * length: Integer number of random bytes to generate
+	// Returns:
+	// * string containing the hex-encoded random token
+	"generate-token": {
+		Argsn: 1,
+		Doc:   "Generates a cryptographically secure random token of the specified length in bytes.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __generate_token(ps, arg0, arg1, arg2, arg3, arg4)
+		},
+	},
+}

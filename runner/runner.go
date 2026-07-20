@@ -23,6 +23,8 @@ import (
 	"golang.org/x/term"
 
 	"github.com/refaktor/rye/contrib"
+	"github.com/refaktor/rye/batteries"
+	ryeconsole "github.com/refaktor/rye/console"
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
 	"github.com/refaktor/rye/loader"
@@ -489,6 +491,7 @@ func main_ryk() {
 	//block, genv := loader.LoadString("{ }", false)
 	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
+	batteries.RegisterBatteries(es)
 	contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
 	evaldo.Eval(es)
 
@@ -670,6 +673,7 @@ func main_rye_http_repl(port string, file string, code string, lang string, regf
 		ps.WorkingPath = workingPath
 
 		evaldo.RegisterBuiltins(ps)
+		batteries.RegisterBatteries(ps)
 		evaldo.RegisterVarBuiltins(ps)
 		contrib.RegisterBuiltins(ps, &evaldo.BuiltinNames)
 		if err := regfn(ps); err != nil {
@@ -705,6 +709,7 @@ func main_rye_http_repl(port string, file string, code string, lang string, regf
 		block, genv := loader.LoadStringNoPEG(code, false)
 		es = env.NewProgramStateOLD(block.(env.Block).Series, genv)
 		evaldo.RegisterBuiltins(es)
+		batteries.RegisterBatteries(es)
 		evaldo.RegisterVarBuiltins(es)
 		contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
 		if err := regfn(es); err != nil {
@@ -1035,6 +1040,7 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 	ps.WorkingPath = workingPath
 
 	evaldo.RegisterBuiltins(ps)
+	batteries.RegisterBatteries(ps)
 	evaldo.RegisterVarBuiltins(ps)
 	contrib.RegisterBuiltins(ps, &evaldo.BuiltinNames)
 	if err := regfn(ps); err != nil {
@@ -1106,7 +1112,7 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 		//		evaldo.MaybeDisplayFailureOrError(ps, ps.Idx, "main rye file #2")
 
 		if interactive {
-			evaldo.DoRyeRepl(ps, "rye", evaldo.ShowResults, *localhist, *histfile)
+			ryeconsole.DoRyeRepl(ps, "rye", evaldo.ShowResults, *localhist, *histfile)
 		} else {
 			if file == "" && evaldo.ShowResults { // TODO -- move this to some instance ... to ProgramState? or is more of a ReplState?
 				fmt.Println(ps.Res.Print(*ps.Idx))
@@ -1135,6 +1141,7 @@ func main_cgi_file(file string, sig bool) {
 		block, genv := loader.LoadStringNoPEG(input, false)
 		es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 		evaldo.RegisterBuiltins(es)
+		batteries.RegisterBatteries(es)
 		contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
 
 		evaldo.Eval(es)
@@ -1155,6 +1162,7 @@ func main_cgi_file(file string, sig bool) {
 		case env.Block:
 			es = env.AddToProgramStateNEWWithLocation(es, block.(env.Block), genv)
 			evaldo.RegisterBuiltins(es)
+			batteries.RegisterBatteries(es)
 			contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
 
 			evaldo.Eval(es)
@@ -1219,6 +1227,7 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 	block, genv := loader.LoadStringNoPEG("", false)
 	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
+	batteries.RegisterBatteries(es)
 	evaldo.RegisterVarBuiltins(es)
 	contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
 	if err := regfn(es); err != nil {
@@ -1284,6 +1293,7 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 		// Create a second program state for the right panel
 		rightEs := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 		evaldo.RegisterBuiltins(rightEs)
+		batteries.RegisterBatteries(rightEs)
 		contrib.RegisterBuiltins(rightEs, &evaldo.BuiltinNames)
 		if err := regfn(rightEs); err != nil {
 			fmt.Println(err.Error())
@@ -1301,9 +1311,9 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 		}
 
 		// Start dual REPL
-		evaldo.DoRyeDualRepl(es, rightEs, lang, evaldo.ShowResults)
+		ryeconsole.DoRyeDualRepl(es, rightEs, lang, evaldo.ShowResults)
 	} else {
-		evaldo.DoRyeRepl(es, lang, evaldo.ShowResults, *localhist, *histfile)
+		ryeconsole.DoRyeRepl(es, lang, evaldo.ShowResults, *localhist, *histfile)
 	}
 }
 
@@ -1501,6 +1511,7 @@ func processTemplate(file string, regfn func(*env.ProgramState) error) {
 
 	// Register builtins
 	evaldo.RegisterBuiltins(ps)
+	batteries.RegisterBatteries(ps)
 	evaldo.RegisterVarBuiltins(ps)
 	contrib.RegisterBuiltins(ps, &evaldo.BuiltinNames)
 	if err := regfn(ps); err != nil {

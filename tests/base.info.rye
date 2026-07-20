@@ -180,7 +180,7 @@ section "Boolean " "Functions that work with true and false values." {
 	{
 	}
 
-	group "any\\with" 
+	group "_any\\with" 
 	"Applies each expression in the block to the provided value until a truthy result is found and returns it."
 	{
 		argsn 2
@@ -193,12 +193,12 @@ section "Boolean " "Functions that work with true and false values." {
 	}
 
 	{
-		equal { any\with 10 { + 10 , * 10 } } 20
-		equal { any\with 0 { + 10 , * 10 } } 10
-		equal { any\with 5 { - 10 , + 10 } } -5
-		equal { any\with false { .not , .string } } true
-		; equal { any\with true { .not , .string } } "true"
-		error { any\with 5 "not-a-block" }
+		equal { _any\with 10 { + 10 , * 10 } } 20
+		equal { _any\with 0 { + 10 , * 10 } } 10
+		equal { _any\with 5 { - 10 , + 10 } } -5
+		equal { _any\with false { .not , .string } } true
+		; equal { _any\with true { .not , .string } } "true"
+		error { _any\with 5 "not-a-block" }
 	}
 
 	{
@@ -1519,25 +1519,24 @@ section "Strings " "" {
 
 section "URL Encoding " "" {
 	group "url-encode" 
-	"Encodes a block of name: value pairs as a URL query string (e.g. ?name=John+Doe&city=New+York), percent-encoding all special characters. Keys can be set-words (name:) or strings (\"name\"), values can be strings, integers, decimals, or words (looked up in context)."
+	"Encodes a block of name: value pairs as a URL query string (e.g. name=John+Doe&city=New+York), percent-encoding all special characters. Keys can be set-words (name:) or strings (\"name\"), values can be strings, integers, decimals, or words (looked up in context)."
 	{
 		argsn 1
 		argtypes {
 			1 [ Block ]
 		}
 		arg `params: Block of name: value pairs where names are set-words or strings and values are strings, integers, decimals, or words (evaluated from context)`
-		returns `URL query string starting with '?' and pairs joined with '&', all special characters percent-encoded`
+		returns `URL query string with pairs joined with '&', all special characters percent-encoded (no leading '?')`
 	}
 
 	{
-		equal { url-encode { name: "John Doe" city: "New York" } } "?city=New+York&name=John+Doe"
+		equal { url-encode { name: "John Doe" city: "New York" } |contains "city=New+York" } 1
 		equal { url-encode { } } ""
-		equal { url-encode { q: "hello world" } } "?q=hello+world"
+		equal { url-encode { q: "hello world" } } "q=hello+world"
 		equal { url-encode { a: "foo" b: "bar" } |contains "a=foo" } 1
 		equal { url-encode { a: "foo" b: "bar" } |contains "b=bar" } 1
-		equal { url-encode { a: "foo" b: "bar" } |first } "?"
 		equal { url-encode { "my-key" "val" } |contains "my-key=val" } 1
-		equal { x: "hello" url-encode { q: x } } "?q=hello"
+		equal { x: "hello" url-encode { q: x } } "q=hello"
 		error { url-encode "not-a-block" }
 	}
 
@@ -2409,7 +2408,7 @@ section "Collections " "" {
 	}
 
 	group "tail" 
-	"Creates a new collection with the last n items from the input collection."
+	"Creates a new collection with the last n items from the input collection, or all but the first |n| items if n is negative."
 	{
 		argsn 2
 		argtypes {
@@ -2417,8 +2416,8 @@ section "Collections " "" {
 			2 [ Integer ]
 		}
 		arg `collection: Block, list, string, table, vector or matrix to get the last items from`
-		arg `n: Number of items to retrieve from the end`
-		returns `a new collection containing the last n items (for matrix: last n rows)`
+		arg `n: Number of items to retrieve from the end; if negative, all but the first |n| items`
+		returns `a new collection containing the last n items (for matrix: last n rows), or all except the first |n| if n is negative`
 	}
 
 	{
@@ -2428,6 +2427,11 @@ section "Collections " "" {
 		equal { tail { 1 2 } 5 } { 1 2 }
 		equal { tail vector { 1.0 2.0 3.0 4.0 } 2 |first } 3.0
 		equal { tail matrix { 3 2 } { 1.0 2.0 3.0 4.0 5.0 6.0 } 2 |rows? } 2
+		equal { tail { 1 2 3 4 5 } -1 } { 2 3 4 5 }
+		equal { tail { 1 2 3 4 5 } -2 } { 3 4 5 }
+		equal { tail "abcde" -1 } "bcde"
+		equal { tail "abcde" -2 } "cde"
+		equal { tail list { 1 2 3 4 5 } -1 } list { 2 3 4 5 }
 	}
 
 	{
@@ -2859,7 +2863,7 @@ section "Collections " "" {
 	{
 		argsn 1
 		argtypes {
-			2 [ String Dict List Block Table PersistentTable Vector ]
+			2 [ String Dict List Block Table Vector ]
 		}
 		arg `collection: String, block, dict, list, table, context or vector to check`
 		returns `boolean true if the collection is empty, false otherwise`
@@ -2881,7 +2885,7 @@ section "Collections " "" {
 	{
 		argsn 1
 		argtypes {
-			2 [ String Dict List Block Table PersistentTable Vector Bytes ]
+			2 [ String Dict List Block Table Vector Bytes ]
 		}
 		arg `collection: String, block, dict, list, table, context, vector or bytes to measure`
 		returns `integer count of elements in the collection`
@@ -2905,7 +2909,7 @@ section "Collections " "" {
 	{
 		argsn 1
 		argtypes {
-			2 [ String Dict List Block Table PersistentTable Vector ]
+			2 [ String Dict List Block Table Vector ]
 		}
 		arg `collection: String, block, dict, list, table, context or vector to measure`
 		returns `integer index of the last element in the collection`
@@ -3442,9 +3446,6 @@ section "Vector " "Vector operations" {
 	"Creates a vector from a block of numbers."
 	{
 		argsn 1
-		argtypes {
-			1 [ Block ]
-		}
 		arg `block: block of numbers to convert to a vector`
 		returns `vector object`
 	}
@@ -3461,9 +3462,6 @@ section "Vector " "Vector operations" {
 	"Calculates the L2 norm (Euclidean length) of a vector."
 	{
 		argsn 1
-		argtypes {
-			1 [ Vector ]
-		}
 		arg `vector: vector object to normalize`
 		returns `decimal representing the L2 norm (Euclidean length) of the vector`
 	}
@@ -3479,9 +3477,6 @@ section "Vector " "Vector operations" {
 	"Calculates the standard deviation of a vector's elements."
 	{
 		argsn 1
-		argtypes {
-			1 [ Vector ]
-		}
 		arg `vector: vector object`
 		returns `decimal representing the standard deviation of the vector elements`
 	}
@@ -3497,10 +3492,6 @@ section "Vector " "Vector operations" {
 	"Calculates the cosine similarity between two vectors."
 	{
 		argsn 2
-		argtypes {
-			1 [ Vector ]
-			2 [ Vector ]
-		}
 		arg `vector1: first vector object`
 		arg `vector2: second vector object`
 		returns `decimal representing the cosine similarity between the two vectors`
@@ -3518,10 +3509,6 @@ section "Vector " "Vector operations" {
 	"Calculates the correlation coefficient between two vectors."
 	{
 		argsn 2
-		argtypes {
-			1 [ Vector ]
-			2 [ Vector ]
-		}
 		arg `vector1: first vector object`
 		arg `vector2: second vector object`
 		returns `decimal representing the correlation coefficient between the two vectors`
@@ -3539,10 +3526,6 @@ section "Vector " "Vector operations" {
 	"Calculates the dot product between two vectors."
 	{
 		argsn 2
-		argtypes {
-			1 [ Vector ]
-			2 [ Vector ]
-		}
 		arg `vector1: first vector object`
 		arg `vector2: second vector object`
 		returns `decimal representing the dot product of the two vectors`
@@ -3559,10 +3542,6 @@ section "Vector " "Vector operations" {
 	"Calculates the Euclidean distance between two vectors. Useful for K-Means clustering."
 	{
 		argsn 2
-		argtypes {
-			1 [ Vector ]
-			2 [ Vector ]
-		}
 		arg `vector1: first vector object`
 		arg `vector2: second vector object`
 		returns `decimal representing the Euclidean distance between the two vectors`
@@ -3580,9 +3559,6 @@ section "Vector " "Vector operations" {
 	"Calculates the element-wise mean of multiple vectors. Useful for creating 'Master Anchors'."
 	{
 		argsn 1
-		argtypes {
-			1 [ Block ]
-		}
 		arg `block: block of vectors to average`
 		returns `new vector representing the element-wise mean of all input vectors`
 	}
@@ -3598,9 +3574,6 @@ section "Vector " "Vector operations" {
 	"Returns a new normalized vector (length = 1). Essential for consistent dot products and overlays."
 	{
 		argsn 1
-		argtypes {
-			1 [ Vector ]
-		}
 		arg `vector: vector object to normalize`
 		returns `new vector with length 1 (unit vector)`
 	}
@@ -3616,10 +3589,6 @@ section "Vector " "Vector operations" {
 	"Projects vector onto another vector. Answers: 'How much of this vector is in the direction of another?'"
 	{
 		argsn 2
-		argtypes {
-			1 [ Vector ]
-			2 [ Vector ]
-		}
 		arg `vector1: vector to project`
 		arg `vector2: vector to project onto`
 		returns `new vector representing the projection of vector1 onto vector2`
@@ -3636,10 +3605,6 @@ section "Vector " "Vector operations" {
 	"Removes projection from vector. Use this to 'subtract' a concept direction from a vector."
 	{
 		argsn 2
-		argtypes {
-			1 [ Vector ]
-			2 [ Vector ]
-		}
 		arg `vector1: vector to reject from`
 		arg `vector2: vector representing the direction to remove`
 		returns `new vector with the projection onto vector2 removed`
@@ -3659,10 +3624,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Creates a new matrix with the given dimensions, initialized to zeros."
 	{
 		argsn 2
-		argtypes {
-			1 [ Integer ]
-			2 [ Integer ]
-		}
 		arg `rows: number of rows`
 		arg `cols: number of columns`
 		returns `a new zero-initialized matrix`
@@ -3681,10 +3642,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Creates a matrix from a shape block and a data block."
 	{
 		argsn 2
-		argtypes {
-			1 [ Block ]
-			2 [ Block ]
-		}
 		arg `shape: block with { rows cols }`
 		arg `data: block of decimal values in row-major order`
 		returns `a new matrix with the given data`
@@ -3701,10 +3658,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Creates a matrix with random normal values (mean 0, std 1)."
 	{
 		argsn 2
-		argtypes {
-			1 [ Integer ]
-			2 [ Integer ]
-		}
 		arg `rows: number of rows`
 		arg `cols: number of columns`
 		returns `a new matrix with random normal values (mean 0, std 1)`
@@ -3722,10 +3675,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Creates a matrix filled with ones."
 	{
 		argsn 2
-		argtypes {
-			1 [ Integer ]
-			2 [ Integer ]
-		}
 		arg `rows: number of rows`
 		arg `cols: number of columns`
 		returns `a new matrix filled with ones`
@@ -3743,9 +3692,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Creates an identity matrix of size n×n."
 	{
 		argsn 1
-		argtypes {
-			1 [ Integer ]
-		}
 		arg `n: size of the identity matrix`
 		returns `an n×n identity matrix`
 	}
@@ -3763,9 +3709,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Returns the shape of a matrix as { rows cols }."
 	{
 		argsn 1
-		argtypes {
-			1 [ Matrix ]
-		}
 		arg `mat: matrix`
 		returns `block with { rows cols }`
 	}
@@ -3781,9 +3724,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Returns the number of rows in a matrix."
 	{
 		argsn 1
-		argtypes {
-			1 [ Matrix ]
-		}
 		arg `mat: matrix`
 		returns `number of rows`
 	}
@@ -3799,9 +3739,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Returns the number of columns in a matrix."
 	{
 		argsn 1
-		argtypes {
-			1 [ Matrix ]
-		}
 		arg `mat: matrix`
 		returns `number of columns`
 	}
@@ -3817,11 +3754,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Gets the element at the specified row and column (0-indexed)."
 	{
 		argsn 3
-		argtypes {
-			1 [ Matrix ]
-			2 [ Integer ]
-			3 [ Integer ]
-		}
 		arg `mat: matrix`
 		arg `row: row index (0-based)`
 		arg `col: column index (0-based)`
@@ -3840,12 +3772,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Sets the element at the specified row and column (0-indexed). Modifies matrix in place."
 	{
 		argsn 4
-		argtypes {
-			1 [ Matrix ]
-			2 [ Integer ]
-			3 [ Integer ]
-			4 [ Decimal Integer ]
-		}
 		arg `mat: matrix (modified in place)`
 		arg `row: row index (0-based)`
 		arg `col: column index (0-based)`
@@ -3864,10 +3790,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Returns a row of the matrix as a vector."
 	{
 		argsn 2
-		argtypes {
-			1 [ Matrix ]
-			2 [ Integer ]
-		}
 		arg `mat: matrix`
 		arg `row: row index (0-based)`
 		returns `the row as a vector`
@@ -3884,10 +3806,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Returns a column of the matrix as a vector."
 	{
 		argsn 2
-		argtypes {
-			1 [ Matrix ]
-			2 [ Integer ]
-		}
 		arg `mat: matrix`
 		arg `col: column index (0-based)`
 		returns `the column as a vector`
@@ -3904,9 +3822,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Returns the transpose of a matrix."
 	{
 		argsn 1
-		argtypes {
-			1 [ Matrix ]
-		}
 		arg `mat: matrix`
 		returns `transposed matrix`
 	}
@@ -3923,10 +3838,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Matrix multiplication. A (m×n) × B (n×p) = C (m×p)."
 	{
 		argsn 2
-		argtypes {
-			1 [ Matrix ]
-			2 [ Matrix Vector ]
-		}
 		arg `A: left matrix (m×n)`
 		arg `B: right matrix (n×p)`
 		returns `result matrix (m×p)`
@@ -3944,10 +3855,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Element-wise (Hadamard) multiplication of two matrices. In the future, could have a dedicated .* operator."
 	{
 		argsn 2
-		argtypes {
-			1 [ Matrix ]
-			2 [ Matrix ]
-		}
 		arg `A: first matrix`
 		arg `B: second matrix (same dimensions)`
 		returns `element-wise product`
@@ -3964,10 +3871,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Element-wise addition of two matrices. In the future, could have a dedicated .+ operator."
 	{
 		argsn 2
-		argtypes {
-			1 [ Matrix ]
-			2 [ Matrix ]
-		}
 		arg `A: first matrix`
 		arg `B: second matrix (same dimensions)`
 		returns `element-wise sum`
@@ -3984,10 +3887,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Element-wise subtraction of two matrices. In the future, could have a dedicated .- operator."
 	{
 		argsn 2
-		argtypes {
-			1 [ Matrix ]
-			2 [ Matrix ]
-		}
 		arg `A: first matrix`
 		arg `B: second matrix (same dimensions)`
 		returns `element-wise difference`
@@ -4004,10 +3903,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Multiplies all elements of a matrix by a scalar."
 	{
 		argsn 2
-		argtypes {
-			1 [ Matrix ]
-			2 [ Decimal Integer ]
-		}
 		arg `mat: matrix`
 		arg `scalar: number to multiply by`
 		returns `scaled matrix`
@@ -4024,9 +3919,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Returns a vector containing the sum of each row."
 	{
 		argsn 1
-		argtypes {
-			1 [ Matrix ]
-		}
 		arg `mat: matrix`
 		returns `vector with sum of each row`
 	}
@@ -4042,9 +3934,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Returns a vector containing the sum of each column."
 	{
 		argsn 1
-		argtypes {
-			1 [ Matrix ]
-		}
 		arg `mat: matrix`
 		returns `vector with sum of each column`
 	}
@@ -4060,9 +3949,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Returns a vector containing the maximum of each row."
 	{
 		argsn 1
-		argtypes {
-			1 [ Matrix ]
-		}
 		arg `mat: matrix`
 		returns `vector with max of each row`
 	}
@@ -4078,9 +3964,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Returns a vector containing the maximum of each column."
 	{
 		argsn 1
-		argtypes {
-			1 [ Matrix ]
-		}
 		arg `mat: matrix`
 		returns `vector with max of each column`
 	}
@@ -4096,9 +3979,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Converts a matrix to a block of blocks (each row is a block)."
 	{
 		argsn 1
-		argtypes {
-			1 [ Matrix ]
-		}
 		arg `mat: matrix`
 		returns `block of blocks (each inner block is a row)`
 	}
@@ -4114,9 +3994,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Converts a block of blocks (rows) to a matrix."
 	{
 		argsn 1
-		argtypes {
-			1 [ Block ]
-		}
 		arg `block: block of blocks (each inner block is a row)`
 		returns `matrix`
 	}
@@ -4132,10 +4009,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Converts a vector to a matrix. Use 'row for 1×n or 'col for n×1."
 	{
 		argsn 2
-		argtypes {
-			1 [ Vector ]
-			2 [ Word ]
-		}
 		arg `vec: vector`
 		arg `orientation: 'row or 'col`
 		returns `matrix (1×n or n×1)`
@@ -4153,11 +4026,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Extracts a sub-matrix. Row and column ranges are { start end } (inclusive, 0-indexed)."
 	{
 		argsn 3
-		argtypes {
-			1 [ Matrix ]
-			2 [ Block ]
-			3 [ Block ]
-		}
 		arg `mat: matrix`
 		arg `row-range: { start end } (inclusive)`
 		arg `col-range: { start end } (inclusive)`
@@ -4175,9 +4043,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Applies softmax to each column of the matrix. Returns a new matrix."
 	{
 		argsn 1
-		argtypes {
-			1 [ Matrix ]
-		}
 		arg `matrix: input matrix`
 		returns `a new matrix with softmax applied to each column`
 	}
@@ -4193,11 +4058,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Sets a column of the matrix from a vector or block. Mutates in place."
 	{
 		argsn 3
-		argtypes {
-			1 [ Matrix ]
-			2 [ Integer ]
-			3 [ Vector Block ]
-		}
 		arg `matrix: matrix to modify`
 		arg `col: column index (0-based)`
 		arg `values: vector or block of values`
@@ -4215,10 +4075,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Adds two vectors element-wise. Returns a new vector."
 	{
 		argsn 2
-		argtypes {
-			1 [ Vector ]
-			2 [ Vector ]
-		}
 		arg `v1: first vector`
 		arg `v2: second vector`
 		returns `a new vector with element-wise sum`
@@ -4235,10 +4091,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Subtracts two vectors element-wise (v1 - v2). Returns a new vector."
 	{
 		argsn 2
-		argtypes {
-			1 [ Vector ]
-			2 [ Vector ]
-		}
 		arg `v1: first vector`
 		arg `v2: second vector`
 		returns `a new vector with element-wise difference (v1 - v2)`
@@ -4255,9 +4107,6 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	"Converts a vector to a block of decimal values."
 	{
 		argsn 1
-		argtypes {
-			1 [ Vector ]
-		}
 		arg `v: vector to convert`
 		returns `a block containing the vector values as decimals`
 	}
@@ -5534,6 +5383,56 @@ section "Flow control " "Functions for conditional execution and branching logic
 	{
 	}
 
+	group "^when" 
+	"Conditionally executes an action block if a condition block evaluates to true, injecting the same value into both blocks and returning the value of the action block if the condition is truthy or the original value otherwise."
+	{
+		argsn 3
+		pure
+		argtypes {
+			2 [ Block ]
+			3 [ Block ]
+		}
+		arg `value: Value to inject into both condition and action blocks`
+		arg `condition: Block that evaluates to a truthy/falsy value with the injected value`
+		arg `action: Block to execute if condition is truthy, with the injected value`
+		returns `the value of the evaluated action block if condition is truthy or the original injected value if condition is falsy`
+	}
+
+	{
+		equal  { 10 .when { > 5 } { + 3 } } 13
+		equal  { 10 .when { < 5 } { + 3 } } 10
+	}
+
+	{
+	}
+
+	group "whether" 
+	"Evaluates a condition block with the injected value and executes either the true or false block accordingly, returning the result. Like when with an else branch."
+	{
+		argsn 4
+		pure
+		argtypes {
+			2 [ Block ]
+			3 [ Block ]
+			4 [ Block ]
+		}
+		arg `value: Value to inject into the condition block and the chosen action block`
+		arg `condition: Block that evaluates to a truthy/falsy value with the injected value`
+		arg `true-block: Block to execute if condition is truthy, with the value injected`
+		arg `false-block: Block to execute if condition is falsy, with the value injected`
+		returns `result of the true-block if condition is truthy, result of the false-block otherwise`
+	}
+
+	{
+		equal  { 10 .whether { > 5 } { + 3 } { - 3 } } 13
+		equal  { 2 .whether { > 5 } { + 3 } { - 3 } } -1
+		equal  { 10 .whether { > 5 } { "big" } { "small" } } "big"
+		equal  { 2 .whether { > 5 } { "big" } { "small" } } "small"
+	}
+
+	{
+	}
+
 	group "^if" 
 	"Conditional that sets the return flag when true, allowing early return from a function when the condition is a boolean."
 	{
@@ -6243,16 +6142,16 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	group "seek" 
-	"Seek over a series until a Block of code returns True and return the value."
+	"Seek over a series until a Block of code, Builtin, or Function returns True and return the value."
 	{
 		argsn 2
 		pure
 		argtypes {
 			1 [ Block List String ]
-			2 [ Block Builtin ]
+			2 [ Block Builtin Function ]
 		}
 		arg `series: Block, List, or String to search through`
-		arg `code: Block or Builtin that returns true when the desired value is found`
+		arg `code: Block, Builtin, or Function that returns true when the desired value is found`
 		returns `first value for which the code returns true, error if none found`
 	}
 
@@ -6263,6 +6162,9 @@ section "Iteration " "Functions for iterating over collections and executing cod
 		equal { try { seek { 1 2 3 4 } { > 5 } } |type? } 'error
 		equal { try { seek list { 1 2 3 4 } { > 5 } } |type? } 'error
 		equal { try { seek "1234" { .integer > 5 } } |type? } 'error
+		equal { seek { 1 2 3 4 } ?is-even } 2
+		equal { seek list { 1 2 3 4 } ?is-even } 2
+		equal { my-is-even: fn { x } { x .is-even } , seek { 1 2 3 4 } ?my-is-even } 2
 	}
 
 	{
@@ -6835,36 +6737,6 @@ section "Other " "..." {
 	{
 	}
 
-	group "save\\current" 
-	"Saves current state of the program to a file."
-	{
-		pure
-		arg `None`
-		returns `Integer 1 on success`
-	}
-
-	{
-		equal  { save\current |type? } 'integer
-	}
-
-	{
-	}
-
-	group "save\\current\\secure" 
-	"Saves current state of the program to a file with password protection."
-	{
-		pure
-		arg `None`
-		returns `Integer 1 on success`
-	}
-
-	{
-		; equal  { save\current\secure |type? } 'integer
-	}
-
-	{
-	}
-
 	group "doc!" 
 	"Sets docstring of the current context."
 	{
@@ -7074,50 +6946,14 @@ section "Other " "..." {
 	{
 	}
 
-	group "file-uri//Import" 
-	"Imports a file, loads and does it from script local path."
-	{
-		argsn 1
-		argtypes {
-			1 [ Uri ]
-		}
-		arg `uri: URI of the file to import and execute`
-		returns `result of executing the imported file`
-	}
-
-	{
-		; import file://test.rye  ; imports and executes test.rye
-	}
-
-	{
-	}
-
-	group "file-uri//Import\\live" 
-	"Imports a file, loads and does it from script local path."
-	{
-		argsn 1
-		argtypes {
-			1 [ Uri ]
-		}
-		arg `uri: URI of the file to import, execute, and watch for changes`
-		returns `result of executing the imported file`
-	}
-
-	{
-		; import\live file://test.rye  ; imports, executes, and watches test.rye for changes
-	}
-
-	{
-	}
-
 	group "load" 
 	"Loads a string into Rye values."
 	{
 		argsn 1
 		argtypes {
-			1 [ String Uri ]
+			1 [ String ]
 		}
-		arg `source: String containing Rye code or URI of file to load`
+		arg `source: String containing Rye code to load`
 		returns `Block containing the parsed Rye values`
 	}
 
@@ -7129,31 +6965,15 @@ section "Other " "..." {
 	{
 	}
 
-	group "file-uri//Load" 
-	"Loads a string into Rye values."
-	{
-		argsn 1
-		argtypes {
-			1 [ String Uri ]
-		}
-		arg `source: String containing Rye code or URI of file to load`
-		returns `Block containing the parsed Rye values`
-	}
-
-	{
-		; equal  { load " 1 2 3 " |third } 3
-		; equal  { load "{ 1 2 3 }" |first |third } 3
-	}
-
-	{
-	}
-
 	group "load\\mod" 
 	"Loads a string into Rye values. During load it allows modification of words."
 	{
 		argsn 1
+		argtypes {
+			1 [ String ]
+		}
 		arg `source: String containing Rye code or URI of file to load with modification allowed`
-		returns `Block containing the parsed Rye values`
+		returns `Block containing the parsed Rye valuesload\mod — string-only; file URI variant moved to builtins_baseio.go as "load\\mod\\file"`
 	}
 
 	{
@@ -7167,8 +6987,11 @@ section "Other " "..." {
 	"Loads a string into Rye values. During load it allows modification of words."
 	{
 		argsn 1
-		arg `source: String containing Rye code or URI of file to load with modification allowed and file watching`
-		returns `Block containing the parsed Rye values`
+		argtypes {
+			1 [ String ]
+		}
+		arg `source: String containing Rye code to load with modification allowed and file watching`
+		returns `Block containing the parsed Rye valuesload\live — string-only; file URI variant moved to builtins_baseio.go`
 	}
 
 	{
@@ -7351,40 +7174,6 @@ section "Other " "..." {
 	{
 	}
 
-	group "scmd" 
-	"Execute a shell command and return its exit status code."
-	{
-		argsn 1
-		argtypes {
-			1 [ String ]
-		}
-	}
-
-	{
-		equal { scmd `echo "hello"` } 0
-		equal { scmd `exit 1` } 1
-		equal { scmd `exit 42` } 42
-	}
-
-	{
-	}
-
-	group "scmd\\capture" 
-	"Execute a shell command and capture the output, return it as string"
-	{
-		argsn 1
-		argtypes {
-			1 [ String ]
-		}
-	}
-
-	{
-		equal { scmd\capture `echo "hello"` } "hello\n"
-	}
-
-	{
-	}
-
 	group "rye" 
 	""
 	{
@@ -7392,24 +7181,6 @@ section "Other " "..." {
 
 	{
 		equal { rye .type? } 'native
-	}
-
-	{
-	}
-
-	group "Rye-itself//History?" 
-	"Returns a block of the last N lines from REPL history."
-	{
-		argsn 2
-		argtypes {
-			1 [ Integer ]
-		}
-		arg `n: Integer specifying how many history lines to return`
-		returns `Block of strings containing the last N lines of REPL history`
-	}
-
-	{
-		; equal { rye .history 5 |length? } 5
 	}
 
 	{
@@ -8024,25 +7795,6 @@ section "Printing " "Functions for displaying and formatting values" {
 	{
 	}
 
-	group "capture-stdout" 
-	"Executes a block of code while capturing all output to stdout, returning the captured output as a string."
-	{
-		argsn 1
-		argtypes {
-			1 [ Block ]
-		}
-		arg `block: Block of code to execute with captured stdout`
-		returns `string containing all output captured during block execution`
-	}
-
-	{
-		equal { capture-stdout { print "hello" } } "hello\n"
-		equal { capture-stdout { loop 3 { prns "x" } } } "x x x "
-	}
-
-	{
-	}
-
 }
 
 section "Default" "" {
@@ -8076,21 +7828,6 @@ section "Default" "" {
 		equal { ff:: fn { } { ^fail "error message" } ff |disarm |message? } "error message"
 		equal { ff:: fn { } { ^fail 404 } ff |disarm |status? } 404
 		equal { ff:: fn { } { ^fail 'user-error } ff |disarm  |kind? } 'user-error
-	}
-
-	{
-	}
-
-	group "refail" 
-	"Re-raises an existing error with additional context. TODO -- duplicate of check"
-	{
-		argsn 2
-		argtypes {
-			1 [ Error ]
-		}
-	}
-
-	{
 	}
 
 	{
@@ -8133,9 +7870,6 @@ section "Default" "" {
 	"Creates a new error that wraps an existing error, allowing for error chaining."
 	{
 		argsn 2
-		argtypes {
-			2 [ Error ]
-		}
 		arg `error_info: String message, Integer code, or block for multiple parameters`
 		arg `error: Error object to wrap`
 		returns `new error object that wraps the provided error`
@@ -8185,9 +7919,6 @@ section "Default" "" {
 	"Returns true if the value is an error of the specified kind, false otherwise."
 	{
 		argsn 2
-		argtypes {
-			2 [ Word Tagword ]
-		}
 		arg `error: Error object to check`
 		arg `kind: Word or tagword representing the error kind to check against`
 		returns `boolean true if the error is of the specified kind, false otherwise`
@@ -8205,9 +7936,6 @@ section "Default" "" {
 	"Extracts the root cause from an error chain by traversing the Parent references."
 	{
 		argsn 1
-		argtypes {
-			1 [ Error ]
-		}
 		arg `error: Error object to extract the root cause from`
 		returns `the root cause error from an error chain`
 	}
@@ -8224,9 +7952,6 @@ section "Default" "" {
 	"Extracts the numeric status code from an error object."
 	{
 		argsn 1
-		argtypes {
-			1 [ Error ]
-		}
 		arg `error: Error object to extract status code from`
 		returns `integer status code of the error`
 	}
@@ -8244,9 +7969,6 @@ section "Default" "" {
 	"Extracts the message string from an error object."
 	{
 		argsn 1
-		argtypes {
-			1 [ Error ]
-		}
 		arg `error: Error object to extract message from`
 		returns `string message of the error`
 	}
@@ -8264,9 +7986,6 @@ section "Default" "" {
 	"Extracts additional details from an error object as a dictionary."
 	{
 		argsn 1
-		argtypes {
-			1 [ Error ]
-		}
 		arg `error: Error object to extract additional details from`
 		returns `dictionary containing any additional values stored in the error`
 	}
@@ -8426,9 +8145,6 @@ section "Default" "" {
 	"Validates that a value matches one of the provided options, failing with a descriptive error if not."
 	{
 		argsn 2
-		argtypes {
-			2 [ Block ]
-		}
 		arg `value: Value to check against valid options`
 		arg `options: Block containing valid values`
 		returns `original value if it matches one of the options, or creates an error with failure flag set`
@@ -8449,9 +8165,6 @@ section "Default" "" {
 	"Validates that a value matches one of the provided options, failing with a descriptive error if not."
 	{
 		argsn 2
-		argtypes {
-			2 [ Block ]
-		}
 		arg `value: Value to check against valid options`
 		arg `options: Block containing valid values`
 		returns `original value if it matches one of the options, or creates an error with failure flag set`
@@ -8472,9 +8185,6 @@ section "Default" "" {
 	"Injects a value into a validation block and returns the value if the block is truthy, otherwise creates an error."
 	{
 		argsn 3
-		argtypes {
-			2 [ Block ]
-		}
 		arg `value: Value to inject into the validation block`
 		arg `block: Block that receives the value and returns truthy/falsy result`
 		arg `error_info: Error information to use if block returns falsy`
@@ -8493,9 +8203,6 @@ section "Default" "" {
 	"Like ensure\\with but also sets the return flag to immediately exit the current function."
 	{
 		argsn 3
-		argtypes {
-			2 [ Block ]
-		}
 		arg `value: Value to inject into the validation block`
 		arg `block: Block that receives the value and returns truthy/falsy result`
 		arg `error_info: Error information to use if block returns falsy`
@@ -8514,9 +8221,6 @@ section "Default" "" {
 	"Handles errors by executing a block if the value is in failure state, clearing the failure flag."
 	{
 		argsn 2
-		argtypes {
-			2 [ Block ]
-		}
 		arg `value: Value to check for failure state`
 		arg `handler: Block to execute if value is in failure state`
 		returns `original value if not in failure state, or result of executing the handler block`
@@ -8535,9 +8239,6 @@ section "Default" "" {
 	"Like 'fix' but also sets the return flag to immediately exit the current function with the handler result."
 	{
 		argsn 2
-		argtypes {
-			2 [ Block ]
-		}
 		arg `value: Value to check for failure state`
 		arg `handler: Block to execute if value is in failure state`
 		returns `original value if not in failure state, or immediately returns from function with handler result`
@@ -8555,10 +8256,6 @@ section "Default" "" {
 	"Executes one of two blocks depending on whether the value is in failure state."
 	{
 		argsn 3
-		argtypes {
-			2 [ Block ]
-			3 [ Block ]
-		}
 		arg `value: Value to check for failure state`
 		arg `error_handler: Block to execute if value is in failure state`
 		arg `success_handler: Block to execute if value is not in failure state`
@@ -8577,9 +8274,6 @@ section "Default" "" {
 	"Executes a block if the value is not in failure state, otherwise returns the original value."
 	{
 		argsn 2
-		argtypes {
-			2 [ Block ]
-		}
 		arg `value: Value to check for failure state`
 		arg `success_handler: Block to execute if value is not in failure state`
 		returns `result of executing the success handler if value is not in failure state, or the original value`
@@ -8597,10 +8291,6 @@ section "Default" "" {
 	"Executes one of two blocks depending on whether the value is in failure state, like an error-handling if/else."
 	{
 		argsn 3
-		argtypes {
-			2 [ Block ]
-			3 [ Block ]
-		}
 		arg `value: Value to check for failure state`
 		arg `error_handler: Block to execute if value is in failure state`
 		arg `success_handler: Block to execute if value is not in failure state`
@@ -8619,9 +8309,6 @@ section "Default" "" {
 	"Executes a block only if the value is not in failure state, opposite of 'fix'."
 	{
 		argsn 2
-		argtypes {
-			2 [ Block ]
-		}
 		arg `value: Value to check for failure state`
 		arg `block: Block to execute if value is not in failure state`
 		returns `result of executing the block if value is not in failure state, or the original value`
@@ -8639,9 +8326,6 @@ section "Default" "" {
 	"Error handling switch that matches error codes with handler blocks and sets the return flag."
 	{
 		argsn 2
-		argtypes {
-			2 [ Block ]
-		}
 		arg `error: Error object to match against`
 		arg `cases: Block containing error codes and corresponding handler blocks`
 		returns `result of executing the matching handler block, or the original error if no match`
@@ -8661,9 +8345,6 @@ section "Default" "" {
 	{
 		argsn 1
 		pure
-		argtypes {
-			1 [ Block ]
-		}
 	}
 
 	{
@@ -8681,9 +8362,6 @@ section "Default" "" {
 	{
 		argsn 1
 		pure
-		argtypes {
-			1 [ Block ]
-		}
 		arg `block: Block of code to execute`
 		returns `a block containing [success, result], where success is true if no error occurred`
 	}
@@ -8700,10 +8378,6 @@ section "Default" "" {
 	"Takes a Context and a Block. It Does a block inside a given Context."
 	{
 		argsn 2
-		argtypes {
-			1 [ Context ]
-			2 [ Block ]
-		}
 	}
 
 	{
@@ -8721,10 +8395,6 @@ section "Default" "" {
 	"Executes a block and ensures another block is executed afterward, regardless of errors."
 	{
 		argsn 2
-		argtypes {
-			1 [ Block ]
-			2 [ Block ]
-		}
 		arg `main-block: Block of code to execute`
 		arg `finally-block: Block to execute afterward, regardless of errors`
 		returns `result of the main block, preserving any failure state`
@@ -8742,10 +8412,6 @@ section "Default" "" {
 	"Executes a block and retries it up to N times if it results in a failure."
 	{
 		argsn 2
-		argtypes {
-			1 [ Integer ]
-			2 [ Block ]
-		}
 		arg `retries: Integer number of retries to attempt`
 		arg `block: Block of code to execute and potentially retry`
 		returns `result of the block if successful, or the last failure if all retries fail`
@@ -8764,9 +8430,6 @@ section "Default" "" {
 	"Executes a block repeatedly until it succeeds (no failure), then returns the successful result. Gives up after 1000 attempts."
 	{
 		argsn 1
-		argtypes {
-			1 [ Block ]
-		}
 		arg `block: Block of code to execute repeatedly until it succeeds`
 		returns `result of the block when it finally succeeds (no failure), or error if 1000 attempts exceeded`
 	}
@@ -8784,10 +8447,6 @@ section "Default" "" {
 	"Executes a block of code with a timeout, failing if execution exceeds the specified duration in milliseconds."
 	{
 		argsn 2
-		argtypes {
-			1 [ Integer ]
-			2 [ Block ]
-		}
 		arg `ms: Integer timeout duration in milliseconds`
 		arg `block: Block of code to execute with a timeout`
 		returns `result of the block if it completes within the timeout, or a timeout error`

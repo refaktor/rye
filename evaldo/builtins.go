@@ -1,10 +1,8 @@
 package evaldo
 
 import (
-	"bytes"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"reflect"
 	"regexp"
@@ -12,14 +10,10 @@ import (
 	"github.com/refaktor/rye/env"
 
 	"github.com/refaktor/rye/loader"
-	// JM 20230825	"github.com/refaktor/rye/term"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/refaktor/rye/util"
-
-	goterm "golang.org/x/term"
 )
 
 func ss() {
@@ -1274,7 +1268,7 @@ var builtins = map[string]*env.Builtin{
 			case env.Kind:
 				switch dict := arg1.(type) {
 				case env.Dict:
-					obj := BuiValidate(ps, dict, spec.Spec)
+					obj := BatteryValidateHook(ps, dict, spec.Spec)
 					switch obj1 := obj.(type) {
 					case env.Dict:
 						ctx := util.Dict2Context(ps, obj1)
@@ -1285,7 +1279,7 @@ var builtins = map[string]*env.Builtin{
 					}
 				case *env.RyeCtx:
 					if spec.HasConverter(dict.Kind.Index) {
-						obj := BuiConvert(ps, dict, spec.Converters[dict.Kind.Index])
+						obj := BatteryConvertHook(ps, dict, spec.Converters[dict.Kind.Index])
 						switch ctx := obj.(type) {
 						case *env.RyeCtx:
 							ctx.Kind = spec.Kind
@@ -1319,61 +1313,6 @@ var builtins = map[string]*env.Builtin{
 		Pure:  true,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return arg0
-		},
-	},
-
-	// Tests:
-	// equal  { save\current |type? } 'integer
-	// Args:
-	// * None
-	// Returns:
-	// * Integer 1 on success
-	"save\\current": {
-		Argsn: 0,
-		Doc:   "Saves current state of the program to a file.",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
-			s := ps.Dump()
-			fileName := fmt.Sprintf("console_%s.rye", time.Now().Format("060102_150405"))
-
-			err := os.WriteFile(fileName, []byte(s), 0600)
-			if err != nil {
-				ps.FailureFlag = true
-				return MakeBuiltinError(ps, fmt.Sprintf("error writing state: %s", err.Error()), "save\\state")
-			}
-			fmt.Println("State current context to \033[1m" + fileName + "\033[0m.")
-			return *env.NewInteger(1)
-		},
-	},
-
-	// Tests:
-	// ; equal  { save\current\secure |type? } 'integer
-	// Args:
-	// * None
-	// Returns:
-	// * Integer 1 on success
-	"save\\current\\secure": {
-		Argsn: 0,
-		Doc:   "Saves current state of the program to a file with password protection.",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
-			s := ps.Dump()
-			fileName := fmt.Sprintf("console_%s.rye.enc", time.Now().Format("060102_150405"))
-
-			fmt.Print("Enter Password: ")
-			bytePassword, err := goterm.ReadPassword(int(os.Stdin.Fd()))
-			if err != nil {
-				panic(err)
-			}
-			password := string(bytePassword)
-
-			util.SaveSecure(s, fileName, password)
-			/*  err != nil {
-				ps.FailureFlag = true
-				return MakeBuiltinError(ps, fmt.Sprintf("error writing state: %s", err.Error()), "save\\state")
-			}*/
-			fmt.Println("State current context to \033[1m" + fileName + "\033[0m.")
-			return *env.NewInteger(1)
 		},
 	},
 
@@ -1702,87 +1641,13 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	// Tests:
-	// ; import file://test.rye  ; imports and executes test.rye
-	// Args:
-	// * uri: URI of the file to import and execute
-	// Returns:
-	// * result of executing the imported file
-	"file-uri//Import": { // **
-		Argsn: 1,
-		Doc:   "Imports a file, loads and does it from script local path.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s1 := arg0.(type) {
-			case env.Uri:
-				block_, script_ := LoadScriptLocalFile(ps, s1)
-				/*
-					var str string
-					fileIdx, _ := ps.Idx.GetIndex("file")
-					fullpath := filepath.Join(filepath.Dir(ps.ScriptPath), s1.GetPath())
-					if s1.Scheme.Index == fileIdx {
-						b, err := os.ReadFile(fullpath)
-						if err != nil {
-							return MakeBuiltinError(ps, err.Error(), "import")
-						}
-						str = string(b) // convert content to a 'string'
-					}
-					script_ := ps.ScriptPath
-					ps.ScriptPath = fullpath
-					block_ := loader.LoadString(str, false, ps)
-				*/
-				ps.Res = EvaluateLoadedValue(ps, block_, script_, false)
-				/* switch block := block_.(type) {
-				case env.Block:
-					ser := ps.Ser
-					ps.Ser = block.Series
-					Eval(ps)
-					ps.Ser = ser
-				case env.Error:
-					ps.ScriptPath = script_
-					ps.ErrorFlag = true
-					return MakeBuiltinError(ps, block.Message, "import")
-				default:
-					fmt.Println(block)
-					panic("Not block and not error in import builtin.") // TODO -- Think how best to handle this
-				} */
-				ps.ScriptPath = script_
-				//ps = env.AddToProgramState(ps, block.Series, genv)
-				return ps.Res
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "import")
-			}
-		},
-	},
-
-	// Tests:
-	// ; import\live file://test.rye  ; imports, executes, and watches test.rye for changes
-	// Args:
-	// * uri: URI of the file to import, execute, and watch for changes
-	// Returns:
-	// * result of executing the imported file
-	"file-uri//Import\\live": { // **
-		Argsn: 1,
-		Doc:   "Imports a file, loads and does it from script local path.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s1 := arg0.(type) {
-			case env.Uri:
-				block_, script_ := LoadScriptLocalFile(ps, s1)
-				ps.Res = EvaluateLoadedValue(ps, block_, script_, false)
-				ps.LiveObj.Add(s1.GetPath()) // add to watcher
-				ps.ScriptPath = script_
-				//ps = env.AddToProgramState(ps, block.Series, genv)
-				return ps.Res
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "import\\live")
-			}
-		},
-	},
+	// file-uri//Import, file-uri//Import\live moved to builtins_baseio.go
 
 	// Tests:
 	// equal  { load " 1 2 3 " |third } 3
 	// equal  { load "{ 1 2 3 }" |first |third } 3
 	// Args:
-	// * source: String containing Rye code or URI of file to load
+	// * source: String containing Rye code to load
 	// Returns:
 	// * Block containing the parsed Rye values
 	"load": { // **
@@ -1792,66 +1657,15 @@ var builtins = map[string]*env.Builtin{
 			switch s1 := arg0.(type) {
 			case env.String:
 				block := loader.LoadString(s1.Value, false, ps)
-				//ps = env.AddToProgramState(ps, block.Series, genv)
-				return block
-			// Deprecated ... should only load strings, like reader / Reader functions
-			case env.Uri:
-				var str string
-				fileIdx, _ := ps.Idx.GetIndex("file")
-				if s1.Scheme.Index == fileIdx {
-					b, err := os.ReadFile(s1.GetPath())
-					if err != nil {
-						return makeError(ps, err.Error())
-					}
-					str = string(b) // convert content to a 'string'
-				}
-				scrip := ps.ScriptPath
-				ps.ScriptPath = s1.GetPath()
-				block := loader.LoadString(str, false, ps)
-				ps.ScriptPath = scrip
-				//ps = env.AddToProgramState(ps, block.Series, genv)
 				return block
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.StringType, env.UriType}, "import\\live")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "load")
 			}
 		},
 	},
 
-	// Tests:
-	// ; equal  { load " 1 2 3 " |third } 3
-	// ; equal  { load "{ 1 2 3 }" |first |third } 3
-	// Args:
-	// * source: String containing Rye code or URI of file to load
-	// Returns:
-	// * Block containing the parsed Rye values
-	"file-uri//Load": { // **
-		Argsn: 1,
-		Doc:   "Loads a string into Rye values.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s1 := arg0.(type) {
-			case env.Uri:
-				var str string
-				fileIdx, _ := ps.Idx.GetIndex("file")
-				if s1.Scheme.Index == fileIdx {
-					b, err := os.ReadFile(s1.GetPath())
-					if err != nil {
-						return makeError(ps, err.Error())
-					}
-					str = string(b) // convert content to a 'string'
-				}
-				scrip := ps.ScriptPath
-				ps.ScriptPath = s1.GetPath()
-				block := loader.LoadString(str, false, ps)
-				ps.ScriptPath = scrip
-				//ps = env.AddToProgramState(ps, block.Series, genv)
-				return block
-			default:
-				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.StringType, env.UriType}, "import\\live")
-			}
-		},
-	},
+	// file-uri//Load moved to builtins_baseio.go
 
 	// TODO -- refactor load variants so they use common function LoadString and LoadFile
 
@@ -1861,6 +1675,7 @@ var builtins = map[string]*env.Builtin{
 	// * source: String containing Rye code or URI of file to load with modification allowed
 	// Returns:
 	// * Block containing the parsed Rye values
+	// load\mod — string-only; file URI variant moved to builtins_baseio.go as "load\\mod\\file"
 	"load\\mod": { // **
 		Argsn: 1,
 		Doc:   "Loads a string into Rye values. During load it allows modification of words.",
@@ -1868,29 +1683,10 @@ var builtins = map[string]*env.Builtin{
 			switch s1 := arg0.(type) {
 			case env.String:
 				block, _ := loader.LoadStringNoPEG(s1.Value, false)
-				//ps = env.AddToProgramState(ps, block.Series, genv)
-				return block
-			case env.Uri:
-				var str string
-				fileIdx, _ := ps.Idx.GetIndex("file")
-				if s1.Scheme.Index == fileIdx {
-					b, err := os.ReadFile(s1.GetPath())
-					if err != nil {
-						return makeError(ps, err.Error())
-					}
-					str = string(b) // convert content to a 'string'
-				}
-				scrip := ps.ScriptPath
-				ps.AllowMod = true
-				ps.ScriptPath = s1.GetPath()
-				block := loader.LoadString(str, false, ps)
-				ps.AllowMod = false
-				ps.ScriptPath = scrip
-				//ps = env.AddToProgramState(ps, block.Series, genv)
 				return block
 			default:
 				ps.FailureFlag = true
-				return env.NewError("Must be string or file TODO")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "load\\mod")
 			}
 		},
 	},
@@ -1898,9 +1694,10 @@ var builtins = map[string]*env.Builtin{
 	// Tests:
 	// ; load\live file://watched.rye  ; loads and watches file for changes
 	// Args:
-	// * source: String containing Rye code or URI of file to load with modification allowed and file watching
+	// * source: String containing Rye code to load with modification allowed and file watching
 	// Returns:
 	// * Block containing the parsed Rye values
+	// load\live — string-only; file URI variant moved to builtins_baseio.go
 	"load\\live": { // **
 		Argsn: 1,
 		Doc:   "Loads a string into Rye values. During load it allows modification of words.",
@@ -1908,30 +1705,10 @@ var builtins = map[string]*env.Builtin{
 			switch s1 := arg0.(type) {
 			case env.String:
 				block, _ := loader.LoadStringNoPEG(s1.Value, false)
-				//ps = env.AddToProgramState(ps, block.Series, genv)
-				return block
-			case env.Uri:
-				var str string
-				fileIdx, _ := ps.Idx.GetIndex("file")
-				if s1.Scheme.Index == fileIdx {
-					b, err := os.ReadFile(s1.GetPath())
-					ps.LiveObj.Add(s1.GetPath()) // add to watcher
-					if err != nil {
-						return makeError(ps, err.Error())
-					}
-					str = string(b) // convert content to a 'string'
-				}
-				scrip := ps.ScriptPath
-				ps.AllowMod = true
-				ps.ScriptPath = s1.GetPath()
-				block := loader.LoadString(str, false, ps)
-				ps.AllowMod = false
-				ps.ScriptPath = scrip
-				//ps = env.AddToProgramState(ps, block.Series, genv)
 				return block
 			default:
 				ps.FailureFlag = true
-				return env.NewError("Must be string or file TODO")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "load\\live")
 			}
 		},
 	},
@@ -2080,13 +1857,13 @@ var builtins = map[string]*env.Builtin{
 					ps.ErrorFlag = true
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do\\inside")
 				}
-			case *PersistentCtx:
+			case PersistentCtxInterface:
 				switch bloc := arg1.(type) {
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
 					// Use a special evaluation function for PersistentCtx
-					EvalBlockInPersistentCtx(ps, ctx)
+					BatteryEvalInPersistentCtxHook(ps, ctx)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "do\\inside")
 					ps.Ser = ser
 					return ps.Res
@@ -2388,99 +2165,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	// return , error , failure functions
-	"exit": { // **
-		Argsn: 1,
-		Doc:   "Accepts one value and returns it.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			// close the keyboard opened for terminal
-			// fmt.Println("Closing keyboard in Exit")
-			// keyboard.Close()
-			util.BeforeExit()
-			switch code := arg0.(type) {
-			case env.Integer:
-				os.Exit(int(code.Value))
-				return nil
-			default:
-				fmt.Println(code.Inspect(*ps.Idx))
-				os.Exit(0)
-				return nil
-			}
-		},
-	},
+	// exit, scmd, scmd\capture moved to builtins_baseio.go
 
-	/* Terminal functions .. move to it's own later */
-
-	// Tests:
-	// equal { scmd `echo "hello"` } 0
-	// equal { scmd `exit 1` } 1
-	// equal { scmd `exit 42` } 42
-	"scmd": {
-		Argsn: 1,
-		Doc:   "Execute a shell command and return its exit status code.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s0 := arg0.(type) {
-			case env.String:
-
-				r := exec.Command("sh", "-c", s0.Value) //nolint: gosec
-				// stdout, stderr := r.Output()
-				r.Stdout = os.Stdout
-				r.Stderr = os.Stderr
-
-				err := r.Run()
-				if err != nil {
-					// Check if this is an exit error with a status code
-					if exitError, ok := err.(*exec.ExitError); ok {
-						// Return the actual exit code
-						return *env.NewInteger(int64(exitError.ExitCode()))
-					}
-					// For other errors (like command not found), print error and return -1
-					fmt.Println(err)
-					return *env.NewInteger(-1)
-				}
-				// Command succeeded, return 0
-				return *env.NewInteger(0)
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "scmd")
-			}
-		},
-	},
-
-	// Tests:
-	// equal { scmd\capture `echo "hello"` } "hello\n"
-	"scmd\\capture": {
-		Argsn: 1,
-		Doc:   "Execute a shell command and capture the output, return it as string",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s0 := arg0.(type) {
-			case env.String:
-				r := exec.Command("sh", "-c", s0.Value) //nolint: gosec
-				var outb, errb bytes.Buffer
-				r.Stdout = &outb
-				r.Stderr = &errb
-
-				err := r.Run()
-				if err != nil {
-					// If command fails, return the error output as part of the result
-					if errb.Len() > 0 {
-						ps.FailureFlag = true
-						return env.NewError("Command failed: " + errb.String())
-					}
-					// For exit errors, still return stdout if available
-					if _, ok := err.(*exec.ExitError); ok && outb.Len() > 0 {
-						return *env.NewString(outb.String())
-					}
-					ps.FailureFlag = true
-					return env.NewError("Command failed: " + err.Error())
-				}
-
-				// Return the captured stdout as string
-				return *env.NewString(outb.String())
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "scmd\\capture")
-			}
-		},
-	},
+	/* Terminal functions .. moved to builtins_baseio.go */
 
 	/* TODO: * whitelist only to http and https prefix
 	         * os\open is temp name, figure out where it belongs, maybe os module and subcontext
@@ -2514,6 +2201,7 @@ var builtins = map[string]*env.Builtin{
 			return nil
 		},
 	}, */
+
 
 	// Tests:
 	// equal { rye .type? } 'native
@@ -2591,146 +2279,7 @@ var builtins = map[string]*env.Builtin{
 			return *env.NewBlock(*env.NewTSeries(blts))
 		},
 	},
-	// Deprecated
-	"Rye-itself//args?": {
-		Argsn: 0,
-		Doc:   "Returns command line arguments as a block of parsed values. Each argument is converted to appropriate type (integer, float, or string).",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var firstArg int
-			if ps.Embedded {
-				firstArg = 1
-			} else {
-				firstArg = 2
-			}
-
-			// If no arguments beyond the script name, return empty block
-			if firstArg >= len(os.Args) {
-				return *env.NewBlock(*env.NewTSeries([]env.Object{}))
-			}
-
-			// Convert each argument to appropriate Rye type
-			args := os.Args[firstArg:]
-			lst := make([]env.Object, len(args))
-
-			intRe := regexp.MustCompile("^[+-]?[0-9]+$")
-			floatRe := regexp.MustCompile("^[+-]?[0-9]*\\.[0-9]+$")
-
-			for i, arg := range args {
-				// Try to parse as integer
-				if intRe.MatchString(arg) {
-					if num, err := strconv.ParseInt(arg, 10, 64); err == nil {
-						lst[i] = *env.NewInteger(num)
-						continue
-					}
-				}
-
-				// Try to parse as float
-				if floatRe.MatchString(arg) {
-					if num, err := strconv.ParseFloat(arg, 64); err == nil {
-						lst[i] = *env.NewDecimal(num)
-						continue
-					}
-				}
-
-				// Default to string
-				lst[i] = *env.NewString(arg)
-			}
-
-			return *env.NewBlock(*env.NewTSeries(lst))
-		},
-	},
-	"Rye-itself//Args?": {
-		Argsn: 0,
-		Doc:   "Returns command line arguments as a block of parsed values. Each argument is converted to appropriate type (integer, float, or string).",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var firstArg int
-			if ps.Embedded {
-				firstArg = 1
-			} else {
-				firstArg = 2
-			}
-
-			// If no arguments beyond the script name, return empty block
-			if firstArg >= len(os.Args) {
-				return *env.NewBlock(*env.NewTSeries([]env.Object{}))
-			}
-
-			// Convert each argument to appropriate Rye type
-			args := os.Args[firstArg:]
-			lst := make([]env.Object, len(args))
-
-			intRe := regexp.MustCompile("^[+-]?[0-9]+$")
-			floatRe := regexp.MustCompile("^[+-]?[0-9]*\\.[0-9]+$")
-
-			for i, arg := range args {
-				// Try to parse as integer
-				if intRe.MatchString(arg) {
-					if num, err := strconv.ParseInt(arg, 10, 64); err == nil {
-						lst[i] = *env.NewInteger(num)
-						continue
-					}
-				}
-
-				// Try to parse as float
-				if floatRe.MatchString(arg) {
-					if num, err := strconv.ParseFloat(arg, 64); err == nil {
-						lst[i] = *env.NewDecimal(num)
-						continue
-					}
-				}
-
-				// Default to string
-				lst[i] = *env.NewString(arg)
-			}
-
-			return *env.NewBlock(*env.NewTSeries(lst))
-		},
-	},
-	"Rye-itself//Args\\raw?": {
-		Argsn: 1,
-		Doc:   "",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var firstArg int
-			if ps.Embedded {
-				firstArg = 1
-			} else {
-				firstArg = 2
-			}
-			if len(os.Args) > 1 {
-				return *env.NewString(strings.Join(os.Args[firstArg:], " "))
-			} else {
-				return *env.NewString("")
-			}
-			// block, _ := loader.LoadString(os.Args[0], false)
-			// return block
-		},
-	},
-	// Tests:
-	// ; equal { rye .history 5 |length? } 5
-	// Args:
-	// * n: Integer specifying how many history lines to return
-	// Returns:
-	// * Block of strings containing the last N lines of REPL history
-	"Rye-itself//History?": {
-		Argsn: 2,
-		Doc:   "Returns a block of the last N lines from REPL history.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch n := arg1.(type) {
-			case env.Integer:
-				if ps.GetHistoryLast == nil {
-					return MakeBuiltinError(ps, "History not available (not running in REPL)", "Rye-itself//history")
-				}
-				lines := ps.GetHistoryLast(int(n.Value))
-				objs := make([]env.Object, len(lines))
-				for i, line := range lines {
-					objs[i] = *env.NewString(line)
-				}
-				return *env.NewBlock(*env.NewTSeries(objs))
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "Rye-itself//history")
-			}
-		},
-	},
+	// Rye-itself//args?, Args?, Args\raw?, History? moved to builtins_baseio.go
 
 	// Tests:
 	// equal { x:: 123 defer { x:: 345 } x } 123
@@ -3088,13 +2637,17 @@ func isTruthy(arg env.Object) env.Object {
 }
 */
 
-func RegisterBuiltins(ps *env.ProgramState) {
+// RegisterBaseBuiltins registers only the pure-computation builtins that
+// have no OS / file-system / shell dependency.  This is the right choice for
+// embedding Rye inside a Go application when you want to keep the sandbox
+// free of host-OS access.  Call RegisterBaseIOBuiltins afterwards if you
+// also want file, shell, args, and exit support.
+func RegisterBaseBuiltins(ps *env.ProgramState) {
 	BuiltinNames = make(map[string]int)
 	RegisterBuiltins2(builtins, ps, "base")
 	RegisterBuiltins2(builtins_boolean, ps, "base")
 	RegisterBuiltins2(builtins_numbers, ps, "base")
 	RegisterBuiltins2(builtins_mth, ps, "base")
-	RegisterBuiltins2(builtins_complex, ps, "base")
 	RegisterBuiltins2(builtins_time, ps, "base")
 	RegisterBuiltins2(builtins_string, ps, "base")
 	RegisterBuiltins2(builtins_collection, ps, "base")
@@ -3104,75 +2657,25 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(builtins_types, ps, "base")
 	RegisterBuiltins2(builtins_iteration, ps, "base")
 	RegisterBuiltins2(builtins_contexts, ps, "base")
-	RegisterBuiltins2(builtins_persistent_contexts, ps, "base")
 	RegisterBuiltins2(builtins_functions, ps, "base")
-	RegisterBuiltins2(builtins_unique, ps, "base")
-	// already in base_functions RegisterBuiltins2(builtins_apply, ps, "base")
-	RegisterBuiltins2(Builtins_error_creation, ps, "error-creation")
-	RegisterBuiltins2(Builtins_error_inspection, ps, "error-inspection")
-	RegisterBuiltins2(Builtins_error_handling, ps, "error-handling")
-	RegisterBuiltins2(Builtins_match, ps, "match")
-	RegisterBuiltins2(Builtins_table, ps, "table")
-	RegisterBuiltins2(Builtins_vector, ps, "vector")
-	RegisterBuiltins2(Builtins_matrix, ps, "matrix")
-	RegisterBuiltins2(Builtins_io, ps, "io")
-	RegisterBuiltins2(Builtins_cmd, ps, "cmd")
-	RegisterBuiltins2(Builtins_regexp, ps, "regexp")
-	RegisterBuiltins2(Builtins_validation, ps, "validation")
-	RegisterBuiltins2(Builtins_cli, ps, "cli")
-	RegisterBuiltins2(Builtins_conversion, ps, "conversion")
-	RegisterBuiltins2(Builtins_web, ps, "web")
-	RegisterBuiltins2(Builtins_markdown, ps, "markdown")
-	RegisterBuiltins2(Builtins_sxml, ps, "sxml")
-	RegisterBuiltins2(Builtins_html, ps, "html")
-	RegisterBuiltins2(Builtins_json, ps, "json")
-	RegisterBuiltins2(Builtins_bson, ps, "bson")
-	RegisterBuiltins2(Builtins_stackless, ps, "stackless")
-	RegisterBuiltins2(Builtins_eyr, ps, "eyr")
-	RegisterBuiltins2(Builtins_goroutines, ps, "goroutines")
-	RegisterBuiltins2(Builtins_msgdispatcher, ps, "msgdispatcher")
-	RegisterBuiltins2(Builtins_http, ps, "http")
-	RegisterBuiltins2(Builtins_sqlite, ps, "sqlite")
-	RegisterBuiltins2(Builtins_psql, ps, "psql")
-	RegisterBuiltins2(Builtins_mysql, ps, "mysql")
-	RegisterBuiltins2(Builtins_email, ps, "email")
-	RegisterBuiltins2(Builtins_imap, ps, "imap")
-	RegisterBuiltins2(Builtins_structures, ps, "structs")
-	RegisterBuiltins2(Builtins_smtpd, ps, "smtpd")
-	RegisterBuiltins2(Builtins_mail, ps, "mail")
-	RegisterBuiltins2(Builtins_ssh, ps, "ssh")
-	RegisterBuiltins2(Builtins_bcrypt, ps, "bcrypt")
-	RegisterBuiltins2(Builtins_console, ps, "console")
-	RegisterBuiltinsInContext(Builtins_crypto, ps, "crypto")
-	RegisterBuiltinsInContext(Builtins_encoding, ps, "encoding")
-	RegisterBuiltinsInContext(Builtins_math, ps, "math")
-	RegisterBuiltinsInContext(Builtins_os, ps, "os")
-	RegisterBuiltinsInContext(Builtins_pipes, ps, "pipes")
-	RegisterBuiltinsInContext(Builtins_term, ps, "term")
-	RegisterBuiltinsInContext(Builtins_termstr, ps, "termstr")
-	RegisterBuiltinsInContext(Builtins_tui, ps, "tui")
-	RegisterBuiltinsInContext(Builtins_telegrambot, ps, "telegram")
-	RegisterBuiltinsInContext(Builtins_mcp, ps, "mcp")
-	RegisterBuiltins2(Builtins_mqtt, ps, "mqtt")
-	RegisterBuiltins2(Builtins_chitosocket, ps, "chitosocket")
-	RegisterBuiltins2(builtins_trees, ps, "trees")
-	// RegisterBuiltinsInContext(Builtins_git, ps, "git")
-	// temporarily removed RegisterBuiltinsInContext(Builtins_docker, ps, "docker")
-	RegisterBuiltinsInContext(Builtins_prometheus, ps, "prometheus")
-	RegisterBuiltinsInContext(Builtins_echarts, ps, "echarts")
-	RegisterBuiltinsInContext(Builtins_flui, ps, "flui")
-	RegisterBuiltins2(Builtins_js_interop, ps, "jsinterop")
-	// RegisterBuiltinsInContext(Builtins_flui_v2, ps, "flui2")
-	// ## Archived modules
-	// RegisterBuiltins2(Builtins_gtk, ps, "gtk")
-	// RegisterBuiltins2(Builtins_nats, ps, "nats")
-	// RegisterBuiltins2(Builtins_qframe, ps, "qframe")
-	// RegisterBuiltins2(Builtins_nng, ps, "nng")
-	// RegisterBuiltins2(Builtins_raylib, ps, "raylib")
-	// RegisterBuiltins2(Builtins_cayley, ps, "cayley")
 
-	// Execute initialization code after everything is loaded but before any custom code is evaluated
+	// Execute initialization code after base builtins are loaded
 	executeInitializationCode(ps)
+}
+
+// RegisterBaseIOBuiltins adds the OS / file / shell / args builtins from
+// builtins_baseio.go on top of an already-initialised program state.
+// It must be called AFTER RegisterBaseBuiltins (or RegisterBuiltins).
+func RegisterBaseIOBuiltins(ps *env.ProgramState) {
+	RegisterBuiltins2(builtins_baseio, ps, "base")
+}
+
+// RegisterBuiltins registers the full base set: pure-computation builtins
+// plus all OS / IO builtins.  This is what the CLI runner uses.
+// For the full standard set including batteries, also call batteries.RegisterBatteries(ps).
+func RegisterBuiltins(ps *env.ProgramState) {
+	RegisterBaseBuiltins(ps)
+	RegisterBaseIOBuiltins(ps)
 }
 
 // executeInitializationCode runs the injected initialization code after builtins are loaded
@@ -3343,7 +2846,6 @@ var allBuiltinGroups = []builtinGroup{
 	{"base", builtins_boolean, false},
 	{"base", builtins_numbers, false},
 	{"base", builtins_mth, false},
-	{"base", builtins_complex, false},
 	{"base", builtins_time, false},
 	{"base", builtins_string, false},
 	{"base", builtins_collection, false},
@@ -3353,64 +2855,9 @@ var allBuiltinGroups = []builtinGroup{
 	{"base", builtins_types, false},
 	{"base", builtins_iteration, false},
 	{"base", builtins_contexts, false},
-	{"base", builtins_persistent_contexts, false},
 	{"base", builtins_functions, false},
-	// Error handling
-	{"error-creation", Builtins_error_creation, false},
-	{"error-inspection", Builtins_error_inspection, false},
-	{"error-handling", Builtins_error_handling, false},
-	// Module builtins – flat
-	{"match", Builtins_match, false},
-	{"table", Builtins_table, false},
-	{"vector", Builtins_vector, false},
-	{"matrix", Builtins_matrix, false},
-	{"io", Builtins_io, false},
-	{"cmd", Builtins_cmd, false},
-	{"regexp", Builtins_regexp, false},
-	{"validation", Builtins_validation, false},
-	{"cli", Builtins_cli, false},
-	{"conversion", Builtins_conversion, false},
-	{"web", Builtins_web, false},
-	{"markdown", Builtins_markdown, false},
-	{"sxml", Builtins_sxml, false},
-	{"html", Builtins_html, false},
-	{"json", Builtins_json, false},
-	{"bson", Builtins_bson, false},
-	{"stackless", Builtins_stackless, false},
-	{"eyr", Builtins_eyr, false},
-	{"goroutines", Builtins_goroutines, false},
-	{"msgdispatcher", Builtins_msgdispatcher, false},
-	{"http", Builtins_http, false},
-	{"sqlite", Builtins_sqlite, false},
-	{"psql", Builtins_psql, false},
-	{"mysql", Builtins_mysql, false},
-	{"email", Builtins_email, false},
-	{"imap", Builtins_imap, false},
-	{"structs", Builtins_structures, false},
-	{"smtpd", Builtins_smtpd, false},
-	{"mail", Builtins_mail, false},
-	{"ssh", Builtins_ssh, false},
-	{"bcrypt", Builtins_bcrypt, false},
-	{"console", Builtins_console, false},
-	{"mqtt", Builtins_mqtt, false},
-	{"chitosocket", Builtins_chitosocket, false},
-	// Module builtins – in named child context
-	{"crypto", Builtins_crypto, true},
-	{"encoding", Builtins_encoding, true},
-	{"math", Builtins_math, true},
-	{"os", Builtins_os, true},
-	{"pipes", Builtins_pipes, true},
-	{"term", Builtins_term, true},
-	{"termstr", Builtins_termstr, true},
-	{"tui", Builtins_tui, true},
-	{"telegram", Builtins_telegrambot, true},
-	{"mcp", Builtins_mcp, true},
-	// {"git", Builtins_git, true},
-	// {"docker", Builtins_docker, true},
-	{"prometheus", Builtins_prometheus, true},
-	{"echarts", Builtins_echarts, true},
-	{"flui", Builtins_flui, true},
-	{"js", Builtins_js_interop, true},
+	// NOTE: Battery groups (match, io, http, sqlite, etc.) are registered via
+	// batteries.RegisterBatteries(ps) — see the batteries/ package.
 }
 
 // RegisterBuiltinGroups registers all builtins belonging to the named groups.

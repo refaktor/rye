@@ -21,10 +21,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns base raised to the power of exponent."
 	{
 		argsn 2
-		argtypes {
-			1 [ Integer Decimal Complex ]
-			2 [ Integer Decimal Complex ]
-		}
 		arg `base: integer, decimal, or complex value`
 		arg `exponent: integer, decimal, or complex value`
 		returns `decimal result of base raised to the power of exponent for integer/decimal inputs, complex result for complex inputs`
@@ -44,9 +40,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the binary logarithm (base-2) of x."
 	{
 		argsn 1
-		argtypes {
-			2 [ Integer Block ]
-		}
 		arg `x: integer or decimal value`
 		returns `decimal binary logarithm of x`
 	}
@@ -63,9 +56,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the decimal logarithm (base-10) of x."
 	{
 		argsn 1
-		argtypes {
-			2 [ Integer Decimal ]
-		}
 		arg `x: integer or decimal value`
 		returns `decimal base-10 logarithm of x`
 	}
@@ -81,9 +71,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the natural logarithm of x."
 	{
 		argsn 1
-		argtypes {
-			1 [ Integer Decimal Complex Vector Matrix ]
-		}
 		arg `x: integer, decimal, complex, vector or matrix value`
 		returns `natural logarithm of x (element-wise for vector/matrix)`
 	}
@@ -106,9 +93,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the natural logarithm of 1 plus its argument x."
 	{
 		argsn 1
-		argtypes {
-			2 [ Integer Decimal ]
-		}
 		arg `x: integer or decimal value`
 		returns `decimal natural logarithm of (1 + x)`
 	}
@@ -124,9 +108,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the binary exponent of x."
 	{
 		argsn 1
-		argtypes {
-			2 [ Integer Decimal ]
-		}
 		arg `x: integer or decimal value`
 		returns `decimal binary exponent of x`
 	}
@@ -142,9 +123,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the square of x."
 	{
 		argsn 1
-		argtypes {
-			2 [ Integer Block ]
-		}
 		arg `x: integer or decimal value`
 		returns `decimal square of x`
 	}
@@ -161,9 +139,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the sine of the radian argument."
 	{
 		argsn 1
-		argtypes {
-			2 [ Integer Decimal Complex ]
-		}
 		arg `x: integer, decimal, or complex value in radians`
 		returns `decimal sine of x for integer/decimal input, complex sine for complex input`
 	}
@@ -182,9 +157,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the cosine of the radian argument."
 	{
 		argsn 1
-		argtypes {
-			2 [ Integer Decimal Complex ]
-		}
 		arg `x: integer, decimal, or complex value in radians`
 		returns `decimal cosine of x for integer/decimal input, complex cosine for complex input`
 	}
@@ -202,9 +174,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the tangent of the radian argument."
 	{
 		argsn 1
-		argtypes {
-			2 [ Integer Decimal Complex ]
-		}
 		arg `x: integer, decimal, or complex value in radians`
 		returns `decimal tangent of x for integer/decimal input, complex tangent for complex input`
 	}
@@ -222,9 +191,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the square root of x."
 	{
 		argsn 1
-		argtypes {
-			1 [ Integer Decimal Complex Vector Matrix ]
-		}
 		arg `x: integer, decimal, complex, vector or matrix value`
 		returns `square root of x (element-wise for vector/matrix)`
 	}
@@ -244,9 +210,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the absolute value of a number."
 	{
 		argsn 1
-		argtypes {
-			1 [ Integer Decimal Complex Vector Matrix ]
-		}
 		arg `x: integer, decimal, complex, vector or matrix value`
 		returns `absolute value of x (element-wise for vector/matrix)`
 	}
@@ -266,9 +229,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the arccosine (inverse cosine) in radians."
 	{
 		argsn 1
-		argtypes {
-			2 [ Integer Decimal ]
-		}
 		arg `x: integer or decimal value between -1 and 1`
 		returns `decimal arccosine of x in radians`
 	}
@@ -284,9 +244,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the inverse hyperbolic cosine."
 	{
 		argsn 1
-		argtypes {
-			2 [ Integer Decimal ]
-		}
 		arg `x: integer or decimal value >= 1`
 		returns `decimal inverse hyperbolic cosine of x`
 	}
@@ -302,9 +259,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the arcsine (inverse sine) in radians."
 	{
 		argsn 1
-		argtypes {
-			2 [ Integer Decimal ]
-		}
 		arg `x: integer or decimal value between -1 and 1`
 		returns `decimal arcsine of x in radians`
 	}
@@ -320,9 +274,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the inverse hyperbolic sine."
 	{
 		argsn 1
-		argtypes {
-			2 [ Integer Decimal ]
-		}
 		arg `x: integer or decimal value`
 		returns `decimal inverse hyperbolic sine of x`
 	}
@@ -338,9 +289,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the arctangent (inverse tangent) in radians."
 	{
 		argsn 1
-		argtypes {
-			2 [ Integer Decimal ]
-		}
 		arg `x: integer or decimal value`
 		returns `decimal arctangent of x in radians`
 	}
@@ -356,10 +304,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the arc tangent of y/x, using the signs of the two to determine the quadrant of the return value."
 	{
 		argsn 2
-		argtypes {
-			1 [ Integer Decimal ]
-			2 [ Integer Decimal ]
-		}
 		arg `y: integer or decimal value`
 		arg `x: integer or decimal value`
 		returns `decimal arctangent of y/x in radians, using signs to determine quadrant`
@@ -376,9 +320,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the inverse hyperbolic tangent."
 	{
 		argsn 1
-		argtypes {
-			1 [ Integer Decimal ]
-		}
 		arg `x: integer or decimal value between -1 and 1`
 		returns `decimal inverse hyperbolic tangent of x`
 	}
@@ -394,9 +335,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the least integer value greater than or equal to x."
 	{
 		argsn 1
-		argtypes {
-			1 [ Integer Decimal ]
-		}
 		arg `x: integer or decimal value`
 		returns `decimal ceiling of x (smallest integer >= x)`
 	}
@@ -412,9 +350,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the cube root of x."
 	{
 		argsn 1
-		argtypes {
-			1 [ Integer Decimal ]
-		}
 		arg `x: integer or decimal value`
 		returns `decimal cube root of x`
 	}
@@ -430,10 +365,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns a value with the magnitude of x and the sign of y."
 	{
 		argsn 2
-		argtypes {
-			1 [ Integer Decimal ]
-			2 [ Integer Decimal ]
-		}
 		arg `x: integer or decimal value`
 		arg `y: integer or decimal value`
 		returns `decimal with magnitude of x and sign of y`
@@ -450,10 +381,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the maximum of x-y or 0."
 	{
 		argsn 2
-		argtypes {
-			1 [ Integer Decimal ]
-			2 [ Integer Decimal ]
-		}
 		arg `x: integer or decimal value`
 		arg `y: integer or decimal value`
 		returns `decimal max(x-y, 0)`
@@ -471,10 +398,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Rounds a decimal to the specified number of decimal places."
 	{
 		argsn 2
-		argtypes {
-			1 [ Decimal ]
-			2 [ Integer Decimal ]
-		}
 		arg `x: decimal value to round`
 		arg `digits: integer number of decimal places to round to`
 		returns `decimal rounded to specified number of decimal places`
@@ -492,9 +415,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Rounds a decimal to the nearest integer."
 	{
 		argsn 1
-		argtypes {
-			1 [ Decimal ]
-		}
 		arg `x: decimal value`
 		returns `decimal rounded to nearest integer`
 	}
@@ -511,9 +431,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the nearest integer, rounding ties to even."
 	{
 		argsn 1
-		argtypes {
-			1 [ Decimal Integer ]
-		}
 		arg `x: integer or decimal value`
 		returns `decimal rounded to nearest integer, with ties rounded to even`
 	}
@@ -530,9 +447,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the error function of value."
 	{
 		argsn 1
-		argtypes {
-			1 [ Integer Decimal ]
-		}
 		arg `x: integer or decimal value`
 		returns `decimal error function value of x`
 	}
@@ -548,9 +462,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the complementary error function of value."
 	{
 		argsn 1
-		argtypes {
-			1 [ Integer Decimal ]
-		}
 		arg `x: integer or decimal value`
 		returns `decimal complementary error function value of x`
 	}
@@ -566,9 +477,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the inverse of erfc(x) function."
 	{
 		argsn 1
-		argtypes {
-			1 [ Integer Decimal ]
-		}
 		arg `x: integer or decimal value between 0 and 2`
 		returns `decimal inverse complementary error function value of x`
 	}
@@ -584,9 +492,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the inverse error function of value."
 	{
 		argsn 1
-		argtypes {
-			1 [ Integer Decimal ]
-		}
 		arg `x: integer or decimal value between -1 and 1`
 		returns `decimal inverse error function value of x`
 	}
@@ -602,9 +507,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns e**x, the base-e exponential of x."
 	{
 		argsn 1
-		argtypes {
-			1 [ Integer Decimal Complex Vector Matrix ]
-		}
 		arg `x: integer, decimal, complex, vector or matrix value`
 		returns `e^x (element-wise for vector/matrix)`
 	}
@@ -625,9 +527,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns 2**x, the base-2 exponential of x."
 	{
 		argsn 1
-		argtypes {
-			1 [ Integer Decimal ]
-		}
 		arg `x: integer or decimal value`
 		returns `decimal 2^x`
 	}
@@ -643,9 +542,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns e**x - 1, the base-e exponential of x minus 1. It is more accurate than exp(x) - 1 when x is near zero."
 	{
 		argsn 1
-		argtypes {
-			1 [ Integer Decimal ]
-		}
 		arg `x: integer or decimal value`
 		returns `decimal e^x - 1`
 	}
@@ -661,11 +557,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns x * y + z, computed with only one rounding. (That is, FMA returns the fused multiply-add of x, y, and z.)"
 	{
 		argsn 3
-		argtypes {
-			1 [ Integer Decimal ]
-			2 [ Integer Decimal ]
-			3 [ Integer Decimal ]
-		}
 		arg `x: integer or decimal value`
 		arg `y: integer or decimal value`
 		arg `z: integer or decimal value`
@@ -683,9 +574,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the order-zero Bessel function of the first kind."
 	{
 		argsn 1
-		argtypes {
-			1 [ Integer Decimal ]
-		}
 		arg `x: integer or decimal value`
 		returns `decimal order-zero Bessel function of the first kind`
 	}
@@ -701,9 +589,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the order-one Bessel function of the first kind."
 	{
 		argsn 1
-		argtypes {
-			1 [ Integer Decimal ]
-		}
 		arg `x: integer or decimal value`
 		returns `decimal order-one Bessel function of the first kind`
 	}
@@ -719,9 +604,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the order-zero Bessel function of the second kind."
 	{
 		argsn 1
-		argtypes {
-			1 [ Integer Decimal ]
-		}
 		arg `x: integer or decimal value`
 		returns `decimal order-zero Bessel function of the second kind`
 	}
@@ -737,9 +619,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the order-one Bessel function of the second kind."
 	{
 		argsn 1
-		argtypes {
-			1 [ Integer Decimal ]
-		}
 		arg `x: integer or decimal value`
 		returns `decimal order-one Bessel function of the second kind`
 	}
@@ -755,10 +634,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the order-n Bessel function of the second kind."
 	{
 		argsn 2
-		argtypes {
-			1 [ Integer Decimal ]
-			2 [ Integer Decimal ]
-		}
 		arg `n: integer order`
 		arg `x: integer or decimal value`
 		returns `decimal order-n Bessel function of the second kind`
@@ -775,10 +650,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the order-n Bessel function of the first kind."
 	{
 		argsn 2
-		argtypes {
-			1 [ Integer Decimal ]
-			2 [ Integer Decimal ]
-		}
 		arg `n: integer order`
 		arg `x: integer or decimal value`
 		returns `decimal order-n Bessel function of the first kind`
@@ -795,9 +666,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the integer value of input."
 	{
 		argsn 1
-		argtypes {
-			1 [ Integer Decimal ]
-		}
 		arg `x: integer or decimal value`
 		returns `decimal integer value of x (truncated toward zero)`
 	}
@@ -827,9 +695,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Converts degrees to radians."
 	{
 		argsn 1
-		argtypes {
-			1 [ Integer Decimal ]
-		}
 		arg `degrees: integer or decimal value in degrees`
 		returns `decimal value in radians`
 	}
@@ -862,9 +727,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns true if a decimal is close to zero."
 	{
 		argsn 1
-		argtypes {
-			1 [ Integer Block ]
-		}
 		arg `x: integer or decimal value`
 		returns `boolean true if value is very close to zero, false otherwise`
 	}
@@ -881,9 +743,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns true if the integer is a prime number."
 	{
 		argsn 1
-		argtypes {
-			1 [ Integer ]
-		}
 		arg `n: integer value to check`
 		returns `integer 1 if n is prime, 0 otherwise`
 	}
@@ -940,10 +799,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns the greatest common divisor of two integers using Euclidean algorithm."
 	{
 		argsn 2
-		argtypes {
-			1 [ Integer ]
-			2 [ Integer ]
-		}
 		arg `a: integer value`
 		arg `b: integer value`
 		returns `integer greatest common divisor of a and b`
@@ -964,10 +819,6 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Computes the outer product of two vectors (blocks), returning a matrix (block of blocks) where each element [i,j] = a[i] * b[j]. Similar to numpy.outer()."
 	{
 		argsn 2
-		argtypes {
-			1 [ Block ]
-			2 [ Block ]
-		}
 		arg `a: block of integers or decimals (first vector)`
 		arg `b: block of integers or decimals (second vector)`
 		returns `block of blocks (matrix) where element [i,j] = a[i] * b[j], similar to numpy.outer()`
@@ -1025,9 +876,6 @@ section "Match dialect " "pattern matching and deconstruction" {
 	"Tries to match and deconstruct a value into multiple values, with support for literal values, type checking, get-words, code evaluation, and nested blocks. First argument can be any value. If it doesn't match, returns failure."
 	{
 		argsn 2
-		argtypes {
-			2 [ Block ]
-		}
 		arg `block: Block to match and deconstruct`
 		arg `pattern: Block containing:`
 		arg `- Words to bind values to`
@@ -1085,9 +933,6 @@ section "Match dialect " "pattern matching and deconstruction" {
 	"Matches a value against a series of pattern/action pairs. Pattern can be a single element or block. Returns the result of the first matching action, or failure if none match."
 	{
 		argsn 2
-		argtypes {
-			2 [ Block ]
-		}
 		arg `value: Any value to match against patterns (can be a block or any other value)`
 		arg `patterns: Block containing pairs:`
 		arg `- First element: pattern (can be a single element like <integer> or a block like { a b })`
@@ -1151,9 +996,6 @@ section "EYR Dialect " "Stack based evaluator / dialect" {
 	"Evaluates Rye block as Eyr (postfix) stack based code."
 	{
 		argsn 1
-		argtypes {
-			1 [ Block ]
-		}
 		arg `block: Block of code to evaluate in EYR (postfix) mode`
 		returns `result of evaluating the block as postfix stack-based code`
 	}
@@ -1174,9 +1016,6 @@ section "EYR Dialect " "Stack based evaluator / dialect" {
 	"Evaluates Rye block as Rye0 dialect."
 	{
 		argsn 1
-		argtypes {
-			1 [ Block ]
-		}
 		arg `block: Block of code to evaluate in RYE0 dialect`
 		returns `result of evaluating the block in RYE0 dialect`
 	}
@@ -1194,9 +1033,6 @@ section "EYR Dialect " "Stack based evaluator / dialect" {
 	"Evaluates Rye block as Rye00 dialect (builtins and integers only)."
 	{
 		argsn 1
-		argtypes {
-			1 [ Block ]
-		}
 		arg `block: Block of code to evaluate in RYE00 dialect (builtins and integers only)`
 		returns `result of evaluating the block in RYE00 dialect (minimal feature set)`
 	}
@@ -1229,9 +1065,6 @@ section "EYR Dialect " "Stack based evaluator / dialect" {
 	"Evaluates Rye block as Eyr (postfix) stack based code."
 	{
 		argsn 1
-		argtypes {
-			1 [ Block ]
-		}
 		arg `block: Block of code to evaluate in EYR mode returning full stack as block`
 		returns `block containing all values from the EYR evaluation stack`
 	}
@@ -1249,10 +1082,6 @@ section "EYR Dialect " "Stack based evaluator / dialect" {
 	"Evaluates Rye block in loop as Eyr code (postfix stack based) N times."
 	{
 		argsn 2
-		argtypes {
-			1 [ Integer ]
-			2 [ Block ]
-		}
 		arg `count: Integer number of times to loop`
 		arg `block: Block of EYR code to execute in each iteration`
 		returns `result of the final EYR evaluation`
@@ -1271,9 +1100,6 @@ section "EYR Dialect " "Stack based evaluator / dialect" {
 	"Evaluates Rye block as Eyr (postfix) stack based code."
 	{
 		argsn 1
-		argtypes {
-			1 [ Block ]
-		}
 		arg `block: Rye block to compile/convert to EYR format`
 		returns `block containing the EYR-compiled version of the input block`
 	}
@@ -1294,10 +1120,6 @@ section "Complex numbers " "Functions for working with complex numbers" {
 	{
 		argsn 2
 		pure
-		argtypes {
-			1 [ Integer Decimal ]
-			2 [ Integer Decimal ]
-		}
 		arg `real: Real part of the complex number (integer or decimal)`
 		arg `imag: Imaginary part of the complex number (integer or decimal)`
 		returns `a new complex number with the given real and imaginary parts`
@@ -1336,9 +1158,6 @@ section "Complex numbers " "Functions for working with complex numbers" {
 	{
 		argsn 1
 		pure
-		argtypes {
-			1 [ Complex ]
-		}
 		arg `value: Complex number`
 		returns `decimal value representing the real part of the complex number`
 	}
@@ -1357,9 +1176,6 @@ section "Complex numbers " "Functions for working with complex numbers" {
 	{
 		argsn 1
 		pure
-		argtypes {
-			1 [ Complex ]
-		}
 		arg `value: Complex number`
 		returns `decimal value representing the imaginary part of the complex number`
 	}
@@ -1378,9 +1194,6 @@ section "Complex numbers " "Functions for working with complex numbers" {
 	{
 		argsn 1
 		pure
-		argtypes {
-			1 [ Complex ]
-		}
 		arg `z: Complex number`
 		returns `complex number representing the complex conjugate of z`
 	}
@@ -1399,9 +1212,6 @@ section "Complex numbers " "Functions for working with complex numbers" {
 	{
 		argsn 1
 		pure
-		argtypes {
-			1 [ Complex ]
-		}
 		arg `z: Complex number`
 		returns `decimal value representing the phase (argument) of the complex number`
 	}

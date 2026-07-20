@@ -1,23 +1,23 @@
+//go:build !no_baseio
+// +build !no_baseio
+
 package evaldo
 
 import (
-	"bytes"
 	"fmt"
-	"io"
-	"os"
 	"strings"
 
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/term"
-	"golang.org/x/sync/errgroup"
 
 	// JM 20230825	"github.com/refaktor/rye/term"
 
 	"github.com/refaktor/rye/util"
 )
 
-// displayRyeValue handles the display of Rye values, supporting both interactive and non-interactive modes
-func displayRyeValue(ps *env.ProgramState, arg0 env.Object, interactive bool) (env.Object, string) {
+// DisplayRyeValue handles the display of Rye values, supporting both interactive and non-interactive modes.
+// Exported so the console package can reference it via evaldo.DisplayRyeValue.
+func DisplayRyeValue(ps *env.ProgramState, arg0 env.Object, interactive bool) (env.Object, string) {
 	if interactive {
 		// Full interactive mode - use terminal display functions for navigation
 		term.SaveCurPos()
@@ -63,22 +63,20 @@ func displayRyeValue(ps *env.ProgramState, arg0 env.Object, interactive bool) (e
 				return obj, ""
 			}
 		case env.Markdown:
-			items := markdownDisplayItems(bloc.Value)
+			items := BatteryMarkdownDisplayHook(bloc.Value)
 			if len(items) == 0 {
 				return bloc, ""
 			}
-			convertedItems := convertMarkdownDisplayItems(items)
-			obj, esc := term.DisplayMarkdownItems(convertedItems, ps.Idx)
+			obj, esc := term.DisplayMarkdownItems(items, ps.Idx)
 			if !esc {
 				return obj, ""
 			}
 		case *env.Markdown:
-			items := markdownDisplayItems(bloc.Value)
+			items := BatteryMarkdownDisplayHook(bloc.Value)
 			if len(items) == 0 {
 				return bloc, ""
 			}
-			convertedItems := convertMarkdownDisplayItems(items)
-			obj, esc := term.DisplayMarkdownItems(convertedItems, ps.Idx)
+			obj, esc := term.DisplayMarkdownItems(items, ps.Idx)
 			if !esc {
 				return obj, ""
 			}
@@ -680,7 +678,7 @@ var builtins_printing = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Interactively displays a value (Block, Dict, Table, TableRow, or Markdown) in the terminal with navigation capabilities.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			result, _ := displayRyeValue(ps, arg0, true)
+			result, _ := DisplayRyeValue(ps, arg0, true)
 			return result
 		},
 	},
@@ -781,90 +779,5 @@ var builtins_printing = map[string]*env.Builtin{
 		},
 	},
 
-	// Tests:
-	// equal { capture-stdout { print "hello" } } "hello\n"
-	// equal { capture-stdout { loop 3 { prns "x" } } } "x x x "
-	// Args:
-	// * block: Block of code to execute with captured stdout
-	// Returns:
-	// * string containing all output captured during block execution
-	"capture-stdout": { // **
-		Argsn: 1,
-		Doc:   "Executes a block of code while capturing all output to stdout, returning the captured output as a string.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch bloc := arg0.(type) {
-			case env.Block:
-
-				old := os.Stdout // keep backup of the real stdout
-				r, w, _ := os.Pipe()
-				os.Stdout = w
-
-				outC := make(chan string, 1000)
-				g := errgroup.Group{}
-				// copy the output in a separate goroutine so printing can't block indefinitely
-				g.Go(func() error {
-					/* var buf bytes.Buffer
-					reader := bufio.NewReader(r)
-					for {
-						line, err := reader.ReadString('\n')
-						if err != nil {
-							if err == io.EOF {
-								break
-							}
-							// Handle error
-							fmt.Println(err)
-							break
-						}
-						buf.WriteString(line)
-					}
-					outC <- buf.String()
-					*/
-					var buf bytes.Buffer
-					_, err := io.Copy(&buf, r)
-					if err != nil {
-						w.Close()
-						os.Stdout = old // restoring the real stdout
-						fmt.Println(err.Error())
-						return err
-					}
-					outC <- buf.String()
-					return nil
-				})
-
-				ser := ps.Ser
-				ps.Ser = bloc.Series
-				ps.BlockFile = bloc.FileName
-				ps.BlockLine = bloc.Line
-				Eval(ps)
-				ps.Ser = ser
-
-				// back to normal state - restore stdout BEFORE displaying errors
-				w.Close()
-				os.Stdout = old // restoring the real stdout
-
-				if err := g.Wait(); err != nil {
-					return MakeBuiltinError(ps, fmt.Sprintf("Error reading stdout: %v", err), "capture-stdout")
-				}
-				out := <-outC
-
-				// Reset SkipFlag since any previous error display went to the captured stdout
-				// and wasn't visible to the user. We need to display errors to real stdout.
-				ps.SkipFlag = false
-				
-				// Display error after stdout is restored so user can see it
-				MaybeDisplayFailureOrError(ps, ps.Idx, "capture-stdout")
-
-				if ps.ErrorFlag {
-					return ps.Res
-				}
-				// reading our temp stdout
-				// fmt.Println("previous output:")
-				// fmt.Print(out)
-
-				return *env.NewString(out)
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "capture-stdout")
-			}
-		},
-	},
+	// capture-stdout moved to builtins_baseio.go
 }

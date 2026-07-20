@@ -1,7 +1,7 @@
 ; Parser tests for comment handling
 ; Regression tests to confirm comments work correctly inside blocks.
 ;
-; KEY RULE: LoadStringNoPEG (used by 'load') wraps input in "{ input\n}" automatically.
+; KEY RULE: LoadStringNoPEG (used by 'Load') wraps input in "{ input\n}" automatically.
 ; So pass RAW tokens (no outer braces) to get the flat top-level block.
 ;   load "42"            → block { 42 }       → length? = 1
 ;   load "; cmt\n 42"   → block { 42 }       → length? = 1 (comment stripped)
@@ -61,7 +61,7 @@ assert\display "comment does not consume next line" {
 ; ============================================
 ; ./ dotword fix (regression test)
 ; Owner confirmed: ./ should be a dotword since / is an op-word
-; Fixed in loader_no_peg.go readOpWord() — only set cpath when word chars precede /
+; Fixed in Loader_no_peg.go readOpWord() — only set cpath when word chars precede /
 ; ============================================
 
 assert\display "./ is a dotword not a cpath" {

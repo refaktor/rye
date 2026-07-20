@@ -477,7 +477,7 @@ var builtins_types = map[string]*env.Builtin{
 			case env.Kind:
 				switch dict := arg0.(type) {
 				case env.Dict:
-					obj := BuiValidate(ps, dict, spec.Spec)
+					obj := BatteryValidateHook(ps, dict, spec.Spec)
 					switch obj1 := obj.(type) {
 					case env.Dict:
 						ctx := util.Dict2Context(ps, obj1)
@@ -660,7 +660,7 @@ var builtins_types = map[string]*env.Builtin{
 			case env.Kind:
 				switch dict := arg0.(type) {
 				case env.Dict:
-					obj := BuiValidate(ps, dict, spec.Spec)
+					obj := BatteryValidateHook(ps, dict, spec.Spec)
 					switch obj1 := obj.(type) {
 					case env.Dict:
 						ctx := util.Dict2Context(ps, obj1)
@@ -671,7 +671,7 @@ var builtins_types = map[string]*env.Builtin{
 					}
 				case *env.RyeCtx:
 					if spec.HasConverter(dict.Kind.Index) {
-						obj := BuiConvert(ps, dict, spec.Converters[dict.Kind.Index])
+						obj := BatteryConvertHook(ps, dict, spec.Converters[dict.Kind.Index])
 						switch ctx := obj.(type) {
 						case *env.RyeCtx:
 							ctx.Kind = spec.Kind

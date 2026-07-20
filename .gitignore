@@ -78,3 +78,6 @@ step_*.md*
 stepi_*md*
 stepi_*csv*
 step*-*.md
+examples/archive
+evaldo/archive
+_sandbox

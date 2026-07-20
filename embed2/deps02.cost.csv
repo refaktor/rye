@@ -1,0 +1,8 @@
+timestamp,step,cost,type,description,input_tokens,output_tokens,model
+2026-07-16 15:00:40,1,0.004758,llm_call,LLM turn 1 (anthropic) (tool_call),1266,64,claude-sonnet-4-6
+2026-07-16 15:00:40,2,0.000000,tool,read: deps01.out.md,0,0,
+2026-07-16 15:00:44,3,0.012042,llm_call,LLM turn 2 (anthropic) (tool_call),3484,106,claude-sonnet-4-6
+2026-07-16 15:00:44,4,0.000000,tool,"bash: ls /home/jimez/Work/rye/embed2/ && echo ""---"" && cat /home/jimez/Work/rye/embed2/go.mod",0,0,
+2026-07-16 15:00:46,5,0.013689,llm_call,LLM turn 3 (anthropic) (tool_call),4223,68,claude-sonnet-4-6
+2026-07-16 15:00:46,6,0.000000,tool,read: /home/jimez/Work/rye/embed2/rye.go,0,0,
+2026-07-16 15:01:10,7,0.035958,llm_call,LLM turn 4 (anthropic) (complete),7241,949,claude-sonnet-4-6
