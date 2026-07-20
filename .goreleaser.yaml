@@ -30,12 +30,19 @@ builds:
       - arm
       - arm64
       - wasm
+      - "386"
     
     ignore: # List of combinations of GOOS + GOARCH + GOARM to ignore.
       - goos: windows
         goarch: arm
       - goos: linux
         goarch: arm
+      - goos: windows
+        goarch: "386"
+      - goos: darwin
+        goarch: "386"
+      - goos: js
+        goarch: "386"
 
     flags:
     # - -tags=b_tiny

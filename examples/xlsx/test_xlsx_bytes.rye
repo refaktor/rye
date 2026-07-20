@@ -1,0 +1,21 @@
+; Test the new bytes support for XLSX functions
+
+; Create a test table  
+table { "name" "age" } { "Alice" 30 "Bob" 25 } :test-table
+
+print type? test-table
+
+; Test format\xlsx - should return bytes native value
+format\xlsx test-table :xlsx-bytes
+
+; Check the type
+print type? xlsx-bytes
+print kind? xlsx-bytes
+
+; Test parse\xlsx with bytes input 
+parse\xlsx xlsx-bytes :parsed-table
+
+; Check the type
+print type? parsed-table
+
+print "✓ All tests completed!"
