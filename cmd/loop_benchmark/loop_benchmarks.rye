@@ -41,12 +41,86 @@ do-benchmarks: fn { dsl } {
 		a: does { b } b: does { c } c: does { 123 }
 		print time-it { dsl { prns loop 1000000 { a } } }
 	}
+
+
+	; NEW checks
+	
+; function env creation
+	a: does { }
+loop 1000000 { a }
+
+; argument cost
+a3: fn { x y z } { x }
+loop 1000000 { a3 1 2 3 }
+
+; recursion depth cost
+fib: fn { n } { either n < 2 { n } { (fib n - 1) + (fib n - 2) } }
+print time-it { fib 25 }
+
+; closure cost
+make-counter: fn { } { n: 0  closure { } { n:: n + 1  n } }
+c: make-counter
+loop 1000000 { c }
+
+
+; branshing cost
+loop 1000000 { either 1 > 0 { 1 } { 2 } }
+
+
+; Rye
+prns "fn-args:"
+private {
+    add-nums: fn { x y } { x + y }
+    print time-it { dsl { prns loop 1000000 { add-nums 10 20 } } }
+}
+
+prns "var-assign:"
+private {
+    a: 0
+    print time-it { dsl { prns loop 1000000 { a: 123 } } }
+}
+
+; expression chain
+; Rye
+prns "math-chain:"
+print time-it { dsl { prns loop 1000000 { 10 + 20 + 30 + 40 } } }
+
+prns "block-alloc:"
+print time-it { dsl { prns loop 1000000 { list [ 1 2 3 ] } } }
+
+; Where python should win the most
+
+; Rye
+prns "dict-lookup:"
+private {
+    d: dict { "key" 100 }
+    print time-it { dsl { prns loop 1000000 { d ? "key" } } }
+}
+
+
+prns "string-format:"
+print time-it { dsl { prns loop 1000000 { concat "hello-" "123" } } }
+
+prns "math-accumulate:"
+private {
+    acc: 0
+    print time-it { dsl { prns loop 1000000 { acc: acc + 1 } } }
+}
+
+; ofload to go
+data: range 1 1000000
+print time-it { sum data }
+
+; list comprehension collector
+
+collect { loop 1000000 { |i| keep _+ i i } }
+
 }
 
 print "== DO mode (base evaluator) =="
 
 do-benchmarks ?do
 
-print "== RYE0 mode (some more optimisations) =="
-
-do-benchmarks ?rye0
+; print "== RYE0 mode (some more optimisations) =="
+; 
+; do-benchmarks ?rye0
