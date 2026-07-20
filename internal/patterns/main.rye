@@ -2,7 +2,7 @@
 ; Run test cases: ../rye main.rye test
 ; Generate documentation: ../rye main.rye doc > builtins.html
 
-rye .Args\raw? |load :args
+rye .Args\raw? |Load :args
 root-ctx: current
 
 t: ?term
@@ -96,7 +96,7 @@ generate-menu: fn { menu } {
 }
 
 generate-doc-file: fn { filename menu } {
-	tests: load to-file filename ++ ".info.rye"
+	tests: Load to-file filename ++ ".info.rye"
 	probe tests
 	join {
 		%tpl/header.html .read .replace "{{title}}" capitalize filename |replace "{{menu}}" generate-menu menu
@@ -137,7 +137,7 @@ test {
 	if sections .length? > 0 {  ; todo add is-empty builtin
 		var 'errors 0
 		for sections {
-			.to-string ++ ".info.rye" |to-file |load :tests ,
+			.to-string ++ ".info.rye" |to-file |Load :tests ,
 			.to-string .with { term/bold , prns "\n#" , .to-upper .prns , print "#\n" }
 			tests |^check { "group does not exist!" } |do\in* test-framework | ++ errors ::errors
 		} 

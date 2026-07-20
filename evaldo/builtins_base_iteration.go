@@ -1907,7 +1907,7 @@ var builtins_iteration = map[string]*env.Builtin{
 	//  equal { try { seek "1234" { .integer > 5 } } |type? } 'error
 	//  equal { seek { 1 2 3 4 } ?is-even } 2
 	//  equal { seek list { 1 2 3 4 } ?is-even } 2
-	//  equal { is-even: fn { x } { x .is-even } , seek { 1 2 3 4 } ?is-even } 2
+	//  equal { my-is-even: fn { x } { x .is-even } , seek { 1 2 3 4 } ?my-is-even } 2
 	// Args:
 	// * series: Block, List, or String to search through
 	// * code: Block, Builtin, or Function that returns true when the desired value is found

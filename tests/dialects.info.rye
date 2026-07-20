@@ -1,5 +1,1229 @@
-Error parsing Go code: open ../evaldo/builtins_math.go: no such file or directory
-Error parsing Go code: open ../evaldo/builtins_validation.go: no such file or directory
-Error parsing Go code: open ../evaldo/builtins_match.go: no such file or directory
-Error parsing Go code: open ../evaldo/builtins_eyr.go: no such file or directory
-Error parsing Go code: open ../evaldo/builtins_complex.go: no such file or directory
+section "Math context and dialect " "Mathematical context and dialect (calc)" {
+	group "mod" 
+	"Returns the remainder of dividing x by y."
+	{
+		argsn 2
+		arg `x: integer or decimal value`
+		arg `y: integer or decimal value`
+		returns `decimal remainder of x/y`
+	}
+
+	{
+		math .change! 'root-ctx   ; temporary way to change context ... will systemize it #TODO, rename root-ctx to curr-ctx and leave root-ctx for returning to it
+		equal { cc math |type? } 'context
+		equal { mod 10 3 } 1.0
+	}
+
+	{
+	}
+
+	group "pow" 
+	"Returns base raised to the power of exponent."
+	{
+		argsn 2
+		arg `base: integer, decimal, or complex value`
+		arg `exponent: integer, decimal, or complex value`
+		returns `decimal result of base raised to the power of exponent for integer/decimal inputs, complex result for complex inputs`
+	}
+
+	{
+		equal { cc math |type? } 'context
+		equal { pow 2 3 } 8.0
+		stdout { pow complex 2 0 complex 3 0 |prn } "8.000000+0.000000i"
+		stdout { pow complex 0 1 complex 2 0 |prn } "-1.000000+0.000000i"
+	}
+
+	{
+	}
+
+	group "log2" 
+	"Returns the binary logarithm (base-2) of x."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal binary logarithm of x`
+	}
+
+	{
+		equal { log2 8 } 3.0
+		equal { log2 1 } 0.0
+	}
+
+	{
+	}
+
+	group "log10" 
+	"Returns the decimal logarithm (base-10) of x."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal base-10 logarithm of x`
+	}
+
+	{
+		equal { log10 100 } 2.0
+	}
+
+	{
+	}
+
+	group "log" 
+	"Returns the natural logarithm of x."
+	{
+		argsn 1
+		arg `x: integer, decimal, complex, vector or matrix value`
+		returns `natural logarithm of x (element-wise for vector/matrix)`
+	}
+
+	{
+		equal { log 1 } 0.0
+		equal { log 2.718281828459045 } 1.0
+		stdout { log complex 1 0 |prn } "0.000000+0.000000i"
+		stdout { log complex 2.718281828459045 0 |prn } "1.000000+0.000000i"
+		; error { log 0 }
+		; error { log complex 0 0 }
+		equal { log vector { 1.0 2.718281828459045 } |vec-to-block |first } 0.0
+		equal { log matrix { 1 2 } { 1.0 2.718281828459045 } |mat-get 0 0 } 0.0
+	}
+
+	{
+	}
+
+	group "log1p" 
+	"Returns the natural logarithm of 1 plus its argument x."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal natural logarithm of (1 + x)`
+	}
+
+	{
+		equal { log1p 0 } 0.0
+	}
+
+	{
+	}
+
+	group "logb" 
+	"Returns the binary exponent of x."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal binary exponent of x`
+	}
+
+	{
+		equal { logb 8 } 3.0
+	}
+
+	{
+	}
+
+	group "sq" 
+	"Returns the square of x."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal square of x`
+	}
+
+	{
+		equal { sq 4 } 16.0
+		equal { sq -3 } 9.0
+	}
+
+	{
+	}
+
+	group "sin" 
+	"Returns the sine of the radian argument."
+	{
+		argsn 1
+		arg `x: integer, decimal, or complex value in radians`
+		returns `decimal sine of x for integer/decimal input, complex sine for complex input`
+	}
+
+	{
+		equal { sin 0 } 0.0
+		equal { round\to sin pi 10 } 0.0
+		stdout { sin complex 0 0 |prn } "0.000000+0.000000i"
+		stdout { sin complex 1.570796326794897 0 |prn } "1.000000+-0.000000i"
+	}
+
+	{
+	}
+
+	group "cos" 
+	"Returns the cosine of the radian argument."
+	{
+		argsn 1
+		arg `x: integer, decimal, or complex value in radians`
+		returns `decimal cosine of x for integer/decimal input, complex cosine for complex input`
+	}
+
+	{
+		equal { cos 0 } 1.0
+		stdout { cos complex 0 0 |prn } "1.000000+-0.000000i"
+		stdout { cos complex 3.141592653589793 0 |prn } "-1.000000+-0.000000i"
+	}
+
+	{
+	}
+
+	group "tan" 
+	"Returns the tangent of the radian argument."
+	{
+		argsn 1
+		arg `x: integer, decimal, or complex value in radians`
+		returns `decimal tangent of x for integer/decimal input, complex tangent for complex input`
+	}
+
+	{
+		equal { tan 0 } 0.0
+		stdout { tan complex 0 0 |prn } "0.000000+0.000000i"
+		stdout { tan complex 0.7853981633974483 0 |prn } "1.000000+0.000000i"
+	}
+
+	{
+	}
+
+	group "sqrt" 
+	"Returns the square root of x."
+	{
+		argsn 1
+		arg `x: integer, decimal, complex, vector or matrix value`
+		returns `square root of x (element-wise for vector/matrix)`
+	}
+
+	{
+		equal { sqrt 9 } 3.0
+		equal { sqrt 2.0 |round\to 4 } 1.4142
+		stdout { sqrt complex -1 0 |prn } "0.000000+1.000000i"
+		equal { sqrt vector { 4.0 9.0 16.0 } |vec-to-block |first } 2.0
+		equal { sqrt matrix { 2 2 } { 4.0 9.0 16.0 25.0 } |mat-get 1 1 } 5.0
+	}
+
+	{
+	}
+
+	group "abs" 
+	"Returns the absolute value of a number."
+	{
+		argsn 1
+		arg `x: integer, decimal, complex, vector or matrix value`
+		returns `absolute value of x (element-wise for vector/matrix)`
+	}
+
+	{
+		equal { abs -5 } 5
+		equal { abs 5 } 5
+		equal { abs complex 3 4 } 5.0
+		equal { abs vector { -1.0 2.0 -3.0 } |vec-to-block |first } 1.0
+		equal { abs matrix { 2 2 } { -1.0 2.0 -3.0 4.0 } |mat-get 1 0 } 3.0
+	}
+
+	{
+	}
+
+	group "acos" 
+	"Returns the arccosine (inverse cosine) in radians."
+	{
+		argsn 1
+		arg `x: integer or decimal value between -1 and 1`
+		returns `decimal arccosine of x in radians`
+	}
+
+	{
+		equal { acos 1 } 0.0
+	}
+
+	{
+	}
+
+	group "acosh" 
+	"Returns the inverse hyperbolic cosine."
+	{
+		argsn 1
+		arg `x: integer or decimal value >= 1`
+		returns `decimal inverse hyperbolic cosine of x`
+	}
+
+	{
+		equal { acosh 1 } 0.0
+	}
+
+	{
+	}
+
+	group "asin" 
+	"Returns the arcsine (inverse sine) in radians."
+	{
+		argsn 1
+		arg `x: integer or decimal value between -1 and 1`
+		returns `decimal arcsine of x in radians`
+	}
+
+	{
+		equal { asin 0 } 0.0
+	}
+
+	{
+	}
+
+	group "asinh" 
+	"Returns the inverse hyperbolic sine."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal inverse hyperbolic sine of x`
+	}
+
+	{
+		equal { asinh 0 } 0.0
+	}
+
+	{
+	}
+
+	group "atan" 
+	"Returns the arctangent (inverse tangent) in radians."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal arctangent of x in radians`
+	}
+
+	{
+		equal { atan 0 } 0.0
+	}
+
+	{
+	}
+
+	group "atan2" 
+	"Returns the arc tangent of y/x, using the signs of the two to determine the quadrant of the return value."
+	{
+		argsn 2
+		arg `y: integer or decimal value`
+		arg `x: integer or decimal value`
+		returns `decimal arctangent of y/x in radians, using signs to determine quadrant`
+	}
+
+	{
+		equal { atan2 0 1 } 0.0
+	}
+
+	{
+	}
+
+	group "atanh" 
+	"Returns the inverse hyperbolic tangent."
+	{
+		argsn 1
+		arg `x: integer or decimal value between -1 and 1`
+		returns `decimal inverse hyperbolic tangent of x`
+	}
+
+	{
+		equal { atanh 0 } 0.0
+	}
+
+	{
+	}
+
+	group "ceil" 
+	"Returns the least integer value greater than or equal to x."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal ceiling of x (smallest integer >= x)`
+	}
+
+	{
+		equal { ceil 3.1 } 4.0
+	}
+
+	{
+	}
+
+	group "cbrt" 
+	"Returns the cube root of x."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal cube root of x`
+	}
+
+	{
+		equal { cbrt 8 } 2.0
+	}
+
+	{
+	}
+
+	group "copysign" 
+	"Returns a value with the magnitude of x and the sign of y."
+	{
+		argsn 2
+		arg `x: integer or decimal value`
+		arg `y: integer or decimal value`
+		returns `decimal with magnitude of x and sign of y`
+	}
+
+	{
+		equal { copysign 1.0 -2.0 } -1.0
+	}
+
+	{
+	}
+
+	group "dim" 
+	"Returns the maximum of x-y or 0."
+	{
+		argsn 2
+		arg `x: integer or decimal value`
+		arg `y: integer or decimal value`
+		returns `decimal max(x-y, 0)`
+	}
+
+	{
+		equal { dim 5 3 } 2.0
+		equal { dim 3 5 } 0.0
+	}
+
+	{
+	}
+
+	group "round\\to" 
+	"Rounds a decimal to the specified number of decimal places."
+	{
+		argsn 2
+		arg `x: decimal value to round`
+		arg `digits: integer number of decimal places to round to`
+		returns `decimal rounded to specified number of decimal places`
+	}
+
+	{
+		equal { round\to 3.14159 2 } 3.14
+		equal { round\to 2.71828 3 } 2.718
+	}
+
+	{
+	}
+
+	group "round" 
+	"Rounds a decimal to the nearest integer."
+	{
+		argsn 1
+		arg `x: decimal value`
+		returns `decimal rounded to nearest integer`
+	}
+
+	{
+		equal { round 3.7 } 4.0
+		equal { round 3.2 } 3.0
+	}
+
+	{
+	}
+
+	group "roundtoeven" 
+	"Returns the nearest integer, rounding ties to even."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal rounded to nearest integer, with ties rounded to even`
+	}
+
+	{
+		equal { roundtoeven 3.5 } 4.0
+		equal { roundtoeven 2.5 } 2.0
+	}
+
+	{
+	}
+
+	group "erf" 
+	"Returns the error function of value."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal error function value of x`
+	}
+
+	{
+		equal { erf 0 } 0.0
+	}
+
+	{
+	}
+
+	group "erfc" 
+	"Returns the complementary error function of value."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal complementary error function value of x`
+	}
+
+	{
+		equal { erfc 0 } 1.0
+	}
+
+	{
+	}
+
+	group "erfcinv" 
+	"Returns the inverse of erfc(x) function."
+	{
+		argsn 1
+		arg `x: integer or decimal value between 0 and 2`
+		returns `decimal inverse complementary error function value of x`
+	}
+
+	{
+		equal { erfcinv 1.0 } 0.0
+	}
+
+	{
+	}
+
+	group "erfinv" 
+	"Returns the inverse error function of value."
+	{
+		argsn 1
+		arg `x: integer or decimal value between -1 and 1`
+		returns `decimal inverse error function value of x`
+	}
+
+	{
+		equal { erfinv 0 } 0.0
+	}
+
+	{
+	}
+
+	group "exp" 
+	"Returns e**x, the base-e exponential of x."
+	{
+		argsn 1
+		arg `x: integer, decimal, complex, vector or matrix value`
+		returns `e^x (element-wise for vector/matrix)`
+	}
+
+	{
+		equal { exp 0 } 1.0
+		equal { exp 1 } 2.718281828459045
+		stdout { exp complex 0 0 |prn } "1.000000+0.000000i" ; OQ: complex is not a literal value yet, should it be?
+		stdout { exp complex 0 3.141592653589793 |prn } "-1.000000+0.000000i"
+		equal { exp vector { 0.0 1.0 } |vec-to-block |first } 1.0
+		equal { exp matrix { 1 2 } { 0.0 1.0 } |mat-get 0 0 } 1.0
+	}
+
+	{
+	}
+
+	group "exp2" 
+	"Returns 2**x, the base-2 exponential of x."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal 2^x`
+	}
+
+	{
+		equal { exp2 3 } 8.0
+	}
+
+	{
+	}
+
+	group "expm1" 
+	"Returns e**x - 1, the base-e exponential of x minus 1. It is more accurate than exp(x) - 1 when x is near zero."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal e^x - 1`
+	}
+
+	{
+		equal { expm1 0 } 0.0
+	}
+
+	{
+	}
+
+	group "fma" 
+	"Returns x * y + z, computed with only one rounding. (That is, FMA returns the fused multiply-add of x, y, and z.)"
+	{
+		argsn 3
+		arg `x: integer or decimal value`
+		arg `y: integer or decimal value`
+		arg `z: integer or decimal value`
+		returns `decimal (x * y) + z computed with only one rounding`
+	}
+
+	{
+		equal { fma 2 3 4 } 10.0
+	}
+
+	{
+	}
+
+	group "j0" 
+	"Returns the order-zero Bessel function of the first kind."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal order-zero Bessel function of the first kind`
+	}
+
+	{
+		equal { j0 0 } 1.0
+	}
+
+	{
+	}
+
+	group "j1" 
+	"Returns the order-one Bessel function of the first kind."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal order-one Bessel function of the first kind`
+	}
+
+	{
+		equal { j1 0 } 0.0
+	}
+
+	{
+	}
+
+	group "y0" 
+	"Returns the order-zero Bessel function of the second kind."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal order-zero Bessel function of the second kind`
+	}
+
+	{
+		equal { y0 1 } 0.08825696421567698
+	}
+
+	{
+	}
+
+	group "y1" 
+	"Returns the order-one Bessel function of the second kind."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal order-one Bessel function of the second kind`
+	}
+
+	{
+		equal { y1 1 } -0.7812128213002887
+	}
+
+	{
+	}
+
+	group "yn" 
+	"Returns the order-n Bessel function of the second kind."
+	{
+		argsn 2
+		arg `n: integer order`
+		arg `x: integer or decimal value`
+		returns `decimal order-n Bessel function of the second kind`
+	}
+
+	{
+		equal { yn 2 1 } -1.6506826068162546
+	}
+
+	{
+	}
+
+	group "jn" 
+	"Returns the order-n Bessel function of the first kind."
+	{
+		argsn 2
+		arg `n: integer order`
+		arg `x: integer or decimal value`
+		returns `decimal order-n Bessel function of the first kind`
+	}
+
+	{
+		equal { jn 2 1 } 0.1149034849319005
+	}
+
+	{
+	}
+
+	group "trunc" 
+	"Returns the integer value of input."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal integer value of x (truncated toward zero)`
+	}
+
+	{
+		equal { trunc 3.7 } 3.0
+	}
+
+	{
+	}
+
+	group "pi" 
+	"Returns the mathematical constant π (pi)."
+	{
+		arg `none`
+		returns `decimal value of π (pi)`
+	}
+
+	{
+		equal { round\to pi 5 } 3.14159
+	}
+
+	{
+	}
+
+	group "deg->rad" 
+	"Converts degrees to radians."
+	{
+		argsn 1
+		arg `degrees: integer or decimal value in degrees`
+		returns `decimal value in radians`
+	}
+
+	{
+		equal { deg->rad 180 } 3.141592653589793
+	}
+
+	{
+	}
+
+	group "is-near" 
+	"Returns true if two decimals are close."
+	{
+		argsn 2
+		arg `x: integer or decimal value`
+		arg `y: integer or decimal value`
+		returns `boolean true if values are very close, false otherwise`
+	}
+
+	{
+		equal { is-near 0.0000000000001 0 } true
+		equal { is-near 0.1 0 } false
+	}
+
+	{
+	}
+
+	group "near-zero" 
+	"Returns true if a decimal is close to zero."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `boolean true if value is very close to zero, false otherwise`
+	}
+
+	{
+		equal { near-zero 0.0000000000001 } true
+		equal { near-zero 0.1 } false
+	}
+
+	{
+	}
+
+	group "is-prime" 
+	"Returns true if the integer is a prime number."
+	{
+		argsn 1
+		arg `n: integer value to check`
+		returns `integer 1 if n is prime, 0 otherwise`
+	}
+
+	{
+		equal { is-prime 7 } true
+		equal { is-prime 10 } false
+	}
+
+	{
+	}
+
+	group "to-eyr" 
+	"Converts math dialect to Eyr dialect."
+	{
+		argsn 1
+		arg `block: block containing math expressions`
+		returns `block converted to Eyr dialect`
+	}
+
+	{
+		equal { to-eyr { 1 + 2 * 3 } |type? } 'block
+	}
+
+	{
+	}
+
+	group "calc" 
+	"Evaluates expressions in math dialect."
+	{
+		argsn 1
+		arg `block: block containing math expressions with proper operator precedence and parentheses support`
+		returns `result of evaluating the math expressions following standard mathematical order of operations`
+	}
+
+	{
+		equal { calc { 1 + 2 * 3 } } 7
+		equal { calc { 2 + 3 * 4 } } 14
+		equal { calc { 10 - 6 / 2 } } 7.0
+		equal { calc { 2 * 3 + 4 } } 10
+		equal { calc { 8 / 2 - 1 } } 3.0
+		equal { calc { ( 1 + 2 ) * 3 } } 9
+		equal { calc { 2 * ( 3 + 4 ) } } 14
+		equal { calc { ( 10 - 6 ) / 2 } } 2.0
+		equal { calc { ( 2 + 3 ) * ( 4 - 1 ) } } 15
+		equal { calc { 2 + ( 3 * ( 4 + 1 ) ) } } 17
+		equal { calc { ( ( 2 + 3 ) * 4 ) - 1 } } 19
+	}
+
+	{
+	}
+
+	group "gcd" 
+	"Returns the greatest common divisor of two integers using Euclidean algorithm."
+	{
+		argsn 2
+		arg `a: integer value`
+		arg `b: integer value`
+		returns `integer greatest common divisor of a and b`
+	}
+
+	{
+		equal { gcd 48 18 } 6
+		equal { gcd 17 13 } 1
+		equal { gcd 100 25 } 25
+		equal { gcd 0 5 } 5
+		equal { gcd 7 0 } 7
+	}
+
+	{
+	}
+
+	group "outer-product" 
+	"Computes the outer product of two vectors (blocks), returning a matrix (block of blocks) where each element [i,j] = a[i] * b[j]. Similar to numpy.outer()."
+	{
+		argsn 2
+		arg `a: block of integers or decimals (first vector)`
+		arg `b: block of integers or decimals (second vector)`
+		returns `block of blocks (matrix) where element [i,j] = a[i] * b[j], similar to numpy.outer()`
+	}
+
+	{
+		equal { outer-product { 1 2 3 } { 10 20 } } { { 10 20 } { 20 40 } { 30 60 } }
+		equal { outer-product { 1 2 } { 1 2 3 } } { { 1 2 3 } { 2 4 6 } }
+		equal { outer-product { 2.0 3.0 } { 4.0 5.0 } } { { 8.0 10.0 } { 12.0 15.0 } }
+		equal { outer-product { } { 1 2 } } { }
+	}
+
+	{
+	}
+
+}
+
+section "Validation dialect " "validation dialect for Rye values" {
+	group "validate" 
+	"Validates and transforms data according to specified rules, returning a dictionary with converted values or an error."
+	{
+		argsn 2
+		arg `data: Dictionary, Context, or List to validate`
+		arg `rules: Block containing validation rules`
+		returns `validated Dictionary/Context/List with converted values or error if validation fails`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "validate>ctx" 
+	"Validates and transforms data according to specified rules, returning a context object for easy field access."
+	{
+		argsn 2
+		arg `data: Dictionary to validate`
+		arg `rules: Block containing validation rules`
+		returns `validated Context with converted values or error if validation fails`
+	}
+
+	{
+		equal { validate>ctx dict { a: 1 } { a: required } |type? } 'context
+		equal { validate>ctx dict { a: 1 } { a: optional 0 } |-> 'a } 1
+	}
+
+	{
+	}
+
+}
+
+section "Match dialect " "pattern matching and deconstruction" {
+	group "match-block" 
+	"Tries to match and deconstruct a value into multiple values, with support for literal values, type checking, get-words, code evaluation, and nested blocks. First argument can be any value. If it doesn't match, returns failure."
+	{
+		argsn 2
+		arg `block: Block to match and deconstruct`
+		arg `pattern: Block containing:`
+		arg `- Words to bind values to`
+		arg `- Literal values to match`
+		arg `- Opwords to check value types (e.g., <integer>, <string>)`
+		arg `- Get-words to match against values in the current context (e.g., ?x)`
+		arg `- Square brackets [ ] to evaluate code with the value injected`
+		arg `- Nested blocks for recursive matching`
+		returns `Integer 1 if successful, or failure if the match fails`
+	}
+
+	{
+		; Basic matching with words:
+		equal { match-block { 1 2 3 } { a b c } a } 1
+		equal { match-block { 1 2 3 } { a b c } b } 2
+		equal { match-block { 1 2 3 } { a b c } c } 3
+		; error { match-block { 1 2 } { a b c } }
+		; error { match-block { 1 2 3 4 } { a b c } }
+		
+		; Matching with literal values:
+		equal { match-block { 1 "test" 3 } { a "test" b } a } 1
+		equal { match-block { 1 "test" 3 } { a "test" b } b } 3
+		; equal { try { match-block { 1 "hi" 3 } { a "bye" b } } |failed? } 1
+		
+		; Matching with nested blocks:
+		equal { match-block { 123 { "hi" 44 } 789 } { a { b c } d } a } 123
+		equal { match-block { 123 { "hi" 44 } 789 } { a { b c } d } b } "hi"
+		equal { match-block { 123 { "hi" 44 } 789 } { a { b c } d } c } 44
+		equal { match-block { 123 { "hi" 44 } 789 } { a { b c } d } d } 789
+		equal { match-block { 1 { 2 { 3 4 } 5 } 6 } { x { y { z w } v } u } z } 3
+		equal { match-block { 1 { 2 { 3 4 } 5 } 6 } { x { y { z w } v } u } w } 4
+		; equal { try { match-block { 1 { 2 3 } 4 } { a { b "wrong" } c } } |failed? } 1
+		
+		; Type checking with opwords:
+		equal { match-block { 123 } { <integer> } } true
+		equal { match-block { "hello" } { <string> } } true
+		equal { match-block { { 1 2 3 } } { <block> } } true
+		equal { match-block { 123.45 } { <decimal> } } true
+		; equal { try { match-block { "not an integer" } { <integer> } } |failed? } true
+		; equal { try { match-block { 123 } { <string> } } |failed? } true
+		
+		;Matching with get-words (match against values in the current context):
+		equal { x: 234 match-block { 123 234 } { 123 ?x } } true
+		; equal { x: 234 try { match-block { 123 456 } { 123 ?x } } |failed? } true
+		
+		; Evaluating blocks with the value injected:
+		; x: 0 , match-block { 1000 } { [ x:: . ] } , equal x 1000
+		; a: 0 , b: 0 , match-block { 100 200 300 } { [ a:: . ] [ b:: . ] c } , equal a 100 , equal b 200 , equal c 300
+	}
+
+	{
+	}
+
+	group "match" 
+	"Matches a value against a series of pattern/action pairs. Pattern can be a single element or block. Returns the result of the first matching action, or failure if none match."
+	{
+		argsn 2
+		arg `value: Any value to match against patterns (can be a block or any other value)`
+		arg `patterns: Block containing pairs:`
+		arg `- First element: pattern (can be a single element like <integer> or a block like { a b })`
+		arg `- Second element: code block to evaluate if pattern matches`
+		returns `The result of evaluating the code block of the first matching pattern, or failure if no pattern matches`
+	}
+
+	{
+		; Basic type matching with single values:
+		equal { match 5 { <integer> { "got integer" } <string> { "got string" } } } "got integer"
+		equal { match "hello" { <integer> { "got integer" } <string> { "got string" } } } "got string"
+		equal { match 3.14 { <integer> { "int" } <decimal> { "decimal" } <string> { "string" } } } "decimal"
+		
+		; Block deconstruction (simple):
+		equal { match { 1 2 } { { a b } { a + b } { x } { x * 2 } } } 3
+		equal { match { 101 202 } { { } { 0 } { a b } { a + b } } } 303
+		equal { match { 10 20 30 } { { x y z } { x + y + z } } } 60
+		
+		; Literal value matching:
+		equal { match 100 { 50 { "fifty" } 100 { "hundred" } 200 { "two hundred" } } } "hundred"
+		equal { match { 100 } { { 50 } { "fifty" } { 100 } { "hundred" } { 200 } { "two hundred" } } } "hundred"
+		
+		; Partial pattern matching:
+		equal { match { 10 20 } { { a 20 } { a * 2 } { 10 b } { b + 5 } } } 20
+		equal { match { 10 20 } { { 10 b } { b + 5 } { a 20 } { a * 2 } } } 25
+		
+		; Rule blocks with arity and type patterns:
+		equal { match { } { { } { 'no-data } { a b } { 'has-data } } } 'no-data
+		equal { match { "Jim" "30" } { { <string> <string> } { 'bad-format } { <string> <integer> } { 'good-format } } } 'bad-format
+		equal { match { "Jim" 30 } { { <string> <string> } { 'bad-format } { <string> <integer> } { 'good-format } } } 'good-format
+		
+		; Complex nested block patterns:
+		equal { match { 200 { "OK" 30 } } { { code { "OK" result } } { result } { code { "ERR" } } { 0 } } } 30
+		equal { match { 404 { "ERR" } } { { code { "OK" result } } { result } { code { "ERR" } } { code } } } 404
+		equal { match { "user" { "John" "Doe" 30 } } { { "user" { first last age } } { first } } } "John"
+		
+		; First :: rest pattern (head and tail matching):
+		equal { match { 11 22 33 } { { a :: bb } { a } } } 11
+		equal { match { 11 22 33 } { { a :: bb } { bb } } } { 22 33 }
+		equal { match { 11 22 33 } { { a b :: cc } { a + b } } } 33
+		equal { match { 11 22 33 44 } { { a b :: cc } { cc } } } { 33 44 }
+		equal { match { { 12 23 } { 23 34 } { 34 45 } } { { { a b } :: more } { a + b } } } 35
+		
+		; Mixed type patterns:
+		equal { match { 1 2 3 } { { <integer> <integer> <integer> } { 'three-ints } { <string> <string> } { 'two-strings } } } 'three-ints
+		equal { match { "hello" "world" } { { <integer> <integer> <integer> } { 'three-ints } { <string> <string> } { 'two-strings } } } 'two-strings
+		
+		; Error handling:
+		; equal { try { match 5.5 { <integer> { "got integer" } <string> { "got string" } } } |failed? } true
+		; equal { try { match { 1 2 3 } { { a b } { a + b } } } |failed? } true
+		
+	}
+
+	{
+	}
+
+}
+
+section "EYR Dialect " "Stack based evaluator / dialect" {
+	group "eyr" 
+	"Evaluates Rye block as Eyr (postfix) stack based code."
+	{
+		argsn 1
+		arg `block: Block of code to evaluate in EYR (postfix) mode`
+		returns `result of evaluating the block as postfix stack-based code`
+	}
+
+	{
+		equal { eyr { 1 2 + } } 3
+		equal { eyr { 5 3 - } } 2
+		equal { eyr { 4 2 * } } 8
+		equal { eyr { 6 2 / } } 3.0
+		equal { eyr { 10 3 mod } } 1.0
+		equal { eyr { 1 2 3 } } 3
+	}
+
+	{
+	}
+
+	group "rye0" 
+	"Evaluates Rye block as Rye0 dialect."
+	{
+		argsn 1
+		arg `block: Block of code to evaluate in RYE0 dialect`
+		returns `result of evaluating the block in RYE0 dialect`
+	}
+
+	{
+		; equal { rye0 { 1 + 2 } } 3
+		; equal { rye0 { 5 - 3 } } 2
+		; equal { rye0 { print "hello" } } "hello"
+	}
+
+	{
+	}
+
+	group "rye00" 
+	"Evaluates Rye block as Rye00 dialect (builtins and integers only)."
+	{
+		argsn 1
+		arg `block: Block of code to evaluate in RYE00 dialect (builtins and integers only)`
+		returns `result of evaluating the block in RYE00 dialect (minimal feature set)`
+	}
+
+	{
+		; equal { rye00 { 1 + 2 } } 3
+		; equal { rye00 { 5 * 3 } } 15
+		; equal { rye00 { inc 5 } } 6
+	}
+
+	{
+	}
+
+	group "eyr\\clear" 
+	"Clears the EYR stack."
+	{
+		arg `none`
+		returns `void`
+	}
+
+	{
+		equal { eyr { 1 2 3 eyr\clear } } false
+		equal { eyr { 1 2 eyr\clear 3 } } 3
+	}
+
+	{
+	}
+
+	group "eyr\\full" 
+	"Evaluates Rye block as Eyr (postfix) stack based code."
+	{
+		argsn 1
+		arg `block: Block of code to evaluate in EYR mode returning full stack as block`
+		returns `block containing all values from the EYR evaluation stack`
+	}
+
+	{
+		equal { eyr\clear eyr\full { 1 2 3 } |length? } 3
+		equal { eyr\clear eyr\full { 1 2 + 3 4 + } |length? } 2
+		equal { eyr\clear eyr\full { 10 5 - } |first } 5
+	}
+
+	{
+	}
+
+	group "eyr\\loop" 
+	"Evaluates Rye block in loop as Eyr code (postfix stack based) N times."
+	{
+		argsn 2
+		arg `count: Integer number of times to loop`
+		arg `block: Block of EYR code to execute in each iteration`
+		returns `result of the final EYR evaluation`
+	}
+
+	{
+		; equal { 3 .eyr\loop { 1 + } 0 } 3
+		; equal { 5 .eyr\loop { 2 * } 1 } 32
+		; equal { 2 .eyr\loop { dup + } 2 } 8
+	}
+
+	{
+	}
+
+	group "to-eyr" 
+	"Evaluates Rye block as Eyr (postfix) stack based code."
+	{
+		argsn 1
+		arg `block: Rye block to compile/convert to EYR format`
+		returns `block containing the EYR-compiled version of the input block`
+	}
+
+	{
+		equal { to-eyr { 1 + 2 } |type? } 'block
+		equal { to-eyr { 5 * 3 } |length? |> 0 } true
+	}
+
+	{
+	}
+
+}
+
+section "Complex numbers " "Functions for working with complex numbers" {
+	group "complex" 
+	"Creates a complex number from real and imaginary parts."
+	{
+		argsn 2
+		pure
+		arg `real: Real part of the complex number (integer or decimal)`
+		arg `imag: Imaginary part of the complex number (integer or decimal)`
+		returns `a new complex number with the given real and imaginary parts`
+	}
+
+	{
+		equal { complex 3 4 |type? } 'complex
+		equal { complex 3 4 |string } "3.000000+4.000000i"
+		equal { complex 0 0 |string } "0.000000+0.000000i"
+		equal { complex -1 -2 |string } "-1.000000-2.000000i"
+	}
+
+	{
+	}
+
+	group "complex?" 
+	"Checks if a value is a complex number."
+	{
+		argsn 1
+		pure
+		arg `value: Value to check`
+		returns `boolean true if the value is a complex number, false otherwise`
+	}
+
+	{
+		equal { complex? complex 3 4 } true
+		equal { complex? 5 } false
+		equal { complex? "hello" } false
+	}
+
+	{
+	}
+
+	group "real" 
+	"Returns the real part of a complex number."
+	{
+		argsn 1
+		pure
+		arg `value: Complex number`
+		returns `decimal value representing the real part of the complex number`
+	}
+
+	{
+		equal { real complex 3 4 } 3.0
+		equal { real complex -1.5 2.5 } -1.5
+		error { real 5 }
+	}
+
+	{
+	}
+
+	group "imag" 
+	"Returns the imaginary part of a complex number."
+	{
+		argsn 1
+		pure
+		arg `value: Complex number`
+		returns `decimal value representing the imaginary part of the complex number`
+	}
+
+	{
+		equal { imag complex 3 4 } 4.0
+		equal { imag complex -1.5 2.5 } 2.5
+		error { imag 5 }
+	}
+
+	{
+	}
+
+	group "complex-conj" 
+	"Returns the complex conjugate of a complex number."
+	{
+		argsn 1
+		pure
+		arg `z: Complex number`
+		returns `complex number representing the complex conjugate of z`
+	}
+
+	{
+		equal { complex-conj complex 3 4 |string } "3.000000-4.000000i"
+		equal { complex-conj complex 3 -4 |string } "3.000000+4.000000i"
+		error { complex-conj 5 }
+	}
+
+	{
+	}
+
+	group "complex-phase" 
+	"Returns the phase (argument) of a complex number."
+	{
+		argsn 1
+		pure
+		arg `z: Complex number`
+		returns `decimal value representing the phase (argument) of the complex number`
+	}
+
+	{
+		equal { complex-phase complex 1 1 } 0.7853981633974483
+		equal { complex-phase complex -1 0 } 3.141592653589793
+		error { complex-phase 5 }
+	}
+
+	{
+	}
+
+}
+

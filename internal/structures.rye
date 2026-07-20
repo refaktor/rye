@@ -521,7 +521,7 @@ section "Context related functions"
 }
 
 
-section "Serializers and loaders"
+section "Serializers and Loaders"
 "Functions that print values to stdio"
 {
 	group "mold"
@@ -557,21 +557,21 @@ section "Serializers and loaders"
 		equal { fn { x "docstring" } { x + 1 } |doc\of? } "docstring"
 	}
 
-	group "load"
-	mold\nowrap ?load
+	group "Load"
+	mold\nowrap ?Load
 	{ { block } }
 	{
-		equal { load "1 2 3" |type? } 'block
-		equal { load "1 2 3" |length? } 3
-		equal { load "1 2 { print 4 }" |third |length? } 2
-		equal { load "1 2 { print 4 }" |third |first |type? } 'word
+		equal { Load "1 2 3" |type? } 'block
+		equal { Load "1 2 3" |length? } 3
+		equal { Load "1 2 { print 4 }" |third |length? } 2
+		equal { Load "1 2 { print 4 }" |third |first |type? } 'word
 	}
 
-	group "load\csv"
-	mold\nowrap ?load\csv
+	group "Load\csv"
+	mold\nowrap ?Load\csv
 	{ { block } }
 	{
-		equal { try { load\csv file:///dev/null } |type? } 'error
+		equal { try { Load\csv file:///dev/null } |type? } 'error
 	}
 
 }

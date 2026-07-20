@@ -7,7 +7,7 @@ import (
 	"github.com/refaktor/rye/evaldo"
 )
 
-var builtins_complex = map[string]*env.Builtin{
+var Builtins_complex = map[string]*env.Builtin{
 
 	//
 	// ##### Complex numbers ##### "Functions for working with complex numbers"

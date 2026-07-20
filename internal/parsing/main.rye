@@ -6,20 +6,20 @@ print "        PARSER TEST SUITE"
 print "========================================"
 print ""
 
-private load %01-words.rye
-private load %02-opwords.rye
-private load %03-dotwords.rye
-private load %04-pipewords.rye
-private load %05-literals.rye
-private load %06-cpaths.rye
-private load %07-blocks.rye
-private load %08-special.rye
-private load %09-spacing.rye
-private load %10-real-world-patterns.rye
-private load %11-edge-cases.rye
-private load %12-error-detection.rye
-private load %13-comments.rye
-private load %bad_tokens.rye
+private Load %01-words.rye
+private Load %02-opwords.rye
+private Load %03-dotwords.rye
+private Load %04-pipewords.rye
+private Load %05-literals.rye
+private Load %06-cpaths.rye
+private Load %07-blocks.rye
+private Load %08-special.rye
+private Load %09-spacing.rye
+private Load %10-real-world-patterns.rye
+private Load %11-edge-cases.rye
+private Load %12-error-detection.rye
+private Load %13-comments.rye
+private Load %bad_tokens.rye
 
 print ""
 print "========================================"

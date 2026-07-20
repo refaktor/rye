@@ -2,7 +2,7 @@
 "Hello World" .replace "World" "Mars" |print
 ; prints "Hello Mars"
 
-"12 8 12 16 8 6" .load .unique .sum
+"12 8 12 16 8 6" .Load .unique .sum
 ; returns 42
 
 switch 'cow { dog { "woof" } cow { "mooo" } cat { "meow" } }
@@ -17,7 +17,7 @@ regexp "([0-9][a-z])" |Submatch? "-7--x3--0k-r--"
 read\lines %data.txt |with
 { .length? .print , .tail 5 |print }
 
-load\csv %ryebots.csv |where-equal 'level 7
+Load\csv %ryebots.csv |where-equal 'level 7
 |column? 'score |avg
 
 get https://ryelang.org |write* %page.html
