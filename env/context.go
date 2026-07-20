@@ -983,6 +983,7 @@ type ProgramState struct {
 	Embedded      bool
 	EmbeddedFS    *interface{} // embed.FS for embedded script files (interface to avoid import cycle)
 	DeferBlocks   []Block      // blocks to be executed when function exits or program terminates
+	CaptureBlock  *Block       // block to be executed with injected error if an error bubbles to the top
 	ContextStack  []*RyeCtx    // stack of previous contexts for ccb navigation
 	// LastFailedCPathInfo map[string]interface{} // stores information about the last failed context path
 	BlockFile      string
