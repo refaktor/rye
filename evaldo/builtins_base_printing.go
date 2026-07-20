@@ -80,6 +80,16 @@ func DisplayRyeValue(ps *env.ProgramState, arg0 env.Object, interactive bool) (e
 			if !esc {
 				return obj, ""
 			}
+		case *env.Error:
+			obj, esc := term.DisplayError(bloc, ps.Idx)
+			if !esc {
+				return obj, ""
+			}
+		case env.Error:
+			obj, esc := term.DisplayError(&bloc, ps.Idx)
+			if !esc {
+				return obj, ""
+			}
 		}
 	}
 
@@ -733,6 +743,16 @@ var builtins_printing = map[string]*env.Builtin{
 				}
 			case *env.TableRow:
 				obj, esc := term.DisplayTableRow(*bloc, ps.Idx)
+				if !esc {
+					return obj
+				}
+			case *env.Error:
+				obj, esc := term.DisplayError(bloc, ps.Idx)
+				if !esc {
+					return obj
+				}
+			case env.Error:
+				obj, esc := term.DisplayError(&bloc, ps.Idx)
 				if !esc {
 					return obj
 				}

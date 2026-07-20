@@ -94,7 +94,7 @@ var Builtins_os = map[string]*env.Builtin{
 				filePath := filepath.Join(ps.WorkingPath, path.GetPath())
 				res := FileExists(filePath)
 				if res == -1 {
-					return evaldo.MakeBuiltinError(ps, "Error checking if path exists", "does-exists")
+					return evaldo.MakeBuiltinError(ps, "Error checking if path exists: "+filePath, "does-exists")
 				}
 				return *env.NewBoolean(res == 1)
 			default:
@@ -140,7 +140,7 @@ var Builtins_os = map[string]*env.Builtin{
 
 				val, ok := os.LookupEnv(variable_name.Value)
 				if !ok {
-					return evaldo.MakeBuiltinError(ps, "Variable couldn't be read", "env?")
+					return evaldo.MakeBuiltinError(ps, "Environment variable not found: "+variable_name.Value, "env?")
 				}
 				return *env.NewString(val)
 			default:

@@ -13,6 +13,249 @@ import (
 	"github.com/refaktor/rye/util"
 )
 
+// DisplayError renders an env.Error in a user-friendly, interactive view.
+//
+// Layout (each "field" is a navigable row):
+//
+//	┌─ Error ──────────────────────────────┐
+//	│  Type    connection-error            │  ← Kind (optional)
+//	│  Code    503                         │  ← Status (optional, shown only if != 0)
+//	│  Message server unavailable          │  ← Message (optional)
+//	│  ─────────────────────────────────   │  ← separator before Values
+//	│  url     https://...                 │  ← Values entries (optional)
+//	│  ─ caused by ─────────────────────   │  ← separator before parent
+//	│  Type    http-error                  │  ← parent fields, indented
+//	│  Code    0                           │
+//	│  Message connection refused          │
+//	└──────────────────────────────────────┘
+//
+// Arrow keys navigate rows; Enter selects the value of the current row;
+// Esc / Ctrl+C returns the original error unchanged.
+func DisplayError(e *env.Error, idx *env.Idxs) (env.Object, bool) {
+	// Collect all display rows recursively
+	type row struct {
+		indent  int    // nesting depth (0 = top-level)
+		label   string // left-hand label
+		value   string // right-hand value (empty for separators)
+		sep     bool   // true → this is a visual separator row (not selectable)
+		retVal  env.Object // value returned when Enter is pressed on this row
+	}
+
+	var buildRows func(err *env.Error, depth int) []row
+	buildRows = func(err *env.Error, depth int) []row {
+		var rows []row
+		indent := depth * 2 // two spaces per nesting level
+
+		// ── Kind ──────────────────────────────────────────────────────
+		if err.Kind.Index != 0 {
+			kindStr := idx.GetWord(err.Kind.Index)
+			rows = append(rows, row{
+				indent: indent,
+				label:  "Type",
+				value:  kindStr,
+				retVal: *env.NewString(kindStr),
+			})
+		}
+
+		// ── Status / Code ─────────────────────────────────────────────
+		if err.Status != 0 {
+			codeStr := strconv.Itoa(err.Status)
+			rows = append(rows, row{
+				indent: indent,
+				label:  "Code",
+				value:  codeStr,
+				retVal: *env.NewInteger(int64(err.Status)),
+			})
+		}
+
+		// ── Message ───────────────────────────────────────────────────
+		if err.Message != "" {
+			rows = append(rows, row{
+				indent: indent,
+				label:  "Message",
+				value:  err.Message,
+				retVal: *env.NewString(err.Message),
+			})
+		}
+
+		// ── Values (extra key/value context) ──────────────────────────
+		if len(err.Values) > 0 {
+			// Separator before values section
+			rows = append(rows, row{indent: indent, sep: true, label: strings.Repeat("─", 30)})
+			// Sort keys for deterministic output
+			keys := make([]string, 0, len(err.Values))
+			for k := range err.Values {
+				keys = append(keys, k)
+			}
+			sort.Strings(keys)
+			for _, k := range keys {
+				v := err.Values[k]
+				valStr := ""
+				if obj, ok := v.(env.Object); ok {
+					valStr = obj.Print(*idx)
+				} else {
+					valStr = fmt.Sprint(v)
+				}
+				var retV env.Object
+				if obj, ok := v.(env.Object); ok {
+					retV = obj
+				} else {
+					retV = *env.NewString(valStr)
+				}
+				rows = append(rows, row{
+					indent: indent,
+					label:  k,
+					value:  valStr,
+					retVal: retV,
+				})
+			}
+		}
+
+		// ── Parent (caused by) ────────────────────────────────────────
+		if err.Parent != nil {
+			rows = append(rows, row{indent: indent, sep: true, label: "─ caused by " + strings.Repeat("─", 18)})
+			rows = append(rows, buildRows(err.Parent, depth+1)...)
+		}
+
+		return rows
+	}
+
+	rows := buildRows(e, 0)
+	if len(rows) == 0 {
+		// Empty error – nothing to show
+		termPrintln("(empty error)")
+		return e, true
+	}
+
+	// ── interactive navigation ────────────────────────────────────────────
+	HideCur()
+	defer ShowCur()
+
+	// curr tracks the currently highlighted *selectable* row
+	curr := 0
+	// Find first non-separator row
+	for curr < len(rows) && rows[curr].sep {
+		curr++
+	}
+	if curr >= len(rows) {
+		curr = 0
+	}
+
+	moveUp := 0
+
+DODO:
+	if moveUp > 0 {
+		CurUp(moveUp)
+	}
+	SaveCurPos()
+
+	// ── header ────────────────────────────────────────────────────────────
+	ClearLine()
+	ColorBrRed()
+	Bold()
+	termPrintln("┌─ Error " + strings.Repeat("─", 42) + "┐")
+	CloseProps()
+
+	totalLines := 1 // header
+
+	for i, r := range rows {
+		ClearLine()
+
+		indentStr := strings.Repeat(" ", r.indent)
+
+		if r.sep {
+			// separator row
+			ColorBrBlack()
+			termPrintln("│  " + indentStr + r.label)
+			CloseProps()
+			totalLines++
+			continue
+		}
+
+		// selectable content row
+		isCurr := (i == curr)
+		if isCurr {
+			ColorBrRed()
+			Bold()
+			termPrint("│» " + indentStr)
+		} else {
+			termPrint("│  " + indentStr)
+		}
+
+		Bold()
+		labelPad := 10 - len(r.label) - r.indent
+		if labelPad < 1 {
+			labelPad = 1
+		}
+		termPrint(r.label + strings.Repeat(" ", labelPad))
+		ResetBold()
+		termPrintln(r.value)
+		CloseProps()
+		totalLines++
+	}
+
+	// ── footer ────────────────────────────────────────────────────────────
+	ClearLine()
+	ColorBrRed()
+	termPrintln("└" + strings.Repeat("─", 50) + "┘")
+	CloseProps()
+	totalLines++ // footer
+
+	moveUp = totalLines
+
+	// ── key loop ─────────────────────────────────────────────────────────
+	for {
+		ascii, keyCode, err2 := GetChar()
+
+		if (ascii == 3 || ascii == 27) || err2 != nil {
+			return e, true // Esc / Ctrl+C → return unchanged error
+		}
+
+		if ascii == 13 { // Enter → return selected value
+			if curr < len(rows) && !rows[curr].sep && rows[curr].retVal != nil {
+				return rows[curr].retVal, false
+			}
+			return e, false
+		}
+
+		// navigate: skip separator rows
+		if keyCode == 40 { // Down arrow
+			next := curr + 1
+			for next < len(rows) && rows[next].sep {
+				next++
+			}
+			if next < len(rows) {
+				curr = next
+			} else {
+				// wrap to first non-sep row
+				curr = 0
+				for curr < len(rows) && rows[curr].sep {
+					curr++
+				}
+			}
+			goto DODO
+		} else if keyCode == 38 { // Up arrow
+			prev := curr - 1
+			for prev >= 0 && rows[prev].sep {
+				prev--
+			}
+			if prev >= 0 {
+				curr = prev
+			} else {
+				// wrap to last non-sep row
+				curr = len(rows) - 1
+				for curr >= 0 && rows[curr].sep {
+					curr--
+				}
+				if curr < 0 {
+					curr = 0
+				}
+			}
+			goto DODO
+		}
+	}
+}
+
 // termPrint is a function that abstracts the terminal output
 // In Unix/Windows, it uses fmt.Print directly
 // In WASM, it uses the sendBack function
