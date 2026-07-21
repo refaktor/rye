@@ -286,7 +286,7 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 		}
 
 		block1 := block.(env.Block)
-		es = env.AddToProgramStateNEWWithLocation(es, block1, genv)
+		es = env.AddToProgramStateNEWWithLocation(es, &block1, genv)
 		// STDIO CAPTURE START
 
 		// Define variables outside if statement
@@ -327,7 +327,7 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 		// EVAL THE DO DIALECT
 		if r.dialect == "rye" {
 			// Use InErrHandler=true so failures at top level are NOT auto-elevated
-			// to errors — the REPL handles the three outcomes below explicitly:
+			// to errors - the REPL handles the three outcomes below explicitly:
 			//   (a) ErrorFlag=true  → real error, display red banner
 			//   (b) FailureFlag=true → soft failure, display yellow warning, keep as prevResult
 			//   (c) neither         → success, display result
@@ -362,11 +362,11 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 		}
 
 		// Three-way outcome handler:
-		// (a) ErrorFlag=true  — real error: show red banner, prevResult NOT updated
-		// (b) FailureFlag=true, no error — soft failure: show yellow warning,
+		// (a) ErrorFlag=true  - real error: show red banner, prevResult NOT updated
+		// (b) FailureFlag=true, no error - soft failure: show yellow warning,
 		//     store error as prevResult so user can handle it on the next REPL line
 		//     with e.g. "|fix { fallback }" or "|check "wrap""
-		// (c) neither — success: display result and update prevResult normally
+		// (c) neither - success: display result and update prevResult normally
 		if es.ErrorFlag {
 			evaldo.MaybeDisplayFailureOrError2(es, genv, "console line", true, false)
 		} else if es.FailureFlag {
@@ -544,7 +544,7 @@ func constructKeyEvent(r rune, k keyboard.Key) term.KeyEvent {
 
 // displayReplFailureWarning prints a yellow "⚠ FAILURE:" notice for failures that
 // ended a REPL line without being handled.  It is intentionally lighter than the
-// red RUNTIME ERROR banner — the failure is stored as prevResult so the user can
+// red RUNTIME ERROR banner - the failure is stored as prevResult so the user can
 // recover it on the very next line with e.g. "|fix { fallback }" or "|check "msg"".
 func displayReplFailureWarning(es *env.ProgramState, genv *env.Idxs) {
 	fmt.Print("\x1b[33m⚠ FAILURE:\x1b[0m ")

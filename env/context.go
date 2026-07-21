@@ -1113,9 +1113,9 @@ func AddToProgramState(ps *ProgramState, ser TSeries, idx *Idxs) *ProgramState {
 // AddToProgramState(ps, blk.Series, ps.Idx) for embedding use:
 //
 //	blk := loader.LoadString(src, false, ps)
-//	ps.SetBlock(blk.(env.Block))
+//	ps.SetBlock(&blk.(env.Block))
 //	evaldo.Eval(ps)
-func (ps *ProgramState) SetBlock(blk Block) {
+func (ps *ProgramState) SetBlock(blk *Block) {
 	ps.Ser = blk.Series
 	if blk.FileName != "" {
 		ps.BlockFile = blk.FileName
@@ -1123,7 +1123,7 @@ func (ps *ProgramState) SetBlock(blk Block) {
 	}
 }
 
-func AddToProgramStateNEWWithLocation(ps *ProgramState, block Block, idx *Idxs) *ProgramState {
+func AddToProgramStateNEWWithLocation(ps *ProgramState, block *Block, idx *Idxs) *ProgramState {
 	ps.Ser = block.Series
 	// ps.Res = nil
 	ps.Idx = idx

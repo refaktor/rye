@@ -1675,7 +1675,7 @@ var builtins = map[string]*env.Builtin{
 	// * source: String containing Rye code or URI of file to load with modification allowed
 	// Returns:
 	// * Block containing the parsed Rye values
-	// load\mod — string-only; file URI variant moved to builtins_baseio.go as "load\\mod\\file"
+	// load\mod - string-only; file URI variant moved to builtins_baseio.go as "load\\mod\\file"
 	"load\\mod": { // **
 		Argsn: 1,
 		Doc:   "Loads a string into Rye values. During load it allows modification of words.",
@@ -1697,7 +1697,7 @@ var builtins = map[string]*env.Builtin{
 	// * source: String containing Rye code to load with modification allowed and file watching
 	// Returns:
 	// * Block containing the parsed Rye values
-	// load\live — string-only; file URI variant moved to builtins_baseio.go
+	// load\live - string-only; file URI variant moved to builtins_baseio.go
 	"load\\live": { // **
 		Argsn: 1,
 		Doc:   "Loads a string into Rye values. During load it allows modification of words.",
@@ -2879,7 +2879,7 @@ var allBuiltinGroups = []builtinGroup{
 	{"base", builtins_contexts, false},
 	{"base", builtins_functions, false},
 	// NOTE: Battery groups (match, io, http, sqlite, etc.) are registered via
-	// batteries.RegisterBatteries(ps) — see the batteries/ package.
+	// batteries.RegisterBatteries(ps) - see the batteries/ package.
 }
 
 // RegisterBuiltinGroups registers all builtins belonging to the named groups.
