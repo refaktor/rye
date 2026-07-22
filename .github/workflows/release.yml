@@ -126,7 +126,12 @@ jobs:
           set -euo pipefail
           checksums=$(echo "$CHECKSUMS" | base64 -d)
           while read -r line; do
-              fn=$(echo $line | cut -d ' ' -f2)
+              # Skip empty lines and comments
+              [ -z "$line" ] && continue
+              # Extract the filename (last field) from the checksum line
+              fn=$(echo "$line" | awk '{print $NF}')
+              # Skip if the file wasn't downloaded (e.g. binary-only artifacts from ko)
+              [ -f "$fn" ] || continue
               echo "Verifying $fn"
               slsa-verifier verify-artifact --provenance-path "$PROVENANCE" \
                                             --source-uri "github.com/$GITHUB_REPOSITORY" \
