@@ -18,7 +18,8 @@ before:
     # - go generate ./...
 
 builds:
-  - env:
+  - id: default
+    env:
       - CGO_ENABLED=0
     goos:
       - linux
@@ -57,9 +58,25 @@ builds:
       flags:
       - -tags=b_tiny,b_wasm,no_sqlite,no_psql,no_mysql,no_io,no_git,no_chitosocket,no_termui
       - -trimpath
-      
+
+  - id: linux-386-static
+    env:
+      - CGO_ENABLED=1
+      - CC=i686-linux-gnu-gcc
+    goos:
+      - linux
+    goarch:
+      - "386"
+    flags:
+      - -trimpath
+    ldflags:
+      - "-s -w -X github.com/refaktor/rye/runner.Version={{.Version}} -extldflags '-static'"
+
 archives:
-  - formats: [ 'tar.gz' ]
+  - id: default
+    ids:
+      - default
+    formats: [ 'tar.gz' ]
     # this name template makes the OS and Arch compatible with the results of `uname`.
     name_template: >-
       {{ .ProjectName }}_
@@ -72,6 +89,15 @@ archives:
     format_overrides:
       - goos: windows
         formats: [ 'zip' ]
+
+  - id: static
+    ids:
+      - linux-386-static
+    formats: [ 'tar.gz' ]
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      i386-static
 
 kos:  # See https://goreleaser.com/customization/ko/
   - repositories:

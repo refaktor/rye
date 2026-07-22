@@ -34,12 +34,13 @@ jobs:
         with:
           go-version: 'stable'
 
-      - name: Install MinGW for Windows cross-compilation
+      - name: Install cross-compilation toolchains
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-mingw-w64 mingw-w64
-          # Verify the compiler is installed
+          sudo apt-get install -y gcc-mingw-w64 mingw-w64 gcc-i686-linux-gnu
+          # Verify compilers are installed
           x86_64-w64-mingw32-gcc --version
+          i686-linux-gnu-gcc --version
 
       - name: Run GoReleaser
         id: goreleaser
