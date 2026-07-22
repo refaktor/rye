@@ -271,7 +271,7 @@ func DoMain(regfn func(*env.ProgramState) error) {
 
 	// PARENT RE-EXEC: If --unshare is requested (via CLI flag or .ryesec policy),
 	// re-exec this process inside Linux namespaces now, before any interpreter
-	// setup. DoReexecInUnshare never returns — it waits for the child and exits.
+	// setup. DoReexecInUnshare never returns - it waits for the child and exits.
 	if !IsUnshareChild() {
 		shouldUnshare := *UnshareEnabled
 		uCfg := UnshareConfig{
@@ -685,7 +685,7 @@ func main_rye_http_repl(port string, file string, code string, lang string, regf
 		block := loader.LoadString(" "+content+"\n"+code, security.CurrentCodeSigEnabled, ps)
 		switch val := block.(type) {
 		case env.Block:
-			ps = env.AddToProgramStateNEWWithLocation(ps, val, ps.Idx)
+			ps = env.AddToProgramStateNEWWithLocation(ps, &val, ps.Idx)
 
 			// Create subcontext
 			ctx := ps.Ctx
@@ -867,7 +867,7 @@ func main_rye_http_repl(port string, file string, code string, lang string, regf
 			resStr = "Error: " + errObj.Message
 		} else {
 			block1 := block.(env.Block)
-			es = env.AddToProgramStateNEWWithLocation(es, block1, genv)
+			es = env.AddToProgramStateNEWWithLocation(es, &block1, genv)
 
 			// Eval
 			if lang == "eyr" {
@@ -1064,7 +1064,7 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 				inputH := string(content)
 				block := loader.LoadString(inputH, security.CurrentCodeSigEnabled, ps)
 				block1 := block.(env.Block)
-				ps = env.AddToProgramStateNEWWithLocation(ps, block1, ps.Idx)
+				ps = env.AddToProgramStateNEWWithLocation(ps, &block1, ps.Idx)
 				evaldo.EvalBlockInj(ps, nil, false)
 				evaldo.MaybeDisplayFailureOrError2(ps, ps.Idx, "main rye file", true, true)
 			}
@@ -1090,7 +1090,7 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 		//evaldo.RegisterBuiltins(es)
 		// contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
 
-		ps = env.AddToProgramStateNEWWithLocation(ps, val, ps.Idx)
+		ps = env.AddToProgramStateNEWWithLocation(ps, &val, ps.Idx)
 
 		if subc {
 			ctx := ps.Ctx
@@ -1160,7 +1160,7 @@ func main_cgi_file(file string, sig bool) {
 		block, genv = loader.LoadStringNoPEG(content, sig)
 		switch val := block.(type) {
 		case env.Block:
-			es = env.AddToProgramStateNEWWithLocation(es, block.(env.Block), genv)
+			es = env.AddToProgramStateNEWWithLocation(es, &val, genv)
 			evaldo.RegisterBuiltins(es)
 			batteries.RegisterBatteries(es)
 			contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)

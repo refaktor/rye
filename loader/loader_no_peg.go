@@ -2144,13 +2144,31 @@ func inferErrorContextNoPEG(tok NoPEGToken, err error, line string, col int, ful
 
 // enhanceErrorMessageNoPEG improves the error message with better context and suggestions
 func enhanceErrorMessageNoPEG(tok NoPEGToken, err error, input string, filePath string, parser *NoPEGParser) string {
-
 	// Get line and column from the parser's lexer
 	lineNum := parser.l.line
 	colNum := parser.l.col
 
-	// Get the line with the error
-	lines := strings.Split(input, "\n")
+	// The loader wraps the original input as "{ " + originalInput + "\n} " for parsing.
+	// Strip this wrapping so the source context shows only the original code.
+	displayInput := input
+	if strings.HasPrefix(displayInput, "{ ") {
+		displayInput = displayInput[2:] // Strip "{ " prefix
+		if lineNum == 1 && colNum > 2 {
+			colNum -= 2 // Adjust column for removed prefix
+		}
+	}
+	// Strip trailing "\n} " or "\n}" (added by wrapping)
+	if strings.HasSuffix(displayInput, "\n} ") {
+		displayInput = displayInput[:len(displayInput)-3]
+	} else if strings.HasSuffix(displayInput, "\n}") {
+		displayInput = displayInput[:len(displayInput)-2]
+	}
+	// Split into lines for display, and clamp the line number
+	// if the error points to the artificial "}" line added by wrapping.
+	lines := strings.Split(displayInput, "\n")
+	if lineNum > len(lines) {
+		lineNum = len(lines)
+	}
 	if lineNum <= 0 || lineNum > len(lines) {
 		return err.Error() // Fallback if line number is invalid
 	}
@@ -2204,7 +2222,7 @@ func enhanceErrorMessageNoPEG(tok NoPEGToken, err error, input string, filePath 
 
 			// Add caret pointing to error column
 			if colNum > 0 && colNum <= len(sourceLine)+1 {
-				padding := strings.Repeat(" ", 7) // For line number column + spaces
+				padding := strings.Repeat(" ", 9) // Align with "  NNNN │ " prefix (2 + 4 + 2 + 1)
 				caretPadding := strings.Repeat(" ", colNum-1)
 				bu.WriteString(fmt.Sprintf("%s\x1b[1;31m%s^\x1b[0m\n", padding, caretPadding))
 			}

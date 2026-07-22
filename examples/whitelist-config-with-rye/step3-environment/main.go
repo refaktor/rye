@@ -72,7 +72,8 @@ func main() {
 		log.Fatalf("parse error: %s", errorObj.Message)
 	}
 
-	evaldo.EvalBlock(ps, blk.(env.Block))
+	b := blk.(env.Block)
+	evaldo.EvalBlock(ps, &b)
 
 	// Check for runtime errors
 	if ps.ErrorFlag {

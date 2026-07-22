@@ -1,0 +1,21 @@
+; Evaluator Test Suite
+; Run with: cd internal/evaluator && rye main.rye
+
+print "========================================"
+print "        EVALUATOR TEST SUITE"
+print "========================================"
+print ""
+
+private Load %word_priority.rye
+private Load %word_type_combos.rye
+private Load %setword_modword.rye
+private Load %dotword_chaining.rye
+private Load %injection.rye
+private Load %force_modifier.rye
+private Load %context_constructors.rye
+private Load %eval_edge_cases.rye
+
+print ""
+print "========================================"
+print "\x1b[32mALL EVALUATOR TESTS COMPLETED\x1b[0m"
+print "========================================"

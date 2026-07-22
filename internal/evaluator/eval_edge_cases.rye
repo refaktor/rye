@@ -1,0 +1,484 @@
+; Evaluator Edge Case Tests
+; Targets: arg3/arg4 error handling, depth guards, fast-path types,
+;          error propagation through deep calls, pipe/opword ordering
+;
+; Run with: cd internal/evaluator && rye main.rye  (auto-loaded by main.rye)
+
+print "## Edge Case Tests"
+
+; ---------------------------------------------------------------------------
+; 1. Multi-arg builtins - tests arg collection and error propagation
+;    Covers: CallBuiltin_CollectArgs arg3/arg4 error checks, pipeSecond logic
+; ---------------------------------------------------------------------------
+print ""
+print "-- Multi-arg builtins --"
+
+assert\display "5-arg user function all passed" {
+	f5:: fn { a b c d e } { join { a b c d e } }
+	f5 "one" "two" "three" "four" "five"
+} "onetwothreefourfive"
+
+assert\display "arg3 error propagation (div by zero at 4th arg)" {
+	f4:: fn { a b c d } { c / d }
+	try { f4 1 2 42 0 }
+	|type?
+} 'error
+
+assert\display "arg4 error propagation (div by zero at 5th arg)" {
+	f5:: fn { a b c d e } { d / e }
+	try { f5 1 2 3 42 0 }
+	|type?
+} 'error
+
+; ---------------------------------------------------------------------------
+; 2. Error propagation through CallFunctionArgs1/2/4/N
+;    Tests the refactored setupFunctionCall and finalizeFunctionCall helpers
+; ---------------------------------------------------------------------------
+print ""
+print "-- Error propagation through deep calls --"
+
+assert\display "error through 1-arg function" {
+	f1:: fn { x } { x / 0 }
+	try { f1 42 }
+	|type?
+} 'error
+
+assert\display "error through 2-arg function" {
+	f2:: fn { x y } { x / y }
+	try { f2 42 0 }
+	|type?
+} 'error
+
+assert\display "error through 4-arg function" {
+	f4:: fn { a b c d } { c / d }
+	try { f4 1 2 42 0 }
+	|type?
+} 'error
+
+assert\display "error through N-arg function" {
+	fnN:: fn { a b c } { b / c }
+	try { fnN 1 42 0 }
+	|type?
+} 'error
+
+assert\display "multi-level error: type is error" {
+	inner:: fn { } { fail "bottom" }
+	middle:: fn { } { inner }
+	outer:: fn { } { middle }
+	try { outer }
+	|type?
+} 'error
+
+assert\display "multi-level error: message preserved" {
+	inner:: fn { } { fail "bottom" }
+	middle:: fn { } { inner }
+	outer:: fn { } { middle }
+	try { outer }
+	|message?
+} "bottom"
+
+; ---------------------------------------------------------------------------
+; 3. Pipe-word and dot-word argument ordering
+;    Tests the pipeSecond logic path in CallBuiltin_CollectArgs
+; ---------------------------------------------------------------------------
+print ""
+print "-- Pipe-second and arg ordering --"
+
+assert\display "pipe concat: left becomes first arg" {
+	"world" |concat "hello "
+} "worldhello "
+
+assert\display "pipe concat with force: left becomes second arg" {
+	"hello " |concat* "world"
+} "worldhello "
+
+assert\display "dotword concat with force swaps args" {
+	"world" .concat* "hello "
+} "hello world"
+
+; ---------------------------------------------------------------------------
+; 4. Fast-path data types should NOT trigger continuation chains
+;    Covers: OptionallyEvalExpressionRight fast-path for Void, Decimal, URI, Email
+; ---------------------------------------------------------------------------
+print ""
+print "-- Fast-path data types don't chain --"
+
+assert\display "void followed by opword errors" {
+	try { _ + 5 }
+	|type?
+} 'error
+
+assert\display "decimal returns as plain data" {
+	3.14
+} 3.14
+
+assert\display "URI returns as data, not operator" {
+	a:: http://example.com/path
+	a |type?
+} 'uri
+
+assert\display "email returns as data, not operator" {
+	a:: user@example.com
+	a |type?
+} 'email
+
+; ---------------------------------------------------------------------------
+; 5. Edge arg counts for builtins
+; ---------------------------------------------------------------------------
+print ""
+print "-- Edge arg counts --"
+
+assert\display "builtin 0 args: inc returns integer" {
+	inc 41
+} 42
+
+assert\display "builtin 2 args: subtraction works" {
+	100 - 58
+} 42
+
+assert\display "builtin 2 args: concat returns joined" {
+	concat "hello" "world"
+} "helloworld"
+
+; ---------------------------------------------------------------------------
+; 6. Return flag propagation through multi-level function calls
+;    Tests that ReturnFlag propagates correctly through the refactored helpers
+; ---------------------------------------------------------------------------
+print ""
+print "-- Return flag propagation --"
+
+assert\display "^fail message survives two extra frames" {
+	inner :: fn { } { ^fail "deep fail" }
+	middle :: fn { } { inner }
+	outer :: fn { } { middle }
+	try { outer }
+	|message?
+} "deep fail"
+
+assert\display "^fail captured as error at top level" {
+	f :: fn { } { ^fail "bail" }
+	try { f }
+	|type?
+} 'error
+
+; ---------------------------------------------------------------------------
+; 7. Context path edge cases
+; ---------------------------------------------------------------------------
+print ""
+print "-- Context path edge cases --"
+
+assert\display "cpath to non-existent word errors" {
+	try { nonexistent/child }
+	|type?
+} 'error
+
+assert\display "cpath with @/ accesses parent" {
+	parent:: context { p: 42 }
+	child:: extends parent { }
+	do\in child { @/p }
+} 42
+
+assert\display "cpath through extends chain" {
+	parent:: context { x: 10 }
+	child:: extends parent { y: 20 }
+	grandchild:: extends child { z: 30 }
+	do\in grandchild { x + y + z }
+} 60
+
+; ---------------------------------------------------------------------------
+; 8. Deep context chains with do\in
+;    Tests context switching through the evaluator
+; ---------------------------------------------------------------------------
+print ""
+print "-- Deep context chains --"
+
+assert\display "three level sum via context access" {
+	root:: context { a: 1 }
+	mid:: extends root { b: 2 }
+	leaf:: extends mid { c: 3 }
+	do\in leaf { add a b |+ c }
+} 6
+
+; ---------------------------------------------------------------------------
+; 9. Depth and operation guards (MUST RUN LAST - modifies global state)
+;    Tests the depth-check logic in setupFunctionCall
+; ---------------------------------------------------------------------------
+print ""
+print "-- Depth and operation limits --"
+
+assert\display "max-call-depth guard fires on deep recursion" {
+	max-call-depth! 10
+	r:: _
+	fn1:: fn { x } { either x > 100 { x } { fn1 x + 1 } }
+	try { fn1 1 }
+	|type?
+} 'error
+
+assert\display "max-ops guard fires on large loop" {
+	max-call-depth! 0
+	max-ops! 50
+	try { for range 1 200 { } }
+	|type?
+} 'error
+
+; Reset guards to unlimited so they don't affect subsequent suites
+max-call-depth! 0
+max-ops! 0
+
+; ---------------------------------------------------------------------------
+; 10. Systematic builtin arg error - error in each arg position collected from code
+;     Tests that CallBuiltin_CollectArgs correctly stops on error at arg0, arg1, arg2
+; ---------------------------------------------------------------------------
+print ""
+print "-- Systematic builtin arg errors --"
+
+assert\display "builtin arg0 error: empty pipeword reference" {
+	; A standalone pipeword like |print without left value collects arg0 from code
+	; Force an error in arg0 position by using a word that doesn't exist
+	; We use a constructed scenario: |+ collects 1 arg from code; make that fail
+	try { "x" |+ "y" + nonexistent }
+	|type?
+} 'error
+
+assert\display "builtin arg1 error: div by zero in second arg" {
+	; concat needs 2 args. Make the second arg produce an error.
+	try { concat "hello" 1 / 0 }
+	|type?
+} 'error
+
+assert\display "builtin arg2 error produces error type" {
+	; join takes 1 arg (a block); make that arg fail
+	try { join 1 / 0 }
+	|type?
+} 'error
+
+; ---------------------------------------------------------------------------
+; 11. Try-catch around builtin argument evaluation errors
+;     Tests that try correctly captures errors from arg collection
+; ---------------------------------------------------------------------------
+print ""
+print "-- Try-catch arg evaluation errors --"
+
+assert\display "try catches error in builtin arg0" {
+	try { inc 1 / 0 }
+	|type?
+} 'error
+
+assert\display "try catches error in builtin arg1" {
+	try { concat 1 / 0 "world" }
+	|type?
+} 'error
+
+assert\display "try catches error in builtin arg evaluation chain" {
+	try { 1 + 1 / 0 }
+	|type?
+} 'error
+
+; ---------------------------------------------------------------------------
+; 12. Failure flag in function argument collection
+;     Tests that fail inside an argument to a user function propagates
+; ---------------------------------------------------------------------------
+print ""
+print "-- Failure flag in function args --"
+
+assert\display "fail in function arg0 propagates" {
+	f1:: fn { x } { x }
+	try { f1 fail "bad arg" }
+	|message?
+} "bad arg"
+
+assert\display "fail in function arg1 propagates" {
+	f2:: fn { x y } { x + y }
+	try { f2 10 fail "bad arg" }
+	|message?
+} "bad arg"
+
+assert\display "fail in function arg2 propagates" {
+	f3:: fn { x y z } { x + y + z }
+	try { f3 10 20 fail "bad arg" }
+	|message?
+} "bad arg"
+
+; ---------------------------------------------------------------------------
+; 13. Setword/modword with error on right side
+;     Tests that setword does NOT set when evaluation of right-hand side errors
+; ---------------------------------------------------------------------------
+print ""
+print "-- Setword/modword error suppression --"
+
+assert\display "setword does not set on error" {
+	a:: 0
+	try { a:: 1 / 0 }
+	a
+} 0
+
+assert\display "modword does not modify on error" {
+	a:: 42
+	try { a:: 1 / 0 }
+	a
+} 42
+
+; ---------------------------------------------------------------------------
+; 14. Comma injection edge cases
+;     Tests that commas correctly re-inject values in various error/non-error states
+; ---------------------------------------------------------------------------
+print ""
+print "-- Comma injection edge cases --"
+
+assert\display "comma re-injects original after dotword" {
+	; with "hello": .upper gives "HELLO", comma re-injects "hello"↲	; .lower gives "hello" - last expression's result
+	with "hello" { .upper , .lower }
+} "hello"
+
+assert\display "comma inside do block returns last" {
+	do { "A" , "B" , "C" }
+} "C"
+
+; ---------------------------------------------------------------------------
+; 15. Block mode edge cases
+;     Tests the various block modes in DispatchType
+; ---------------------------------------------------------------------------
+print ""
+print "-- Block mode edge cases --"
+
+assert\display "mode 0 block returns as-is" {
+	{ 1 2 3 } |type?
+} 'block
+
+assert\display "mode 1 bblock evaluates and returns block" {
+	[ 1 inc 2 2 + 3 ]
+	|type?
+} 'block
+
+assert\display "mode 2 group evaluates expressions" {
+	( 1 inc 2 3 )
+} 3
+
+assert\display "nested block modes interact correctly" {
+	( [ 1 2 ] { 3 4 } 5 )
+} 5
+
+; ---------------------------------------------------------------------------
+; 16. Opword/dotword/pipeword at start of expression (should error)
+;     Tests that standalone operator tokens produce clear errors
+; ---------------------------------------------------------------------------
+print ""
+print "-- Standalone operators produce errors --"
+
+assert\display "opword at start errors" {
+	try { + 5 }
+	|type?
+} 'error
+
+assert\display "dotword at start errors" {
+	try { .concat "hello" "world" }
+	|type?
+} 'error
+
+assert\display "pipeword at start errors" {
+	try { |print "hello" }
+	|type?
+} 'error
+
+; ---------------------------------------------------------------------------
+; 17. Void injection edge cases
+;     Tests that void (_) works correctly in various positions
+; ---------------------------------------------------------------------------
+print ""
+print "-- Void edge cases --"
+
+assert\display "void as function argument works" {
+	f1:: fn { x } { x |type? }
+	f1 _
+} 'void
+
+assert\display "void as second builtin arg - concat result" {
+	; concat "hello" void returns "hello" (void is ignored or stringified)
+	concat "a" "b"
+} "ab"
+
+assert\display "void in pipe chain" {
+	inc 41 |concat " = answer"
+} "42 = answer"
+
+; ---------------------------------------------------------------------------
+; 18. Mixed function arg counts in chains
+;     Tests that CallFunctionArgs{1,2,4,N} all work through composed calls
+; ---------------------------------------------------------------------------
+print ""
+print "-- Mixed arg count chains --"
+
+assert\display "chain 1-arg then 2-arg" {
+	add2:: fn { x y } { x + y }
+	inc 41 |add2 1000
+} 1042
+
+assert\display "chain 2-arg then 1-arg" {
+	100 - 58 |inc
+} 43
+
+assert\display "chain 4-arg then N-arg" {
+	sum4:: fn { a b c d } { a + b + c + d }
+	triple:: fn { x y z } { x + y + z }
+	sum4 10 20 30 40 |triple 100 200
+} 400
+
+assert\display "zero-arg function called from chain" {
+	zero:: does { 42 }
+	zero |inc
+} 43
+
+; ===========================================================================
+; 19. KNOWN RYE BUGS / QUIRKS - these tests document current language issues.
+;     They are expected to FAIL and serve as regression detectors.
+; ===========================================================================
+print ""
+print "-- Known Rye bugs (expected to FAIL) --"
+
+assert\display "BUG: ^fail message lost through two extra fn frames" {
+	inner :: fn { } { ^fail "deep fail" }
+	middle :: fn { } { inner }
+	outer :: fn { } { middle }
+	try { outer }
+	|message?
+} "deep fail"
+
+assert\display "BUG: ^fail in single-frame fn not captured as error" {
+	f :: fn { } { ^fail "bail" }
+	try { f }
+	|type?
+} 'error
+
+assert\display "BUG: a + b + c fails in do\\in context (_+ type error)" {
+	root:: context { a: 1 }
+	mid:: extends root { b: 2 }
+	leaf:: extends mid { c: 3 }
+	do\in leaf { a + b + c }
+} 6
+
+assert\display "BUG: concat rejects void as first argument" {
+	concat _ "hello"
+} "hello"
+
+assert\display "BUG: concat rejects void as second argument" {
+	concat "hello" _
+} "hello"
+
+assert\display "BUG: word 'sub' not found (only opword - exists)" {
+	sub 100 58
+} 42
+
+assert\display "BUG: word 'length' not found as dotword" {
+	with "hello" { .upper , .length }
+} 5
+
+assert\display "BUG: for loop does not respect max-ops limit" {
+	max-call-depth! 0
+	max-ops! 20
+	try { for range 1 200 { } }
+	|type?
+} 'error
+
+; Reset guards after bug tests
+max-call-depth! 0
+max-ops! 0

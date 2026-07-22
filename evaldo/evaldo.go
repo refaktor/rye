@@ -33,12 +33,12 @@ func Eval(ps *env.ProgramState) {
 }
 
 // EvalBlock sets the block as the current series and evaluates it.
-// This is the idiomatic entry point for embedders — combining ps.SetBlock
+// This is the idiomatic entry point for embedders - combining ps.SetBlock
 // and Eval into a single call:
 //
 //	blk := loader.LoadString(src, false, ps)
-//	evaldo.EvalBlock(ps, blk.(env.Block))
-func EvalBlock(ps *env.ProgramState, blk env.Block) {
+//	evaldo.EvalBlock(ps, &blk.(env.Block))
+func EvalBlock(ps *env.ProgramState, blk *env.Block) {
 	ps.SetBlock(blk)
 	EvalBlockInj(ps, nil, false)
 }
@@ -116,7 +116,7 @@ func EvalBlockInj_Rye2(ps *env.ProgramState, inj env.Object, injnow bool) {
 		// When ReturnFlag is set by a returning word (^fix, ^check, ^fail):
 		// - Inside a function (CallDepth > 0): always stop the block.
 		// - At top level (CallDepth == 0): only stop if the next token is a continuation
-		//   token (Pipeword, Dotword, LSetword, Opword) — an orphaned chain left by ^fix.
+		//   token (Pipeword, Dotword, LSetword, Opword) - an orphaned chain left by ^fix.
 		//   If the next token starts a fresh independent expression, clear ReturnFlag and
 		//   continue so that code after e.g. a "for" loop keeps running.
 		if ps.ErrorFlag || ps.ReturnFlag {
@@ -142,7 +142,7 @@ func EvalBlockInj_Rye2(ps *env.ProgramState, inj env.Object, injnow bool) {
 		}
 		// Handle comma expression guards.
 		// When an original injection value exists (e.g. inside `with`), commas must always
-		// re-inject that original value — not a dotword's intermediate result that may have
+		// re-inject that original value - not a dotword's intermediate result that may have
 		// overwritten `inj` via the ps.Inj/ps.Injnow mechanism above.
 		if origInj != nil {
 			if obj := ps.Ser.Peek(); obj != nil {
@@ -275,12 +275,17 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 	if nextObj == nil || ps.ReturnFlag || ps.ErrorFlag {
 		return
 	}
-	// exit quickly for most common value types
+	// exit quickly for most common value types - any type that DispatchType
+	// would set as ps.Res without further processing (i.e. pure data, not operators)
 	objType := nextObj.Type()
 	if objType == env.StringType ||
 		objType == env.IntegerType ||
+		objType == env.DecimalType ||
 		objType == env.BlockType ||
-		objType == env.WordType {
+		objType == env.WordType ||
+		objType == env.VoidType ||
+		objType == env.UriType ||
+		objType == env.EmailType {
 		return
 	}
 	switch opword := nextObj.(type) {
@@ -622,18 +627,18 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 		EvalGetword(ps, object.(env.Getword), nil, false)
 		return
 	case env.DotwordType:
-		// A dotword appearing at the start of an expression has no left-hand value — error.
+		// A dotword appearing at the start of an expression has no left-hand value - error.
 		// Valid use is always after a value (via OptionallyEvalExpressionRight), e.g. `1 .add 2`.
 		ps.ErrorFlag = true
 		ps.Res = env.NewError("Dotword `." + ps.Idx.GetWord(object.(env.Dotword).Index) + "` requires a value on the left.")
 		return
 	case env.OpwordType:
-		// An opword appearing at the start of an expression has no left-hand value — error.
+		// An opword appearing at the start of an expression has no left-hand value - error.
 		ps.ErrorFlag = true
 		ps.Res = env.NewError("Opword `" + ps.Idx.GetWord(object.(env.Opword).Index) + "` requires a value on the left.")
 		return
 	case env.PipewordType:
-		// A pipeword appearing at the start of an expression has no left-hand value — error.
+		// A pipeword appearing at the start of an expression has no left-hand value - error.
 		ps.ErrorFlag = true
 		ps.Res = env.NewError("Pipeword `|" + ps.Idx.GetWord(object.(env.Pipeword).Index) + "` requires a value on the left.")
 		return
@@ -693,6 +698,14 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 // findWordValue retrieves the value associated with a word or context path.
 // Called from: EvalWord internally (now replaced by findWordValueWithFailureInfo in most places)
 // Purpose: Looks up words in context hierarchy or traverses context paths to find values
+//
+// Returns:
+//   - bool: whether the word was found
+//   - Object: the resolved value
+//   - *RyeCtx: the context where the value was found. For regular words (Word, Opword, Dotword,
+//     Pipeword) looked up via ps.Ctx.Get(), this is nil - the lookup traverses the context
+//     chain and the result does not carry a specific context origin. For CPath words, the
+//     traversed context is returned. Callers MUST handle nil ctx (all current callers do).
 func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *env.RyeCtx) {
 	switch word := word1.(type) {
 	case env.Word:
@@ -735,7 +748,7 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 					return found, *env.NewString("No word value!!"), currCtx
 				default:
 					// Bug fix: non-traversable object (not a context or dict) with more
-					// path segments remaining — this is an error, not a silent call.
+					// path segments remaining - this is an error, not a silent call.
 					_ = swObj
 					return false, nil, currCtx
 				}
@@ -750,6 +763,12 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 // findWordValueWithFailureInfo is an extended version of findWordValue that includes failure diagnostics.
 // Called from: EvalWord
 // Purpose: Like findWordValue but returns detailed info about which word failed in a context path
+//
+// Returns:
+//   - bool: whether the word was found
+//   - Object: the resolved value
+//   - *RyeCtx: the context where the value was found (nil for regular words - see findWordValue docs)
+//   - string: failure diagnostics when not found
 func findWordValueWithFailureInfo(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *env.RyeCtx, string) {
 	switch word := word1.(type) {
 	case env.Word:
@@ -859,7 +878,7 @@ func findWordValueWithFailureInfo(ps *env.ProgramState, word1 env.Object) (bool,
 					return true, object, currCtx, ""
 				default:
 					// Bug fix: non-traversable object (not a context or dict) with more
-					// path segments remaining — this is an error, not a silent call.
+					// path segments remaining - this is an error, not a silent call.
 					return false, nil, currCtx, wordName + " is not a context or dict"
 				}
 			}
@@ -921,7 +940,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 		}
 
 		if !capitalized {
-			// Non-capitalized words only live in context and its parents — no generic lookup.
+			// Non-capitalized words only live in context and its parents - no generic lookup.
 			// Fail immediately without consuming any tokens from the stream.
 			ps.ErrorFlag = true
 			if !ps.FailureFlag {
@@ -933,7 +952,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 			return
 		}
 
-		// Capitalized word — generic dispatch path.
+		// Capitalized word - generic dispatch path.
 		// Collect the first argument so we can determine its Kind.
 		kind := &genericKind
 		argCollectionFailed := false
@@ -943,7 +962,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 			if !ps.Ser.AtLast() {
 				// Use EvalExpression_CollectArg (not EvalExpression_DispatchType) so that
 				// opwords/dotwords to the right of the first argument are consumed as part
-				// of that argument — consistent with how locally-bound words collect args.
+				// of that argument - consistent with how locally-bound words collect args.
 				// E.g. "Read %file ++ ".txt"" must evaluate "%file ++ ".txt"" → %file.txt
 				// first, then call Read on that URI. Previously, EvalExpression_DispatchType
 				// only grabbed the bare next atom (%file), giving generic words wrong priority.
@@ -983,7 +1002,8 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 	// fmt.Println("----EvalObject:0")
 	// If found initially or via methods namespace
 	if found {
-		// Eval the value (object) word was bound to
+		// Eval the value (object) word was bound to.
+		// session may be nil for regular words (not context paths) - EvalObject handles nil ctx.
 		EvalObject(ps, object, leftVal, toLeft, session, pipeSecond, firstVal, opword, dotword) //ww0128a *
 		return
 		// word is not found
@@ -1004,7 +1024,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 				// The first argument was collected successfully but its Kind is not determined
 				// (it is a Uri, Context, Native, Dict, List, or Error without a named Kind set).
 				// Generic dispatch looks up methods by Kind, so without a Kind there is nothing
-				// to find — reporting "word not found: `Get`" would be misleading here.
+				// to find - reporting "word not found: `Get`" would be misleading here.
 				argType := ps.Idx.GetWord(int(leftVal.Type()))
 				err := env.NewError2(5, "Generic method `"+failureInfo+"`: first argument of type `"+argType+"` has no Kind determined. Methods dispatch on kinds.")
 				err.CodeBlock = ps.Ser
@@ -1094,6 +1114,9 @@ func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toL
 			ps.ErrorFlag = true
 			return
 		}
+		// ctx may be nil when the function was resolved via a regular word lookup
+		// (not a context path). CallFunction_CollectArgs handles nil ctx correctly -
+		// it falls through to the default parent-chain behaviour.
 		CallFunction_CollectArgs(fn, ps, leftVal, toLeft, ctx, pipeSecond, firstVal, opword, dotword)
 		return
 	case env.VarBuiltinType:
@@ -1500,53 +1523,60 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 	*/
 }
 
-// CallFunctionArgs1 calls a function with exactly 1 argument provided.
-// Called from: CallFunctionWithArgs, builtins needing to call 1-arg functions
-// Purpose: Optimized path for 1-argument function calls from builtins
-func CallFunctionArgs1(fn env.Function, ps *env.ProgramState, arg0 env.Object, ctx *env.RyeCtx) {
+// setupFunctionCall creates a child ProgramState for function execution, determines
+// the appropriate context (via DetermineContext), performs the depth-guard check, and
+// returns a cleanup function that the caller MUST defer.  The cleanup returns the
+// context to the pool, executes deferred blocks, and propagates OpsCount back to the
+// parent ProgramState.
+// Returns (psX, cleanup, true) on success; (nil, nil, false) when a guard check fails.
+func setupFunctionCall(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx) (*env.ProgramState, func(), bool) {
 	fnCtx, fromPool := DetermineContext(fn, ps, ctx)
 	if ps.ReturnFlag || ps.ErrorFlag {
-		return
+		return nil, nil, false
 	}
-	i := 0
-	index := fn.Spec.Series.Get(i).(env.Word).Index
-	fnCtx.SetVar(index, arg0)
-	// TRY
+
 	psX := env.NewProgramStateOLD(fn.Body.Series, ps.Idx)
 	psX.Ctx = fnCtx
 	psX.PCtx = ps.PCtx
 	psX.Gen = ps.Gen
-	// Propagate execution guards so sub-calls respect the same limits
 	psX.CallDepth = ps.CallDepth + 1
 	psX.MaxCallDepth = ps.MaxCallDepth
 	psX.MaxOps = ps.MaxOps
 	psX.OpsCount = ps.OpsCount
+	psX.Ser.SetPos(0)
 
-	// END TRY
+	// Check depth guard before running
+	if psX.MaxCallDepth > 0 && psX.CallDepth > psX.MaxCallDepth {
+		returnContextToPool(fnCtx, fromPool)
+		ps.ErrorFlag = true
+		ps.Res = env.NewError2(5, "Stack overflow: call depth "+strconv.Itoa(psX.CallDepth)+" exceeded maximum of "+strconv.Itoa(psX.MaxCallDepth)+". Use `max-call-depth!` to configure the limit.")
+		return nil, nil, false
+	}
 
-	defer func() {
+	cleanup := func() {
 		if len(psX.DeferBlocks) > 0 {
 			ExecuteDeferredBlocks(psX)
 		}
 		returnContextToPool(fnCtx, fromPool)
 		// Propagate ops count back so the parent sees work done in sub-calls
 		ps.OpsCount = psX.OpsCount
-	}()
-	// Check depth guard before running
-	if psX.MaxCallDepth > 0 && psX.CallDepth > psX.MaxCallDepth {
-		ps.ErrorFlag = true
-		ps.Res = env.NewError2(5, "Stack overflow: call depth "+strconv.Itoa(psX.CallDepth)+" exceeded maximum of "+strconv.Itoa(psX.MaxCallDepth)+". Use `max-call-depth!` to configure the limit.")
-		return
 	}
-	psX.Ser.SetPos(0)
-	EvalBlockInj(psX, arg0, true)
-	MaybeDisplayFailureOrError(psX, psX.Idx, "func. call first arg")
+
+	return psX, cleanup, true
+}
+
+// finalizeFunctionCall handles post-execution result propagation for a function call.
+// It checks for error/failure flags, runs MaybeDisplayFailureOrError, handles
+// ForcedResult, and resets ReturnFlag.  The cleanup function (from setupFunctionCall)
+// runs automatically via the caller's defer after this returns.
+func finalizeFunctionCall(ps *env.ProgramState, psX *env.ProgramState, tag string) {
 	if psX.ErrorFlag || psX.FailureFlag {
 		ps.Res = psX.Res
 		ps.ErrorFlag = psX.ErrorFlag
 		ps.FailureFlag = psX.FailureFlag
 		return
 	}
+	MaybeDisplayFailureOrError(psX, psX.Idx, tag)
 	if psX.ForcedResult != nil {
 		ps.Res = psX.ForcedResult
 		psX.ForcedResult = nil
@@ -1554,207 +1584,84 @@ func CallFunctionArgs1(fn env.Function, ps *env.ProgramState, arg0 env.Object, c
 		ps.Res = psX.Res
 	}
 	ps.ReturnFlag = false
+}
+
+// CallFunctionArgs1 calls a function with exactly 1 argument provided.
+// Called from: CallFunctionWithArgs, builtins needing to call 1-arg functions
+// Purpose: Optimized path for 1-argument function calls from builtins
+func CallFunctionArgs1(fn env.Function, ps *env.ProgramState, arg0 env.Object, ctx *env.RyeCtx) {
+	psX, cleanup, ok := setupFunctionCall(fn, ps, ctx)
+	if !ok {
+		return
+	}
+	defer cleanup()
+
+	index := fn.Spec.Series.Get(0).(env.Word).Index
+	psX.Ctx.SetVar(index, arg0)
+	EvalBlockInj(psX, arg0, true)
+	finalizeFunctionCall(ps, psX, "func. call first arg")
 }
 
 // CallFunctionArgs2 calls a function with exactly 2 arguments provided.
 // Called from: CallFunctionWithArgs, builtins needing to call 2-arg functions
 // Purpose: Optimized path for 2-argument function calls from builtins
 func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, arg1 env.Object, ctx *env.RyeCtx) {
-	fnCtx, fromPool := DetermineContext(fn, ps, ctx)
-	if ps.ReturnFlag || ps.ErrorFlag {
+	psX, cleanup, ok := setupFunctionCall(fn, ps, ctx)
+	if !ok {
 		return
 	}
-	i := 0
-	index := fn.Spec.Series.Get(i).(env.Word).Index
-	fnCtx.SetVar(index, arg0)
-	i = 1
-	index = fn.Spec.Series.Get(i).(env.Word).Index
-	fnCtx.SetVar(index, arg1)
-	// TRY
-	psX := env.NewProgramStateOLD(fn.Body.Series, ps.Idx)
-	psX.Ctx = fnCtx
-	psX.PCtx = ps.PCtx
-	psX.Gen = ps.Gen
-	// Propagate execution guards so sub-calls respect the same limits
-	psX.CallDepth = ps.CallDepth + 1
-	psX.MaxCallDepth = ps.MaxCallDepth
-	psX.MaxOps = ps.MaxOps
-	psX.OpsCount = ps.OpsCount
+	defer cleanup()
 
-	// END TRY
-
-	/// ser0 := ps.Ser
-	/// ps.Ser = fn.Body.Series
-	/// env0 = ps.Ctx
-	/// ps.Ctx = fnCtx
-	defer func() {
-		if len(psX.DeferBlocks) > 0 {
-			ExecuteDeferredBlocks(psX)
-		}
-		returnContextToPool(fnCtx, fromPool)
-		// Propagate ops count back so the parent sees work done in sub-calls
-		ps.OpsCount = psX.OpsCount
-	}()
-	// Check depth guard before running
-	if psX.MaxCallDepth > 0 && psX.CallDepth > psX.MaxCallDepth {
-		ps.ErrorFlag = true
-		ps.Res = env.NewError2(5, "Stack overflow: call depth "+strconv.Itoa(psX.CallDepth)+" exceeded maximum of "+strconv.Itoa(psX.MaxCallDepth)+". Use `max-call-depth!` to configure the limit.")
-		return
-	}
-	psX.Ser.SetPos(0)
+	index := fn.Spec.Series.Get(0).(env.Word).Index
+	psX.Ctx.SetVar(index, arg0)
+	index = fn.Spec.Series.Get(1).(env.Word).Index
+	psX.Ctx.SetVar(index, arg1)
 	EvalBlockInj(psX, arg0, true)
-	MaybeDisplayFailureOrError(psX, psX.Idx, "func. call second arg.")
-	if psX.ErrorFlag || psX.FailureFlag {
-		ps.Res = psX.Res
-		ps.ErrorFlag = psX.ErrorFlag
-		ps.FailureFlag = psX.FailureFlag
-		return
-	}
-	// fmt.Println(psX.Res)
-	if psX.ForcedResult != nil {
-		ps.Res = psX.ForcedResult
-		psX.ForcedResult = nil
-	} else {
-		ps.Res = psX.Res
-	}
-	ps.ReturnFlag = false
+	finalizeFunctionCall(ps, psX, "func. call second arg.")
 }
 
 // CallFunctionArgs4 calls a function with exactly 4 arguments provided.
 // Called from: CallFunctionWithArgs, builtins needing to call 4-arg functions
 // Purpose: Optimized path for 4-argument function calls from builtins
 func CallFunctionArgs4(fn env.Function, ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, ctx *env.RyeCtx) {
-	fnCtx, fromPool := DetermineContext(fn, ps, ctx)
-	if ps.ReturnFlag || ps.ErrorFlag {
+	psX, cleanup, ok := setupFunctionCall(fn, ps, ctx)
+	if !ok {
 		return
 	}
-	i := 0
-	index := fn.Spec.Series.Get(i).(env.Word).Index
-	fnCtx.SetVar(index, arg0)
-	i = 1
-	index = fn.Spec.Series.Get(i).(env.Word).Index
-	fnCtx.SetVar(index, arg1)
-	i = 2
-	index = fn.Spec.Series.Get(i).(env.Word).Index
-	fnCtx.SetVar(index, arg2)
-	i = 3
-	index = fn.Spec.Series.Get(i).(env.Word).Index
-	fnCtx.SetVar(index, arg3)
-	// TRY
-	psX := env.NewProgramStateOLD(fn.Body.Series, ps.Idx)
-	psX.Ctx = fnCtx
-	psX.PCtx = ps.PCtx
-	psX.Gen = ps.Gen
-	// Propagate execution guards so sub-calls respect the same limits
-	psX.CallDepth = ps.CallDepth + 1
-	psX.MaxCallDepth = ps.MaxCallDepth
-	psX.MaxOps = ps.MaxOps
-	psX.OpsCount = ps.OpsCount
+	defer cleanup()
 
-	// END TRY
-	psX.Ser.SetPos(0)
-	// Check depth guard before running
-	if psX.MaxCallDepth > 0 && psX.CallDepth > psX.MaxCallDepth {
-		returnContextToPool(fnCtx, fromPool)
-		ps.ErrorFlag = true
-		ps.Res = env.NewError2(5, "Stack overflow: call depth "+strconv.Itoa(psX.CallDepth)+" exceeded maximum of "+strconv.Itoa(psX.MaxCallDepth)+". Use `max-call-depth!` to configure the limit.")
-		return
-	}
-	defer func() {
-		if len(psX.DeferBlocks) > 0 {
-			ExecuteDeferredBlocks(psX)
-		}
-		returnContextToPool(fnCtx, fromPool)
-		// Propagate ops count back so the parent sees work done in sub-calls
-		ps.OpsCount = psX.OpsCount
-	}()
-
+	index := fn.Spec.Series.Get(0).(env.Word).Index
+	psX.Ctx.SetVar(index, arg0)
+	index = fn.Spec.Series.Get(1).(env.Word).Index
+	psX.Ctx.SetVar(index, arg1)
+	index = fn.Spec.Series.Get(2).(env.Word).Index
+	psX.Ctx.SetVar(index, arg2)
+	index = fn.Spec.Series.Get(3).(env.Word).Index
+	psX.Ctx.SetVar(index, arg3)
 	EvalBlockInj(psX, arg0, true)
-	if psX.ErrorFlag || psX.FailureFlag {
-		ps.Res = psX.Res
-		ps.ErrorFlag = psX.ErrorFlag
-		ps.FailureFlag = psX.FailureFlag
-		return
-	}
-	MaybeDisplayFailureOrError(psX, psX.Idx, "func. call fourth arg.")
-	if psX.ForcedResult != nil {
-		ps.Res = psX.ForcedResult
-		psX.ForcedResult = nil
-	} else {
-		ps.Res = psX.Res
-	}
-	ps.ReturnFlag = false
+	finalizeFunctionCall(ps, psX, "func. call fourth arg.")
 }
 
 // CallFunctionArgsN calls a function with a variable number of arguments (N arguments).
 // Called from: CallFunctionWithArgs, CallCurriedCaller, builtins with variable args
 // Purpose: Generic function caller for any number of arguments provided as a slice
 func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, args ...env.Object) {
-	// fmt.Println(6)
-	// ctx = nil
-	fnCtx, fromPool := DetermineContext(fn, ps, ctx)
-	if ps.ReturnFlag || ps.ErrorFlag {
+	psX, cleanup, ok := setupFunctionCall(fn, ps, ctx)
+	if !ok {
 		return
 	}
+	defer cleanup()
 
 	for i, argWord := range fn.Spec.Series.S {
 		index := argWord.(env.Word).Index
-		arg := args[i]
-		fnCtx.SetVar(index, arg)
+		psX.Ctx.SetVar(index, args[i])
 	}
-	/* for i, arg := range args {
-		index := fn.Spec.Series.Get(i).(env.Word).Index
-		fnCtx.Set(index, arg)
-	}*/
-
-	// TRY
-	psX := env.NewProgramStateOLD(fn.Body.Series, ps.Idx)
-	psX.Ctx = fnCtx
-	psX.PCtx = ps.PCtx
-	psX.Gen = ps.Gen
-	// Propagate execution guards so sub-calls respect the same limits
-	psX.CallDepth = ps.CallDepth + 1
-	psX.MaxCallDepth = ps.MaxCallDepth
-	psX.MaxOps = ps.MaxOps
-	psX.OpsCount = ps.OpsCount
-
-	// END TRY
-	psX.Ser.SetPos(0)
-	// Check depth guard before running
-	if psX.MaxCallDepth > 0 && psX.CallDepth > psX.MaxCallDepth {
-		returnContextToPool(fnCtx, fromPool)
-		ps.ErrorFlag = true
-		ps.Res = env.NewError2(5, "Stack overflow: call depth "+strconv.Itoa(psX.CallDepth)+" exceeded maximum of "+strconv.Itoa(psX.MaxCallDepth)+". Use `max-call-depth!` to configure the limit.")
-		return
-	}
-	defer func() {
-		if len(psX.DeferBlocks) > 0 {
-			ExecuteDeferredBlocks(psX)
-		}
-		returnContextToPool(fnCtx, fromPool)
-		// Propagate ops count back so the parent sees work done in sub-calls
-		ps.OpsCount = psX.OpsCount
-	}()
-
 	if len(args) > 0 {
 		EvalBlockInj(psX, args[0], true)
 	} else {
 		Eval(psX)
 	}
-	if psX.ErrorFlag || psX.FailureFlag {
-		ps.Res = psX.Res
-		ps.ErrorFlag = psX.ErrorFlag
-		ps.FailureFlag = psX.FailureFlag
-		return
-	}
-	MaybeDisplayFailureOrError(psX, psX.Idx, "func. call N args")
-	if psX.ForcedResult != nil {
-		ps.Res = psX.ForcedResult
-		psX.ForcedResult = nil
-	} else {
-		ps.Res = psX.Res
-	}
-	ps.ReturnFlag = false
+	finalizeFunctionCall(ps, psX, "func. call N args")
 }
 
 // DetermineContext determines the appropriate context for a function call.
@@ -1872,6 +1779,25 @@ func CallCurriedCallerArgsN(cc env.CurriedCaller, ps *env.ProgramState, args ...
 	}
 }
 
+// fillNextNilSlot stores val in the first nil slot among arg0–arg4 and increments collected.
+// Used by CallCurriedCaller to avoid duplicating the 5-way if-else chain.
+func fillNextNilSlot(arg0, arg1, arg2, arg3, arg4 *env.Object, val env.Object, collected *int) {
+	if *arg0 == nil {
+		*arg0 = val
+	} else if *arg1 == nil {
+		*arg1 = val
+	} else if *arg2 == nil {
+		*arg2 = val
+	} else if *arg3 == nil {
+		*arg3 = val
+	} else if *arg4 == nil {
+		*arg4 = val
+	} else {
+		return // all slots filled
+	}
+	*collected++
+}
+
 // CallCurriedCaller handles calling a curried caller (partially applied function or builtin).
 // Called from: EvalExpression_DispatchType, EvalObject
 // Purpose: Executes curried callers by filling in remaining arguments and calling the underlying builtin/function
@@ -1900,60 +1826,15 @@ func CallCurriedCaller(cc env.CurriedCaller, ps *env.ProgramState, arg0_ env.Obj
 	if argsToCollect > 0 {
 		if arg0_ != nil && !pipeSecond {
 			// Op-word: left value fills first nil slot
-			if arg0 == nil {
-				arg0 = arg0_
-				collected++
-			} else if arg1 == nil {
-				arg1 = arg0_
-				collected++
-			} else if arg2 == nil {
-				arg2 = arg0_
-				collected++
-			} else if arg3 == nil {
-				arg3 = arg0_
-				collected++
-			} else if arg4 == nil {
-				arg4 = arg0_
-				collected++
-			}
+			fillNextNilSlot(&arg0, &arg1, &arg2, &arg3, &arg4, arg0_, &collected)
 		} else if firstVal != nil && pipeSecond {
 			// Pipe-second: firstVal fills first nil slot
-			if arg0 == nil {
-				arg0 = firstVal
-				collected++
-			} else if arg1 == nil {
-				arg1 = firstVal
-				collected++
-			} else if arg2 == nil {
-				arg2 = firstVal
-				collected++
-			} else if arg3 == nil {
-				arg3 = firstVal
-				collected++
-			} else if arg4 == nil {
-				arg4 = firstVal
-				collected++
-			}
+			fillNextNilSlot(&arg0, &arg1, &arg2, &arg3, &arg4, firstVal, &collected)
 		}
 
 		// Handle pipeSecond: arg0_ goes to second nil slot
 		if arg0_ != nil && pipeSecond && collected < argsToCollect {
-			if arg0 == nil {
-				arg0 = arg0_
-				collected++
-			} else if arg1 == nil {
-				arg1 = arg0_
-				collected++
-			} else if arg2 == nil {
-				arg2 = arg0_
-				collected++
-			} else if arg3 == nil {
-				arg3 = arg0_
-				collected++
-			} else if arg4 == nil {
-				arg4 = arg0_
-				collected++
-			}
+			fillNextNilSlot(&arg0, &arg1, &arg2, &arg3, &arg4, arg0_, &collected)
 		}
 	}
 
@@ -1963,26 +1844,7 @@ func CallCurriedCaller(cc env.CurriedCaller, ps *env.ProgramState, arg0_ env.Obj
 		if ps.ReturnFlag || ps.ErrorFlag {
 			return
 		}
-		// Fill the next nil slot
-		if arg0 == nil {
-			arg0 = ps.Res
-			collected++
-		} else if arg1 == nil {
-			arg1 = ps.Res
-			collected++
-		} else if arg2 == nil {
-			arg2 = ps.Res
-			collected++
-		} else if arg3 == nil {
-			arg3 = ps.Res
-			collected++
-		} else if arg4 == nil {
-			arg4 = ps.Res
-			collected++
-		} else {
-			// All slots filled, shouldn't happen
-			break
-		}
+		fillNextNilSlot(&arg0, &arg1, &arg2, &arg3, &arg4, ps.Res, &collected)
 	}
 
 	// Call the appropriate function based on caller type
@@ -2093,11 +1955,27 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 	}
 	if bi.Argsn > 3 {
 		evalExprFn(ps, true, opword)
+
+		if checkForFailureWithBuiltin(bi, ps, 3) {
+			return
+		}
+		if ps.ReturnFlag || ps.ErrorFlag {
+			ps.Res = env.NewError4(0, "Argument 4 missing. Check that all required arguments are provided for the builtin function.", getParentErr(), nil)
+			return
+		}
 		// The CallCurriedCaller is now created explicitly with partial builtin function
 		arg3 = ps.Res
 	}
 	if bi.Argsn > 4 {
 		evalExprFn(ps, true, opword)
+
+		if checkForFailureWithBuiltin(bi, ps, 4) {
+			return
+		}
+		if ps.ReturnFlag || ps.ErrorFlag {
+			ps.Res = env.NewError4(0, "Argument 5 missing. Check that all required arguments are provided for the builtin function.", getParentErr(), nil)
+			return
+		}
 		// The CallCurriedCaller is now created explicitly with partial builtin function
 		arg4 = ps.Res
 	}
@@ -2182,6 +2060,10 @@ func DirectlyCallBuiltin(ps *env.ProgramState, bi env.Builtin, a0 env.Object, a1
 	var arg2 env.Object
 	var arg3 env.Object
 	var arg4 env.Object
+	if bi.Fn == nil {
+		ps.ErrorFlag = true
+		return env.NewError4(0, "Builtin function is nil - builtin was registered without an implementation.", nil, nil)
+	}
 	res := bi.Fn(ps, a0, a1, arg2, arg3, arg4)
 	if res == nil {
 		ps.ErrorFlag = true
@@ -2227,7 +2109,7 @@ func findNearestLocationNode(ps *env.ProgramState) *env.LocationNode {
 // Purpose: Converts `word` to highlighted word for better error readability
 func FormatBacktickQuotes(message string) string {
 	// Magenta background, white text for quoted words
-	result := strings.Builder{}
+	result := &strings.Builder{}
 	inQuote := false
 	for i := 0; i < len(message); i++ {
 		if message[i] == '`' {
@@ -2499,7 +2381,7 @@ func MaybeDisplayFailureOrError2(es *env.ProgramState, genv *env.Idxs, tag strin
 				}
 				return
 			}
-			// Capture block itself produced an error — restore captured error as Res
+			// Capture block itself produced an error - restore captured error as Res
 			// and fall through to normal error display below
 		}
 
