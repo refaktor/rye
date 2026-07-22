@@ -100,7 +100,8 @@ archives:
       i386-static
 
 kos:  # See https://goreleaser.com/customization/ko/
-  - repositories:
+  - id: default
+    repositories:
     - ghcr.io/refaktor/rye
     tags:
     - '{{.Version}}'
