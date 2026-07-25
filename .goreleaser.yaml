@@ -62,7 +62,7 @@ builds:
   - id: linux-386-static
     env:
       - CGO_ENABLED=1
-      - CC=i686-linux-gnu-gcc
+      - CC=i686-linux-musl-gcc
     goos:
       - linux
     goarch:
@@ -70,7 +70,7 @@ builds:
     flags:
       - -trimpath
     ldflags:
-      - "-s -w -X github.com/refaktor/rye/runner.Version={{.Version}} -extldflags '-static'"
+      - "-s -w -X github.com/refaktor/rye/runner.Version={{.Version}} -linkmode external -extldflags '-static'"
 
 archives:
   - id: default

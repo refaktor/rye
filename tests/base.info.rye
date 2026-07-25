@@ -6973,7 +6973,7 @@ section "Other " "..." {
 			1 [ String ]
 		}
 		arg `source: String containing Rye code or URI of file to load with modification allowed`
-		returns `Block containing the parsed Rye valuesload\mod — string-only; file URI variant moved to builtins_baseio.go as "load\\mod\\file"`
+		returns `Block containing the parsed Rye valuesload\mod - string-only; file URI variant moved to builtins_baseio.go as "load\\mod\\file"`
 	}
 
 	{
@@ -6991,7 +6991,7 @@ section "Other " "..." {
 			1 [ String ]
 		}
 		arg `source: String containing Rye code to load with modification allowed and file watching`
-		returns `Block containing the parsed Rye valuesload\live — string-only; file URI variant moved to builtins_baseio.go`
+		returns `Block containing the parsed Rye valuesload\live - string-only; file URI variant moved to builtins_baseio.go`
 	}
 
 	{
@@ -7181,6 +7181,26 @@ section "Other " "..." {
 
 	{
 		equal { rye .type? } 'native
+	}
+
+	{
+	}
+
+	group "Rye-itself//Capture" 
+	"Registers a capture block that will be executed with the error injected if an unhandled error bubbles to the top of the program. The error value is injected as the first value (use .disarm, .print, etc.)."
+	{
+		argsn 2
+		argtypes {
+			2 [ Block ]
+		}
+		arg `rye-itself: The rye native object (passed via dot-word dispatch)`
+		arg `block: Block of code to execute with the captured error injected when an error bubbles to top-level`
+		returns `The rye-itself native (so the chain continues cleanly)`
+	}
+
+	{
+		stdout { rye .Capture { .disarm .print } 1 / 0 } "Error: { message: division by zero  }\n"
+		stdout { rye .Capture { .disarm .print } "ok" } ""
 	}
 
 	{

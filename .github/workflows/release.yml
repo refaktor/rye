@@ -37,10 +37,15 @@ jobs:
       - name: Install cross-compilation toolchains
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-mingw-w64 mingw-w64 gcc-i686-linux-gnu
-          # Verify compilers are installed
+          sudo apt-get install -y gcc-mingw-w64 mingw-w64
+          # Verify Windows cross-compilers
           x86_64-w64-mingw32-gcc --version
-          i686-linux-gnu-gcc --version
+
+      - name: Install i686 musl cross-compiler
+        run: |
+          curl -fsSL https://musl.cc/i686-linux-musl-cross.tgz | tar xz
+          echo "$PWD/i686-linux-musl-cross/bin" >> "$GITHUB_PATH"
+          i686-linux-musl-gcc --version
 
       - name: Run GoReleaser
         id: goreleaser

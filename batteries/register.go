@@ -66,7 +66,7 @@ func RegisterBatteries(ps *env.ProgramState) {
 	evaldo.RegisterBuiltins2(Builtins_psql, ps, "psql")
 	evaldo.RegisterBuiltins2(Builtins_mysql, ps, "mysql")
 	evaldo.RegisterBuiltins2(Builtins_email, ps, "email")
-	evaldo.RegisterBuiltins2(Builtins_imap, ps, "imap")
+	// evaldo.RegisterBuiltins2(Builtins_imap, ps, "imap")
 	evaldo.RegisterBuiltins2(Builtins_structures, ps, "structs")
 	evaldo.RegisterBuiltins2(Builtins_smtpd, ps, "smtpd")
 	evaldo.RegisterBuiltins2(Builtins_mail, ps, "mail")

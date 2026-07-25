@@ -603,7 +603,7 @@ func (l *Lexer) NextToken() NoPEGToken {
 			}
 
 			// Check if it's a URI (word://)
-			if l.ch == ':' && l.peekChar() == '/' && l.peekChar() == '/' {
+			if l.ch == ':' && l.peekChar() == '/' && l.peekCharOffs(1) == '/' {
 				l.readChar() // :
 				l.readChar() // /
 				l.readChar() // /
@@ -863,6 +863,10 @@ func (l *Lexer) readString() NoPEGToken {
 
 	if l.ch == delimiter {
 		l.readChar() // Skip closing quote
+	} else {
+		// Unterminated string — reached EOF without finding closing quote
+		errMsg := fmt.Sprintf("Unterminated string starting at line %d, column %d. Missing closing quote ('%c').", l.startLine, l.startCol, delimiter)
+		return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, ERR_UNKNOWN)
 	}
 
 	// Ensure the string is followed by a token delimiter
@@ -1080,8 +1084,7 @@ func (l *Lexer) readOpWord() NoPEGToken {
 }
 
 func (l *Lexer) readPipeWord() NoPEGToken {
-	ch := l.ch
-	l.readChar() // Skip backslash or pipe
+	l.readChar() // Skip prefix character ('|', '~', '=', '>')
 
 	cpath := false
 
@@ -1106,11 +1109,15 @@ func (l *Lexer) readPipeWord() NoPEGToken {
 		return l.makeToken(NPEG_TOKEN_PIPECPATH, l.input[l.tokenStart:l.pos])
 	}
 
-	if ch == '|' {
-		return l.makeToken(NPEG_TOKEN_PIPEWORD, l.input[l.tokenStart:l.pos])
-	} else {
-		return l.makeToken(NPEG_TOKEN_PIPEWORD, string(ch)+l.input[l.tokenStart:l.pos])
-	}
+	// For '|' prefix, tokenStart already points to '|', so value is correct.
+	// For '~'/'='/'>' prefix, we need to skip the already-advanced prefix char;
+	// l.input[l.tokenStart:l.pos] already includes it, and l.tokenStart+1 strips it
+	// but we need the full token including the prefix. l.readChar() advanced l.pos
+	// past the prefix, so l.input[l.tokenStart:l.pos] already has the prefix.
+	// Since the main switch already positioned us with l.ch as the prefix,
+	// and l.startToken() was called before the switch, l.tokenStart IS the prefix.
+	// So l.input[l.tokenStart:l.pos] is the correct full token for all cases.
+	return l.makeToken(NPEG_TOKEN_PIPEWORD, l.input[l.tokenStart:l.pos])
 
 }
 
@@ -1691,14 +1698,17 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 		return *env.NewDecimal(val), nil
 	case NPEG_TOKEN_STRING:
 		str := p.currentToken.Value[1 : len(p.currentToken.Value)-1]
-		// Process escape sequences
+		// Process escape sequences.
+		// IMPORTANT: \\ and \" must be processed FIRST so that escaped backslashes
+		// and quotes don't get consumed by the other escape sequence replacements.
+		// Example: "a\\nb" should produce literal "a\nb" (backslash-n), not "a<newline>b".
+		str = strings.Replace(str, "\\\\", "\\", -1)
+		str = strings.Replace(str, "\\\"", "\"", -1)
 		str = strings.Replace(str, "\\n", "\n", -1)
 		str = strings.Replace(str, "\\r", "\r", -1)
 		str = strings.Replace(str, "\\t", "\t", -1)
 		str = strings.Replace(str, "\\e", "\x1b", -1)
 		str = processHexEscapesNoPeg(str) // Handle \xHH hex escapes
-		str = strings.Replace(str, "\\\\", "\\", -1)
-		str = strings.Replace(str, "\\\"", "\"", -1)
 		return *env.NewString(str), nil
 	case NPEG_TOKEN_URI:
 		parts := strings.SplitN(p.currentToken.Value, "://", 2)
