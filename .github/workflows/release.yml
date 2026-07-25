@@ -32,7 +32,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.ref_name }} # <--- Put Step 3 here
+          # ref: ${{ github.ref_name }} # <--- Put Step 3 here
           fetch-depth: 0 # needs full git history for changelog generation
           fetch-tags: true
           persist-credentials: false
