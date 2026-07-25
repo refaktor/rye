@@ -49,7 +49,7 @@ jobs:
           echo "/tmp/musl/i686-unknown-linux-musl/bin" >> "$GITHUB_PATH"
           # curl -fsSL https://github.com/cross-tools/musl-cross/releases/download/20250515/i686-unknown-linux-musl.tar.xz | tar -xJ -C /tmp
           # echo "$PWD/i686-linux-musl-cross/bin" >> "$GITHUB_PATH"
-          i686-linux-musl-gcc --version
+          # /tmp/musl/i686-unknown-linux-musl/bin i686-linux-musl-gcc --version
           # run: |
           #  curl -fsSL https://musl.cc/i686-linux-musl-cross.tgz | tar xz
           #  echo "$PWD/i686-linux-musl-cross/bin" >> "$GITHUB_PATH"
