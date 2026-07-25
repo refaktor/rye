@@ -53,6 +53,7 @@ jobs:
           mkdir -p /tmp/musl
           curl -fsSL https://github.com/cross-tools/musl-cross/releases/download/20250929/i686-unknown-linux-musl.tar.xz | tar -xJ -C /tmp/musl
           echo "/tmp/musl/i686-unknown-linux-musl/bin" >> "$GITHUB_PATH"
+          chmod -R u+w /tmp/musl
           ln -s /tmp/musl/i686-unknown-linux-musl/bin/i686-unknown-linux-musl-gcc /tmp/musl/i686-unknown-linux-musl/bin/i686-linux-musl-gcc
           # curl -fsSL https://github.com/cross-tools/musl-cross/releases/download/20250515/i686-unknown-linux-musl.tar.xz | tar -xJ -C /tmp
           # echo "$PWD/i686-linux-musl-cross/bin" >> "$GITHUB_PATH"
