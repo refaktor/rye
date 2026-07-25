@@ -6,6 +6,11 @@ on:
         tags:
           - 'v*.*.*'
     workflow_dispatch:
+        inputs:
+            snapshot:
+                description: 'Run as snapshot (no publish)'
+                type: boolean
+                default: true
 
 permissions:
   contents: read
@@ -60,12 +65,22 @@ jobs:
         id: goreleaser
         uses: goreleaser/goreleaser-action@v7
         with:
-          # either 'goreleaser' (default) or 'goreleaser-pro':
           distribution: goreleaser
           version: latest
-          args: release --clean
+          args: ${{ github.event_name == 'workflow_dispatch' && inputs.snapshot && 'release --snapshot --clean --skip=publish' || 'release --clean' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      #- name: Run GoReleaser
+      #  id: goreleaser
+      #  uses: goreleaser/goreleaser-action@v7
+      #  with:
+      #    # either 'goreleaser' (default) or 'goreleaser-pro':
+      #    distribution: goreleaser
+      #    version: latest
+      #    args: release --clean
+      #  env:
+      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate binary hashes
         id: binary
