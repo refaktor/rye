@@ -145,6 +145,8 @@ Pre-compiled binaries for **Linux**, **macOS**, **Windows**, and **WASM** are av
   yay -S ryelang
   ```
 
+Thanks to @kseistrup for Arch package and @stefanb for Homebrew.
+
 ### Docker Images
 
 - **Binary image** (includes Rye and Emacs-nox):
@@ -177,6 +179,7 @@ Pre-compiled binaries for **Linux**, **macOS**, **Windows**, and **WASM** are av
 - **VS Code**: Search for "ryelang" in the Extension marketplace [repository](https://github.com/refaktor/rye-vscode)
 - **Emacs**: [syntax highlighting](https://github.com/refaktor/rye/tree/main/editors/emacs)
 - **NeoVIM**: [syntax highlighting](https://github.com/refaktor/rye/tree/main/editors/nvim)
+- **Helix**: soon
 
 ## Community and Contact
 
@@ -184,4 +187,9 @@ Pre-compiled binaries for **Linux**, **macOS**, **Windows**, and **WASM** are av
 - **[Reddit](https://reddit.com/r/ryelang/)**
 - **[Issues](https://github.com/refaktor/rye/issues)**
 - **[Discord](https://discord.gg/8SFmNM2U)** - #Homoiconic - a discord for languages like Lisp, Rebol, Red, Rye (very new, few users, welcome!)
+- **[Rosetta Code](https://rosettacode.org/wiki/Category:Rye)**
 - **Email**: janko.itm+rye[at]gmail.com
+
+## Thanks!
+
+A big thanks to all contributors!
