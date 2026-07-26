@@ -1,0 +1,877 @@
+; Testing Quirks — Edge Cases and Surprising Behaviours
+; Tests for Rye language quirks that are NOT intuitive from syntax alone.
+; Run with: cd internal && rye testing_quirks.rye
+
+print "========================================"
+print "       RYE LANGUAGE QUIRKS TESTS"
+print "========================================"
+print ""
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 1. SETWORD IMMUTABILITY
+; ══════════════════════════════════════════════════════════════════════════════
+
+print "## Setword Immutability"
+
+assert\display "setword can't be reassigned" {
+	try { x: 5 , x: 10 } |type?
+} 'error
+
+assert\display "modword can't modify setword" {
+	try { x: 5 , x:: 10 } |type?
+} 'error
+
+assert\display "var can be modified with modword" {
+	var 'v 5 , v:: 10 , v
+} 10
+
+assert\display "modword creates if not exists" {
+	try { ::y 42 } |type?
+} 'integer
+
+assert\display "left-modword creates if not exists" {
+	42 ::z , z
+} 42
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 2. LOOPS: SETWORD AND VAR FAIL ON 2ND ITERATION
+; ══════════════════════════════════════════════════════════════════════════════
+
+print "## Loop Assignment Quirks"
+
+assert\display "setword fails in loop on 2nd iteration" {
+	try {
+		for range 1 3 { ::i , result: i * 2 }
+	} |type?
+} 'error
+
+assert\display "var fails in loop on 2nd iteration" {   ; QUESTION: TODO: sometimes we want try to just cover failures, but sometimes also coding errors (code input) should we have two try variants?
+	try {
+		for range 1 3 { ::i , var 'res i * 2 }
+	} |probe |type?
+} 'error
+
+assert\display "modword works in loop every iteration" {
+	var 'sum 0
+	for range 1 5 { ::i
+		i * 2 ::doubled
+		sum:: sum + doubled
+	}
+	sum
+} 30
+
+assert\display "modword in map body" {
+	map range 1 4 { ::n , n * 3 ::tripled , tripled }
+} { 3 6 9 12 }
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 3. OP-WORD RIGHT-ASSOCIATIVITY
+; ══════════════════════════════════════════════════════════════════════════════
+
+print "## Op-Word Right-Associativity"
+
+assert\display "n .mod d = 0 parsed as n .mod (d = 0) — WRONG" {
+	try { 4 .mod 2 = 0 } |type?
+} 'error
+
+assert\display "correct: parentheses force left-assoc" {
+	( 4 .mod 2 ) = 0
+} 0
+
+assert\display "d * d > n parsed as d * (d > n) — fails" {
+	try { 3 * 3 > 10 } |type?
+} 'error
+
+assert\display "correct: intermediate variable" {
+	sq: 3 * 3 , sq > 10
+} 0
+
+assert\display "chained comparisons need parens" {
+	( 5 > 3 ) and ( 3 > 1 )
+} 1
+
+assert\display "bare = steals word on right" {
+	try { fn { a } { a } 5 = print } |type?
+} 'error
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 4. PIPE EQUALITY |= for comparing two expressions
+; ══════════════════════════════════════════════════════════════════════════════
+
+print "## Pipe Equality"
+
+assert\display "|= compares results of two function calls" {
+	fn { a } { a * 2 } 3 |= fn { b } { b + 3 } 3
+} 1
+
+assert\display "bare = steals function on right — fails" {
+	try { fn { a } { a * 2 } 3 = fn { b } { b + 3 } 3 } |type?
+} 'error
+
+assert\display "|> works for pipe greater-than" {
+	10 |> 5
+} 1
+
+assert\display "|!= works for pipe not-equal" {
+	10 |!= 5
+} 1
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 5. PIPE-WORDS vs OP-WORDS PRIORITY
+; ══════════════════════════════════════════════════════════════════════════════
+
+print "## Pipe vs Op-Word Priority"
+
+assert\display "pipe |+ after op + — pipe ends expression" {
+	1 + 2 |+ 3
+} 6
+
+assert\display "chain of pipes — left to right" {
+	1 |+ 2 |* 3
+} 9
+
+assert\display "op-word chain — right associative" {
+	1 + 2 * 3
+} 7
+
+assert\display "setword captures everything (highest priority)" {
+	x:: 1 + 2 * 3 , x
+} 7
+
+assert\display "modword with pipe chain" {
+	x:: 2 , 3 |+ x
+} 5
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 6. STRING + FAILS, join REQUIRED
+; ══════════════════════════════════════════════════════════════════════════════
+
+print "## String Concatenation (NO + for strings)"
+
+assert\display "+ on strings fails" {
+	try { "hello" + " world" } |type?
+} 'error
+
+assert\display "join concatenates strings" {
+	join { "hello" " " "world" }
+} "hello world"
+
+assert\display "join with non-string fails" {
+	try { join { "a" 42 "b" } } |type?
+} 'error
+
+assert\display "join with to-string for numbers" {
+	join { "a" to-string 42 "b" }
+} "a42b"
+
+assert\display "++ works for string appending" {
+	"hello" ++ " world"
+} "hello world"
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 7. if vs either — if HAS NO ELSE
+; ══════════════════════════════════════════════════════════════════════════════
+
+print "## if vs either"
+
+assert\display "either takes two blocks" {
+	either true { "yes" } { "no" }
+} "yes"
+
+assert\display "if only takes one block" {
+	if true { "just-true" }
+} "just-true"
+
+assert\display "second block after if is not executed as else" {
+	var 'track "start"
+	if false { track:: "wrong" } { track:: "should-not-run" }
+	track
+} "should-not-run"
+
+assert\display "correct: use either for if/else" {
+	var 'track "start"
+	either false { track:: "no" } { track:: "yes" }
+	track
+} "yes"
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 8. FUNCTION ARG NAMES MUST NOT SHADOW BUILTINS
+; ══════════════════════════════════════════════════════════════════════════════
+
+print "## Function Arg Name Shadowing"
+
+assert\display "param 'lower' shadows builtin — fails" {
+	try { fn { lower } { lower lower } 5 } |type?
+} 'error
+
+assert\display "param 'sort' shadows builtin — fails" {
+	try { fn { sort } { sort sort } 5 } |type?
+} 'error
+
+assert\display "safe param name works" {
+	fn { txt } { txt ++ "!" } "hello"
+} "hello!"
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 9. COMMAS SEPARATE EXPRESSIONS, CAN'T BE INSIDE EXPRESSIONS
+; ══════════════════════════════════════════════════════════════════════════════
+
+print "## Comma Expression Separator"
+
+assert\display "comma inside join fails" {
+	try { join { "a" , "b" } } |type?
+} 'error
+
+assert\display "correct: separate expressions, then join" {
+	a: "hello" , b: "world" , join { a b }
+} "helloworld"
+
+assert\display "comma re-injects value in injected block" {
+	with 42 { * 10 ::a , + 10 ::b , a + b }
+} 52
+
+assert\display "comma separates independent statements" {
+	var 'x 0 , var 'y 10 , x:: y * 2 , x
+} 20
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 10. TYPE CONVERSION QUIRKS
+; ══════════════════════════════════════════════════════════════════════════════
+
+print "## Type Conversion Quirks"
+
+assert\display "to-integer on non-numeric string fails" {
+	try { to-integer "H" } |type?
+} 'error
+
+assert\display "to-integer on numeric string works" {
+	to-integer "123"
+} 123
+
+assert\display "to-integer on empty string fails" {
+	try { to-integer "" } |type?
+} 'error
+
+assert\display "to-decimal on integer fails (takes strings)" {
+	try { to-decimal 5 } |type?
+} 'error
+
+assert\display "integer to decimal: multiply by 1.0" {
+	5 * 1.0
+} 5.0
+
+assert\display "to-decimal on decimal string works" {
+	to-decimal "3.14"
+} 3.14
+
+assert\display "to-char integer to character" {
+	to-char 65
+} "A"
+
+assert\display "no char to integer — to-integer fails" {
+	try { to-integer "A" } |type?
+} 'error
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 11. INTEGER DIVISION TRUNCATES
+; ══════════════════════════════════════════════════════════════════════════════
+
+print "## Integer Division"
+
+assert\display "integer division truncates" {
+	10 / 3
+} 3
+
+assert\display "decimal division is precise" {
+	10.0 / 3.0
+} 3.3333333333333335
+
+assert\display "mixed division promotes to decimal" {
+	10 / 3.0
+} 3.3333333333333335
+
+assert\display "mod on integers" {
+	10 .mod 3
+} 1
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 12. MODWORD vs SETWORD MUTABILITY
+; ══════════════════════════════════════════════════════════════════════════════
+
+print "## Modword vs Setword"
+
+assert\display "modword creates if not defined" {
+	fresh:: 99 , fresh
+} 99
+
+assert\display "modword modifies var" {
+	var 'mvar 10 , mvar:: 20 , mvar
+} 20
+
+assert\display "modword can't modify setword" {
+	try { s: 10 , s:: 20 } |type?
+} 'error
+
+assert\display "modword can't redefine context word" {
+	try {
+		ctx:: context { x: 5 }
+		do\in ctx { x:: 10 }
+	} |type?
+} 'error
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 13. FAILURE FIRST-CLASS VALUES
+; ══════════════════════════════════════════════════════════════════════════════
+
+print "## Failure as First-Class Values"
+
+assert\display "failure flows through pipe chain" {
+	try { 1 / 0 |+ 100 } |type?
+} 'error
+
+assert\display "fix provides fallback for pipe chain" {
+	1 / 0 |fix { 99 } |+ 1
+} 100
+
+assert\display "fix on success passes through" {
+	10 / 2 |fix { 99 } |+ 1
+} 6.0
+
+assert\display "check wraps error with context" {
+	try { 1 / 0 |check 501 } |status?
+} 501
+
+assert\display "check on success passes through" {
+	10 |check "ok"
+} 10
+
+assert\display "ensure on false creates error" {
+	try { false |ensure "must be true" } |type?
+} 'error
+
+assert\display "ensure on true passes through" {
+	true |ensure "must be true"
+} true
+
+private {
+assert\display "disarm clears failure flag but keeps error object" {
+	x: try { fail 404 |disarm } , is-error x
+} true
+}
+
+private {
+assert\display "disarm error has no failure flag" {
+	x: try { fail 404 |disarm } , is-error x
+} true
+}
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 14. FAILURE IN LOOPS
+; ══════════════════════════════════════════════════════════════════════════════
+
+print "## Failure in Loops"
+
+assert\display "failure exits loop and propagates" {
+	try {
+		for { 1 2 0 3 } { ::x , 10 / x }
+	} |type?
+} 'error
+
+private {
+assert\display "fix absorbs failure inside loop" {
+	var 'sum 0.0
+	for { 2 0 5 } { ::x
+		sum:: sum + ( 10 / x |fix { 0.0 } )
+	}
+	sum
+} 7.0
+}
+
+private {
+assert\display "try disarms failure in loop" {
+	var 'count 0
+	for { 2 0 4 } { ::x
+		try { 10 / x } |fix { count:: count + 1 , 0 }
+	}
+	count
+} 1
+}
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 15. to-block ON BLOCKS FAILS
+; ══════════════════════════════════════════════════════════════════════════════
+
+print "## to-block Quirks"
+
+assert\display "to-block on block fails" {
+	try { block { 1 2 3 } } |type?
+} 'error
+
+assert\display "to-block on list works" {
+	block list { 1 2 3 } |type?
+} 'block
+
+assert\display "ref copies a block" {
+	b1: ref { 1 2 3 } , append! 4 b1 , b1
+} { 1 2 3 4 }
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 16. EMPTY COLLECTION OPERATIONS
+; ══════════════════════════════════════════════════════════════════════════════
+
+print "## Empty Collection Operations"
+
+assert\display "first on empty block fails" {
+	try { first { } } |type?
+} 'error
+
+assert\display "last on empty block fails" {
+	try { last { } } |type?
+} 'error
+
+assert\display "rest on empty block fails" {
+	try { rest { } } |type?
+} 'error
+
+assert\display "reduce on empty block fails" {
+	try { reduce { } 'acc { + acc } } |type?
+} 'error
+
+assert\display "fold on empty block returns initial" {
+	fold { } 'acc 42 fn { x } { + acc }
+} 42
+
+assert\display "sum of empty block is 0" {    ; TODO: BUG: make it return 0
+	sum { }
+} 0
+
+assert\display "map over empty block returns empty" {
+	map { } { + 1 }
+} { }
+
+assert\display "filter over empty block returns empty" {
+	filter { } { .even }
+} { }
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 17. TYPE-SENSITIVE MAP/FILTER — preserves type
+; ══════════════════════════════════════════════════════════════════════════════
+
+print "## Map/Filter Type Preservation"
+
+assert\display "map over list returns list" {
+	map list { 1 2 3 } { + 1 } |type?
+} 'list
+
+assert\display "map over block returns block" {
+	map { 1 2 3 } { + 1 } |type?
+} 'block
+
+assert\display "map over string returns block of chars" {
+	map "abc" { ++ "-" } |type?
+} 'block
+
+assert\display "filter over list returns list" {
+	filter list { 1 2 3 4 } { .is-even } |type?
+} 'list
+
+assert\display "filter over string returns block of chars" {
+	filter "a1b2c3" { .integer |fix\either { false } { .is-even } } |type?
+} 'block
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 18. CONTEXT AND SCOPE EDGE CASES
+; ══════════════════════════════════════════════════════════════════════════════
+
+print "## Context Edge Cases"
+
+assert\display "type? of context returns 'context" {
+	context { x: 1 } |type?
+} 'context
+
+private {
+assert\display "private returns last value, vars don't leak" {
+	result: private { 
+		aa: 10 , bb: 20 , aa + bb
+	}
+	result
+} 30
+}
+
+private {
+assert\display "private variables don't leak" {
+	try { private { aa: 10 , bb: 20 , aa + bb } , aa } |type?
+} 'error
+}
+
+assert\display "isolate has parent builtins at construction" {
+	try { isolate { if 1 { 0 } } } |type?
+} 'context
+
+assert\display "isolate has no parent builtins" {
+	iso: isolate { x: does { if 1 { 0 } } } 
+	try { iso/x } |type?
+} 'error
+
+assert\display "extends chains context" {
+	c1: context { name: "base" }
+	c2: extends c1 { age: 42 }
+	c2/name ++ "-" ++ string c2/age
+} "base-42"
+
+private {
+assert\display "do\\in evaluates code in context" {
+	ctx:: context { x: 100 , double: does { x * 2 } }
+	do\in ctx { x + double }
+} 300
+}
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 19. BLOCK WITH INJECTION
+; ══════════════════════════════════════════════════════════════════════════════
+
+print "## Block Injection"
+
+assert\display "with injects value" {
+	with 100 { + 50 }
+} 150
+
+private {
+assert\display "comma re-injects original value after pipe" {
+	with 10 { * 2 ::a , + 5 ::b , a + b }
+} 35
+}
+
+private { 
+assert\display "loop injects counter" {
+	var 'sum 0
+	loop 5 { + sum ::sum }
+	sum
+} 10
+}
+
+assert\display "fn1 uses injection (single-arg fn)" {
+	double: fn1 { * 2 }
+	double 5
+} 10
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 20. CLOSURE vs fn\\inside — closure is safe
+; ══════════════════════════════════════════════════════════════════════════════
+
+print "## Closures and Capturing"
+
+assert\display "closure captures mutable var" {
+	mk-counter: does {
+		var 'c 0
+		closure { } { inc! 'c }
+	}
+	cnt: mk-counter
+	cnt , cnt , cnt
+} 3
+
+
+private {                         ; total is read from parent , but mod words always sets in current context
+assert\display "closure captures outer var" {
+	var 'total 0
+	add: closure { x } { total:: total + x , total }
+	add 5 , add 3
+} 3
+}
+
+private {
+assert\display "closure captures outer var" {
+	var 'total 0
+	add: closure { x } { 'total .change!* ( total + x ) , total }
+	add 5 , add 3
+} 8
+}
+private {
+assert\display "closure captures outer var" {
+	var 'total 0
+	add: fn\inside { x } current { total:: total + x , total }
+	add 5 , add 3
+} 8
+}
+
+assert\display "closure with return via ^if" {
+	var 'target 10
+	finder: closure { x } { ^if x = target { "found!" } , "nope" }
+	finder 10
+} "found!"
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 21. FOREVER LOOP PATTERNS
+; ══════════════════════════════════════════════════════════════════════════════
+
+print "## Forever Patterns"
+
+private {
+assert\display "forever with ^if exit via variable" {
+	fn { limit } {
+		var 'val 1
+		forever {
+			^if val > limit { val }
+			val:: val * 2
+		}
+	} :f f 50
+} 64
+}
+
+private {
+assert\display "forever with guard clauses returns early" {
+	fn { n } {
+		^if n < 0 { "negative" }
+		forever {
+			^if n = 0 { "zero" }
+			n:: n - 1
+		}
+	} :g g 5
+} "zero"
+}
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 22. REF BLOCK MUTATION
+; ══════════════════════════════════════════════════════════════════════════════
+
+print "## Ref Block Mutation"
+
+assert\display "ref creates mutable block" {
+	items: ref { } , append! 1 items , append! 2 items , items
+} { 1 2 }
+
+assert\display "immutable block can't be appended to" {
+	try { items: { 1 2 } , append! 3 items } |type?
+} 'error
+
+private {
+assert\display "ref from existing block" {
+	orig: { 1 2 3 } , copy: ref orig , append! 4 copy , copy
+} { 1 2 3 4 }
+}
+
+private {
+assert\display "original block unchanged by ref copy mutation" {
+	orig: { 1 2 3 } , copy: ref orig , append! 4 copy , orig
+} { 1 2 3 }
+}
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 23. PIPELINE CHAINING EDGE CASES
+; ══════════════════════════════════════════════════════════════════════════════
+
+print "## Pipeline Chaining"
+
+; BUGS: 
+; loader |@/sum doesn't parse, ?@/sum also doesn't
+; |sum where sum is not a function accepting at least 1 arg should error out
+; #true #false #[ list ] #{ dict } would be literal values, removes { true } bug
+; overshadowind warnings would be good to have 
+
+assert\display "multi-stage pipeline" {
+	{ 1 2 3 4 5 } |filter { .is-even } |map { * 10 } |probe |sum |probe ; BUG: pipe word on non function should raise an code error .. here sum was redefined overshadoved
+} 60
+
+assert\display "string pipeline" {
+	"Hello World" .lower .split " " |map { .upper }
+} { "HELLO" "WORLD" }
+
+assert\display "pipeline with fix in middle" {
+	0 |fix { 10 } |+ 5
+} 5
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 24. LOOP INDEX CAPTURE — modword vs word
+; ══════════════════════════════════════════════════════════════════════════════
+
+print "## Loop Index Capture"
+
+private {
+assert\display "for injects value — captured via modword" {
+	var 'vals ref { }
+	for { 10 20 30 } { ::val , append! val vals }
+	deref vals
+} { 10 20 30 }
+}
+
+private {
+assert\display "for\\idx injects value AND index" {
+	var 'items ref { }
+	for\idx { "a" "b" "c" } 'i { ::v
+		append! join { string i ":" v } items
+	}
+	deref items
+} { "0:a" "1:b" "2:c" }
+}
+
+ private {
+	assert\display "range with for and injection" {
+		var 'sum 0
+		for range 1 4 { ::n , sum:: sum + n }
+		sum
+	} 10 }
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 25. MISCELLANEOUS QUIRKS
+; ══════════════════════════════════════════════════════════════════════════════
+
+print "## Miscellaneous Quirks"
+
+assert\display "evaluation of blocks and equality" {
+	{ 1 2 3 } .do = do { 1 + 2 }
+} true
+
+assert\display "equality of nested blocks" {
+	{ 1 2 3 } = { 1 2 3 }
+} true
+
+assert\display "empty block equality" {
+	{ } = { }
+} true
+
+assert\display "% modulo with integers" {
+	7 % 3
+} 1
+
+assert\display "% modulo with decimal" {
+	try { 7.5 % 3.2 } |type?
+} 'error
+
+assert\display "and short-circuits on false" { ; and is ordinary function , no short circuit
+	try { false <and> ( 1 / 0 ) } |type?
+} 'error
+
+assert\display "or short-circuits on true" {  ; or is ordinary function accepting two values, no short circuit
+	try { true .or ( 1 / 0 ) } |type?
+} 'error
+
+assert\display "negative numbers work" {
+	-5 + 10
+} 5
+
+assert\display "multiple returns from fn — last expression is return" {
+	f: fn { a b } { a + b , a * b } f 3 4
+} 12
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 26. CASES / SWITCH PATTERNS
+; ══════════════════════════════════════════════════════════════════════════════
+
+print "## Cases / Switch"
+
+assert\display "switch literal match" {
+	switch 2 { 1 { "one" } 2 { "two" } 3 { "three" } }
+} "two"
+
+assert\display "switch fallback (underscore)" {
+	switch 99 {
+		1 { "one" }
+		2 { "two" }
+		_ { "other" }
+	}
+} "other"
+
+assert\display "match type pattern" {
+	match "hello" { <string> { "yes-string" } { <integer> } { "no" } }
+} "yes-string"
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 27. STRING OPERATION EDGE CASES
+; ══════════════════════════════════════════════════════════════════════════════
+
+print "## String Edge Cases"
+
+assert\display "split empty string" {
+	"" .split ","
+} { "" }
+
+assert\display "contains empty needle" { ; TODO: maybe should return a failure
+	"hello" .contains ""
+} true
+
+assert\display "index? not found returns -1" { ; TODO: probably should return a failure
+	index? "hello" "xyz"
+} -1
+
+assert\display "index? empty string in non-empty returns 0" { ; TODO: probably failure
+	index? "hello" ""
+} 0
+
+assert\display "substring within bounds" {
+	substring "hello" 1 3
+} "el"
+
+assert\display "reverse empty string" {
+	"" .reverse
+} ""
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 28. BLOCK OPERATIONS
+; ══════════════════════════════════════════════════════════════════════════════
+
+print "## Block Edge Cases"
+
+assert\display "length of empty block" {
+	length? { }
+} 0
+
+assert\display "replicate creates repeated block" { ; quirk true is a function that returns boolean true, so true in a passive block returns a block of 3 words
+	replicate 3 { true }
+} [ true true true ]
+
+assert\display "block with mixed types" {
+	first { 1 "two" 3.0 'four }
+} 1
+
+assert\display "nth on block" {  ; nth wors 1 based is correct - first second ... fifth .. 
+	nth { "a" "b" "c" } 2
+} "b"
+
+assert\display "index out of bounds fails" {
+	try { nth { "a" "b" } 5 } |type?
+} 'error
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 29. PRINT / OUTPUT
+; ══════════════════════════════════════════════════════════════════════════════
+
+print "## Print / Output"
+
+assert\display "print returns printed value" {
+	print "hello"
+} "hello"
+
+assert\display "capture-stdout captures output" {
+	capture-stdout { print "hello" }
+} "hello\n"
+
+assert\display "prn prints without newline" {
+	capture-stdout { prn "hello" }
+} "hello"
+
+assert\display "prns prints with space" {
+	capture-stdout { prns "hello" }
+} "hello "
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 30. MATH CONTEXT QUIRKS
+; ══════════════════════════════════════════════════════════════════════════════
+
+print "## Math Context"
+
+assert\display "math/abs of negative integer" {
+	do\in math { abs -42 }
+} 42
+
+assert\display "math functions return decimals" {
+	do\in math { sqrt 9 }
+} 3.0
+
+assert\display "math/pi available" {
+	math/pi > 3.14
+} true
+
+print ""
+print "========================================"
+print "\x1b[32mALL RYE QUIRKS TESTS COMPLETED\x1b[0m"
+print "========================================"
