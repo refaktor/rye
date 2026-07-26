@@ -396,6 +396,12 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 		if limited {
 			return
 		}
+		// We added this check for failure flag and othe flags, and escalated (in case of failure)
+		// FIX 1023
+		if ps.FailureFlag || ps.ErrorFlag || ps.ReturnFlag {
+			ps.ErrorFlag = true
+			return
+		}
 		idx := opword.Index
 		if ps.AllowMod {
 			ok := ps.Ctx.Mod(idx, ps.Res)
@@ -419,6 +425,11 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 		return
 	case env.LModword:
 		if limited {
+			return
+		}
+		// FIX 1023: Check for failure/error/return flags before modifying
+		if ps.FailureFlag || ps.ErrorFlag || ps.ReturnFlag {
+			ps.ErrorFlag = true
 			return
 		}
 		idx := opword.Index
@@ -2362,7 +2373,7 @@ func MaybeDisplayFailureOrError2(es *env.ProgramState, genv *env.Idxs, tag strin
 			captureBlock := es.CaptureBlock
 			es.CaptureBlock = nil // consume the capture block so it only fires once
 
-			capturedErr := es.Res  // the error value to inject
+			capturedErr := es.Res // the error value to inject
 
 			// Reset error state so the capture block evaluates cleanly
 			es.ErrorFlag = false
