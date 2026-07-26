@@ -30,6 +30,7 @@ var builtins_functions = map[string]*env.Builtin{
 				// Check if word already exists in context
 				if _, exists := ps.Ctx.GetCurrent(idx); exists {
 					ps.FailureFlag = true
+					ps.ErrorFlag = true
 					return env.NewError("Cannot redefine existing word '" + ps.Idx.GetWord(idx) + "' with var")
 				}
 				// Set the value
@@ -43,7 +44,9 @@ var builtins_functions = map[string]*env.Builtin{
 				idx := word.Index
 				// Check if word already exists in context
 				if _, exists := ps.Ctx.GetCurrent(idx); exists {
-					ps.FailureFlag = true
+					ps.FailureFlag = true // #Q TODO: do we need to set failureflag it there is already errorflag?
+					// FIX 1024: this is code error not just failure, so we need Error flag
+					ps.ErrorFlag = true
 					return env.NewError("Cannot redefine existing word '" + ps.Idx.GetWord(idx) + "' with var")
 				}
 				ps.Ctx.SetNew(idx, arg1, ps.Idx)
@@ -490,6 +493,7 @@ var builtins_functions = map[string]*env.Builtin{
 				args = block.Series.GetAll()
 				if len(args) > 5 {
 					ps.FailureFlag = true
+					ps.ErrorFlag = true
 					return env.NewError("partial currently supports up to 5 arguments")
 				}
 			default:
@@ -578,6 +582,7 @@ var builtins_functions = map[string]*env.Builtin{
 					// Check if we have enough arguments
 					if args.Series.Len() < fn.Argsn {
 						ps.FailureFlag = true
+						ps.ErrorFlag = true
 						return env.NewError("Not enough arguments for function. Expected " +
 							string(rune(fn.Argsn+'0')) + ", got " +
 							string(rune(args.Series.Len()+'0')))
@@ -602,6 +607,7 @@ var builtins_functions = map[string]*env.Builtin{
 							paramWord, ok := fn.Spec.Series.Get(i).(env.Word)
 							if !ok {
 								ps.FailureFlag = true
+								ps.ErrorFlag = true
 								return env.NewError("Invalid parameter specification in function")
 							}
 
@@ -643,6 +649,7 @@ var builtins_functions = map[string]*env.Builtin{
 					// Check if we have enough arguments
 					if args.Series.Len() < fn.Argsn {
 						ps.FailureFlag = true
+						ps.ErrorFlag = true
 						return env.NewError("Not enough arguments for builtin. Expected " +
 							string(rune(fn.Argsn+'0')) + ", got " +
 							string(rune(args.Series.Len()+'0')))
@@ -688,6 +695,7 @@ var builtins_functions = map[string]*env.Builtin{
 					// Check if we have enough arguments
 					if args.Series.Len() < fn.Argsn {
 						ps.FailureFlag = true
+						ps.ErrorFlag = true
 						return env.NewError("Not enough arguments for variadic builtin. Expected at least " +
 							string(rune(fn.Argsn+'0')) + ", got " +
 							string(rune(args.Series.Len()+'0')))
@@ -731,11 +739,13 @@ var builtins_functions = map[string]*env.Builtin{
 					// Check if the word is actually a variable in the current context
 					if _, exists := ps.Ctx.GetCurrent(word.Index); !exists {
 						ps.FailureFlag = true
+						ps.ErrorFlag = true
 						return env.NewError("Word '" + ps.Idx.GetWord(word.Index) + "' not found in current context")
 					}
 
 					if !ps.Ctx.IsVariable(word.Index) {
 						ps.FailureFlag = true
+						ps.ErrorFlag = true
 						return env.NewError("Word '" + ps.Idx.GetWord(word.Index) + "' is not a variable. Use 'var' to declare it as variable first.")
 					}
 

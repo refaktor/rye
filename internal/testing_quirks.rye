@@ -45,11 +45,13 @@ assert\display "setword fails in loop on 2nd iteration" {
 	} |type?
 } 'error
 
+private {
 assert\display "var fails in loop on 2nd iteration" {   ; QUESTION: TODO: sometimes we want try to just cover failures, but sometimes also coding errors (code input) should we have two try variants?
 	try {
 		for range 1 3 { ::i , var 'res i * 2 }
 	} |probe |type?
 } 'error
+}
 
 assert\display "modword works in loop every iteration" {
 	var 'sum 0

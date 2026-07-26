@@ -108,7 +108,7 @@ var builtins_iteration = map[string]*env.Builtin{
 				for i := int64(0); i < count.Value; i++ {
 					// Evaluate the block with the current iteration number
 					EvalBlockInj(ps, iterObj, true)
-					if ps.ErrorFlag {
+					if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 						MaybeDisplayFailureOrError(ps, ps.Idx, "loop")
 						ps.Ser = ser
 						return ps.Res
@@ -127,7 +127,7 @@ var builtins_iteration = map[string]*env.Builtin{
 				for i := int64(0); i < count.Value; i++ {
 					// Call the builtin with the current iteration number
 					ps.Res = DirectlyCallBuiltin(ps, block, iterObj, nil)
-					if ps.ErrorFlag {
+					if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 						return ps.Res
 					}
 					iterObj.Value++
@@ -138,7 +138,7 @@ var builtins_iteration = map[string]*env.Builtin{
 				for i := int64(0); i < count.Value; i++ {
 					// Call the function with the current iteration number
 					CallFunctionArgsN(block, ps, ps.Ctx, iterObj)
-					if ps.ErrorFlag {
+					if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 						return ps.Res
 					}
 					iterObj.Value++
@@ -179,7 +179,7 @@ var builtins_iteration = map[string]*env.Builtin{
 					for i := 0; int64(i) < cond.Value; i++ {
 						EvalBlockInj(ps, acc, true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "produce")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
@@ -222,7 +222,7 @@ var builtins_iteration = map[string]*env.Builtin{
 					for i := int64(0); i < cond.Value; i++ {
 						Eval(ps)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "replicate")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
@@ -265,7 +265,7 @@ var builtins_iteration = map[string]*env.Builtin{
 					for i := int64(0); i < cond.Value; i++ {
 						EvalBlockInj(ps, *env.NewInteger(i), true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "replicate\\idx")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
@@ -310,7 +310,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						ps.Ser = cond.Series
 						EvalBlockInj(ps, acc, true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "produce\\while")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
@@ -325,7 +325,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						ps.Ser = bloc.Series
 						EvalBlockInj(ps, acc, true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "produce\\while")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
@@ -370,7 +370,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						for i := 0; int64(i) < cond.Value; i++ {
 							EvalBlockInj(ps, acc, true)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "produce\\")
-							if ps.ErrorFlag || ps.ReturnFlag {
+							if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 								ps.Ser = ser
 								return ps.Res
 							}
@@ -422,6 +422,10 @@ var builtins_iteration = map[string]*env.Builtin{
 						ps.Ser = ser
 						return ps.Res
 					}
+					if ps.FailureFlag {
+						ps.Ser = ser
+						return ps.Res
+					}
 					if ps.ReturnFlag {
 						ps.ReturnFlag = false
 						break
@@ -464,6 +468,10 @@ var builtins_iteration = map[string]*env.Builtin{
 					EvalBlockInj(ps, arg0, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "forever\\with")
 					if ps.ErrorFlag {
+						ps.Ser = ser
+						return ps.Res
+					}
+					if ps.FailureFlag {
 						ps.Ser = ser
 						return ps.Res
 					}
@@ -587,7 +595,9 @@ var builtins_iteration = map[string]*env.Builtin{
 					for i := 0; i < block.Length(); i++ {
 						EvalBlockInj(ps, block.Get(i), true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "for")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						// FIX 1025: we must also check for failure flag in loop, if failure happened we can't just loop further if it's not handeled
+						// QUEST: Should we return failure with ability to fix or should we just escalate, probably not, so we can fix outside of the loop
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
@@ -598,7 +608,7 @@ var builtins_iteration = map[string]*env.Builtin{
 				case env.Builtin:
 					for i := 0; i < block.Length(); i++ {
 						ps.Res = DirectlyCallBuiltin(ps, code, block.Get(i), nil)
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							return ps.Res
 						}
 					}
@@ -606,7 +616,7 @@ var builtins_iteration = map[string]*env.Builtin{
 				case env.Function:
 					for i := 0; i < block.Length(); i++ {
 						CallFunctionArgsN(code, ps, ps.Ctx, block.Get(i))
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							return ps.Res
 						}
 					}
@@ -651,7 +661,7 @@ var builtins_iteration = map[string]*env.Builtin{
 							}
 							EvalBlockInj(ps, list.Get(i), true)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "for\\pos")
-							if ps.ErrorFlag || ps.ReturnFlag {
+							if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 								ps.Ser = ser
 								return ps.Res
 							}
@@ -702,7 +712,7 @@ var builtins_iteration = map[string]*env.Builtin{
 							}
 							EvalBlockInj(ps, list.Get(i), true)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "for\\idx")
-							if ps.ErrorFlag || ps.ReturnFlag {
+							if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 								ps.Ser = ser
 								return ps.Res
 							}
@@ -746,7 +756,7 @@ var builtins_iteration = map[string]*env.Builtin{
 					for block.Series.GetPos() < block.Series.Len() {
 						EvalBlockInj(ps, block, true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "walk")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
@@ -800,7 +810,7 @@ var builtins_iteration = map[string]*env.Builtin{
 							}
 							EvalBlockInj(ps, block, true)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "walk\\pos")
-							if ps.ErrorFlag || ps.ReturnFlag {
+							if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 								ps.Ser = ser
 								return ps.Res
 							}
@@ -858,7 +868,7 @@ var builtins_iteration = map[string]*env.Builtin{
 							}
 							EvalBlockInj(ps, block, true)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "walk\\idx")
-							if ps.ErrorFlag || ps.ReturnFlag {
+							if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 								ps.Ser = ser
 								return ps.Res
 							}
@@ -914,7 +924,7 @@ var builtins_iteration = map[string]*env.Builtin{
 					for i := 0; i < block.Series.Len(); i++ {
 						EvalBlockInj(ps, block.Series.Get(i), true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "purge")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
@@ -939,7 +949,7 @@ var builtins_iteration = map[string]*env.Builtin{
 					for i := 0; i < len(block.Data); i++ {
 						EvalBlockInj(ps, env.ToRyeValue(block.Data[i]), true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "purge")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
@@ -966,7 +976,7 @@ var builtins_iteration = map[string]*env.Builtin{
 					for i := 0; i < len(input); i++ {
 						EvalBlockInj(ps, *env.NewString(string(input[i])), true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "purge")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
@@ -990,7 +1000,7 @@ var builtins_iteration = map[string]*env.Builtin{
 					for i := 0; i < len(block.Rows); i++ {
 						EvalBlockInj(ps, block.Rows[i], true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "purge")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
@@ -1039,7 +1049,7 @@ var builtins_iteration = map[string]*env.Builtin{
 							for i := 0; i < block.Series.Len(); i++ {
 								EvalBlockInj(ps, block.Series.Get(i), true)
 								MaybeDisplayFailureOrError(ps, ps.Idx, "purge!")
-								if ps.ErrorFlag || ps.ReturnFlag {
+								if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 									ps.Ser = ser
 									return ps.Res
 								}
@@ -1103,7 +1113,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						for i := 0; i < l; i++ {
 							EvalBlockInj(ps, list.Get(i), true)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "map")
-							if ps.ErrorFlag || ps.ReturnFlag {
+							if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 								ps.Ser = ser
 								return ps.Res
 							}
@@ -1115,14 +1125,14 @@ var builtins_iteration = map[string]*env.Builtin{
 						for i := 0; i < l; i++ {
 							newl[i] = DirectlyCallBuiltin(ps, block, list.Get(i), nil)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "map")
-							if ps.ErrorFlag || ps.ReturnFlag {
+							if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 								return ps.Res
 							}
 						}
 					case env.Function:
 						for i := 0; i < l; i++ {
 							CallFunctionArgsN(block, ps, ps.Ctx, list.Get(i))
-							if ps.ErrorFlag {
+							if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 								return ps.Res
 							}
 							newl[i] = ps.Res
@@ -1172,7 +1182,7 @@ var builtins_iteration = map[string]*env.Builtin{
 							}
 							EvalBlockInj(ps, list.Get(i), true)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "map\\pos")
-							if ps.ErrorFlag || ps.ReturnFlag {
+							if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 								ps.Ser = ser
 								return ps.Res
 							}
@@ -1224,7 +1234,7 @@ var builtins_iteration = map[string]*env.Builtin{
 							}
 							EvalBlockInj(ps, list.Get(i), true)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "map\\idx")
-							if ps.ErrorFlag || ps.ReturnFlag {
+							if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 								ps.Ser = ser
 								return ps.Res
 							}
@@ -1286,7 +1296,7 @@ var builtins_iteration = map[string]*env.Builtin{
 							}
 							EvalBlockInj(ps, list.Get(i), true)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "reduce")
-							if ps.ErrorFlag || ps.ReturnFlag {
+							if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 								ps.Ser = ser
 								return ps.Res
 							}
@@ -1343,7 +1353,7 @@ var builtins_iteration = map[string]*env.Builtin{
 							}
 							EvalBlockInj(ps, list.Get(i), true)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "fold\\do")
-							if ps.ErrorFlag || ps.ReturnFlag {
+							if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 								ps.Ser = ser
 								return ps.Res
 							}
@@ -1387,7 +1397,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						var item any
 						item = list.Get(i)
 						CallFunctionArgsN(block, ps, ps.Ctx, env.ToRyeValue(item), acc) // , env.NewInteger(int64(i)))
-						if ps.ErrorFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							return ps.Res
 						}
 						acc = ps.Res
@@ -1532,7 +1542,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						for _, curval := range list.Value {
 							EvalBlockInj(ps, *env.NewString(string(curval)), true)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "partition")
-							if ps.ErrorFlag || ps.ReturnFlag {
+							if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 								ps.Ser = ser
 								return ps.Res
 							}
@@ -1552,7 +1562,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						for _, curval := range list.Value {
 							res := DirectlyCallBuiltin(ps, block, env.ToRyeValue(curval), nil)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "partition-by")
-							if ps.ErrorFlag || ps.ReturnFlag {
+							if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 								return ps.Res
 							}
 							if prevres == nil || res.Equal(prevres) {
@@ -1586,7 +1596,7 @@ var builtins_iteration = map[string]*env.Builtin{
 							curval := list.Get(i)
 							EvalBlockInj(ps, curval, true)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "partition")
-							if ps.ErrorFlag || ps.ReturnFlag {
+							if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 								ps.Ser = ser
 								return ps.Res
 							}
@@ -1608,7 +1618,7 @@ var builtins_iteration = map[string]*env.Builtin{
 							curval := list.Get(i)
 							res := DirectlyCallBuiltin(ps, block, curval, nil)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "partition-by")
-							if ps.ErrorFlag || ps.ReturnFlag {
+							if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 								return ps.Res
 							}
 							if prevres == nil || res.Equal(prevres) {
