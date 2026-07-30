@@ -1,0 +1,49 @@
+; 02-filesystem.rye - verify filesystem namespace isolation
+; Run: rye -unshare 02-filesystem.rye
+;
+; Expected results with -unshare (full isolation):
+;   /home  → NOT visible  (pivot_root jail contains only CWD as /app)
+;   /etc   → NOT visible
+;   .      → visible      (CWD is bind-mounted as /app)
+;
+; Expected results with -unshare-fs=false:
+;   /home, /etc visible (host FS intact), network/pid/uts still isolated
+
+print "=== Filesystem isolation test ==="
+
+; Check /home
+either os/is-dir? %/home {
+    print "  /home  : VISIBLE   (isolation NOT active or -unshare-fs=false)"
+} {
+    print "  /home  : INVISIBLE (isolation OK)"
+}
+
+; Check /etc
+either os/is-dir? %/etc {
+    print "  /etc   : VISIBLE   (isolation NOT active or -unshare-fs=false)"
+} {
+    print "  /etc   : INVISIBLE (isolation OK)"
+}
+
+; Check /proc
+either os/is-dir? %/proc {
+    print "  /proc  : VISIBLE   (isolation NOT active or -unshare-fs=false)"
+} {
+    print "  /proc  : INVISIBLE (isolation OK)"
+}
+
+; CWD (.) must always be visible - our script is here
+either os/is-dir? %. {
+    print "  .      : VISIBLE   (CWD OK)"
+} {
+    print "  .      : INVISIBLE (ERROR: cannot see own directory!)"
+}
+
+; The script file itself must be readable
+either os/is-file? %02-filesystem.rye {
+    print "  script : READABLE  (CWD bind-mount OK)"
+} {
+    print "  script : NOT FOUND (ERROR: script file missing!)"
+}
+
+print "=== done ==="

@@ -1,0 +1,20 @@
+; CLI Parse Test Suite
+; Run with: cd internal/cli-parse && rye main.rye
+
+print "========================================"
+print "        CLI-PARSE TEST SUITE"
+print "========================================"
+print ""
+
+private Load %test_basic.rye
+private Load %test_errors.rye
+private Load %test_subcommands.rye
+private Load %test_args_check.rye
+private Load %test_validation.rye
+private Load %test_help.rye
+private Load %test_cli_integration.rye
+
+print ""
+print "========================================"
+print "\x1b[32mALL CLI-PARSE TESTS COMPLETED\x1b[0m"
+print "========================================"

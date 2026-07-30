@@ -1,0 +1,13 @@
+; 03-multi-file.rye - verify that Loading a sibling file works inside the jail
+; Run: rye -unshare 03-multi-file.rye
+;
+; The filesystem jail bind-mounts the current directory as /app.
+; If Load % works, the CWD bind-mount and Rye's file resolver are both correct.
+
+print "=== Multi-file Load test ==="
+
+Load %helper.rye
+
+greet "sandbox"
+
+print "=== done ==="

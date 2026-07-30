@@ -1,0 +1,84 @@
+; Failure Handling in Loops
+; Tests try, fix, check behavior with loops
+print "## Failure Handling in Loops"
+
+; =============================================================================
+; try inside loop captures failures
+; =============================================================================
+
+assert\display "try captures failure in loop" {
+	var 'errors1 0
+	for { 1 0 2 0 3 } { ::x1
+		try { 10 / x1 } |fix { errors1:: errors1 + 1 , 0 }
+	}
+	errors1
+} 2
+
+assert\display "try continues after failure" {
+	results2: ref { }
+	var 'r2 0.0
+	for { 2 0 4 } { ::x2
+		r2:: try { 10 / x2 } |fix { -1.0 }
+		append! r2 results2
+	}
+	deref results2
+} { 5.0 -1.0 2.5 }
+
+; =============================================================================
+; fix provides default in loop
+; =============================================================================
+
+assert\display "fix provides default in loop" {
+	var 'sum3 0.0
+	var 'v3 0.0
+	for { 2 0 5 } { ::x3
+		v3:: 10 / x3 |fix { 0.0 }
+		sum3:: sum3 + v3
+	}
+	sum3
+} 7.0
+
+; =============================================================================
+; check wraps errors in loop then propagates
+; =============================================================================
+
+assert\display "check wraps in loop" {
+	process4: fn { items } {
+		for items { ::x4
+			10 / x4 |^check "division failed"
+		}
+		"ok"
+	}
+	try { process4 { 1 0 2 } } |message?
+} "division failed"
+
+; =============================================================================
+; Failure stops loop propagates up
+; =============================================================================
+
+assert\display "unhandled failure exits loop" {
+	process5: fn { items } {
+		var 'sum5 0
+		for items { ::x5
+			sum5:: sum5 + 10 / x5
+		}
+		sum5
+	}
+	try { process5 { 1 2 0 3 } } |type?
+} 'error
+
+; =============================================================================
+; fix\either in loop - counts successes vs failures
+; =============================================================================
+
+assert\display "fix\\either branches in loop" {
+	var 'ok-count6 0
+	var 'err-count6 0
+	for { 2 0 4 0 } { ::x6
+		10 / x6 |fix\either { err-count6:: err-count6 + 1 } { ok-count6:: ok-count6 + 1 }
+	}
+	; 2 successes + 2 errors = 4 total, encode as ok * 10 + err
+	ok-count6 * 10 + err-count6
+} 22
+
+print ""

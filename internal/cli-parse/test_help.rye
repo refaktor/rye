@@ -1,0 +1,55 @@
+; Help generation tests
+print "## Help Generation Tests"
+
+; Basic help generation returns string
+assert\display "basic help returns string" {
+	type? generate-help { 
+		program "mytool"
+		description "A helpful tool"
+		-v|verbose flag doc "Enable verbose output"
+		-o|output string required doc "Output file path"
+	}
+} 'string
+
+; Help contains program name
+assert\display "help contains program name" {
+	contains generate-help { program "mytool" -v|verbose flag } "mytool"
+} true
+
+; Help contains flag description
+assert\display "help contains flag description" {
+	contains generate-help { program "test" -v|verbose flag doc "Enable verbose" } "verbose"
+} true
+
+; Help with subcommands contains subcommand
+assert\display "help contains subcommand" {
+	contains generate-help {
+		program "git-like"
+		subcommand {
+			init { doc "Initialize repo" }
+			clone { doc "Clone repo" }
+		}
+	} "init"
+} true
+
+; Help for specific subcommand
+assert\display "help for subcommand" {
+	contains generate-help\command {
+		program "git-like"
+		subcommand {
+			'remote {
+				doc "Manage remotes"
+				subcommand {
+					add { doc "Add a remote" }
+				}
+			}
+		}
+	} "remote" "remote"
+} true
+
+; Help with positional arguments
+assert\display "help with positional args" {
+	contains generate-help { program "compile" input: string required doc "Input file" } "input"
+} true
+
+print ""

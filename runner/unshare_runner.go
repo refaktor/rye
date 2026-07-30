@@ -14,7 +14,7 @@ import (
 // peekUnsharePolicy does a quick, lightweight read of the .ryesec file in
 // scriptDir to determine whether unshare isolation is requested by a local
 // project policy. It intentionally skips the full security validation that
-// LoadSecurityPolicy performs — the full validation still runs later during
+// LoadSecurityPolicy performs - the full validation still runs later during
 // normal policy loading.
 //
 // Returns (enabled, config, found):
@@ -25,7 +25,7 @@ func peekUnsharePolicy(scriptDir string) (enabled bool, cfg UnshareConfig, found
 	localPath := filepath.Join(scriptDir, security.LocalPolicyFilename)
 	data, err := os.ReadFile(localPath)
 	if err != nil {
-		// File absent or unreadable — that is perfectly normal.
+		// File absent or unreadable - that is perfectly normal.
 		return false, UnshareConfig{}, false
 	}
 

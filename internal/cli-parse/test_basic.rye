@@ -1,0 +1,44 @@
+; Basic CLI parsing tests
+print "## Basic CLI Parsing Tests"
+
+; Boolean flag with flagword
+assert\display "boolean flag with flagword" {
+	( parse-args { --verbose } { -v|verbose flag } ) -> "verbose"
+} true
+
+; Boolean flag with string (simulating command line)
+assert\display "boolean flag with string from CLI" {
+	( parse-args { "--verbose" } { -v|verbose flag } ) -> "verbose"
+} true
+
+; Short flag with string
+assert\display "short flag with string" {
+	( parse-args { "-v" } { -v|verbose flag } ) -> "verbose"
+} true
+
+; String option
+assert\display "string option" {
+	( parse-args { "-o" "output.txt" } { -o|output string required } ) -> "output"
+} "output.txt"
+
+; Integer option with default
+assert\display "integer option with default" {
+	( parse-args { } { -n|count integer optional 42 } ) -> "count"
+} 42
+
+; Integer option provided
+assert\display "integer option provided" {
+	( parse-args { "--count" 10 } { -n|count integer optional 42 } ) -> "count"
+} 10
+
+; Positional argument
+assert\display "positional argument" {
+	( parse-args { "file.txt" } { file: string required } ) -> "_file"
+} "file.txt"
+
+; Multiple positional arguments (many)
+assert\display "multiple positional arguments" {
+	length? ( parse-args { "a.txt" "b.txt" "c.txt" } { files: string many } ) -> "_files"
+} 3
+
+print ""

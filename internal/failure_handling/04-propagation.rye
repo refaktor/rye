@@ -1,0 +1,121 @@
+print "## Failure Propagation Tests"
+
+; --- failure propagates from user function ---
+; When a function calls fail, the caller sees the failure
+
+assert\display "fail inside fn propagates to caller try" {
+	f:: fn { } { fail "from fn" }
+	try { f } |type?
+} 'error
+
+assert\display "fail inside fn carries message" {
+	f:: fn { } { fail "from fn" }
+	try { f } |message?
+} "from fn"
+
+assert\display "^fail inside fn propagates to caller try" {
+	f:: fn { } { ^fail "from fn" }
+	try { f } |type?
+} 'error
+
+assert\display "^fail inside fn carries message" {
+	f:: fn { } { ^fail "from fn" }
+	try { f } |message?
+} "from fn"
+
+; --- failure from fn stops piped builtins ---
+; A builtin receiving a failure from a user function should refuse it (raise error)
+
+assert\display "fn failure stops pipeword builtin" {
+	f:: fn { } { fail "stop" }
+	try { f |to-string } |type?
+} 'error
+
+assert\display "fn failure stops opword builtin" {
+	f:: fn { } { fail "stop" }
+	try { 1 + f } |type?
+} 'error
+
+assert\display "fn failure stops dotword builtin" {
+	f:: fn { } { fail "stop" }
+	try { f .to-string } |type?
+} 'error
+
+; --- failure from fn handled by fix ---
+; fix (AcceptFailure=true) properly intercepts failure from user function
+
+assert\display "fix handles failure from fn via pipeword" {
+	f:: fn { } { fail "fn fail" }
+	f |fix { "handled" }
+} "handled"
+
+assert\display "fix handles ^fail from fn via pipeword" {
+	f:: fn { } { ^fail "fn fail" }
+	f |fix { "handled" }
+} "handled"
+
+assert\display "fix via try-captured result from fn" {
+	f:: fn { } { fail "fn fail" }
+	try { f } |fix { "handled" }
+} "handled"
+
+; --- check on failure from fn ---
+assert\display "check wraps failure from fn" {
+	f:: fn { } { fail "inner" }
+	try { f |check "outer" } |message?
+} "outer"
+
+assert\display "check preserves fn failure as cause?" {
+	f:: fn { } { fail "inner" }
+	try { f |check "outer" } |cause? |message?
+} "inner"
+
+; --- disarm on failure from fn ---
+assert\display "disarm defuses failure from fn" {
+	f:: fn { } { fail "fn err" }
+	disarm f |type?
+} 'error
+
+; --- nested function calls ---
+; If inner fn fails, outer fn should propagate failure unless it handles it
+
+assert\display "nested fn failure propagates through outer fn" {
+	inner:: fn { } { fail "deep" }
+	outer:: fn { } { inner }
+	try { outer } |message?
+} "deep"
+
+assert\display "outer fn can catch inner fn failure with fix" {
+	inner:: fn { } { fail "deep" }
+	outer:: fn { } { inner |fix { "caught-in-outer" } }
+	outer
+} "caught-in-outer"
+
+assert\display "outer fn can propagate inner fn failure with check" {
+	inner:: fn { } { fail "deep" }
+	outer:: fn { } { inner |^check "wrapped" }
+	try { outer } |message?
+} "wrapped"
+
+assert\display "outer fn check preserves inner cause" {
+	inner:: fn { } { fail "deep" }
+	outer:: fn { } { inner |^check "wrapped" }
+	try { outer } |cause? |message?
+} "deep"
+
+; --- failure does NOT propagate past fix ---
+; After fix handles it, execution continues normally
+
+assert\display "execution continues after fix handles fn failure" {
+	f:: fn { } { fail "fail" }
+	r:: f |fix { "fixed" }
+	r
+} "fixed"
+
+assert\display "fix result can be used in further computation" {
+	f:: fn { } { fail "fail" }
+	f |fix { 10 } |+ 5
+} 15
+
+print ""
+print "Propagation tests completed."

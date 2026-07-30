@@ -135,7 +135,7 @@ func blockToStringSlice(ps *env.ProgramState, blk env.Block) ([]string, *env.Err
 var Builtins_echarts = map[string]*env.Builtin{
 
 	//
-	// ##### ECharts — Chart Creation #####
+	// ##### ECharts - Chart Creation #####
 	//
 	// bar-chart creates a new bar chart instance.
 	// Tests:
@@ -382,7 +382,7 @@ var Builtins_echarts = map[string]*env.Builtin{
 	},
 
 	//
-	// ##### ECharts — Line Chart #####
+	// ##### ECharts - Line Chart #####
 	//
 
 	"line-chart": {
@@ -538,7 +538,7 @@ var Builtins_echarts = map[string]*env.Builtin{
 	},
 
 	//
-	// ##### ECharts — Pie Chart #####
+	// ##### ECharts - Pie Chart #####
 	//
 
 	"pie-chart": {
@@ -664,7 +664,7 @@ var Builtins_echarts = map[string]*env.Builtin{
 	},
 
 	//
-	// ##### ECharts — Scatter Chart #####
+	// ##### ECharts - Scatter Chart #####
 	//
 
 	"scatter-chart": {
@@ -820,7 +820,7 @@ var Builtins_echarts = map[string]*env.Builtin{
 	},
 
 	//
-	// ##### ECharts — Additional Global Options #####
+	// ##### ECharts - Additional Global Options #####
 	//
 
 	"legend-opts": {

@@ -1,0 +1,77 @@
+; HOF Word Type Interactions
+; Tests how map/for/fold blocks interact with different word types
+print "## HOF Word Type Interactions"
+
+; =============================================================================
+; Dotword vs pipeword vs opword in HOF blocks
+; =============================================================================
+
+assert\display "dotword in map block" {
+	map { 1 2 3 } { .inc }
+} { 2 3 4 }
+
+assert\display "pipeword in map block" {
+	map { 1 2 3 } { |+ 10 }
+} { 11 12 13 }
+
+assert\display "opword in map block" {
+	map { 1 2 3 } { * 2 }
+} { 2 4 6 }
+
+assert\display "chained dotwords in map" {
+	map { 1 2 3 } { .inc .inc }
+} { 3 4 5 }
+
+assert\display "dotword then opword in map" {
+	map { 10 20 30 } { .inc * 2 }
+} { 22 42 62 }
+
+; =============================================================================
+; Setword/modword in HOF blocks  
+; =============================================================================
+
+assert\display "setword captures in for" {
+	var 'last-seen 0
+	for { 1 2 3 } { ::x last-seen:: x }
+	last-seen
+} 3
+
+assert\display "accumulator pattern in for" {
+	var 'sum 0
+	for { 1 2 3 4 5 } { ::x sum:: sum + x }
+	sum
+} 15
+
+; =============================================================================
+; Nested HOF evaluation
+; =============================================================================
+
+assert\display "map inside map" {
+	map { { 1 2 } { 3 4 } } { .map { .inc } }
+} { { 2 3 } { 4 5 } }
+
+assert\display "for inside for accumulates" {
+	var 'total 0
+	for { 1 2 } { ::a
+		for { 10 20 } { ::b
+			total:: total + a + b
+		}
+	}
+	total
+} 66
+
+; =============================================================================
+; User-defined functions in map
+; =============================================================================
+
+assert\display "fn in map via pipe" {
+	double1: fn { x } { x * 2 }
+	map { 1 2 3 } { |double1 }
+} { 2 4 6 }
+
+assert\display "fn with explicit arg in map" {
+	triple2: fn { x } { x * 3 }
+	{ 1 2 3 } |map { ::v triple2 v }
+} { 3 6 9 }
+
+print ""

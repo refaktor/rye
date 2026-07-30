@@ -2,7 +2,7 @@ package evaldo
 
 // builtins_base_mth.go
 //
-// mth — fast single-pass infix math evaluator with proper operator precedence.
+// mth - fast single-pass infix math evaluator with proper operator precedence.
 //
 // Design: classic two-stack (values + operators) Shunting-yard algorithm that
 // evaluates *inline* instead of producing an intermediate RPN block.
@@ -10,20 +10,20 @@ package evaldo
 // Supported: integer and decimal literals, words (var) for variable access,
 // blocks { } for parenthesised sub-expressions, and the operators:
 //   + - * / // %    (arithmetic, precedence 2–3)
-//   < > = <= >= !=  (comparison, precedence 1 — lowest)
+//   < > = <= >= !=  (comparison, precedence 1 - lowest)
 //
 // The result is an env.Integer, env.Decimal, or env.Boolean.
 //
 // Key design decision: operators are identified by their raw string ("+" etc.)
-// via ps.Idx.GetWord — a simple slice index, O(1), no allocation.  This means
+// via ps.Idx.GetWord - a simple slice index, O(1), no allocation.  This means
 // no builtin dictionary lookup, no global state, no lazy init.
-// Arithmetic is done directly in Go — no builtin function call overhead.
+// Arithmetic is done directly in Go - no builtin function call overhead.
 
 import (
 	"github.com/refaktor/rye/env"
 )
 
-// Operator codes — small constants used on the operator stack.
+// Operator codes - small constants used on the operator stack.
 const (
 	mthOpNone = iota
 	mthOpAdd  // +
@@ -56,7 +56,7 @@ func mthOpPrec(op int) int8 {
 
 // mthOpOf maps an opword string to an operator code.
 // In Rye, arithmetic opwords are stored with a leading underscore (_+, _-, etc.).
-// ps.Idx.GetWord is a plain slice index — O(1), no allocation.
+// ps.Idx.GetWord is a plain slice index - O(1), no allocation.
 func mthOpOf(name string) int {
 	switch name {
 	case "_+":
@@ -88,7 +88,7 @@ func mthOpOf(name string) int {
 }
 
 // ---------------------------------------------------------------------------
-// Stack-allocated state — zero heap for typical expressions (≤8 operands).
+// Stack-allocated state - zero heap for typical expressions (≤8 operands).
 // ---------------------------------------------------------------------------
 
 type mthState struct {
@@ -119,7 +119,7 @@ func (s *mthState) topOp() int8 { return s.ops[s.oLen-1] }
 func (s *mthState) popOp() int8 { s.oLen--; return s.ops[s.oLen] }
 
 // ---------------------------------------------------------------------------
-// Arithmetic — pure Go, no builtin lookup.
+// Arithmetic - pure Go, no builtin lookup.
 // ---------------------------------------------------------------------------
 
 func mthToFloat(o env.Object) (float64, bool) {
@@ -353,7 +353,7 @@ func Mth_EvalDirect(ps *env.ProgramState) env.Object {
 			s.pushVal(sub)
 
 		case env.Opword:
-			// Identify operator from its string — ps.Idx.GetWord is a slice index, O(1).
+			// Identify operator from its string - ps.Idx.GetWord is a slice index, O(1).
 			op := mthOpOf(ps.Idx.GetWord(obj.Index))
 			if op == mthOpNone {
 				ps.ErrorFlag = true

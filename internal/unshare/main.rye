@@ -1,0 +1,19 @@
+; Unshare Test Suite
+; Run with: cd internal/unshare && rye main.rye
+; Note: these tests require Linux unshare/namespace support
+
+print "========================================"
+print "        UNSHARE TEST SUITE"
+print "========================================"
+print ""
+
+do Load %01-hello.rye
+do Load %02-filesystem.rye
+do Load %03-multi-file.rye
+do Load %04-network.rye
+do Load %05-write.rye
+
+print ""
+print "========================================"
+print "\x1b[32mALL UNSHARE TESTS COMPLETED\x1b[0m"
+print "========================================"

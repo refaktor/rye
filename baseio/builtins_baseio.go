@@ -1,13 +1,10 @@
-//go:build !no_baseio
-// +build !no_baseio
+package baseio
 
-package evaldo
-
-// builtins_baseio.go — OS / file / shell / stdin / args builtins.
+// builtins_baseio.go - OS / file / shell / stdin / args builtins.
 //
 // These are kept separate from the pure-computation base builtins so that
 // embedding use-cases (embed.New / RegisterBaseBuiltins) can opt-out of OS
-// access entirely.  The full runner registers both sets via RegisterBuiltins.
+// access entirely.  The full runner registers these via baseio.Register.
 
 import (
 	"bytes"
@@ -21,6 +18,7 @@ import (
 	"time"
 
 	"github.com/refaktor/rye/env"
+	"github.com/refaktor/rye/evaldo"
 	"github.com/refaktor/rye/loader"
 	"github.com/refaktor/rye/util"
 
@@ -30,20 +28,13 @@ import (
 
 // builtins_baseio groups all builtins that touch the operating-system
 // boundary: file I/O, shell commands, stdin, os.Exit, os.Args, and
-// capture-stdout.  They are registered by RegisterBaseIOBuiltins which is
-// called from the full RegisterBuiltins but NOT from RegisterBaseBuiltins.
+// capture-stdout.  They are registered by baseio.Register.
 var builtins_baseio = map[string]*env.Builtin{
 
 	// -------------------------------------------------------------------------
 	// Save / persist state
 	// -------------------------------------------------------------------------
 
-	// Tests:
-	// equal  { save\current |type? } 'integer
-	// Args:
-	// * None
-	// Returns:
-	// * Integer 1 on success
 	"save\\current": {
 		Argsn: 0,
 		Doc:   "Saves current state of the program to a file.",
@@ -55,19 +46,13 @@ var builtins_baseio = map[string]*env.Builtin{
 			err := os.WriteFile(fileName, []byte(s), 0600)
 			if err != nil {
 				ps.FailureFlag = true
-				return MakeBuiltinError(ps, fmt.Sprintf("error writing state: %s", err.Error()), "save\\state")
+				return evaldo.MakeBuiltinError(ps, fmt.Sprintf("error writing state: %s", err.Error()), "save\\state")
 			}
 			fmt.Println("State current context to \033[1m" + fileName + "\033[0m.")
 			return *env.NewInteger(1)
 		},
 	},
 
-	// Tests:
-	// ; equal  { save\current\secure |type? } 'integer
-	// Args:
-	// * None
-	// Returns:
-	// * Integer 1 on success
 	"save\\current\\secure": {
 		Argsn: 0,
 		Doc:   "Saves current state of the program to a file with password protection.",
@@ -93,58 +78,39 @@ var builtins_baseio = map[string]*env.Builtin{
 	// File import / load (URI-based)
 	// -------------------------------------------------------------------------
 
-	// Tests:
-	// ; import file://test.rye  ; imports and executes test.rye
-	// Args:
-	// * uri: URI of the file to import and execute
-	// Returns:
-	// * result of executing the imported file
 	"file-uri//Import": { // **
 		Argsn: 1,
 		Doc:   "Imports a file, loads and does it from script local path.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Uri:
-				block_, script_ := LoadScriptLocalFile(ps, s1)
-				ps.Res = EvaluateLoadedValue(ps, block_, script_, false)
+				block_, script_ := evaldo.LoadScriptLocalFile(ps, s1)
+				ps.Res = evaldo.EvaluateLoadedValue(ps, block_, script_, false)
 				ps.ScriptPath = script_
 				return ps.Res
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "import")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType}, "import")
 			}
 		},
 	},
 
-	// Tests:
-	// ; import\live file://test.rye  ; imports, executes, and watches test.rye for changes
-	// Args:
-	// * uri: URI of the file to import, execute, and watch for changes
-	// Returns:
-	// * result of executing the imported file
 	"file-uri//Import\\live": { // **
 		Argsn: 1,
 		Doc:   "Imports a file, loads and does it from script local path.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Uri:
-				block_, script_ := LoadScriptLocalFile(ps, s1)
-				ps.Res = EvaluateLoadedValue(ps, block_, script_, false)
+				block_, script_ := evaldo.LoadScriptLocalFile(ps, s1)
+				ps.Res = evaldo.EvaluateLoadedValue(ps, block_, script_, false)
 				ps.LiveObj.Add(s1.GetPath()) // add to watcher
 				ps.ScriptPath = script_
 				return ps.Res
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "import\\live")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType}, "import\\live")
 			}
 		},
 	},
 
-	// Tests:
-	// ; equal  { load " 1 2 3 " |third } 3
-	// ; equal  { load "{ 1 2 3 }" |first |third } 3
-	// Args:
-	// * source: String containing Rye code or URI of file to load
-	// Returns:
-	// * Block containing the parsed Rye values
 	"file-uri//Load": { // **
 		Argsn: 1,
 		Doc:   "Loads a file URI into Rye values.",
@@ -156,7 +122,8 @@ var builtins_baseio = map[string]*env.Builtin{
 				if s1.Scheme.Index == fileIdx {
 					b, err := os.ReadFile(s1.GetPath())
 					if err != nil {
-						return makeError(ps, err.Error())
+						ps.FailureFlag = true
+						return env.NewError(err.Error())
 					}
 					str = string(b)
 				}
@@ -167,19 +134,11 @@ var builtins_baseio = map[string]*env.Builtin{
 				return block
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-uri//Load")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType}, "file-uri//Load")
 			}
 		},
 	},
 
-	// TODO -- refactor load variants so they use common function LoadString and LoadFile
-
-	// Tests:
-	// ; load\mod file://modifiable.rye  ; loads file with word modification allowed
-	// Args:
-	// * source: URI of file to load with modification allowed
-	// Returns:
-	// * Block containing the parsed Rye values
 	"load\\mod\\file": { // **
 		Argsn: 1,
 		Doc:   "Loads a file URI into Rye values, allowing modification of words during load.",
@@ -191,7 +150,8 @@ var builtins_baseio = map[string]*env.Builtin{
 				if s1.Scheme.Index == fileIdx {
 					b, err := os.ReadFile(s1.GetPath())
 					if err != nil {
-						return makeError(ps, err.Error())
+						ps.FailureFlag = true
+						return env.NewError(err.Error())
 					}
 					str = string(b)
 				}
@@ -209,12 +169,6 @@ var builtins_baseio = map[string]*env.Builtin{
 		},
 	},
 
-	// Tests:
-	// ; load\live file://watched.rye  ; loads and watches file for changes
-	// Args:
-	// * source: URI of file to load with modification allowed and file watching
-	// Returns:
-	// * Block containing the parsed Rye values
 	"load\\live": { // **
 		Argsn: 1,
 		Doc:   "Loads a file URI into Rye values, allows modification of words, and watches for changes.",
@@ -227,7 +181,8 @@ var builtins_baseio = map[string]*env.Builtin{
 					b, err := os.ReadFile(s1.GetPath())
 					ps.LiveObj.Add(s1.GetPath()) // add to watcher
 					if err != nil {
-						return makeError(ps, err.Error())
+						ps.FailureFlag = true
+						return env.NewError(err.Error())
 					}
 					str = string(b)
 				}
@@ -249,10 +204,6 @@ var builtins_baseio = map[string]*env.Builtin{
 	// Process / shell
 	// -------------------------------------------------------------------------
 
-	// Tests:
-	// equal { scmd `echo "hello"` } 0
-	// equal { scmd `exit 1` } 1
-	// equal { scmd `exit 42` } 42
 	"scmd": {
 		Argsn: 1,
 		Doc:   "Execute a shell command and return its exit status code.",
@@ -273,13 +224,11 @@ var builtins_baseio = map[string]*env.Builtin{
 				}
 				return *env.NewInteger(0)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "scmd")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType}, "scmd")
 			}
 		},
 	},
 
-	// Tests:
-	// equal { scmd\capture `echo "hello"` } "hello\n"
 	"scmd\\capture": {
 		Argsn: 1,
 		Doc:   "Execute a shell command and capture the output, return it as string",
@@ -305,13 +254,11 @@ var builtins_baseio = map[string]*env.Builtin{
 				}
 				return *env.NewString(outb.String())
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "scmd\\capture")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType}, "scmd\\capture")
 			}
 		},
 	},
 
-	// Tests:
-	// ; equal { exit 0 } ...
 	"exit": { // **
 		Argsn: 1,
 		Doc:   "Exits the process with the given integer status code (or 0 for any non-integer).",
@@ -330,10 +277,9 @@ var builtins_baseio = map[string]*env.Builtin{
 	},
 
 	// -------------------------------------------------------------------------
-	// Rye-itself — args / history (requires os.Args / process context)
+	// Rye-itself - args / history (requires os.Args / process context)
 	// -------------------------------------------------------------------------
 
-	// Deprecated
 	"Rye-itself//args?": {
 		Argsn: 0,
 		Doc:   "Returns command line arguments as a block of parsed values. Each argument is converted to appropriate type (integer, float, or string).",
@@ -362,12 +308,6 @@ var builtins_baseio = map[string]*env.Builtin{
 		},
 	},
 
-	// Tests:
-	// ; equal { rye .history 5 |length? } 5
-	// Args:
-	// * n: Integer specifying how many history lines to return
-	// Returns:
-	// * Block of strings containing the last N lines of REPL history
 	"Rye-itself//History?": {
 		Argsn: 2,
 		Doc:   "Returns a block of the last N lines from REPL history.",
@@ -375,7 +315,7 @@ var builtins_baseio = map[string]*env.Builtin{
 			switch n := arg1.(type) {
 			case env.Integer:
 				if ps.GetHistoryLast == nil {
-					return MakeBuiltinError(ps, "History not available (not running in REPL)", "Rye-itself//history")
+					return evaldo.MakeBuiltinError(ps, "History not available (not running in REPL)", "Rye-itself//history")
 				}
 				lines := ps.GetHistoryLast(int(n.Value))
 				objs := make([]env.Object, len(lines))
@@ -384,7 +324,7 @@ var builtins_baseio = map[string]*env.Builtin{
 				}
 				return *env.NewBlock(*env.NewTSeries(objs))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "Rye-itself//history")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.IntegerType}, "Rye-itself//history")
 			}
 		},
 	},
@@ -393,8 +333,6 @@ var builtins_baseio = map[string]*env.Builtin{
 	// stdout capture
 	// -------------------------------------------------------------------------
 
-	// Tests:
-	// equal { capture-stdout { print "hello" } } "hello\n"
 	"capture-stdout": { // **
 		Argsn: 1,
 		Doc:   "Executes a block of code while capturing all output to stdout, returning the captured output as a string.",
@@ -424,26 +362,26 @@ var builtins_baseio = map[string]*env.Builtin{
 				ps.Ser = bloc.Series
 				ps.BlockFile = bloc.FileName
 				ps.BlockLine = bloc.Line
-				Eval(ps)
+				evaldo.Eval(ps)
 				ps.Ser = ser
 
 				w.Close()
 				os.Stdout = old
 
 				if err := g.Wait(); err != nil {
-					return MakeBuiltinError(ps, fmt.Sprintf("Error reading stdout: %v", err), "capture-stdout")
+					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Error reading stdout: %v", err), "capture-stdout")
 				}
 				out := <-outC
 
 				ps.SkipFlag = false
-				MaybeDisplayFailureOrError(ps, ps.Idx, "capture-stdout")
+				evaldo.MaybeDisplayFailureOrError(ps, ps.Idx, "capture-stdout")
 
 				if ps.ErrorFlag {
 					return ps.Res
 				}
 				return *env.NewString(out)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "capture-stdout")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.BlockType}, "capture-stdout")
 			}
 		},
 	},

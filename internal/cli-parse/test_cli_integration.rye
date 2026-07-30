@@ -1,0 +1,33 @@
+; CLI Integration tests - basic parse-args functionality
+print "## CLI Integration Tests"
+
+; Full spec parsing - verbose flag
+assert\display "full spec parsing" {
+	( parse-args { "--verbose" "-o" "out.txt" "in.txt" } {
+		program "test-cli"
+		description "Test CLI"
+		-v|verbose flag doc "Verbose"
+		-o|output string doc "Output file"
+		input: string doc "Input file"
+	} ) -> "verbose"
+} true
+
+; Full spec parsing - output value
+assert\display "full spec output value" {
+	( parse-args { "--verbose" "-o" "out.txt" "in.txt" } {
+		-v|verbose flag
+		-o|output string
+		input: string
+	} ) -> "output"
+} "out.txt"
+
+; Full spec parsing - positional value
+assert\display "full spec positional value" {
+	( parse-args { "--verbose" "-o" "out.txt" "in.txt" } {
+		-v|verbose flag
+		-o|output string
+		input: string
+	} ) -> "_input"
+} "in.txt"
+
+print ""

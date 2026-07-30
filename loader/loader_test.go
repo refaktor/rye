@@ -166,7 +166,7 @@ func TestLoader_load_dotword_1(t *testing.T) {
 		t.Error("Expected 1 item")
 	}
 	if block.(env.Block).Series.Get(0).Type() != env.DotwordType {
-		t.Error("Expected type Dotword (not Opword — dotwords are now a distinct type)")
+		t.Error("Expected type Dotword (not Opword - dotwords are now a distinct type)")
 	}
 
 	idx := block.(env.Block).Series.Get(0).(env.Dotword).Index

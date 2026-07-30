@@ -1,0 +1,164 @@
+; Complex real-world CLI patterns and integration tests
+print "## Real-World CLI Integration Tests"
+
+; ### Maven-like build tool
+assert\display "maven clean install" {
+	result: parse-args { clean install -D "skipTests=true" -P "production" } {
+		-D|define string list doc "Define system properties"
+		-P|profiles string list doc "Activate profiles"  
+		goals: string many doc "Build goals to execute"
+	}
+	first result -> "goals" 
+} "clean"
+
+assert\display "maven with multiple defines" {
+	result: parse-args { compile -D "prop1=val1" -D "prop2=val2" } {
+		-D|define string list
+		goals: string many
+	}
+	length? result -> "define"
+} 2
+
+; ### Rsync-like file synchronization
+assert\display "rsync command structure" {
+	result: parse-args { -a -v --delete "source/" "dest/" } {
+		-a|archive flag doc "Archive mode"
+		-v|verbose flag doc "Verbose output"  
+		-z|compress flag doc "Compress during transfer"
+		--delete flag doc "Delete extraneous files"
+		--exclude string list doc "Exclude patterns"
+		source: string required doc "Source path"
+		dest: string required doc "Destination path"
+	}
+	all { 
+		(result -> "archive") = true
+		(result -> "verbose") = true
+		(result -> "delete") = true
+		(result -> "source") = "source/"
+		(result -> "dest") = "dest/"
+	}
+} true
+
+; ### Compiler-like interface (gcc/clang style)
+assert\display "compiler command" {
+	result: parse-args { -O2 -I "/usr/include" -I "./include" -l "math" "main.c" "-o" "main" } {
+		-O|optimize integer optional 0 doc "Optimization level"
+		-I|include string list doc "Include directories"
+		-l|library string list doc "Link libraries"  
+		-g|debug flag doc "Include debug info"
+		-o|output string doc "Output file"
+		sources: string many doc "Source files"
+	}
+	all {
+		(result -> "optimize") = 2
+		(length? result -> "include") = 2
+		(length? result -> "library") = 1
+		(first result -> "sources") = "main.c"
+	}
+} true
+
+; ### Package manager interface  
+assert\display "package manager install" {
+	result: parse-args { install --global lodash express --save-dev } {
+		-g|global flag doc "Install globally"
+		-S|save flag doc "Save to dependencies"
+		-D|save-dev flag doc "Save to devDependencies"
+		packages: string many doc "Packages to install"
+	}
+	all {
+		(result -> "global") = true  
+		(result -> "save-dev") = true
+		(length? result -> "packages") = 2
+		(first result -> "packages") = "lodash"
+	}
+} true
+
+; ### Database CLI tool
+assert\display "database connection" {
+	result: parse-args { connect --host "localhost" --port 5432 --database "myapp" --ssl } {
+		subcommand {
+			'connect {
+				-h|host string optional "localhost" doc "Database host"
+				-p|port integer optional 5432 check { > 0 } "valid port" doc "Database port"  
+				-d|database string required doc "Database name"
+				-u|user string optional "postgres" doc "Username"
+				-s|ssl flag doc "Use SSL connection"
+			}
+			'migrate {
+				-n|dry-run flag doc "Show what would be migrated"
+				direction: string optional "up" doc "Migration direction"
+			}
+		}
+	}
+	all {
+		(result -> "command") = "connect"
+		(result -> "host") = "localhost"
+		(result -> "port") = 5432
+		(result -> "database") = "myapp"
+		(result -> "ssl") = true
+	}
+} true
+
+; ### Complex nested tool (like kubectl)
+assert\display "kubernetes-like complex nesting" {
+	result: parse-args { --namespace "prod" config set-context staging --cluster "k8s-staging" } {
+		-n|namespace string doc "Default namespace"
+		subcommand {
+			'config {
+				doc "Modify config files"
+				subcommand {
+					'set-context {
+						doc "Set context entry"
+						-c|cluster string doc "Cluster name"
+						-u|user string doc "User name" 
+						context: string required doc "Context name"
+					}
+					'get-contexts {
+						doc "List contexts"
+						-o|output string optional "table" doc "Output format"
+					}
+				}
+			}
+			'get {
+				doc "Get resources"
+				resource: string required
+			}
+		}
+	}
+	all {
+		(result -> "namespace") = "prod"
+		(result -> "command") = "config set-context"
+		(result -> "cluster") = "k8s-staging"
+		(result -> "context") = "staging"
+	}
+} true
+
+; ### File processing tool with complex options
+assert\display "file processing pipeline" {
+	result: parse-args { process --input "data.csv" --format json --filter "active=true" --sort "name" --limit 100 --output "result.json" } {
+		subcommand {
+			'process {
+				-i|input string required doc "Input file"
+				-f|format string optional "csv" doc "Input format"
+				-o|output string doc "Output file"
+				-F|filter string list doc "Filter conditions"
+				-s|sort string list doc "Sort fields"  
+				-l|limit integer check { > 0 } "positive" doc "Limit results"
+				-H|headers flag doc "Include headers"
+			}
+			'validate {
+				schema: string required doc "Schema file"
+				data: string required doc "Data file"
+			}
+		}
+	}
+	all {
+		(result -> "command") = "process"
+		(result -> "input") = "data.csv" 
+		(result -> "format") = "json"
+		(first result -> "filter") = "active=true"
+		(result -> "limit") = 100
+	}
+} true
+
+print ""

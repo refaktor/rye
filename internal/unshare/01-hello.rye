@@ -1,0 +1,5 @@
+; 01-hello.rye - smoke test: basic execution in a sandboxed namespace
+; Run: rye -unshare 01-hello.rye
+
+print "Hello from the sandbox!"
+print join { "PID inside sandbox: " to-string os/getpid }

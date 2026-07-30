@@ -1,0 +1,83 @@
+; Indexed Iteration Tests
+; Tests for\idx with return words and failures
+print "## Indexed Iteration"
+
+; =============================================================================
+; for\idx with ^if exit - value is injected, use ::v to capture
+; =============================================================================
+
+assert\display "for\\idx with ^if finds index" {
+	find-idx1: fn { items target } {
+		for\idx items 'i1 { ::v1
+			^if v1 = target { i1 }
+		}
+		-1
+	}
+	find-idx1 { "a" "b" "c" "d" } "c"
+} 2
+
+assert\display "for\\idx ^if not found" {
+	find-idx2: fn { items target } {
+		for\idx items 'i2 { ::v2
+			^if v2 = target { i2 }
+		}
+		-1
+	}
+	find-idx2 { "a" "b" "c" } "z"
+} -1
+
+; =============================================================================
+; for\pos with ^if exit - position is 1-based
+; =============================================================================
+
+assert\display "for\\pos with ^if finds position" {
+	find-pos3: fn { items target } {
+		for\pos items 'p3 { ::v3
+			^if v3 = target { p3 }
+		}
+		-1
+	}
+	find-pos3 { "a" "b" "c" "d" } "c"
+} 3
+
+; =============================================================================
+; Indexed loops with failure handling
+; =============================================================================
+
+assert\display "for\\idx tracks error positions" {
+	error-indices4: ref { }
+	for\idx { 2 0 4 0 5 } 'i4 { ::val4
+		try { 10 / val4 } |fix { append! i4 error-indices4 , 0 }
+	}
+	deref error-indices4
+} { 1 3 }
+
+assert\display "for\\idx ^check on zero propagates" {
+	; 0 is falsy, so ^check treats it as failure-like
+	validate5: fn { items } {
+		for\idx items 'i5 { ::val5
+			; Use explicit condition: fail if value is 0
+			either val5 = 0 { 
+				fail join { "zero at index " i5 } |^check "validation"
+			} { val5 }
+		}
+		"all valid"
+	}
+	try { validate5 { 1 2 0 4 } } |type?
+} 'error
+
+; =============================================================================
+; Index conditional with ^if
+; =============================================================================
+
+assert\display "for\\idx get first even-indexed" {
+	first-even-idx6: fn { items } {
+		for\idx items 'i6 { ::val6
+			^if ( i6 % 2 ) = 0 { val6 }
+		}
+		_
+	}
+	first-even-idx6 { "a" "b" "c" "d" }
+} "a"
+
+print ""

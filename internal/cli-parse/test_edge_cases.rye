@@ -1,0 +1,106 @@
+; Comprehensive error handling and edge cases
+print "## Error Handling and Edge Cases"
+
+; ### Missing required arguments
+assert\display "missing required flag" {
+	try { parse-args { } { -o|output string required } } |type?
+} 'error
+
+assert\display "missing required positional" {
+	try { parse-args { } { input: string required } } |type?
+} 'error
+
+; ### Unknown flags  
+assert\display "unknown short flag" {
+	try { parse-args { -x } { -v|verbose flag } } |type?
+} 'error
+
+assert\display "unknown long flag" {
+	try { parse-args { --unknown } { -v|verbose flag } } |type?
+} 'error
+
+; ### Flags without values
+assert\display "flag missing value" {
+	try { parse-args { -o } { -o|output string required } } |type?
+} 'error
+
+assert\display "flag at end missing value" {
+	try { parse-args { --verbose -o } { -v|verbose flag -o|output string required } } |type?
+} 'error
+
+; ### Type validation errors
+assert\display "invalid integer" {
+	try { parse-args { --count "not-a-number" } { -n|count integer } } |type?
+} 'error
+
+assert\display "invalid decimal" {
+	try { parse-args { --rate "not-a-decimal" } { -r|rate decimal } } |type?
+} 'error
+
+; ### Custom validation failures
+assert\display "check block failure - port too low" {
+	try { parse-args { --port 80 } { -p|port integer check { >= 1024 } "port must be >= 1024" } } |type?
+} 'error
+
+assert\display "check block failure - negative count" {
+	try { parse-args { --count -1 } { -n|count integer check { > 0 } "count must be positive" } } |type?
+} 'error
+
+assert\display "check block failure - file extension" {
+	try { parse-args { --file "test.pdf" } { -f|file string check { .ends-with? ".txt" } "must be .txt file" } } |type?
+} 'error
+
+; ### Invalid subcommands
+assert\display "unknown subcommand" {
+	try { parse-args { unknown-cmd } { subcommand { init { } build { } } } } |type?
+} 'error
+
+; ### Edge cases with empty inputs
+assert\display "empty args with optionals only" {
+	result: parse-args { } { -v|verbose flag -o|output string optional "default" }
+	result -> "verbose"
+} false
+
+assert\display "empty args with defaults" {
+	result: parse-args { } { -n|count integer optional 10 }
+	result -> "count"  
+} 10
+
+; ### Complex validation scenarios
+assert\display "multiple validation failures" {
+	try {
+		parse-args { --count 0 --file "bad.pdf" } {
+			-n|count integer check { > 0 } "positive"
+			-f|file string check { .ends-with? ".txt" } "txt file"
+		}
+	} |type?
+} 'error
+
+; ### List with validation
+assert\display "list item validation - all valid" {
+	result: parse-args { -p 8080 -p 9000 } {
+		-p|ports integer list check { >= 1024 } "must be >= 1024"
+	}
+	length? result -> "ports"
+} 2
+
+assert\display "list item validation - one invalid" {
+	try {
+		parse-args { -p 8080 -p 80 } {
+			-p|ports integer list check { >= 1024 } "must be >= 1024"
+		}
+	} |type?
+} 'error
+
+; ### Help flag handling (meta test)
+assert\display "help flag detection pattern" {
+	args: { --help }
+	contains\flag args -h|help
+} true
+
+assert\display "help flag with other args" {
+	args: { init --help --force }
+	contains\flag args -h|help
+} true
+
+print ""

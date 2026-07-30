@@ -2685,19 +2685,23 @@ func RegisterBaseBuiltins(ps *env.ProgramState) {
 	executeInitializationCode(ps)
 }
 
-// RegisterBaseIOBuiltins adds the OS / file / shell / args builtins from
-// builtins_baseio.go on top of an already-initialised program state.
-// It must be called AFTER RegisterBaseBuiltins (or RegisterBuiltins).
+// RegisterBaseIOBuiltins is DEPRECATED - OS / file / shell / args builtins
+// have moved to the baseio package (github.com/refaktor/rye/baseio).
+// This function is now a no-op kept for backward compatibility.
+// Call baseio.Register(ps) after RegisterBuiltins(ps) to add I/O support.
 func RegisterBaseIOBuiltins(ps *env.ProgramState) {
-	RegisterBuiltins2(builtins_baseio, ps, "base")
+	// no-op: baseio builtins are now in baseio.Register
 }
 
-// RegisterBuiltins registers the full base set: pure-computation builtins
-// plus all OS / IO builtins.  This is what the CLI runner uses.
-// For the full standard set including batteries, also call batteries.RegisterBatteries(ps).
+// RegisterBuiltins registers the base set: pure-computation builtins
+// plus basic printing.  OS I/O and interactive display builtins are
+// registered separately via baseio.Register(ps).
+// For the full standard set including batteries, also call:
+//
+//	baseio.Register(ps)
+//	batteries.RegisterBatteries(ps)
 func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBaseBuiltins(ps)
-	RegisterBaseIOBuiltins(ps)
 }
 
 // executeInitializationCode runs the injected initialization code after builtins are loaded

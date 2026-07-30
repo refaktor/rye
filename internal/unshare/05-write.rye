@@ -1,0 +1,31 @@
+; 05-write.rye - test write access inside the filesystem jail
+; Run: rye -unshare 05-write.rye
+;
+; With -unshare (default): /app is bind-mounted read-only, so writes fail.
+; With -unshare (warning about read-only failed): /app may be writable.
+; With -unshare-fs=false: full host FS, writes to CWD succeed normally.
+
+print "=== Write access test ==="
+
+; Try to write a temp file in current directory
+result: try { write %._unshare_test_tmp.txt "test" }
+
+either is-error result {
+    print "  write .  : BLOCKED  (read-only mount OK, or permission denied)"
+} {
+    print "  write .  : SUCCESS  (writable; cleaning up)"
+    ; Clean up the temp file if it was created
+    r2: try { os/delete-file %._unshare_test_tmp.txt }
+    _ r2  ; ignore result
+}
+
+; Writing to /tmp should always fail inside the jail (no /tmp dir in jail)
+result2: try { write %/tmp/_unshare_test.txt "test" }
+
+either is-error result2 {
+    print "  write /tmp: BLOCKED  (/tmp not in jail, OK)"
+} {
+    print "  write /tmp: SUCCESS  (isolation NOT active)"
+}
+
+print "=== done ==="

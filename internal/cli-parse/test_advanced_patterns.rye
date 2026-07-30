@@ -1,0 +1,161 @@
+; Advanced CLI parsing patterns
+print "## Advanced CLI Parsing Patterns"
+
+; ### Git-like interface
+assert\display "git-like commit command" {
+	result: parse-args { --verbose commit -m "Initial commit" --amend } {
+		-v|verbose flag doc "Enable verbose output"
+		subcommand {
+			''commit {
+				-m|message string required doc "Commit message"
+				-a|amend flag doc "Amend last commit" 
+			}
+			''push {
+				-f|force flag doc "Force push"
+				remote: string optional "origin" doc "Remote name"
+			}
+		}
+	}
+	result -> "message"
+} "Initial commit"
+
+assert\display "git-like commit with global flag" {
+	result: parse-args { --verbose commit -m "test" --amend } {
+		-v|verbose flag
+		subcommand {
+			''commit {
+				-m|message string required
+				-a|amend flag
+			}
+		}
+	}
+	result -> "verbose"
+} true
+
+; ### Docker-like interface  
+assert\display "docker run command" {
+	result: parse-args { run --detach --port "8080:80" nginx } {
+		subcommand {
+			''run {
+				-d|detach flag doc "Run in background"
+				-p|port string list doc "Port mapping"
+				image: string required doc "Container image"
+				args: string many doc "Command arguments"
+			}
+			''build {
+				-t|tag string doc "Tag for image"
+				path: string optional "." doc "Build context"
+			}
+		}
+	}
+	result -> "image"
+} "nginx"
+
+assert\display "docker run with multiple ports" {
+	result: parse-args { run -p "80:80" -p "443:443" nginx } {
+		subcommand {
+			''run {
+				-p|port string list
+				image: string required
+			}
+		}
+	}
+	length? result -> "port"
+} 2
+
+; ### Npm/Yarn-like interface
+assert\display "npm install command" {
+	result: parse-args { install lodash --save-dev } {
+		subcommand {
+			''install {
+				-S|save flag doc "Save as dependency"
+				-D|save-dev flag doc "Save as dev dependency"
+				packages: string many doc "Packages to install"
+			}
+			''run {
+				script: string required doc "Script to run"
+			}
+		}
+	}
+	first result -> "packages"
+} "lodash"
+
+; ### Cargo-like interface
+assert\display "cargo build command" {
+	result: parse-args { build --release --target "x86_64-unknown-linux-gnu" } {
+		subcommand {
+			''build {
+				-r|release flag doc "Build in release mode"
+				-t|target string doc "Target triple"
+				-j|jobs integer doc "Number of parallel jobs"
+			}
+			''run {
+				--bin string doc "Binary to run"
+				args: string many doc "Arguments to binary"
+			}
+		}
+	}
+	result -> "target"
+} "x86_64-unknown-linux-gnu"
+
+; ### AWS CLI-like interface
+assert\display "aws s3 cp command" {
+	result: parse-args { s3 cp "file.txt" "s3://bucket/file.txt" --recursive } {
+		subcommand {
+			's3 {
+				doc "Amazon S3 service commands"
+				subcommand {
+					'cp {
+						doc "Copy files to/from S3"
+						-r|recursive flag doc "Copy recursively"
+						--dryrun flag doc "Display operations without executing"
+						source: string required doc "Source path"
+						dest: string required doc "Destination path" 
+					}
+					'ls {
+						doc "List S3 objects"
+						path: string optional doc "S3 path to list"
+					}
+				}
+			}
+		}
+	}
+	result -> "source"
+} "file.txt"
+
+assert\display "aws s3 nested command path" {
+	result: parse-args { s3 cp "a" "b" } {
+		subcommand {
+			's3 {
+				subcommand {
+					'cp {
+						source: string required
+						dest: string required
+					}
+				}
+			}
+		}
+	}
+	result -> "command"
+} "s3 cp"
+
+; ### Kubectl-like interface
+assert\display "kubectl get pods" {
+	result: parse-args { get pods --namespace "default" --selector "app=nginx" } {
+		subcommand {
+			''get {
+				doc "Display resources"
+				-n|namespace string doc "Kubernetes namespace"
+				-l|selector string doc "Label selector" 
+				resource: string required doc "Resource type"
+			}
+			''apply {
+				doc "Apply configuration"
+				-f|filename string required doc "Configuration file"
+			}
+		}
+	}
+	result -> "resource"
+} "pods"
+
+print ""

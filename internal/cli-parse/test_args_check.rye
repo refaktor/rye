@@ -1,0 +1,21 @@
+; Test that args are parsed to correct types
+print "## Args Type Check Tests"
+
+; Args from parse-args are typed correctly
+assert\display "parsed integer is integer" {
+	type? ( parse-args { "--count" 42 } { -n|count integer optional 0 } ) -> "count"
+} 'integer
+
+assert\display "parsed string is string" {
+	type? ( parse-args { "-o" "file.txt" } { -o|output string required } ) -> "output"
+} 'string
+
+assert\display "parsed flag is true" {
+	( parse-args { "--verbose" } { -v|verbose flag } ) -> "verbose"
+} true
+
+assert\display "missing flag is false" {
+	( parse-args { } { -v|verbose flag } ) -> "verbose"
+} false
+
+print ""

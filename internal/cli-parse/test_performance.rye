@@ -1,0 +1,173 @@
+; Performance and stress tests for CLI parsing
+print "## Performance and Stress Tests"
+
+; ### Large number of flags
+assert\display "many flags parsing" {
+	spec: {
+		-a|alpha flag -b|beta flag -c|charlie flag -d|delta flag -e|echo flag
+		-f|foxtrot flag -g|golf flag -h|hotel flag -i|india flag -j|juliet flag
+		-k|kilo flag -l|lima flag -m|mike flag -n|november flag -o|oscar flag
+	}
+	args: { -a -c -e -g -i -k -m -o }
+	result: parse-args args spec
+	all {
+		(result -> "alpha") = true
+		(result -> "charlie") = true  
+		(result -> "echo") = true
+		(result -> "golf") = true
+		(result -> "india") = true
+		(result -> "kilo") = true
+		(result -> "mike") = true
+		(result -> "oscar") = true
+		(result -> "beta") = false
+		(result -> "delta") = false
+	}
+} true
+
+; ### Many positional arguments
+assert\display "many positional arguments" {
+	args: { "file1" "file2" "file3" "file4" "file5" "file6" "file7" "file8" "file9" "file10" }
+	spec: { files: string many }
+	result: parse-args args spec
+	(length? result -> "files") = 10
+} true
+
+; ### Complex mixed arguments
+assert\display "complex mixed argument parsing" {
+	args: { 
+		--verbose 
+		-I "/usr/include" 
+		-I "/opt/include" 
+		-I "./include"
+		--define "DEBUG=1"
+		--define "VERSION=2.0"
+		-O 3
+		"main.c" 
+		"utils.c" 
+		"helper.c"
+		-o "program"
+	}
+	spec: {
+		-v|verbose flag
+		-I|include string list
+		-D|define string list  
+		-O|optimize integer optional 0
+		-o|output string
+		sources: string many
+	}
+	result: parse-args args spec
+	all {
+		(result -> "verbose") = true
+		(length? result -> "include") = 3
+		(length? result -> "define") = 2
+		(result -> "optimize") = 3
+		(result -> "output") = "program"
+		(length? result -> "sources") = 3
+		(first result -> "include") = "/usr/include"
+		(last result -> "sources") = "helper.c"
+	}
+} true
+
+; ### Deep nesting stress test
+assert\display "deeply nested subcommands" {
+	args: { level1 level2 level3 level4 --flag }
+	spec: {
+		subcommand {
+			'level1 {
+				subcommand {
+					'level2 {
+						subcommand {
+							'level3 {
+								subcommand {
+									'level4 {
+										-f|flag flag
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	result: parse-args args spec
+	all {
+		(result -> "command") = "level1 level2 level3 level4"
+		(result -> "flag") = true
+		(length? result -> "command-path") = 4
+	}
+} true
+
+; ### Large validation blocks
+assert\display "complex validation logic" {
+	args: { --port 8080 --threads 4 --memory 1024 }
+	spec: {
+		-p|port integer check { 
+			and (>= 1024) (<= 65535)
+		} "port must be in range 1024-65535"
+		-t|threads integer check {
+			and (>= 1) (<= 16)  
+		} "threads must be 1-16"
+		-m|memory integer check {
+			and (>= 512) (<= 8192)
+		} "memory must be 512-8192 MB"
+	}
+	result: parse-args args spec
+	all {
+		(result -> "port") = 8080
+		(result -> "threads") = 4
+		(result -> "memory") = 1024
+	}
+} true
+
+; ### String processing stress
+assert\display "long string values" {
+	longString: "This is a very long string that might stress the parsing system with lots of text and special characters like !@#$%^&*()_+-=[]{}|;:,.<>?"
+	args: concat { "--message" } { longString }
+	spec: { -m|message string }
+	result: parse-args args spec
+	(result -> "message") = longString
+} true
+
+; ### Edge case combinations
+assert\display "edge case flag combinations" {
+	args: { --flag1 --flag2 --no-flag3 -abc --option "value with spaces" }
+	spec: {
+		-f|flag1 flag
+		-g|flag2 flag  
+		-n|no-flag3 flag
+		-a|alpha flag
+		-b|beta flag
+		-c|charlie flag
+		-o|option string
+	}
+	result: parse-args args spec
+	all {
+		(result -> "flag1") = true
+		(result -> "flag2") = true
+		(result -> "no-flag3") = true
+		(result -> "alpha") = true
+		(result -> "beta") = true
+		(result -> "charlie") = true
+		(result -> "option") = "value with spaces"
+	}
+} true
+
+; ### Memory efficiency test with lists
+assert\display "large lists parsing" {
+	; Simulate many include paths like a compiler might have
+	includes: map { int++ } { range 1 20 } { ++ "/usr/include/lib" str }
+	args: append { "-v" } flatten map includes { lit -I }
+	spec: {
+		-v|verbose flag
+		-I|include string list
+	}
+	result: parse-args args spec
+	all {
+		(result -> "verbose") = true
+		(length? result -> "include") = 20
+		(first result -> "include") .contains? "/usr/include/lib"
+	}
+} true
+
+print ""
