@@ -2233,11 +2233,8 @@ func (i Argword) Dump(e Idxs) string {
 //
 
 type CPath struct {
-	Mode  int // 0 Cpath, 1 OpCpath , 2 PipeCPath
-	Cnt   int
-	Word1 Word
-	Word2 Word
-	Word3 Word
+	Mode  int    // 0 Cpath, 1 OpCpath , 2 PipeCPath
+	Words []Word // context path segments, supports any number of levels
 }
 
 func (i CPath) Type() Type {
@@ -2245,36 +2242,30 @@ func (i CPath) Type() Type {
 }
 
 func (i CPath) Inspect(e Idxs) string {
-	switch i.Cnt {
-	case 2:
-		return "[CPath: " + i.Word1.Inspect(e) + "/" + i.Word2.Inspect(e) + "]"
-	case 3:
-		return "[CPath: " + i.Word1.Inspect(e) + "/" + i.Word2.Inspect(e) + "/" + i.Word3.Inspect(e) + "]"
+	var b strings.Builder
+	b.WriteString("[CPath: ")
+	for j, w := range i.Words {
+		if j > 0 {
+			b.WriteString("/")
+		}
+		b.WriteString(w.Inspect(e))
 	}
-	return "[CPath: " + i.Word1.Inspect(e) + "/ ... ]"
+	b.WriteString("]")
+	return b.String()
 }
 
 func (o CPath) GetWordNumber(i int) Word {
-	switch i {
-	case 1:
-		return o.Word1
-	case 2:
-		if o.Cnt >= 2 {
-			return o.Word2
-		}
-		// Fall through to default case if Cnt < 2
-	case 3:
-		if o.Cnt >= 3 {
-			return o.Word3
-		}
-		// Fall through to default case if Cnt < 3
+	if i >= 1 && i <= len(o.Words) {
+		return o.Words[i-1]
 	}
-	// Return Word with index 0 for out of bounds or invalid cases
 	return Word{0, false}
 }
 
 func (b CPath) Print(e Idxs) string {
-	return b.Word1.Print(e)
+	if len(b.Words) > 0 {
+		return b.Words[0].Print(e)
+	}
+	return ""
 }
 
 func (i CPath) Trace(msg string) {
@@ -2285,21 +2276,10 @@ func (i CPath) GetKind() int {
 	return 0
 }
 
-func NewCPath2(mode int, w1 Word, w2 Word) *CPath {
+func NewCPath(mode int, words []Word) *CPath {
 	var cp CPath
 	cp.Mode = mode
-	cp.Cnt = 2
-	cp.Word1 = w1
-	cp.Word2 = w2
-	return &cp
-}
-func NewCPath3(mode int, w1 Word, w2 Word, w3 Word) *CPath {
-	var cp CPath
-	cp.Mode = mode
-	cp.Cnt = 3
-	cp.Word1 = w1
-	cp.Word2 = w2
-	cp.Word3 = w3
+	cp.Words = words
 	return &cp
 }
 
@@ -2308,29 +2288,24 @@ func (i CPath) Equal(o Object) bool {
 		return false
 	}
 	oCPath := o.(CPath)
-	if i.Cnt != oCPath.Cnt {
+	if len(i.Words) != len(oCPath.Words) {
 		return false
 	}
-	if !i.Word1.Equal(oCPath.Word1) {
-		return false
-	}
-	if !i.Word2.Equal(oCPath.Word2) {
-		return false
-	}
-	if !i.Word3.Equal(oCPath.Word3) {
-		return false
+	for j, w := range i.Words {
+		if !w.Equal(oCPath.Words[j]) {
+			return false
+		}
 	}
 	return true
 }
 
 func (i CPath) Dump(e Idxs) string {
 	var b strings.Builder
-	b.WriteString(i.Word1.Dump(e))
-	if i.Cnt > 1 {
-		b.WriteString("/" + i.Word2.Dump(e))
-	}
-	if i.Cnt > 2 {
-		b.WriteString("/" + i.Word3.Dump(e))
+	for j, w := range i.Words {
+		if j > 0 {
+			b.WriteString("/")
+		}
+		b.WriteString(w.Dump(e))
 	}
 	return b.String()
 }

@@ -439,20 +439,20 @@ func TestLoader_cpath(t *testing.T) {
 
 	fmt.Println(block.(env.Block).Series.Get(0))
 
-	block.(env.Block).Series.Get(0).(env.CPath).Word1.Print(*wordIndex)
+	block.(env.Block).Series.Get(0).(env.CPath).Words[0].Print(*wordIndex)
 
 	idx, _ := wordIndex.GetIndex("user")
-	if block.(env.Block).Series.Get(0).(env.CPath).Word1.Index != idx {
+	if block.(env.Block).Series.Get(0).(env.CPath).Words[0].Index != idx {
 		t.Error("Expected context user")
 	}
 
 	idx2, _ := wordIndex.GetIndex("check")
-	if block.(env.Block).Series.Get(0).(env.CPath).Word2.Index != idx2 { // todo later return just the path part ... but there are more components to URI, so we do it later
+	if block.(env.Block).Series.Get(0).(env.CPath).Words[1].Index != idx2 { // todo later return just the path part ... but there are more components to URI, so we do it later
 		t.Error("Expected word1 check")
 	}
 
 	idx3, _ := wordIndex.GetIndex("user")
-	if block.(env.Block).Series.Get(0).(env.CPath).Word3.Index != idx3 { // todo later return just the path part ... but there are more components to URI, so we do it later
+	if block.(env.Block).Series.Get(0).(env.CPath).Words[2].Index != idx3 { // todo later return just the path part ... but there are more components to URI, so we do it later
 		t.Error("Expected word1 user")
 	}
 }

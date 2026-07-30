@@ -741,7 +741,7 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 				// Go to parent context
 				if currCtx.Parent != nil {
 					currCtx = currCtx.Parent
-					if word.Cnt > i {
+					if len(word.Words) > i {
 						continue
 					}
 					// If no more path parts, return the parent context itself
@@ -750,7 +750,7 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 				return false, nil, currCtx
 			}
 			object, found := currCtx.Get(currWord.Index)
-			if found && word.Cnt > i {
+			if found && len(word.Words) > i {
 				switch swObj := object.(type) {
 				case *env.RyeCtx:
 					currCtx = swObj
@@ -826,7 +826,7 @@ func findWordValueWithFailureInfo(ps *env.ProgramState, word1 env.Object) (bool,
 				if currCtx.Parent != nil {
 					currCtx = currCtx.Parent
 					i += 1
-					if word.Cnt > i-1 {
+					if len(word.Words) > i-1 {
 						continue
 					}
 					// If no more path parts, return the parent context itself
@@ -852,7 +852,7 @@ func findWordValueWithFailureInfo(ps *env.ProgramState, word1 env.Object) (bool,
 					return false, object, currCtx, wordName + " (in context " + ctxName.String() + ")"
 				}
 			}
-			if found && word.Cnt > i {
+			if found && len(word.Words) > i {
 				switch swObj := object.(type) {
 				case *env.RyeCtx:
 					currCtx = swObj
@@ -861,7 +861,7 @@ func findWordValueWithFailureInfo(ps *env.ProgramState, word1 env.Object) (bool,
 				case env.Dict:
 					// Handle dict path traversal
 					currDict := swObj
-					for word.Cnt > i {
+					for len(word.Words) > i {
 						i += 1
 						keyWord := word.GetWordNumber(i)
 						keyStr := ps.Idx.GetWord(keyWord.Index)
@@ -869,7 +869,7 @@ func findWordValueWithFailureInfo(ps *env.ProgramState, word1 env.Object) (bool,
 						if val, ok := currDict.Data[keyStr]; ok {
 							object = env.ToRyeValue(val)
 							// If more path segments, check what we got
-							if word.Cnt > i {
+							if len(word.Words) > i {
 								switch nextObj := object.(type) {
 								case env.Dict:
 									currDict = nextObj
@@ -2181,8 +2181,13 @@ func displayBlockWithErrorPosition(es *env.ProgramState, genv *env.Idxs) {
 		isDifferent := err.CodeBlock.Len() != es.Ser.Len() || codeBlockPos != serPos
 		if !isDifferent && err.CodeBlock.Len() > 0 && es.Ser.Len() > 0 {
 			// Compare first element to see if it's the same block
-			if err.CodeBlock.Len() > 0 && es.Ser.Len() > 0 {
-				isDifferent = err.CodeBlock.S[0] != es.Ser.S[0]
+			// Use .Equal() instead of != because some Object types (e.g. CPath, Dict, Block)
+			// contain slices/maps and are not directly comparable with ==/!= in Go
+			a, b := err.CodeBlock.S[0], es.Ser.S[0]
+			if a == nil || b == nil {
+				isDifferent = a != b
+			} else {
+				isDifferent = !a.Equal(b)
 			}
 		}
 

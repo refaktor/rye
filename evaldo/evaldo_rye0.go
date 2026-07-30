@@ -237,7 +237,7 @@ func Rye0_findCPathValue(ps *env.ProgramState, word env.CPath) (bool, env.Object
 	currCtx := ps.Ctx
 	i := 1
 
-	for i <= word.Cnt {
+	for i <= len(word.Words) {
 		currWord := word.GetWordNumber(i)
 		object, found := currCtx.Get(currWord.Index)
 
@@ -245,7 +245,7 @@ func Rye0_findCPathValue(ps *env.ProgramState, word env.CPath) (bool, env.Object
 			return false, nil, nil
 		}
 
-		if word.Cnt > i {
+		if len(word.Words) > i {
 			switch swObj := object.(type) {
 			case *env.RyeCtx:
 				currCtx = swObj
