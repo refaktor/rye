@@ -1727,56 +1727,48 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 				parts[i] = "_@"
 			}
 		}
-		if len(parts) == 2 {
-			idx1 := p.wordIndex.IndexWord(parts[0])
-			idx2 := p.wordIndex.IndexWord(parts[1])
-			return *env.NewCPath2(0, *env.NewWord(idx1), *env.NewWord(idx2)), nil
-		} else if len(parts) >= 3 {
-			idx1 := p.wordIndex.IndexWord(parts[0])
-			idx2 := p.wordIndex.IndexWord(parts[1])
-			idx3 := p.wordIndex.IndexWord(parts[2])
-			return *env.NewCPath3(0, *env.NewWord(idx1), *env.NewWord(idx2), *env.NewWord(idx3)), nil
+		if len(parts) >= 2 {
+			words := make([]env.Word, len(parts))
+			for i, part := range parts {
+				idx := p.wordIndex.IndexWord(part)
+				words[i] = *env.NewWord(idx)
+			}
+			return *env.NewCPath(0, words), nil
 		}
-		return nil, fmt.Errorf("invalid context path '%s'. Context paths must have exactly 2 or 3 parts separated by '/', like 'word/word' or 'word/word/word'. Found %d part(s)", p.currentToken.Value, len(parts))
+		return nil, fmt.Errorf("invalid context path '%s'. Context paths must have at least 2 parts separated by '/', like 'word/word'. Found %d part(s)", p.currentToken.Value, len(parts))
 	case NPEG_TOKEN_OPCPATH:
 		parts := strings.Split(p.currentToken.Value[1:], "/")
-		if len(parts) == 2 {
-			idx1 := p.wordIndex.IndexWord(parts[0])
-			idx2 := p.wordIndex.IndexWord(parts[1])
-			return *env.NewCPath2(1, *env.NewWord(idx1), *env.NewWord(idx2)), nil
-		} else if len(parts) >= 3 {
-			idx1 := p.wordIndex.IndexWord(parts[0])
-			idx2 := p.wordIndex.IndexWord(parts[1])
-			idx3 := p.wordIndex.IndexWord(parts[2])
-			return *env.NewCPath3(1, *env.NewWord(idx1), *env.NewWord(idx2), *env.NewWord(idx3)), nil
+		if len(parts) >= 2 {
+			words := make([]env.Word, len(parts))
+			for i, part := range parts {
+				idx := p.wordIndex.IndexWord(part)
+				words[i] = *env.NewWord(idx)
+			}
+			return *env.NewCPath(1, words), nil
 		}
-		return nil, fmt.Errorf("invalid op context path '%s'. Op context paths must have exactly 2 or 3 parts separated by '/', like '+word/word' or '+word/word/word'. Found %d part(s)", p.currentToken.Value, len(parts))
+		return nil, fmt.Errorf("invalid op context path '%s'. Op context paths must have at least 2 parts separated by '/', like '+word/word'. Found %d part(s)", p.currentToken.Value, len(parts))
 	case NPEG_TOKEN_PIPECPATH:
 		parts := strings.Split(p.currentToken.Value[1:], "/")
-		if len(parts) == 2 {
-			idx1 := p.wordIndex.IndexWord(parts[0])
-			idx2 := p.wordIndex.IndexWord(parts[1])
-			return *env.NewCPath2(2, *env.NewWord(idx1), *env.NewWord(idx2)), nil
-		} else if len(parts) >= 3 {
-			idx1 := p.wordIndex.IndexWord(parts[0])
-			idx2 := p.wordIndex.IndexWord(parts[1])
-			idx3 := p.wordIndex.IndexWord(parts[2])
-			return *env.NewCPath3(2, *env.NewWord(idx1), *env.NewWord(idx2), *env.NewWord(idx3)), nil
+		if len(parts) >= 2 {
+			words := make([]env.Word, len(parts))
+			for i, part := range parts {
+				idx := p.wordIndex.IndexWord(part)
+				words[i] = *env.NewWord(idx)
+			}
+			return *env.NewCPath(2, words), nil
 		}
-		return nil, fmt.Errorf("invalid pipe context path '%s'. Pipe context paths must have exactly 2 or 3 parts separated by '/', like '|word/word' or '|word/word/word'. Found %d part(s)", p.currentToken.Value, len(parts))
+		return nil, fmt.Errorf("invalid pipe context path '%s'. Pipe context paths must have at least 2 parts separated by '/', like '|word/word'. Found %d part(s)", p.currentToken.Value, len(parts))
 	case NPEG_TOKEN_GETCPATH:
 		parts := strings.Split(p.currentToken.Value[1:], "/")
-		if len(parts) == 2 {
-			idx1 := p.wordIndex.IndexWord(parts[0])
-			idx2 := p.wordIndex.IndexWord(parts[1])
-			return *env.NewCPath2(3, *env.NewWord(idx1), *env.NewWord(idx2)), nil
-		} else if len(parts) >= 3 {
-			idx1 := p.wordIndex.IndexWord(parts[0])
-			idx2 := p.wordIndex.IndexWord(parts[1])
-			idx3 := p.wordIndex.IndexWord(parts[2])
-			return *env.NewCPath3(3, *env.NewWord(idx1), *env.NewWord(idx2), *env.NewWord(idx3)), nil
+		if len(parts) >= 2 {
+			words := make([]env.Word, len(parts))
+			for i, part := range parts {
+				idx := p.wordIndex.IndexWord(part)
+				words[i] = *env.NewWord(idx)
+			}
+			return *env.NewCPath(3, words), nil
 		}
-		return nil, fmt.Errorf("invalid get context path '%s'. Get context paths must have exactly 2 or 3 parts separated by '/', like '?word/word' or '?word/word/word'. Found %d part(s)", p.currentToken.Value, len(parts))
+		return nil, fmt.Errorf("invalid get context path '%s'. Get context paths must have at least 2 parts separated by '/', like '?word/word'. Found %d part(s)", p.currentToken.Value, len(parts))
 	case NPEG_TOKEN_COMMA:
 		return env.Comma{}, nil
 	case NPEG_TOKEN_VOID:

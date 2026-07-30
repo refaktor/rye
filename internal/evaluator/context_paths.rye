@@ -1,0 +1,227 @@
+; Context Path Tests
+; Tests nested dict/context access via cpaths, and error handling for
+; non-existent children.
+;
+; Run with: cd internal/evaluator && rye main.rye  (auto-loaded by main.rye)
+
+print "## Context Path Tests"
+
+; ---------------------------------------------------------------------------
+; 1. Nested dict creation and access via cpaths
+; ---------------------------------------------------------------------------
+print ""
+print "-- Nested dict cpath access --"
+
+assert\display "create deeply nested dict" {
+	ccc: dict [ "b" dict [ "x" dict [ "f" dict [ "a" "101" ] ] ] ]
+	ccc |type?
+} 'dict
+
+assert\display "access nested dict root" {
+	ccc: dict [ "b" dict [ "x" dict [ "f" dict [ "a" "101" ] ] ] ]
+	ccc |type?
+} 'dict
+
+assert\display "cpath 1 level into dict" {
+	ccc: dict [ "b" dict [ "x" dict [ "f" dict [ "a" "101" ] ] ] ]
+	ccc/b |type?
+} 'dict
+
+assert\display "cpath 2 levels into dict" {
+	ccc: dict [ "b" dict [ "x" dict [ "f" dict [ "a" "101" ] ] ] ]
+	ccc/b/x |type?
+} 'dict
+
+assert\display "cpath 3 levels into dict" {
+	ccc: dict [ "b" dict [ "x" dict [ "f" dict [ "a" "101" ] ] ] ]
+	ccc/b/x/f |type?
+} 'dict
+
+assert\display "cpath 4 levels into dict gets value" {
+	ccc: dict [ "b" dict [ "x" dict [ "f" dict [ "a" "101" ] ] ] ]
+	ccc/b/x/f/a
+} "101"
+
+; ---------------------------------------------------------------------------
+; 2. Accessing non-existent child produces error on dict
+; ---------------------------------------------------------------------------
+print ""
+print "-- Non-existent dict child produces error --"
+
+assert\display "cpath to non-existent dict key errors" {
+	ccc: dict [ "b" dict [ "x" dict [ "f" dict [ "a" "101" ] ] ] ]
+	try { ccc/b/x/x }
+	|type?
+} 'error
+
+assert\display "cpath to non-existent deep dict key errors" {
+	ccc: dict [ "b" dict [ "x" dict [ "f" dict [ "a" "101" ] ] ] ]
+	try { ccc/b/x/f/g }
+	|type?
+} 'error
+
+assert\display "cpath to non-existent mid-level key errors" {
+	ccc: dict [ "b" dict [ "x" dict [ "f" dict [ "a" "101" ] ] ] ]
+	try { ccc/z }
+	|type?
+} 'error
+
+assert\display "cpath to non-existent root key errors" {
+	ccc: dict [ "b" dict [ "x" dict [ "f" dict [ "a" "101" ] ] ] ]
+	try { ccc/nope }
+	|type?
+} 'error
+
+; ---------------------------------------------------------------------------
+; 3. Nested context creation and access via cpaths
+; ---------------------------------------------------------------------------
+print ""
+print "-- Nested context cpath access --"
+
+assert\display "create deeply nested context" {
+	c: context { b: context { x: context { f: context { a: 101 } } } }
+	c |type?
+} 'context
+
+assert\display "cpath 1 level into context" {
+	c: context { b: context { x: context { f: context { a: 101 } } } }
+	c/b |type?
+} 'context
+
+assert\display "cpath 2 levels into context" {
+	c: context { b: context { x: context { f: context { a: 101 } } } }
+	c/b/x |type?
+} 'context
+
+assert\display "cpath 3 levels into context" {
+	c: context { b: context { x: context { f: context { a: 101 } } } }
+	c/b/x/f |type?
+} 'context
+
+assert\display "cpath 4 levels into context gets value" {
+	c: context { b: context { x: context { f: context { a: 101 } } } }
+	c/b/x/f/a
+} 101
+
+; ---------------------------------------------------------------------------
+; 4. Accessing non-existent child produces error on context
+; ---------------------------------------------------------------------------
+print ""
+print "-- Non-existent context child produces error --"
+
+assert\display "cpath to non-existent context word errors" {
+	c: context { b: context { x: context { f: context { a: 101 } } } }
+	try { c/b/x/x }
+	|type?
+} 'error
+
+assert\display "cpath to non-existent deep context word errors" {
+	c: context { b: context { x: context { f: context { a: 101 } } } }
+	try { c/b/x/f/z }
+	|type?
+} 'error
+
+assert\display "cpath to non-existent mid-level context word errors" {
+	c: context { b: context { x: context { f: context { a: 101 } } } }
+	try { c/z }
+	|type?
+} 'error
+
+assert\display "cpath to non-existent root context word errors" {
+	c: context { b: context { x: context { f: context { a: 101 } } } }
+	try { c/nope }
+	|type?
+} 'error
+
+; ---------------------------------------------------------------------------
+; 5. Mixed dict and context in deeper nesting
+; ---------------------------------------------------------------------------
+print ""
+print "-- Mixed dict/context nesting --"
+
+assert\display "context with nested dict access" {
+	outer: context {
+		info: dict [ "name" "rye" "version" 1 ]
+	}
+	outer/info/name
+} "rye"
+
+assert\display "dict with nested context-like structure" {
+	d: dict [
+		"person" dict [
+			"name" "Alice"
+			"age" 30
+		]
+	]
+	d/person/age
+} 30
+
+; ---------------------------------------------------------------------------
+; 6. Cpath parsing verification
+; ---------------------------------------------------------------------------
+print ""
+print "-- Cpath parsing --"
+
+assert\display "two-segment cpath parses" {
+	type? first { a/b }
+} 'cpath
+
+assert\display "three-segment cpath parses" {
+	type? first { a/b/c }
+} 'cpath
+
+assert\display "five-segment cpath parses" {
+	type? first { a/b/c/d/e }
+} 'cpath
+
+assert\display "cpath with numeric segments parses" {
+	type? first { x/y/123 }
+} 'cpath
+
+; ---------------------------------------------------------------------------
+; 7. Cpath through extends chains
+; ---------------------------------------------------------------------------
+print ""
+print "-- Cpath through extends chains --"
+
+assert\display "cpath accesses inherited value" {
+	parent: context { val: 42 }
+	child: extends parent { }
+	child/val
+} 42
+
+assert\display "cpath through 3-level extends chain" {
+	base: context { root-val: 1 }
+	mid: extends base { mid-val: 2 }
+	top: extends mid { top-val: 3 }
+	top/root-val + top/mid-val + top/top-val
+} 6
+
+assert\display "cpath to non-existent on extends errors" {
+	parent: context { val: 42 }
+	child: extends parent { }
+	try { child/nope }
+	|type?
+} 'error
+
+; ---------------------------------------------------------------------------
+; 8. Parent cpath @/ notation
+; ---------------------------------------------------------------------------
+print ""
+print "-- Parent cpath @/ --"
+
+assert\display "@/ accesses parent from child context" {
+	parent: context { p: 100 }
+	child: extends parent { }
+	do\in child { @/p }
+} 100
+
+assert\display "@/@/ accesses grandparent" {
+	gp: context { g: 1 }
+	p: extends gp { }
+	c: extends p { }
+	do\in c { @/@/g }
+} 1
+
+print ""
+print "Context path tests completed."

@@ -599,43 +599,37 @@ func (p *StateMachineParser) Parse() (env.Object, error) {
 					if strings.HasPrefix(wordBuffer, ".") {
 						// Op context path
 						parts := strings.Split(wordBuffer[1:]+"/"+path, "/")
-						if len(parts) == 2 {
-							idx1 := p.wordIndex.IndexWord(parts[0])
-							idx2 := p.wordIndex.IndexWord(parts[1])
-							p.addToCurrentBlock(*env.NewCPath2(1, *env.NewWord(idx1), *env.NewWord(idx2)))
-						} else if len(parts) >= 3 {
-							idx1 := p.wordIndex.IndexWord(parts[0])
-							idx2 := p.wordIndex.IndexWord(parts[1])
-							idx3 := p.wordIndex.IndexWord(parts[2])
-							p.addToCurrentBlock(*env.NewCPath3(1, *env.NewWord(idx1), *env.NewWord(idx2), *env.NewWord(idx3)))
+						if len(parts) >= 2 {
+							words := make([]env.Word, len(parts))
+							for i, part := range parts {
+								idx := p.wordIndex.IndexWord(part)
+								words[i] = *env.NewWord(idx)
+							}
+							p.addToCurrentBlock(*env.NewCPath(1, words))
 						}
 					} else if strings.HasPrefix(wordBuffer, "\\") {
 						// Pipe context path
 						parts := strings.Split(wordBuffer[1:]+"/"+path, "/")
-						if len(parts) == 2 {
-							idx1 := p.wordIndex.IndexWord(parts[0])
-							idx2 := p.wordIndex.IndexWord(parts[1])
-							p.addToCurrentBlock(*env.NewCPath2(2, *env.NewWord(idx1), *env.NewWord(idx2)))
-						} else if len(parts) >= 3 {
-							idx1 := p.wordIndex.IndexWord(parts[0])
-							idx2 := p.wordIndex.IndexWord(parts[1])
-							idx3 := p.wordIndex.IndexWord(parts[2])
-							p.addToCurrentBlock(*env.NewCPath3(2, *env.NewWord(idx1), *env.NewWord(idx2), *env.NewWord(idx3)))
+						if len(parts) >= 2 {
+							words := make([]env.Word, len(parts))
+							for i, part := range parts {
+								idx := p.wordIndex.IndexWord(part)
+								words[i] = *env.NewWord(idx)
+							}
+							p.addToCurrentBlock(*env.NewCPath(2, words))
 						}
 					}
 					wordBuffer = ""
 				} else {
 					// Regular context path
 					parts := strings.Split(path, "/")
-					if len(parts) == 2 {
-						idx1 := p.wordIndex.IndexWord(parts[0])
-						idx2 := p.wordIndex.IndexWord(parts[1])
-						p.addToCurrentBlock(*env.NewCPath2(0, *env.NewWord(idx1), *env.NewWord(idx2)))
-					} else if len(parts) >= 3 {
-						idx1 := p.wordIndex.IndexWord(parts[0])
-						idx2 := p.wordIndex.IndexWord(parts[1])
-						idx3 := p.wordIndex.IndexWord(parts[2])
-						p.addToCurrentBlock(*env.NewCPath3(0, *env.NewWord(idx1), *env.NewWord(idx2), *env.NewWord(idx3)))
+					if len(parts) >= 2 {
+						words := make([]env.Word, len(parts))
+						for i, part := range parts {
+							idx := p.wordIndex.IndexWord(part)
+							words[i] = *env.NewWord(idx)
+						}
+						p.addToCurrentBlock(*env.NewCPath(0, words))
 					}
 				}
 				p.state = STATE_NORMAL

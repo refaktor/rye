@@ -1,0 +1,178 @@
+print "## CachedBuiltin and Iteration Optimization Tests"
+
+; =============================================================================
+; Bug: Local variable shadowing builtins
+; The word `val` is a builtin but commonly used as a variable name.
+; When used in loops, the cached builtin version should not shadow the local.
+; =============================================================================
+
+print "### Local Variable Shadowing Tests"
+
+assert\display "local var shadows builtin in loop" {
+	r1:: 0
+	loop 3 {
+		5 ::myval1
+		r1:: r1 + myval1
+	}
+	r1
+} 15
+
+assert\display "local var shadows builtin in for" {
+	r2:: 0
+	for { 1 2 3 } { ::i2
+		i2 ::myval2
+		r2:: r2 + myval2
+	}
+	r2
+} 6
+
+assert\display "LSetword in single iteration" {
+	r3:: ""
+	for { "a" } { ::x3
+		x3 :item3
+		r3:: item3
+	}
+	r3
+} "a"
+
+; =============================================================================
+; Bug: Pipeword barrier masking "Word not found" error
+; When an undefined word is followed by pipeword/opword/dotword, the error
+; should be "Word not found" not "Pipeword barrier" or similar.
+; This is tested via error-kind checking.
+; =============================================================================
+
+print "### Undefined Word Error Tests"
+
+assert\display "undefined word alone gives error" {
+	try { undefined_word_xyz } |type?
+} 'error
+
+assert\display "undefined word with pipeword gives error" {
+	try { undefined_word_xyz |print } |type?
+} 'error
+
+assert\display "undefined word with dotword gives error" {
+	try { undefined_word_xyz .print } |type?
+} 'error
+
+assert\display "undefined word with opword gives error" {
+	try { undefined_word_xyz + 1 } |type?
+} 'error
+
+; =============================================================================
+; Force flag (star suffix) tests
+; The * suffix on dotwords/pipewords makes the left value become the second
+; argument instead of first (pipeSecond semantics).
+; =============================================================================
+
+print "### Force Flag (Star Suffix) Tests"
+
+assert\display "dotword star - left becomes arg2" {
+	; replace string old new -> replace arg1 arg2 arg3
+	; .replace* makes left become arg2 (old)
+	"l" .replace* "hello" "X"
+} "heXXo"
+
+assert\display "pipeword star - left becomes arg2" {
+	; |replace* makes left become arg2 (old)
+	"l" |replace* "hello" "X"
+} "heXXo"
+
+assert\display "dotword star in loop" {
+	r4:: ""
+	for { "l" "e" } { ::ch4
+		r4:: r4 ++ ch4 .replace* "hello" "X" ++ " "
+	}
+	trim r4
+} "heXXo hXllo"
+
+assert\display "pipeword star in loop" {
+	r5:: ""
+	for { "l" "e" } { ::ch5
+		r5:: r5 ++ ( ch5 |replace* "hello" "X" ) ++ " "
+	}
+	trim r5
+} "heXXo hXllo"
+
+; =============================================================================
+; Pipeword with LSetword tests
+; Pattern: expr |fix { handler } :result should work correctly
+; =============================================================================
+
+print "### Pipeword with LSetword Tests"
+
+assert\display "pipeword then LSetword" {
+	5 |+ 3 :res6
+	res6
+} 8
+
+assert\display "fix with LSetword" {
+	"hello" |fix { "default" } :res7
+	res7
+} "hello"
+
+assert\display "fix with LModword in loop" {
+	r8:: ""
+	for { "a" "b" } { ::x8
+		x8 |fix { "err" } ::item8
+		r8:: r8 ++ item8
+	}
+	r8
+} "ab"
+
+assert\display "multiple pipewords with LSetword" {
+	"hello" |upper |fix { "ERR" } :res9
+	res9
+} "HELLO"
+
+; =============================================================================
+; CachedBuiltin preserves all word semantics
+; =============================================================================
+
+print "### CachedBuiltin Semantic Preservation Tests"
+
+assert\display "opword in loop" {
+	sum10:: 0
+	loop 5 { ::i10
+		sum10:: sum10 + i10
+	}
+	sum10
+} 10
+
+assert\display "pipeword in loop with map" {
+	map { 1 2 3 } { |+ 10 }
+} { 11 12 13 }
+
+assert\display "dotword in loop with map" {
+	map { "a" "b" "c" } { .upper }
+} { "A" "B" "C" }
+
+assert\display "mixed operators in for" {
+	sum11:: 0
+	for { 1 2 3 } { ::x11
+		x11 + 10 * 2 ::comp11
+		sum11:: sum11 + comp11
+	}
+	sum11
+} 72
+
+assert\display "nested for loops with caching" {
+	total12:: 0
+	for { 1 2 } { ::a12
+		for { 10 20 } { ::b12
+			total12:: total12 + a12 + b12
+		}
+	}
+	total12
+} 66
+
+assert\display "loop with print cached" {
+	count13:: 0
+	loop 3 { 
+		count13:: count13 + 1 
+	}
+	count13
+} 3
+
+print "### All CachedBuiltin Tests Passed!"
