@@ -9,13 +9,13 @@
 ; If you pass "{ ... }" in the string, load returns { { ... } } (double-wrapped)
 ; and first-level length? is always 1.
 ;
-; ALSO: avoid re-using setword names across assert blocks — they run in the same
+; ALSO: avoid re-using setword names across assert blocks - they run in the same
 ; context. Use |pipes| to inline instead.
 
 print "## Comment Handling Tests"
 
 ; ============================================
-; Basic comment skipping — raw tokens, no outer braces
+; Basic comment skipping - raw tokens, no outer braces
 ; ============================================
 
 assert\display "comment-only line in block is skipped" {
@@ -61,7 +61,7 @@ assert\display "comment does not consume next line" {
 ; ============================================
 ; ./ dotword fix (regression test)
 ; Owner confirmed: ./ should be a dotword since / is an op-word
-; Fixed in Loader_no_peg.go readOpWord() — only set cpath when word chars precede /
+; Fixed in Loader_no_peg.go readOpWord() - only set cpath when word chars precede /
 ; ============================================
 
 assert\display "./ is a dotword not a cpath" {

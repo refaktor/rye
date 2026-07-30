@@ -1472,7 +1472,7 @@ var Builtins_pipes = map[string]*env.Builtin{
 	// GOPSUTIL
 
 	// ========================================
-	// GROUP 1 — Trivial (pure Go, stateless per-line)
+	// GROUP 1 - Trivial (pure Go, stateless per-line)
 	// ========================================
 
 	// Tests:
@@ -1536,7 +1536,7 @@ var Builtins_pipes = map[string]*env.Builtin{
 	},
 
 	// ========================================
-	// GROUP 2 — Simple (pure Go, stateful, sequential)
+	// GROUP 2 - Simple (pure Go, stateful, sequential)
 	// ========================================
 
 	// Tests:
@@ -1713,7 +1713,7 @@ var Builtins_pipes = map[string]*env.Builtin{
 	},
 
 	// ========================================
-	// GROUP 3 — Moderate (uses existing script library method)
+	// GROUP 3 - Moderate (uses existing script library method)
 	// ========================================
 
 	// Tests:
@@ -1759,7 +1759,7 @@ var Builtins_pipes = map[string]*env.Builtin{
 	},
 
 	// ========================================
-	// GROUP 4 — Complex (calls back into the Rye evaluator)
+	// GROUP 4 - Complex (calls back into the Rye evaluator)
 	// ========================================
 
 	// Tests:

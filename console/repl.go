@@ -16,6 +16,7 @@ import (
 	// "github.com/eiannone/keyboard"
 	"github.com/refaktor/keyboard"
 
+	"github.com/refaktor/rye/baseio"
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
 	"github.com/refaktor/rye/loader"
@@ -635,7 +636,7 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool, localHist
 	ml := term.NewMicroLiner(c, r.recieveMessage, r.recieveLine)
 	r.ml = ml
 	ml.SetProgramState(es)
-	ml.SetDisplayValueFunc(evaldo.DisplayRyeValue)
+	ml.SetDisplayValueFunc(baseio.DisplayRyeValue)
 	ml.SetOnValueSelectedFunc(func(obj env.Object) {
 		r.prevResult = obj // Update prevResult when user selects a value via Ctrl+x
 	})

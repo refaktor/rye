@@ -1064,7 +1064,7 @@ var builtins_string = map[string]*env.Builtin{
 				i := 0
 				for i < len(series) {
 					obj := series[i]
-					// resolve the key name — accept set-words (name:) or plain strings ("name")
+					// resolve the key name - accept set-words (name:) or plain strings ("name")
 					var name string
 					switch sw := obj.(type) {
 					case env.Setword:
@@ -1080,7 +1080,7 @@ var builtins_string = map[string]*env.Builtin{
 						ps.FailureFlag = true
 						return MakeBuiltinError(ps, "Missing value for key '"+name+"' in url-encode block.", "url-encode")
 					}
-					// resolve the value — if it is a word, look it up in the context
+					// resolve the value - if it is a word, look it up in the context
 					valObj := series[i]
 					if word, isWord := valObj.(env.Word); isWord {
 						resolved, found := ps.Ctx.Get(word.Index)

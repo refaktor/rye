@@ -147,7 +147,7 @@ assert\display "group closed with } errors" {
 } 'error
 
 ; Note: <> is actually parsed as the not-equal operator opword (like !=)
-; so "{ <> }" is valid — it parses to a block with one opword.
+; so "{ <> }" is valid - it parses to a block with one opword.
 ; Empty x-word syntax error only occurs for truly empty <> that would break
 ; the xword reading, but the lexer routes it to readOpWord first.
 

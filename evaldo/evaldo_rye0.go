@@ -280,7 +280,7 @@ func Rye0_EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, to
 
 		// Evaluate next expression if needed.
 		// Use Rye0_EvalExpression_CollectArg (not just DispatchType) so that opwords/dotwords
-		// to the right of the first argument are consumed as part of that argument expression —
+		// to the right of the first argument are consumed as part of that argument expression -
 		// consistent with how locally-bound words collect args (same fix as in evaldo.go).
 		if (leftVal == nil && !pipeSecond) || pipeSecond {
 			if !ps.Ser.AtLast() {
@@ -330,7 +330,7 @@ func Rye0_EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, to
 			ps.Ser.SetPos(pos)
 			wordStr := word.Print(*ps.Idx)
 			if leftVal != nil && kind == 0 {
-				// First arg has no Kind — report that instead of "word not found".
+				// First arg has no Kind - report that instead of "word not found".
 				argType := ps.Idx.GetWord(int(leftVal.Type()))
 				setError(ps, "Generic word `"+wordStr+"`: first argument of type '"+argType+"' has no Kind determined. Uri, Context, and Native values must have a named Kind before generic methods can be dispatched on them.")
 			} else if leftVal != nil && kind != 0 {

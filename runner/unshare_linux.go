@@ -163,7 +163,7 @@ func SetupUnshareFilesystem() error {
 	// Remount read-only.
 	if err := syscall.Mount("none", appDir, "", syscall.MS_REMOUNT|syscall.MS_BIND|syscall.MS_RDONLY, ""); err != nil {
 		// Non-fatal: we proceed with read-write if the remount fails (e.g. some kernels
-		// require different flags). A warning is enough — the script still runs, just
+		// require different flags). A warning is enough - the script still runs, just
 		// with write access to its own directory.
 		fmt.Fprintf(os.Stderr, "rye --unshare: warning: could not remount /app read-only: %v\n", err)
 	}

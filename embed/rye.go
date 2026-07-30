@@ -52,7 +52,7 @@ type Engine struct {
 // I/O (no file access, no shell commands, no os.Exit, no os.Args).
 // This keeps the embedded sandbox safe by default.
 // If you need file/shell access in the embedded engine, call
-// evaldo.RegisterBaseIOBuiltins(engine.ProgramState()) after New().
+// baseio.Register(engine.ProgramState()) after New().
 // Register additional Go functions with [Engine.RegisterBuiltin].
 func New() *Engine {
 	block, idxs := loader.LoadStringNoPEG("", false)
@@ -260,7 +260,7 @@ func (e *Engine) EvalBool(code string) (bool, error) {
 // Reset re-initialises the engine with a fresh context and re-registers all
 // base Rye builtins (no OS I/O, matching the behaviour of [New]).
 // Custom builtins registered with RegisterBuiltin are
-// removed — call RegisterBuiltin again to re-add them, or use [New] to
+// removed - call RegisterBuiltin again to re-add them, or use [New] to
 // create a fresh engine.
 func (e *Engine) Reset() {
 	block, idxs := loader.LoadStringNoPEG("", false)

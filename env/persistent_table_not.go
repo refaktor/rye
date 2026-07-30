@@ -3,7 +3,7 @@
 
 package env
 
-// PersistentTable is a stub — real implementation in persistent_table.go.NOT
+// PersistentTable is a stub - real implementation in persistent_table.go.NOT
 // Without badger, persistent tables are unavailable.
 type PersistentTable struct {
 	Cols []string

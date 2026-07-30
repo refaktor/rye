@@ -871,7 +871,7 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Tests:
 	// equal { max-call-depth! 10 , max-call-depth! 0 } 10
 	// Args:
-	// * limit: integer — new maximum call depth (0 = unlimited)
+	// * limit: integer - new maximum call depth (0 = unlimited)
 	// Returns:
 	// * the previous MaxCallDepth value (0 = was unlimited)
 	"max-call-depth!": {
@@ -921,7 +921,7 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Tests:
 	// equal { max-ops! 100000 , max-ops! 0 } 100000
 	// Args:
-	// * limit: integer — new maximum number of expression evaluations (0 = unlimited)
+	// * limit: integer - new maximum number of expression evaluations (0 = unlimited)
 	// Returns:
 	// * the previous MaxOps value (0 = was unlimited)
 	"max-ops!": {

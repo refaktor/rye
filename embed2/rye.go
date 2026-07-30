@@ -52,7 +52,7 @@ type Engine struct {
 // I/O (no file access, no shell commands, no os.Exit, no os.Args).
 // This keeps the embedded sandbox safe by default.
 // If you need file/shell access in the embedded engine, call
-// evaldo.RegisterBaseIOBuiltins(engine.ProgramState()) after New().
+// baseio.Register(engine.ProgramState()) after New().
 // Register additional Go functions with [Engine.RegisterBuiltin].
 func New() *Engine {
 	block, idxs := loader.LoadStringNoPEG("", false)

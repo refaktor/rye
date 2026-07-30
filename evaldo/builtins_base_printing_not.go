@@ -1,12 +1,9 @@
-//go:build no_baseio
-// +build no_baseio
-
 package evaldo
 
-// builtins_base_printing_not.go — lightweight printing builtins used when the
-// no_baseio build tag is active.  The terminal-interactive builtins (display,
-// _.. , display\custom) and the CSV/SSV printers are omitted so that the embed
-// module has no dependency on the term / util / keyboard packages.
+// builtins_base_printing_not.go - lightweight printing builtins always available.
+// The terminal-interactive builtins (display, _.., display\custom) and the
+// CSV/SSV printers live in the baseio package now.  This file provides basic
+// print, format, inspect, and probe.  No dependency on term / util / keyboard.
 
 import (
 	"fmt"

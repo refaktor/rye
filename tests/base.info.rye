@@ -5223,7 +5223,7 @@ section "Contexts " "Context related functions" {
 		argtypes {
 			1 [ Integer ]
 		}
-		arg `limit: integer — new maximum call depth (0 = unlimited)`
+		arg `limit: integer - new maximum call depth (0 = unlimited)`
 		returns `the previous MaxCallDepth value (0 = was unlimited)`
 	}
 
@@ -5270,7 +5270,7 @@ section "Contexts " "Context related functions" {
 		argtypes {
 			1 [ Integer ]
 		}
-		arg `limit: integer — new maximum number of expression evaluations (0 = unlimited)`
+		arg `limit: integer - new maximum number of expression evaluations (0 = unlimited)`
 		returns `the previous MaxOps value (0 = was unlimited)`
 	}
 

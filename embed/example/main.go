@@ -45,8 +45,8 @@ func main() {
 	// ---------------------------------------------------------------------------
 	engine := embed.New()
 
-	engine.RegisterBuiltinDoc("multiply", 2, "multiply a b — returns a × b", multiply)
-	engine.RegisterBuiltinDoc("greet", 1, "greet name — returns a greeting string", greet)
+	engine.RegisterBuiltinDoc("multiply", 2, "multiply a b - returns a × b", multiply)
+	engine.RegisterBuiltinDoc("greet", 1, "greet name - returns a greeting string", greet)
 
 	// ---------------------------------------------------------------------------
 	// 3. Inject a Go value as a Rye word

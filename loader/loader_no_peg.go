@@ -822,8 +822,14 @@ func (l *Lexer) readWord() NoPEGToken {
 		l.readChar()
 	}
 
+	// Consume a trailing '/' as part of the word when it's not followed by a word character
+	// (e.g. _/ should be a single WORD, not split into _ followed by /)
+	if l.ch == '/' && !isWordCharacter(l.peekChar()) {
+		l.readChar()
+	}
+
 	// Ensure the word is followed by a token delimiter or a valid word terminator.
-	// e.g. word{ word} word[ word] are all invalid — missing space before delimiter.
+	// e.g. word{ word} word[ word] are all invalid - missing space before delimiter.
 	if !isTokenDelimiter(l.ch) && l.ch != ':' && l.ch != '@' && l.ch != '/' {
 		invalidChar := l.ch
 		tokenValue := l.input[l.tokenStart:l.pos]
@@ -864,7 +870,7 @@ func (l *Lexer) readString() NoPEGToken {
 	if l.ch == delimiter {
 		l.readChar() // Skip closing quote
 	} else {
-		// Unterminated string — reached EOF without finding closing quote
+		// Unterminated string - reached EOF without finding closing quote
 		errMsg := fmt.Sprintf("Unterminated string starting at line %d, column %d. Missing closing quote ('%c').", l.startLine, l.startCol, delimiter)
 		return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, ERR_UNKNOWN)
 	}
@@ -1087,14 +1093,21 @@ func (l *Lexer) readPipeWord() NoPEGToken {
 	l.readChar() // Skip prefix character ('|', '~', '=', '>')
 
 	cpath := false
+	slashPos := -1
 
 	// Read the word part
 	for isWordCharacter(l.ch) || l.ch == '/' || l.ch == '<' {
 		if l.ch == '/' {
-			cpath = true
+			slashPos = l.pos
 		}
 
 		l.readChar()
+	}
+
+	// Only treat as cpath if there's content after the last '/'
+	// (e.g. |/ is a pipeword, |/foo is a pipecpath)
+	if slashPos >= 0 && slashPos < l.pos-1 {
+		cpath = true
 	}
 
 	// Ensure the token is followed by whitespace
