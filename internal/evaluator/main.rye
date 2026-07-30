@@ -13,6 +13,7 @@ private Load %dotword_chaining.rye
 private Load %injection.rye
 private Load %force_modifier.rye
 private Load %context_constructors.rye
+private Load %context_paths.rye
 private Load %eval_edge_cases.rye
 
 print ""

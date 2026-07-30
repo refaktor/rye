@@ -64,13 +64,13 @@ func BenchmarkRye0_CallBuiltin(b *testing.B) {
 	}
 }
 
-// BenchmarkRye0_CallBuiltinWithCurried benchmarks the Rye0_CallBuiltin function with curried arguments
-func BenchmarkRye0_CallBuiltinWithCurried(b *testing.B) {
+// DISABLED_BenchmarkRye0_CallBuiltinWithCurried - Cur0/Cur1 fields removed from Builtin struct
+func DISABLED_BenchmarkRye0_CallBuiltinWithCurried(b *testing.B) {
 	ps, _, addBuiltin := setupRye0CallBuiltinBenchmark()
 
-	// Set curried values
-	addBuiltin.Cur0 = *env.NewInteger(10)
-	addBuiltin.Cur1 = *env.NewInteger(20)
+	// Curried fields removed
+	// addBuiltin.Cur0 = *env.NewInteger(10)
+	// addBuiltin.Cur1 = *env.NewInteger(20)
 
 	// Reset the timer before the benchmark loop
 	b.ResetTimer()
