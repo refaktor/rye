@@ -1,0 +1,19 @@
+; Error formatting tests
+print "## Error Formatting Tests"
+
+; Format error dict returns string
+assert\display "format error dict returns string" {
+	type? format-parse-errors dict { "output" "required" "count" "must be positive" }
+} 'string
+
+; Format error from failed parse-args returns string
+assert\display "format error from parse-args" {
+	type? format-parse-errors try { parse-args { "--count" 0 } { -o|output string required -n|count integer check { > 0 } "must be positive" } }
+} 'string
+
+; Multiple validation errors - missing required args returns error
+assert\display "multiple missing required args returns error" {
+	try { parse-args { } { -o|output string required -n|count integer required -f|file string required } } |type?
+} 'error
+
+print ""

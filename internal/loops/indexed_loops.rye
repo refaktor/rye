@@ -1,0 +1,130 @@
+; Indexed Loop Tests
+print "## Indexed Loops (for\\idx, for\\pos)"
+
+; =============================================================================
+; for\idx - zero-based index
+; =============================================================================
+
+assert\display "for\\idx provides 0-based index" {
+	var 'result { }
+	for\idx { "a" "b" "c" } 'i 'v { 
+		append! 'result list [ i v ]
+	}
+	first result
+} [ 0 "a" ]
+
+assert\display "for\\idx second element" {
+	var 'indices { }
+	for\idx { "x" "y" "z" } 'i 'v { 
+		append! 'indices i
+	}
+	second indices
+} 1
+
+assert\display "for\\idx last index" {
+	var 'last-idx 0
+	for\idx { 1 2 3 4 5 } 'i 'v { 
+		last-idx:: i
+	}
+	last-idx
+} 4
+
+assert\display "for\\idx sum indices" {
+	var 'sum 0
+	for\idx { "a" "b" "c" "d" } 'i 'v { 
+		sum:: sum + i
+	}
+	sum
+} 6
+
+; =============================================================================
+; for\pos - one-based position
+; =============================================================================
+
+assert\display "for\\pos provides 1-based position" {
+	var 'positions { }
+	for\pos { "a" "b" "c" } 'p 'v { 
+		append! 'positions p
+	}
+	first positions
+} 1
+
+assert\display "for\\pos last position" {
+	var 'last-pos 0
+	for\pos { "x" "y" "z" "w" } 'p 'v { 
+		last-pos:: p
+	}
+	last-pos
+} 4
+
+assert\display "for\\pos sum positions" {
+	var 'sum 0
+	for\pos { "a" "b" "c" "d" } 'p 'v { 
+		sum:: sum + p
+	}
+	sum
+} 10
+
+; =============================================================================
+; Using index in computation
+; =============================================================================
+
+assert\display "for\\idx multiply by index" {
+	var 'result { }
+	for\idx { 10 20 30 } 'i 'v { 
+		append! 'result v * i
+	}
+	result
+} { 0 20 60 }
+
+assert\display "for\\pos multiply by position" {
+	var 'result { }
+	for\pos { 10 20 30 } 'p 'v { 
+		append! 'result v * p
+	}
+	result
+} { 10 40 90 }
+
+; =============================================================================
+; Index for conditional logic
+; =============================================================================
+
+assert\display "for\\idx skip first" {
+	var 'result { }
+	for\idx { "skip" "keep" "keep" } 'i 'v {
+		if i > 0 { append! 'result v }
+	}
+	result
+} { "keep" "keep" }
+
+assert\display "for\\idx every other" {
+	var 'result { }
+	for\idx { 1 2 3 4 5 6 } 'i 'v {
+		if ( i % 2 ) = 0 { append! 'result v }
+	}
+	result
+} { 1 3 5 }
+
+; =============================================================================
+; Edge cases
+; =============================================================================
+
+assert\display "for\\idx empty" {
+	var 'count 0
+	for\idx { } 'i 'v { count:: count + 1 }
+	count
+} 0
+
+assert\display "for\\idx single" {
+	var 'idx -1
+	for\idx { "only" } 'i 'v { idx:: i }
+	idx
+} 0
+
+assert\display "for\\pos single" {
+	var 'pos -1
+	for\pos { "only" } 'p 'v { pos:: p }
+	pos
+} 1
+
+print ""

@@ -1,0 +1,16 @@
+; Higher Order Functions - Runtime Behavior Tests
+; Tests HOF interaction with word types, closures, and evaluation
+; Run with: cd internal/higher_order && rye main.rye
+
+print "========================================"
+print "     HOF RUNTIME BEHAVIOR TESTS"
+print "========================================"
+print ""
+
+private Load %word_interactions.rye
+private Load %closure_capture.rye
+
+print ""
+print "========================================"
+print "\x1b[32mALL HOF RUNTIME TESTS COMPLETED\x1b[0m"
+print "========================================"

@@ -1,0 +1,159 @@
+print "## Failure Handling Tests"
+
+; --- try ---
+; try executes a block and captures any failure into a result, clearing flags
+assert\display "try success returns value" {
+	try { 10 + 5 }
+} 15
+
+assert\display "try captures fail as error object" {
+	try { fail "caught" } |type?
+} 'error
+
+assert\display "try captures fail message" {
+	try { fail "caught" } |message?
+} "caught"
+
+assert\display "try captures fail status" {
+	try { fail 503 } |status?
+} 503
+
+assert\display "try captures type error" {
+	try { 1 + "bad" } |type?
+} 'error
+
+; --- disarm ---
+; disarm clears FailureFlag but keeps the error object as a plain value
+assert\display "disarm preserves error object" {
+	disarm fail "err" |type?
+} 'error
+
+assert\display "disarm clears failure so execution continues" {
+	; after disarm, the next expression runs normally
+	_ : disarm fail "err"
+	42
+} 42
+
+assert\display "disarm on non-failure is pass-through" {
+	disarm 100
+} 100
+
+; --- fix ---
+; fix handles a failure by running the handler block; passes through on success
+assert\display "fix pass-through on success" {
+	5 |fix { "fallback" }
+} 5
+
+assert\display "fix handles fail with handler block" {
+	fail "err" |fix { "recovered" }
+} "recovered"
+
+assert\display "fix handler result is returned" {
+	fail "err" |fix { 42 }
+} 42
+
+assert\display "fix on try-captured error" {
+	try { fail "orig" } |fix { "handled" }
+} "handled"
+
+assert\display "fix passes original error into handler" {
+	try { fail "orig" } |fix { .message? }
+} "orig"
+
+; --- check ---
+; check wraps an error with a new message (keeps original as cause?)
+assert\display "check pass-through on success" {
+	5 |check "wrap"
+} 5
+
+assert\display "check wraps fail with new message" {
+	try { fail "orig" |check "wrapped" } |message?
+} "wrapped"
+
+assert\display "check preserves original as cause?" {
+	try { fail "orig" |check "wrapped" } |cause? |message?
+} "orig"
+
+; --- ensure ---
+; ensure returns the value if truthy, fails if falsy
+assert\display "ensure passes truthy value" {
+	true |ensure "must be true"
+} true
+
+assert\display "ensure passes true comparison" {
+	5 > 0 |ensure "must be positive"
+} true
+
+assert\display "ensure fails on false" {
+	try { false |ensure "must be true" } |type?
+} 'error
+
+assert\display "ensure fail message" {
+	try { false |ensure "must be true" } |message?
+} "must be true"
+
+assert\display "ensure fails on 0 false" { ; no more falsy values, only false is falsy
+	try { false |ensure "nonzero" } |type?
+} 'error
+
+; --- ^check inside function ---
+assert\display "^check wraps and returns from function" {
+	f:: fn { x } { x |^check "wrapped" }
+	try { f failure "orig" } |message?
+} "wrapped"
+
+assert\display "^check pass-through in function" {
+	f:: fn { x } { x |^check "wrapped" }
+	f 42
+} 42
+
+; --- ^ensure inside function ---
+assert\display "^ensure returns from function on failure" {
+	f:: fn { x } { x > 0 |^ensure "must be positive" }
+	try { f -5 } |message?
+} "must be positive"
+
+assert\display "^ensure passes through on success" {
+	f:: fn { x } { x > 0 |^ensure "must be positive" }
+	f 10
+} true
+
+; --- ^fix inside function ---
+assert\display "^fix handles and returns from function" {
+	f:: fn { } { fail "inner" |^fix { "recovered" } }
+	f
+} "recovered"
+
+assert\display "^fix pass-through in function on success" {
+	f:: fn { x } { x |^fix { "recovered" } }
+	f 99
+} 99
+
+; --- try-all ---
+assert\display "try-all success first is true" {
+	try-all { 1 + 2 } |first
+} true
+
+assert\display "try-all success second is value" {
+	try-all { 1 + 2 } |second
+} 3
+
+assert\display "try-all failure first is false" {
+	try-all { fail "x" } |first
+} false
+
+; --- finally ---
+assert\display "finally runs cleanup on success" {
+	cleaned:: false
+	r: finally { 42 } { cleaned:: true }
+	r
+} 42
+
+assert\display "finally runs cleanup on failure" {
+	cleaned:: false
+	try { finally { fail "err" } { cleaned:: true } }
+	cleaned
+} true
+
+print ""
+print "Handling tests completed."

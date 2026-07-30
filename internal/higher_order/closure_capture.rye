@@ -1,0 +1,58 @@
+; HOF with Closure Capture
+; Tests how closures interact with HOFs
+print "## HOF Closure Capture"
+
+; =============================================================================
+; Closure capturing outer variable used in HOF
+; =============================================================================
+
+assert\display "closure uses outer var in map" {
+	var 'multiplier 10
+	mapper1: closure { x } { x * multiplier }
+	map { 1 2 3 } { |mapper1 }
+} { 10 20 30 }
+
+assert\display "closure captures and HOF modifies" {
+	var 'counter 0
+	inc-counter2: closure { x } { counter + 1 |change! 'counter , x }
+	map { "a" "b" "c" } { |inc-counter2 }
+	counter
+} 3
+
+; =============================================================================
+; HOF with fn\inside context
+; =============================================================================
+
+assert\display "fn\\inside used via HOF" {
+	ctx4: context { var 'sum 0 }
+	adder4: fn\inside { x } ctx4 { sum:: sum + x , sum }
+	map { 1 2 3 } { |adder4 }
+	ctx4/sum
+} 6
+
+; =============================================================================
+; Filter with closure predicate
+; =============================================================================
+
+assert\display "filter with closure predicate" {
+	var 'threshold 3
+	filter { 1 2 3 4 5 } { ::x x > threshold }
+} { 4 5 }
+
+assert\display "filter modifies closure state" {
+	var 'checked 0
+	filter { 1 2 3 4 5 } { ::x checked:: checked + 1 , x > 2 }
+	checked
+} 5
+
+; =============================================================================
+; fold with state tracking
+; =============================================================================
+
+assert\display "fold tracks call count" {
+	var 'call-count 0
+	fold\do { 1 2 3 } 'acc 0 { ::v call-count:: call-count + 1 , v + acc }
+	call-count
+} 3
+
+print ""

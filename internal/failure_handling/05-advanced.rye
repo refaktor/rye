@@ -1,0 +1,120 @@
+print "## Advanced Failure Handling Tests"
+
+; --- fix\either ---
+; executes first block on failure, second block on success
+assert\display "fix\\either failure branch" {
+	fix\either failure "err" { "fixed" } { "ok" }
+} "fixed"
+
+assert\display "fix\\either success branch" {
+	fix\either 42 { "fixed" } { "ok" }
+} "ok"
+
+assert\display "fix\\either failure branch gets error" {
+	fix\either failure "err" { .message? } { "ok" }
+} "err"
+
+assert\display "fix\\either success branch gets value" {
+	fix\either 100 { "fixed" } { .+ 1 }
+} 101
+
+; --- fix\else ---
+; executes the block only on success; failure passes through
+assert\display "fix\\else executes on success" {
+	5 |fix\else { .* 2 }
+} 10
+
+assert\display "fix\\else skips on failure" {
+	try { fail "err" |fix\else { .* 2 } } |message?
+} "err"
+
+; --- fix\continue ---
+; two-block form: first for failure, second for success
+assert\display "fix\\continue failure branch" {
+	try { fail "err" |fix\continue { "handled" } { "ok" } }
+} "handled"
+
+assert\display "fix\\continue success branch" {
+	5 |fix\continue { "handled" } { .* 2 }
+} 10
+
+; --- continue ---
+; executes block only when NOT in failure state; failure passes through
+assert\display "continue executes on success" {
+	10 |continue { + 5 }
+} 15
+
+assert\display "continue skips on failure" {
+	try { fail "err" |continue { + 5 } } |message?
+} "err"
+
+; --- ^fix\match ---
+; matches on error status codes
+assert\display "^fix\\match exact code 404" {
+	^fix\match failure 404 { 404 { "Not Found" } 500 { "Server Error" } }
+} "Not Found"
+
+assert\display "^fix\\match exact code 500" {
+	^fix\match failure 500 { 404 { "Not Found" } 500 { "Server Error" } }
+} "Server Error"
+
+assert\display "^fix\\match wildcard fallback" {
+	^fix\match failure 403 { 404 { "Not Found" } _ { "Other Error" } }
+} "Other Error"
+
+; --- retry ---
+; retries up to N times while failure occurs
+assert\display "retry succeeds immediately" {
+	retry 3 { 42 }
+} 42
+
+assert\display "retry succeeds on 3rd attempt" {
+	attempts:: 0
+	retry 3 { attempts:: attempts + 1  if attempts < 3 { fail "not yet" } "done" }
+} "done"
+
+assert\display "retry fails after exhausting attempts" {
+	try { retry 3 { fail "always fail" } } |type?
+} 'error
+
+assert\display "retry correct attempt count" {
+	cnt:: 0
+	try { retry 3 { cnt:: cnt + 1  fail "always" } }
+	cnt
+} 3
+
+; --- chaining handlers ---
+; handlers can be chained: fail → check → check (outer wraps inner)
+assert\display "chained check creates cause chain" {
+	try { fail "root" |check "level1" |check "level2" } |message?
+} "level2"
+
+assert\display "chained check inner cause message" {
+	try { fail "root" |check "level1" } |cause? |message?
+} "root"
+
+; --- fix after check ---
+; check wraps the error, fix then handles the wrapped error
+assert\display "fix handles check-wrapped error" {
+	try { fail "orig" |check "wrapped" } |fix { .message? }
+} "wrapped"
+
+; --- multiple failures in try-all ---
+assert\display "try-all captures type error" {
+	try-all { 1 + "x" } |first
+} false
+
+; --- refail ---
+; re-raises a captured error with additional context
+assert\display "refail creates new error" {
+	e:: failure "original"
+	try { refail e "outer" } |message?
+} "outer"
+
+assert\display "refail preserves cause" {
+	e:: failure "original"
+	try { refail e "outer" } |cause? |message?
+} "original"
+
+print ""
+print "Advanced tests completed."

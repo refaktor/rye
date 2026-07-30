@@ -1,0 +1,147 @@
+#!/usr/bin/env rye
+; Comprehensive test runner for CLI parsing functionality
+
+print "========================================"
+print "CLI Parsing Test Suite"
+print "========================================"
+
+; Load all test files
+Load "test_basic.rye"
+Load "test_subcommands.rye"  
+Load "test_validation.rye"
+Load "test_args_check.rye"
+Load "test_errors.rye"
+Load "test_help.rye"
+Load "test_cli_integration.rye"
+
+; Load new comprehensive test files  
+Load "test_advanced_patterns.rye"
+Load "test_type_coercion.rye"
+Load "test_edge_cases.rye"
+Load "test_integration.rye"
+Load "test_help_generation.rye"
+Load "test_performance.rye"
+
+print "========================================"
+print "All CLI parsing tests completed!"
+print "========================================"
+
+; Example usage patterns for CLI parsing:
+
+print ""
+print "## CLI Parsing Usage Examples"
+print ""
+
+; ### Example 1: Simple tool with flags
+print "### Simple Tool Example"
+simple-spec: {
+	program "mytool"
+	description "A simple command line tool"
+	-v|verbose flag doc "Enable verbose output"
+	-o|output string optional "output.txt" doc "Output file"
+	-n|count integer optional 1 check { > 0 } "must be positive" doc "Number of iterations"
+	input: string required doc "Input file"
+}
+
+print "Simple spec help:"
+print generate-help simple-spec
+print ""
+
+; ### Example 2: Git-like tool
+print "### Git-like Tool Example"  
+git-spec: {
+	program "mygit"
+	description "A git-like version control tool"
+	-v|verbose flag doc "Verbose output"
+	subcommand {
+		'init {
+			doc "Initialize a new repository"
+			-b|bare flag doc "Create bare repository"
+			path: string optional "." doc "Repository path"
+		}
+		'commit {
+			doc "Record changes to the repository" 
+			-m|message string required doc "Commit message"
+			-a|all flag doc "Stage all changes"
+			-A|amend flag doc "Amend previous commit"
+		}
+		'push {
+			doc "Update remote repository"
+			-f|force flag doc "Force push"
+			remote: string optional "origin" doc "Remote name"
+			branch: string optional doc "Branch name"
+		}
+	}
+}
+
+print "Git-like spec help:"
+print generate-help git-spec
+print ""
+print "Commit subcommand help:"
+print generate-help\command git-spec "commit" 
+print ""
+
+; ### Example 3: Docker-like tool
+print "### Docker-like Tool Example"
+docker-spec: {
+	program "mydocker"
+	description "A container management tool"
+	subcommand {
+		'run {
+			doc "Run a new container"
+			-d|detach flag doc "Run container in background" 
+			-i|interactive flag doc "Keep STDIN open"
+			-t|tty flag doc "Allocate pseudo-TTY"
+			-p|port string list doc "Publish ports (host:container)"
+			-v|volume string list doc "Bind mount volumes"
+			-e|env string list doc "Set environment variables"
+			--name string doc "Container name"
+			image: string required doc "Container image"
+			command: string many doc "Command and arguments"
+		}
+		'build {
+			doc "Build image from Dockerfile"
+			-t|tag string list doc "Tag for the image"
+			-f|file string optional "Dockerfile" doc "Dockerfile path"
+			--no-cache flag doc "Don't use cache when building"
+			context: string optional "." doc "Build context"
+		}
+		'ps {
+			doc "List containers"
+			-a|all flag doc "Show all containers"
+			-q|quiet flag doc "Only show container IDs"
+		}
+	}
+}
+
+print "Docker-like spec help:"
+print generate-help docker-spec
+print ""
+
+; ### Example 4: Parsing real arguments
+print "### Example Parsing Results"
+
+; Simple tool example
+simple-args: { --verbose -n 5 "input.txt" }
+simple-result: parse-args simple-args simple-spec
+print "Simple tool result:" 
+print simple-result
+print ""
+
+; Git commit example  
+commit-args: { --verbose commit -m "Initial commit" --all }
+commit-result: parse-args commit-args git-spec
+print "Git commit result:"
+print commit-result
+print ""
+
+; Docker run example
+docker-args: { run -d -p "8080:80" -p "8443:443" -e "NODE_ENV=production" nginx }
+docker-result: parse-args docker-args docker-spec  
+print "Docker run result:"
+print docker-result
+print ""
+
+print "========================================"
+print "CLI Parsing Examples Complete!"
+print "========================================"

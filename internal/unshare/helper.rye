@@ -1,0 +1,4 @@
+; helper.rye - Loaded by 03-multi-file.rye to test cross-file Loading in jail
+greet: fn { name } {
+    print join { "Hello from helper, " name "!" }
+}

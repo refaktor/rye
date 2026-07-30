@@ -1,0 +1,17 @@
+; Loop Runtime Behavior Tests
+; Tests loop interaction with return words, failures, closures
+; Run with: cd internal/loops && rye main.rye
+
+print "========================================"
+print "      LOOP RUNTIME BEHAVIOR TESTS"
+print "========================================"
+print ""
+
+private Load %return_from_loops.rye
+private Load %failure_in_loops.rye
+private Load %indexed_iteration.rye
+
+print ""
+print "========================================"
+print "\x1b[32mALL LOOP RUNTIME TESTS COMPLETED\x1b[0m"
+print "========================================"

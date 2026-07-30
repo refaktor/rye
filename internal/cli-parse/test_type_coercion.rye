@@ -1,0 +1,75 @@
+; Type coercion and conversion tests
+print "## Type Coercion Tests"
+
+; ### String to Integer
+assert\display "string to integer coercion" {
+	( parse-args { --port "8080" } { -p|port integer } ) -> "port"
+} 8080
+
+assert\display "string to integer invalid" {
+	try { parse-args { --port "invalid" } { -p|port integer } } |type?
+} 'error
+
+; ### String to Decimal  
+assert\display "string to decimal coercion" {
+	( parse-args { --rate "3.14159" } { -r|rate decimal } ) -> "rate"
+} 3.14159
+
+assert\display "integer to decimal coercion" {
+	( parse-args { --rate 42 } { -r|rate decimal } ) -> "rate"
+} 42.0
+
+; ### String to Boolean
+assert\display "string true to boolean" {
+	( parse-args { --enabled "true" } { -e|enabled boolean } ) -> "enabled"
+} true
+
+assert\display "string false to boolean" {
+	( parse-args { --disabled "false" } { -d|disabled boolean } ) -> "disabled"
+} false
+
+assert\display "integer to boolean (non-zero)" {
+	( parse-args { --flag 1 } { -f|flag boolean } ) -> "flag"
+} true
+
+assert\display "integer to boolean (zero)" {
+	( parse-args { --flag 0 } { -f|flag boolean } ) -> "flag"
+} false
+
+; ### Word to String
+assert\display "word to string coercion" {
+	( parse-args { output-file } { file: string required } ) -> "_file"
+} "output-file"
+
+; ### File type handling
+assert\display "file type coercion" {
+	( parse-args { "/path/to/file.txt" } { -f|file file } ) -> "file"
+} "/path/to/file.txt"
+
+; ### Mixed type positionals
+assert\display "mixed type positionals" {
+	result: parse-args { "config.json" 8080 } {
+		config: string required
+		port: integer required
+	}
+	result -> "port"
+} 8080
+
+; ### Default value types
+assert\display "integer default" {
+	( parse-args { } { -n|count integer optional 42 } ) -> "count"
+} 42
+
+assert\display "decimal default" {
+	( parse-args { } { -r|rate decimal optional 1.5 } ) -> "rate"
+} 1.5
+
+assert\display "boolean default" {
+	( parse-args { } { -v|verbose boolean optional false } ) -> "verbose"
+} false
+
+assert\display "string default" {
+	( parse-args { } { -o|output string optional "stdout" } ) -> "output"
+} "stdout"
+
+print ""

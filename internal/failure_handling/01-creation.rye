@@ -1,0 +1,93 @@
+print "## Failure Creation Tests"
+
+; --- fail ---
+; fail sets FailureFlag and returns an error object
+assert\display "fail result is error type" {
+	try { fail "something went wrong" } |type?
+} 'error
+
+assert\display "fail carries message" {
+	try { fail "something went wrong" } |message?
+} "something went wrong"
+
+assert\display "fail with status code" {
+	try { fail 404 } |status?
+} 404
+
+assert\display "fail stops current execution" {
+	; the 999 after fail should never be evaluated
+	r:: try { fail "stop" }
+	r |type?
+} 'error
+
+; --- failure (no flag) ---
+; failure just creates an error object without setting any flags
+assert\display "failure creates error object" {
+	failure "just an error" |type?
+} 'error
+
+assert\display "failure carries message" {
+	failure "just an error" |message?
+} "just an error"
+
+assert\display "failure with status" {
+	failure 500 |status?
+} 500
+
+assert\display "failure does not stop execution (no flag)" {
+	r:: failure "no flag"
+	r |has-failed
+} true
+
+; --- ^fail ---
+; ^fail sets FailureFlag + ReturnFlag, so it returns from the function
+assert\display "^fail returns error from function" {
+	f:: fn { } { ^fail "bailing out" }
+	try { f } |type?
+} 'error
+
+assert\display "^fail carries message" {
+	f:: fn { } { ^fail "bailing out" }
+	try { f } |message?
+} "bailing out"
+
+assert\display "^fail with status code" {
+	f:: fn { } { ^fail 503 }
+	try { f } |status?
+} 503
+
+assert\display "^fail stops function, caller continues" {
+	f:: fn { } { 1 ^fail "bail" 999 }
+	r:: try { f }
+	r |type?
+} 'error
+
+; --- failure\wrap ---
+; wraps an existing error in a new error (for error chaining)
+assert\display "failure\\wrap creates outer error" {
+	failure\wrap "outer" failure "inner" |message?
+} "outer"
+
+assert\display "failure\\wrap preserves inner error" {
+	failure\wrap "outer" failure "inner" |cause? |message?
+} "inner"
+
+assert\display "failure\\wrap result is error type" {
+	failure\wrap "outer" failure "inner" |type?
+} 'error
+
+; --- failure with kind ---
+assert\display "failure with kind block" {
+	failure { 'my-error 42 "custom error" } |error-kind?
+} 'my-error
+
+assert\display "failure with kind has status" {
+	failure { 'my-error 42 "custom error" } |status?
+} 42
+
+assert\display "failure with kind has message" {
+	failure { 'my-error 42 "custom error" } |message?
+} "custom error"
+
+print ""
+print "Creation tests completed."

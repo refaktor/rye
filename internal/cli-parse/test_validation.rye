@@ -1,0 +1,34 @@
+; Validation (check block) tests
+print "## Validation Tests"
+
+; Valid value passes check
+assert\display "valid value passes check" {
+	( parse-args { --count 5 } { -n|count integer check { > 0 } "must be positive" } ) -> "count"
+} 5
+
+; Invalid value fails check (zero not > 0)
+assert\display "invalid value fails check" {
+	try { parse-args { --count 0 } { -n|count integer check { > 0 } "must be positive" } } |type?
+} 'error
+
+; Negative value fails check
+assert\display "negative value fails check" {
+	try { parse-args { "--count" -5 } { -n|count integer check { > 0 } "must be positive" } } |type?
+} 'error
+
+; Port check - valid
+assert\display "port check valid" {
+	( parse-args { --port 8080 } { -p|port integer check { > 1000 } "must be > 1000" } ) -> "port"
+} 8080
+
+; Port check - invalid (too low)
+assert\display "port too low fails" {
+	try { parse-args { --port 80 } { -p|port integer check { > 1000 } "must be > 1000" } } |type?
+} 'error
+
+; Check without error message uses default
+assert\display "check without error message" {
+	try { parse-args { --value 0 } { -x|value integer check { > 0 } } } |type?
+} 'error
+
+print ""

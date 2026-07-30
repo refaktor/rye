@@ -1,0 +1,207 @@
+; Help generation and documentation tests
+print "## Help Generation Tests"
+
+; ### Basic help generation
+assert\display "basic help generation" {
+	help: generate-help {
+		-v|verbose flag doc "Enable verbose output"
+		-o|output string doc "Output file"
+	}
+	all {
+		help .contains? "verbose"
+		help .contains? "Enable verbose output"
+		help .contains? "-v"
+		help .contains? "--output"
+	}
+} true
+
+; ### Help with defaults
+assert\display "help shows defaults" {
+	help: generate-help {
+		-p|port integer optional 8080 doc "Server port"
+		-h|host string optional "localhost" doc "Server host"
+	}
+	all {
+		help .contains? "(default: 8080)"
+		help .contains? "(default: \"localhost\")"
+	}
+} true
+
+; ### Help with required flags
+assert\display "help shows required" {
+	help: generate-help {
+		-o|output string required doc "Output file"
+		-v|verbose flag doc "Verbose mode"
+	}
+	all {
+		help .contains? "(required)"
+		help .contains? "Output file (required)"
+	}
+} true
+
+; ### Subcommand help  
+assert\display "subcommand help generation" {
+	help: generate-help {
+		program "MyTool"
+		description "A sample CLI tool"
+		subcommand {
+			'init {
+				doc "Initialize a new project"
+				-f|force flag doc "Force overwrite"
+			}
+			'build {
+				doc "Build the project"  
+				-r|release flag doc "Release build"
+			}
+		}
+	}
+	all {
+		help .contains? "MyTool"
+		help .contains? "A sample CLI tool"
+		help .contains? "Commands:"
+		help .contains? "init"
+		help .contains? "Initialize a new project"
+		help .contains? "build"
+	}
+} true
+
+; ### Specific subcommand help
+assert\display "specific subcommand help" {
+	spec: {
+		program "git"
+		subcommand {
+			'commit {
+				doc "Record changes"
+				-m|message string required doc "Commit message"
+				-a|all flag doc "Stage all changes"
+			}
+		}
+	}
+	help: generate-help\command spec "commit"
+	all {
+		help .contains? "git commit"
+		help .contains? "-m, --message"
+		help .contains? "(required)"
+		help .contains? "--all"
+	}
+} true
+
+; ### Complex nested help
+assert\display "nested subcommand help" {
+	spec: {
+		program "kubectl"  
+		subcommand {
+			'config {
+				doc "Manage configuration"
+				subcommand {
+					'set-context {
+						doc "Set context"
+						name: string required doc "Context name"
+					}
+				}
+			}
+		}
+	}
+	help: generate-help\command spec "config"
+	all {
+		help .contains? "kubectl config"
+		help .contains? "set-context"
+		help .contains? "Set context"
+	}
+} true
+
+; ### Positional args in help
+assert\display "positional args in help" {
+	help: generate-help {
+		input: string required doc "Input file"
+		output: string optional doc "Output file"  
+		extra: string many doc "Extra files"
+	}
+	all {
+		help .contains? "<input>"
+		help .contains? "[output]"
+		help .contains? "[extra...]"
+	}
+} true
+
+; ### Mixed flags and positionals help
+assert\display "mixed flags and positionals help" {
+	help: generate-help {
+		program "processor"
+		-v|verbose flag doc "Verbose output"
+		-f|format string optional "json" doc "Output format"
+		input: string required doc "Input file"
+		args: string many doc "Additional arguments"
+	}
+	all {
+		help .contains? "processor [options] <input> [args...]"
+		help .contains? "-v, --verbose"
+		help .contains? "(default: \"json\")"
+	}
+} true
+
+; ### Error message formatting
+assert\display "error formatting basic" {
+	errors: dict { "output" "required" }
+	formatted: format-parse-errors errors
+	formatted .contains? "--output required"
+} true
+
+assert\display "error formatting multiple" {
+	errors: dict { "port" "must be >= 1024" "output" "required" }
+	formatted: format-parse-errors errors
+	all {
+		formatted .contains? "--port must be >= 1024"
+		formatted .contains? "--output required"
+	}
+} true
+
+; ### Documentation completeness tests  
+assert\display "comprehensive spec documentation" {
+	spec: {
+		program "TestTool"
+		description "Tool for testing CLI parsing"
+		-v|verbose flag doc "Enable verbose logging"
+		-c|config string optional "config.yml" doc "Configuration file path"
+		subcommand {
+			'process {
+				doc "Process input data"
+				-f|format string optional "json" doc "Output format (json, yaml, csv)"
+				-o|output string doc "Output file (default: stdout)"
+				input: string required doc "Input data file"
+			}
+			'validate {
+				doc "Validate data format"
+				-s|schema string required doc "Schema file for validation"  
+				files: string many doc "Files to validate"
+			}
+		}
+	}
+	
+	mainHelp: generate-help spec
+	processHelp: generate-help\command spec "process"
+	validateHelp: generate-help\command spec "validate"
+	
+	all {
+		; Main help completeness
+		mainHelp .contains? "TestTool"
+		mainHelp .contains? "Tool for testing CLI parsing"
+		mainHelp .contains? "Commands:"
+		mainHelp .contains? "process"
+		mainHelp .contains? "validate"
+		
+		; Process subcommand help
+		processHelp .contains? "TestTool process"
+		processHelp .contains? "-f, --format"
+		processHelp .contains? "(default: \"json\")"
+		processHelp .contains? "<input>"
+		
+		; Validate subcommand help  
+		validateHelp .contains? "TestTool validate"
+		validateHelp .contains? "--schema"
+		validateHelp .contains? "(required)"
+		validateHelp .contains? "[files...]"
+	}
+} true
+
+print ""

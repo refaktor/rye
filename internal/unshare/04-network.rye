@@ -1,0 +1,23 @@
+; 04-network.rye - verify network namespace isolation
+; Run with full isolation:  rye -unshare 04-network.rye
+; Run with net only:        rye -unshare -unshare-fs=false 04-network.rye
+;
+; Expected with -unshare (network isolated):
+;   HTTP request → error   (no network interface in new net namespace)
+;
+; Expected without -unshare (or with -unshare-net=false):
+;   HTTP request → succeeds or returns content
+
+print "=== Network isolation test ==="
+
+; Try an outbound HTTP request to a well-known host.
+; read on an http:// URI does an HTTP GET.
+result: try { read https://example.com/ }
+
+either is-error result {
+    print "  HTTP GET : BLOCKED  (network isolation OK)"
+} {
+    print "  HTTP GET : SUCCESS  (no network isolation, or -unshare-net=false)"
+}
+
+print "=== done ==="

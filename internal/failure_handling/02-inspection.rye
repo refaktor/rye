@@ -1,0 +1,102 @@
+print "## Failure Inspection Tests"
+
+; --- type? ---
+assert\display "error type word" {
+	failure "x" |type?
+} 'error
+
+; --- has-failed ---
+assert\display "has-failed on error object" {
+	has-failed failure "x"
+} true
+
+assert\display "has-failed on integer" {
+	has-failed 42
+} false
+
+assert\display "has-failed on string" {
+	has-failed "hello"
+} false
+
+assert\display "has-failed on try result" {
+	try { fail "x" } |has-failed
+} true
+
+assert\display "has-failed on successful try result" {
+	try { 1 + 2 } |has-failed
+} false
+
+; --- is-error ---
+assert\display "is-error on error object" {
+	is-error failure "x"
+} true
+
+assert\display "is-error on integer" {
+	is-error 99
+} false
+
+; --- is-failure / is-success ---
+assert\display "is-failure on error" {
+	is-failure failure "x"
+} true
+
+assert\display "is-failure on non-error" {
+	is-failure 123
+} false
+
+assert\display "is-success on non-error" {
+	is-success 123
+} true
+
+assert\display "is-success on error" {
+	is-success failure "x"
+} false
+
+; --- message? ---
+assert\display "message? from string fail" {
+	failure "some message" |message?
+} "some message"
+
+assert\display "message? from status fail" {
+	failure 500 |message?
+} ""
+
+; --- status? ---
+assert\display "status? from status fail" {
+	failure 404 |status?
+} 404
+
+assert\display "status? from message fail" {
+	failure "only message" |status?
+} 0
+
+; --- error-kind? ---
+assert\display "error-kind? from kind block" {
+	failure { 'my-error 0 "desc" } |error-kind?
+} 'my-error
+
+; --- is-error-of-kind ---
+assert\display "is-error-of-kind matching" {
+	is-error-of-kind failure { 'network-error 0 "desc" } 'network-error
+} true
+
+assert\display "is-error-of-kind not matching" {
+	is-error-of-kind failure { 'network-error 0 "desc" } 'disk-error
+} false
+
+; --- cause? ---
+assert\display "cause? from wrapped error" {
+	failure\wrap "outer" failure "inner" |cause? |message?
+} "inner"
+
+assert\display "cause? from simple error is itself" {
+	failure "lone error" |cause? |message?
+} "lone error"
+
+; --- details? ---
+assert\display "details? returns a dict" {
+	failure { "code" 404 "info" "Not Found" } |details? |type?
+} 'dict
+
+print ""
+print "Inspection tests completed."

@@ -1,0 +1,97 @@
+; Return Words in Loops
+; Tests ^if, ^check, ^fix behavior inside loops
+print "## Return Words in Loops"
+
+; =============================================================================
+; ^if exits function from inside loop
+; =============================================================================
+
+assert\display "^if exits from loop" {
+	find-first1: fn { items val } {
+		for items { ::x
+			^if x = val { "found" }
+		}
+		"not found"
+	}
+	find-first1 { 1 2 3 4 5 } 3
+} "found"
+
+assert\display "^if not triggered continues loop" {
+	find-first2: fn { items val } {
+		for items { ::x
+			^if x = val { "found" }
+		}
+		"not found"
+	}
+	find-first2 { 1 2 3 } 99
+} "not found"
+
+assert\display "^if with index tracking" {
+	find-idx3: fn { items val } {
+		var 'idx 0
+		for items { ::x
+			^if x = val { idx }
+			idx:: idx + 1
+		}
+		-1
+	}
+	find-idx3 { "a" "b" "c" "d" } "c"
+} 2
+
+; =============================================================================
+; ^if in nested loops
+; =============================================================================
+
+assert\display "^if exits from nested for" {
+	search4: fn { } {
+		for { 0 1 2 } { ::out4
+			for { 0 1 2 } { ::inn4
+				^if all { out4 = 1 inn4 = 1 } { "found at 1,1" }
+			}
+		}
+		"not found"
+	}
+	search4
+} "found at 1,1"
+
+; =============================================================================  
+; ^check in loops
+; =============================================================================
+
+assert\display "^check exits on first failure" {
+	process5: fn { items } {
+		for items { ::x
+			10 / x |^check "division failed"
+		}
+		"all ok"
+	}
+	try { process5 { 2 1 0 4 } } |type?
+} 'error
+
+; =============================================================================
+; forever with ^if exit
+; =============================================================================
+
+assert\display "forever exits via ^if" {
+	countdown7: fn { start } {
+		var 'n start
+		forever {
+			n:: n - 1
+			^if n <= 0 { "done" }
+		}
+	}
+	countdown7 5
+} "done"
+
+assert\display "forever accumulates until condition" {
+	double-until8: fn { limit } {
+		var 'val 1
+		forever {
+			val:: val * 2
+			^if val > limit { val }
+		}
+	}
+	double-until8 100
+} 128
+
+print ""

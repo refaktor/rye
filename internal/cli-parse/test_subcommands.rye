@@ -1,0 +1,97 @@
+; Subcommand CLI parsing tests
+print "## Subcommand Tests"
+
+; Basic subcommand
+assert\display "basic subcommand" {
+	( parse-args { init --force } { 
+		-v|verbose flag 
+		subcommand { 
+			init { -f|force flag doc "Force initialization" } 
+			build { -o|output string doc "Output directory" }
+		} 
+	} ) -> "command"
+} "init"
+
+; Subcommand force flag
+assert\display "subcommand flag" {
+	( parse-args { init --force } { 
+		-v|verbose flag 
+		subcommand { 
+			init { -f|force flag } 
+			build { -o|output string }
+		} 
+	} ) -> "force"
+} true
+
+; Subcommand with global flag
+assert\display "subcommand with global flag" {
+	( parse-args { --verbose init } { 
+		-v|verbose flag 
+		subcommand { 
+			init { -f|force flag } 
+			build { -o|output string }
+		} 
+	} ) -> "verbose"
+} true
+
+; Nested subcommand
+assert\display "nested subcommand" {
+	( parse-args { remote add "origin" "https://github.com/example/repo" } {
+		subcommand {
+			'remote {
+				doc "Manage remotes"
+				subcommand {
+					add { 
+						name: string required doc "Remote name"
+						url: string required doc "Remote URL"
+					}
+					remove { 
+						name: string required 
+					}
+				}
+			}
+		}
+	} ) -> "command"
+} "remote add"
+
+; Nested subcommand positional args
+assert\display "nested subcommand positional args" {
+	( parse-args { remote add "origin" "https://example.com" } {
+		subcommand {
+			'remote {
+				subcommand {
+					add { 
+						name: string required
+						url: string required
+					}
+				}
+			}
+		}
+	} ) -> "_name"
+} "origin"
+
+; Command path length
+assert\display "command path length" {
+	length? ( parse-args { remote add "origin" "url" } {
+		subcommand {
+			'remote {
+				subcommand {
+					add { name: string required url: string required }
+				}
+			}
+		}
+	} ) -> "command-path"
+} 2
+
+; String-based subcommand (from CLI)
+assert\display "string subcommand from CLI" {
+	( parse-args { "init" "--force" } { 
+		-v|verbose flag 
+		subcommand { 
+			init { -f|force flag } 
+			build { -o|output string }
+		} 
+	} ) -> "command"
+} "init"
+
+print ""

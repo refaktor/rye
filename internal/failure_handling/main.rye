@@ -1,0 +1,25 @@
+; Failure Handling Test Suite
+; Run with: cd internal/failure_handling && rye main.rye
+;
+; Covers:
+;   01-creation  - fail, failure, ^fail, failure\wrap
+;   02-inspection - has-failed, is-error, message?, status?, cause?, error-kind?
+;   03-handling  - try, disarm, fix, check, ensure, ^check, ^ensure, ^fix, try-all, finally
+;   04-propagation - failure through user functions, opwords, dotwords, pipewords
+;   05-advanced  - fix\either, fix\else, fix\continue, continue, ^fix\match, retry, refail
+
+print "========================================"
+print "     FAILURE HANDLING TEST SUITE"
+print "========================================"
+print ""
+
+private Load %01-creation.rye
+private Load %02-inspection.rye
+private Load %03-handling.rye
+private Load %04-propagation.rye
+private Load %05-advanced.rye
+
+print ""
+print "========================================"
+print "\x1b[32mALL FAILURE HANDLING TESTS COMPLETED\x1b[0m"
+print "========================================"
