@@ -1699,7 +1699,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						}
 						EvalBlockInj(ps, curval, true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "group")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
@@ -1736,7 +1736,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						}
 						res := DirectlyCallBuiltin(ps, block, curval, nil)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "group")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							return ps.Res
 						}
 						// TODO !!! -- currently only works if results are strings
@@ -1830,7 +1830,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						}
 						EvalBlockInj(ps, env.ToRyeValue(item), true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "filter")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
@@ -1857,6 +1857,9 @@ var builtins_iteration = map[string]*env.Builtin{
 							item = env.ToRyeValue(ls[i])
 						}
 						CallFunctionArgsN(block, ps, ps.Ctx, env.ToRyeValue(item)) // , env.NewInteger(int64(i)))
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
+							return ps.Res
+						}
 						if util.IsTruthy(ps.Res) {                                 // todo -- move these to util or something
 							if modeObj == 1 {
 								newll = append(newll, ll[i])
@@ -1879,7 +1882,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						}
 						res := DirectlyCallBuiltin(ps, block, env.ToRyeValue(item), nil)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "filter")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							return ps.Res
 						}
 						if util.IsTruthy(res) { // todo -- move these to util or something
@@ -1968,7 +1971,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						}
 						EvalBlockInj(ps, env.ToRyeValue(item), true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "seek")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
@@ -1991,7 +1994,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						}
 						res := DirectlyCallBuiltin(ps, block, env.ToRyeValue(item), nil)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "seek")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							return ps.Res
 						}
 						if util.IsTruthy(res) {
@@ -2009,7 +2012,7 @@ var builtins_iteration = map[string]*env.Builtin{
 							item = *env.NewString(string(ls[i]))
 						}
 						CallFunctionArgsN(block, ps, ps.Ctx, env.ToRyeValue(item))
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							return ps.Res
 						}
 						if util.IsTruthy(ps.Res) {
@@ -2058,7 +2061,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						ps.Ser.Reset()
 						Eval(ps)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "while")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
@@ -2078,7 +2081,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						ps.Ser.Reset()
 						Eval(ps)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "while")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
@@ -2124,7 +2127,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						ps.Ser.Reset()
 						Eval(ps)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "until")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
@@ -2135,7 +2138,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						ps.Ser.Reset()
 						Eval(ps)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "until")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
@@ -2195,7 +2198,7 @@ var builtins_iteration = map[string]*env.Builtin{
 							}
 							Eval(ps)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "for\\")
-							if ps.ErrorFlag || ps.ReturnFlag {
+							if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 								ps.Ser = ser
 								return ps.Res
 							}
@@ -2213,7 +2216,7 @@ var builtins_iteration = map[string]*env.Builtin{
 							}
 							Eval(ps)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "for\\")
-							if ps.ErrorFlag || ps.ReturnFlag {
+							if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 								ps.Ser = ser
 								return ps.Res
 							}
