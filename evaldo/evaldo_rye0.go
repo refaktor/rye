@@ -15,7 +15,7 @@ func Rye0_EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) *env.P
 		ps, injnow = Rye0_EvalExpressionInj(ps, inj, injnow)
 
 		// Check for both error and failure flags immediately after expression evaluation
-		if ps.ErrorFlag || ps.ReturnFlag {
+		if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 			return ps
 		}
 
@@ -659,7 +659,7 @@ func Rye0_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, to
 			}
 		}
 
-		if ps.ErrorFlag || ps.ReturnFlag {
+		if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 			ps.Res = errArg1Missing
 			return ps
 		}
@@ -680,7 +680,7 @@ func Rye0_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, to
 			}
 		}
 
-		if ps.ErrorFlag || ps.ReturnFlag {
+		if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 			ps.Res = errArg2Missing
 			return ps
 		}
@@ -701,7 +701,7 @@ func Rye0_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, to
 			}
 		}
 
-		if ps.ErrorFlag || ps.ReturnFlag {
+		if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 			ps.Res = errArg3Missing
 			return ps
 		}

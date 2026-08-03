@@ -27,7 +27,7 @@ func Stck_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, to
 		if evaldo.CheckForFailureWithBuiltin(bi, ps, 0) {
 			return ps
 		}
-		if ps.ErrorFlag || ps.ReturnFlag {
+		if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 			return ps
 		}
 		arg0 = ps.Res
@@ -38,7 +38,7 @@ func Stck_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, to
 		if evaldo.CheckForFailureWithBuiltin(bi, ps, 1) {
 			return ps
 		}
-		if ps.ErrorFlag || ps.ReturnFlag {
+		if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 			return ps
 		}
 		//fmt.Println(ps.Res)
@@ -133,7 +133,7 @@ func Stck_EvalBlock(ps *env.ProgramState) *env.ProgramState {
 		if evaldo.TryHandleFailure(ps) {
 			return ps
 		}
-		if ps.ReturnFlag || ps.ErrorFlag {
+		if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 			return ps
 		}
 	}

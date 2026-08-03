@@ -132,7 +132,7 @@ func (md *MessageDispatcher) runLoop(ps *env.ProgramState, updateCallback env.Fu
 
 				evaldo.CallFunctionArgs2(updateCallback, ps, nil, state, nil)
 				evaldo.MaybeDisplayFailureOrError(ps, ps.Idx, "msgdispatcher-update")
-				if ps.ErrorFlag || ps.ReturnFlag {
+				if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 					continue // Skip update on error
 				}
 				if newState, ok := ps.Res.(env.Dict); ok {
@@ -180,7 +180,7 @@ func (md *MessageDispatcher) processMessage(ps *env.ProgramState, msg env.Object
 	// Call handler with message and state
 	evaldo.CallFunctionArgs2(handler, ps, msg, currentState, nil)
 	evaldo.MaybeDisplayFailureOrError(ps, ps.Idx, "msgdispatcher-handler")
-	if ps.ErrorFlag || ps.ReturnFlag {
+	if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 		fmt.Printf("Warning: Handler error for message type '%s'\n", msgType)
 		return
 	}

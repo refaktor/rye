@@ -72,7 +72,7 @@ var builtins_trees = map[string]*env.Builtin{
 									ps.Ser = bodyBlock.Series
 									ps.Ser.Reset()
 									evaldo.Eval(ps)
-									if ps.ErrorFlag || ps.ReturnFlag {
+									if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 										fmt.Println("***2")
 										ps.Ser = ser
 										return ps.Res
@@ -86,7 +86,7 @@ var builtins_trees = map[string]*env.Builtin{
 									for ps.Ser.Pos() < ps.Ser.Len() {
 										// ps, injnow = EvalExpressionInj(ps, inj, injnow)
 										evaldo.EvalExpression_CollectArg(ps, false, false)
-										if ps.ReturnFlag || ps.ErrorFlag {
+										if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 											return ps.Res
 										}
 										res = append(res, ps.Res)
@@ -116,7 +116,7 @@ var builtins_trees = map[string]*env.Builtin{
 										for i := 0; i < children.Series.Len(); i++ {
 											childNode := children.Series.Get(i)
 											traverseTree(childNode)
-											if ps.ErrorFlag || ps.ReturnFlag {
+											if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 												fmt.Println("***4")
 												break
 											}
@@ -125,7 +125,7 @@ var builtins_trees = map[string]*env.Builtin{
 										for i := 0; i < len(children.Data); i++ {
 											childNode := env.ToRyeValue(children.Data[i])
 											traverseTree(childNode)
-											if ps.ErrorFlag || ps.ReturnFlag {
+											if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 												fmt.Println("***5")
 												break
 											}
@@ -217,7 +217,7 @@ var builtins_trees = map[string]*env.Builtin{
 								case env.Builtin:
 									result := evaldo.DirectlyCallBuiltin(ps, transformer, env.ToRyeValue(v), nil)
 									evaldo.MaybeDisplayFailureOrError(ps, ps.Idx, "tree-transform")
-									if ps.ErrorFlag || ps.ReturnFlag {
+									if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 										return node // Return original on error
 									}
 									newData[k] = result

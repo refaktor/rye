@@ -170,7 +170,7 @@ func Rye00_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, t
 			}
 		}
 
-		if ps.ErrorFlag || ps.ReturnFlag {
+		if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 			ps.Res = errArg1Missing
 			return
 		}
@@ -191,7 +191,7 @@ func Rye00_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, t
 			}
 		}
 
-		if ps.ErrorFlag || ps.ReturnFlag {
+		if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 			ps.Res = errArg2Missing
 			return
 		}
@@ -212,7 +212,7 @@ func Rye00_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, t
 			}
 		}
 
-		if ps.ErrorFlag || ps.ReturnFlag {
+		if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 			ps.Res = errArg3Missing
 			return
 		}

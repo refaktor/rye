@@ -33,7 +33,7 @@ var builtins_contexts = map[string]*env.Builtin{
 				ps.Ctx = env.NewEnv(nil) // make new context with no parent
 				Eval(ps)
 				MaybeDisplayFailureOrError(ps, ps.Idx, "raw-context")
-				if ps.ReturnFlag || ps.ErrorFlag {
+				if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 					ps.Ctx = ctx
 					ps.Ser = ser
 					return ps.Res
@@ -70,7 +70,7 @@ var builtins_contexts = map[string]*env.Builtin{
 				ps.Ctx = env.NewEnv(ps.Ctx) // make new context with no parent
 				Eval(ps)
 				MaybeDisplayFailureOrError(ps, ps.Idx, "isolate")
-				if ps.ReturnFlag || ps.ErrorFlag {
+				if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 					ps.Ctx = ctx
 					ps.Ser = ser
 					return ps.Res
@@ -110,7 +110,7 @@ var builtins_contexts = map[string]*env.Builtin{
 				ps.Ctx = env.NewEnv(ps.Ctx) // make new context with no parent
 				Eval(ps)
 				MaybeDisplayFailureOrError(ps, ps.Idx, "context")
-				if ps.ReturnFlag || ps.ErrorFlag {
+				if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 					ps.Ctx = ctx
 					ps.Ser = ser
 					return ps.Res
@@ -147,7 +147,7 @@ var builtins_contexts = map[string]*env.Builtin{
 				ps.Ctx = env.NewEnv(ps.PCtx) // make new context with PCtx as parent instead of regular Ctx
 				Eval(ps)
 				MaybeDisplayFailureOrError(ps, ps.Idx, "context\\pure")
-				if ps.ReturnFlag || ps.ErrorFlag {
+				if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 					ps.Ctx = ctx
 					ps.Ser = ser
 					return ps.Res
@@ -183,7 +183,7 @@ var builtins_contexts = map[string]*env.Builtin{
 				ps.Ctx = env.NewEnv(ps.Ctx) // make new context with no parent
 				Eval(ps)
 				MaybeDisplayFailureOrError(ps, ps.Idx, "private")
-				if ps.ReturnFlag || ps.ErrorFlag {
+				if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 					ps.Ctx = ctx
 					ps.Ser = ser
 					return ps.Res
@@ -219,7 +219,7 @@ var builtins_contexts = map[string]*env.Builtin{
 					ps.Ctx = env.NewEnv2(ps.Ctx, doc.Value) // make new context with no parent
 					Eval(ps)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "private\\")
-					if ps.ReturnFlag || ps.ErrorFlag {
+					if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 						ps.Ctx = ctx
 						ps.Ser = ser
 						return ps.Res
@@ -261,7 +261,7 @@ var builtins_contexts = map[string]*env.Builtin{
 					ps.Ctx = env.NewEnv(ctx0) // make new context with no parent
 					Eval(ps)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "extends")
-					if ps.ReturnFlag || ps.ErrorFlag {
+					if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 						ps.Ctx = ctx
 						ps.Ser = ser
 						return ps.Res
@@ -806,7 +806,7 @@ var builtins_contexts = map[string]*env.Builtin{
 						ps.Ctx = ryeCtx
 						Eval(ps)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "clone\\")
-						if ps.ReturnFlag || ps.ErrorFlag {
+						if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 							ps.Ctx = origCtx
 							ps.Ser = ser
 							return ps.Res

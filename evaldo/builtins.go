@@ -791,7 +791,7 @@ func IntersectStringsCustom(a env.String, b env.String, ps *env.ProgramState, fn
 	for _, ch := range a.Value {
 		CallFunctionArgs2(fn, ps, b, *env.NewString(string(ch)), nil)
 		MaybeDisplayFailureOrError(ps, ps.Idx, "intersection\\by")
-		if ps.ErrorFlag || ps.ReturnFlag {
+		if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 			return ""
 		}
 		res := util.IsTruthy(ps.Res)
@@ -809,7 +809,7 @@ func IntersectBlocksCustom(a env.Block, b env.Block, ps *env.ProgramState, fn en
 	for _, v := range a.Series.S {
 		CallFunctionArgs2(fn, ps, b, v, nil)
 		MaybeDisplayFailureOrError(ps, ps.Idx, "intersection\\by")
-		if ps.ErrorFlag || ps.ReturnFlag {
+		if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 			return res
 		}
 		r := util.IsTruthy(ps.Res)
