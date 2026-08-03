@@ -657,9 +657,11 @@ func Rye0_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, to
 				ps.ErrorFlag = true
 				return ps
 			}
+			// AcceptFailure: preserve the failure value instead of overwriting with generic error
+			return ps
 		}
 
-		if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
+		if ps.ErrorFlag || ps.ReturnFlag {
 			ps.Res = errArg1Missing
 			return ps
 		}
@@ -678,9 +680,11 @@ func Rye0_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, to
 				ps.ErrorFlag = true
 				return ps
 			}
+			// AcceptFailure: preserve the failure value instead of overwriting with generic error
+			return ps
 		}
 
-		if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
+		if ps.ErrorFlag || ps.ReturnFlag {
 			ps.Res = errArg2Missing
 			return ps
 		}
@@ -699,9 +703,11 @@ func Rye0_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, to
 				ps.ErrorFlag = true
 				return ps
 			}
+			// AcceptFailure: preserve the failure value instead of overwriting with generic error
+			return ps
 		}
 
-		if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
+		if ps.ErrorFlag || ps.ReturnFlag {
 			ps.Res = errArg3Missing
 			return ps
 		}

@@ -122,6 +122,12 @@ func EvalBlockInj_Rye2(ps *env.ProgramState, inj env.Object, injnow bool) {
 		if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 			// fmt.Println("EVAL BLOCK INJ")
 			// fmt.Println(ps.ErrorFlag, ps.ReturnFlag, ps.CallDepth)
+			// At top level (CallDepth == 0), convert unhandled failures to errors
+			// so they are displayed and stop evaluation (same semantics as tryHandleFailure)
+			if ps.FailureFlag && ps.CallDepth == 0 && !ps.ErrorFlag {
+				ps.ErrorFlag = true
+				return
+			}
 			if ps.ErrorFlag || ps.CallDepth > 0 {
 				return
 			}
@@ -535,7 +541,8 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 			ser := ps.Ser
 			ps.Ser = block.Series
 			Eval(ps)
-			if ps.ErrorFlag || ps.FailureFlag {
+			if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
+				ps.Ser = ser
 				return
 			}
 			ps.Ser = ser
@@ -566,7 +573,8 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 			ps.Ser = block.Series
 			injVal := ps.Res // Use current result as injection value
 			EvalBlockInj(ps, injVal, true)
-			if ps.ErrorFlag || ps.FailureFlag {
+			if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
+				ps.Ser = ser
 				return
 			}
 			ps.Ser = ser
@@ -1165,7 +1173,7 @@ func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toL
 func EvalSetword(ps *env.ProgramState, word env.Setword) {
 	// es1 := EvalExpression(es)
 	EvalExpressionInj(ps, nil, false)
-	if ps.ErrorFlag || ps.FailureFlag {
+	if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 		return
 	}
 	idx := word.Index
@@ -1192,7 +1200,7 @@ func EvalSetword(ps *env.ProgramState, word env.Setword) {
 func EvalModword(ps *env.ProgramState, word env.Modword) {
 	// es1 := EvalExpression(es)
 	EvalExpressionInj(ps, nil, false)
-	if ps.ErrorFlag || ps.FailureFlag {
+	if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 		return
 	}
 	idx := word.Index
