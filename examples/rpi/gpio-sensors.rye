@@ -1,0 +1,42 @@
+; GPIO Input/Pull-up/PWM example - works on RPi hardware or simulated on desktop
+; Build with: ./buildrpi (real RPi) or ./buildrpi_sim (desktop sim)
+
+print "=== GPIO Input & PWM Demo ==="
+
+gpio-open
+
+; -- Button input with pull-up --
+btn: gpio-pin 22
+btn .Input .Pull-up
+print "Button on pin 22 configured as input with pull-up"
+print "Reading button:"
+print btn .Read
+
+; Write to button pin to simulate press (for testing)
+btn .Write 1
+print "Simulated press:"
+print btn .Read
+btn .Write 0
+print "Simulated release:"
+print btn .Read
+
+; -- PWM on pin 18 --
+pwm: gpio-pin 18
+pwm .Mode 'Pwm
+pwm .Freq 1000
+pwm .Duty-cycle 1 4
+print "PWM on pin 18: 1000 Hz, 25% duty"
+
+pwm .Duty-cycle 3 4
+print "PWM on pin 18: 1000 Hz, 75% duty"
+
+; -- Edge detection --
+edge-pin: gpio-pin 23
+edge-pin .Input
+edge-pin .Detect 'Both
+print "Edge detection on pin 23 (Both edges)"
+print "Edge detected?"
+print edge-pin .Edge-detected?
+
+gpio-close
+print "Done."

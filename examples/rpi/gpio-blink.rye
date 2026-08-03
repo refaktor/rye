@@ -1,0 +1,38 @@
+; GPIO Blink Example - works on RPi hardware or simulated on desktop
+; Build with: ./buildrpi (real RPi) or ./buildrpi_sim (desktop sim)
+
+print "=== GPIO Blink Demo ==="
+
+gpio-open
+
+; Create pin on GPIO 17 (BCM numbering)
+pin: gpio-pin 17
+
+; Set to output and blink 5 times
+pin .Output
+print "Blinking pin 17 five times..."
+loop 5 {
+    pin .High
+    print "HIGH"
+    sleep 200
+    pin .Low
+    print "LOW"
+    sleep 200
+}
+
+; Read state and print
+state: pin .Read
+print "State:"
+print state
+
+; Toggle demo
+print "Toggling..."
+pin .Toggle
+print "After toggle:"
+print pin .Read
+pin .Toggle
+print "After toggle:"
+print pin .Read
+
+gpio-close
+print "Done."

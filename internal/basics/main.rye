@@ -1,0 +1,15 @@
+; Basics Test Suite
+; Run with: cd internal/basics && rye main.rye
+
+print "========================================"
+print "        BASICS TEST SUITE"
+print "========================================"
+print ""
+
+private Load %words.rye
+private Load %opwords.rye
+
+print ""
+print "========================================"
+print "\x1b[32mALL BASICS TESTS COMPLETED\x1b[0m"
+print "========================================"

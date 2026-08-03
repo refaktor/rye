@@ -1,0 +1,14 @@
+; Structures Test Suite
+; Run with: cd internal/structures && rye main.rye
+
+print "========================================"
+print "        STRUCTURES TEST SUITE"
+print "========================================"
+print ""
+
+private Load %syntax_sugar.rye
+
+print ""
+print "========================================"
+print "\x1b[32mALL STRUCTURES TESTS COMPLETED\x1b[0m"
+print "========================================"

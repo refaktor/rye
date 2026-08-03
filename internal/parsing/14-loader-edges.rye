@@ -1,0 +1,341 @@
+; Loader Edge Tests — stress the non-PEG lexer/parser at boundaries
+; Tests: deep nesting, long input, escape sequences, boundary tokens, error recovery
+
+print "## Loader Edge & Stress Tests"
+
+; ============================================
+; Deeply nested blocks
+; ============================================
+
+assert\display "10-level nested block parses" {
+	first first first first first first first first first first {
+		{ { { { { { { { { 42 } } } } } } } } }
+	}
+} 42
+
+assert\display "15-level nested block parses" {
+	first first first first first first first first first 
+	first first first first first {
+		{ { { { { { { { { { { { { { 99 } } } } } } } } } } } } } }
+	}
+} 99
+
+; ============================================
+; Many consecutive empty blocks
+; ============================================
+
+assert\display "10 consecutive empty blocks" {
+	length? { { } { } { } { } { } { } { } { } { } { } }
+} 10
+
+; ============================================
+; Mixed empty structures
+; ============================================
+
+assert\display "mixed empty blocks braces brackets groups" {
+	length? { { } [ ] ( ) l{ } d{ } { } }
+} 6
+
+; ============================================
+; Very long word
+; ============================================
+
+assert\display "100-char word parses" {
+	word100: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	type? first { aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa }
+} 'word
+
+assert\display "word with many hyphens" {
+	type? first { one-two-three-four-five-six-seven-eight-nine-ten }
+} 'word
+
+; ============================================
+; Kindword extremes
+; ============================================
+
+assert\display "kindword ~(integer)~ parses" {
+	type? first { ~(integer)~ }
+} 'kindword
+
+assert\display "kindword ~(string)~ parses" {
+	type? first { ~(string)~ }
+} 'kindword
+
+assert\display "kindword ~(block) without trailing tilde" {
+	type? first { ~(block) }
+} 'kindword
+
+assert\display "kindword ~(any-tag-name-with-hyphens)~" {
+	type? first { ~(any-tag-name-with-hyphens)~ }
+} 'kindword
+
+; ============================================
+; Flagword extremes
+; ============================================
+
+assert\display "short flag -v parses" {
+	type? first { -v }
+} 'flagword
+
+assert\display "long flag --verbose parses" {
+	type? first { --verbose }
+} 'flagword
+
+assert\display "combined flag -v|verbose parses" {
+	type? first { -v|verbose }
+} 'flagword
+
+; ============================================
+; Long flag with many chars
+; ============================================
+
+assert\display "long flag --this-is-a-very-long-flag-name" {
+	type? first { --this-is-a-very-long-flag-name }
+} 'flagword
+
+; ============================================
+; Arrow operator extremes
+; ============================================
+
+assert\display "--> arrow parses as opword" {
+	type? first { --> }
+} 'opword
+
+assert\display "<-- arrow parses as opword" {
+	type? first { <-- }
+} 'opword
+
+assert\display "<=> spaceship parses as opword" {
+	type? first { <=> }
+} 'opword
+
+; ============================================
+; String edge cases
+; ============================================
+
+assert\display "string with escaped newline" {
+	first { "line1\nline2" }
+} "line1\nline2"
+
+assert\display "string with escaped tab" {
+	first { "col1\tcol2" }
+} "col1\tcol2"
+
+assert\display "string with hex escape \\x41" {
+	first { "A" }
+} "A"
+
+assert\display "string with hex escape \\x30" {
+	first { "\x30" }
+} "0"
+
+assert\display "string with multiple hex escapes" {
+	first { "\x48\x65\x6c\x6c\x6f" }
+} "Hello"
+
+assert\display "backtick string with double quotes inside" {
+	type? first { `string with "quotes" inside` }
+} 'string
+
+assert\display "backtick string preserves inner double quotes" {
+	first { `She said "hello"` }
+} "She said \"hello\""
+
+assert\display "backtick multiline string" {
+	type? first {
+		`line one
+line two
+line three`
+	}
+} 'string
+
+assert\display "empty string" {
+	first { "" }
+} ""
+
+assert\display "empty backtick string" {
+	first { `` }
+} ""
+
+; ============================================
+; Number edge cases
+; ============================================
+
+assert\display "negative zero" {
+	first { -0 }
+} 0
+
+assert\display "very large integer" {
+	type? first { 9223372036854775807 }
+} 'integer
+
+assert\display "negative very large" {
+	type? first { -9223372036854775808 }
+} 'integer
+
+assert\display "decimal zero point five" {
+	type? first { 0.5 }
+} 'decimal
+
+assert\display "decimal with leading zeros after point" {
+	type? first { 1.001 }
+} 'decimal
+
+assert\display "decimal very small" {
+	type? first { 0.0001 }
+} 'decimal
+
+assert\display "decimal negative" {
+	type? first { -3.14 }
+} 'decimal
+
+; ============================================
+; Context path edge cases
+; ============================================
+
+assert\display "two-part cpath" {
+	type? first { ctx/val }
+} 'cpath
+
+assert\display "three-part cpath" {
+	type? first { a/b/c }
+} 'cpath
+
+assert\display "four-part cpath" {
+	type? first { one/two/three/four }
+} 'cpath
+
+assert\display "cpath with @/ parent" {
+	type? first { @/x }
+} 'cpath
+
+assert\display "cpath with @/@/ grandparent" {
+	type? first { @/@/y }
+} 'cpath
+
+; ============================================
+; CPath variants (op, pipe, get)
+; ============================================
+
+assert\display "op-cpath .ctx/val" {
+	type? first { .ctx/val }
+} 'cpath
+
+assert\display "pipe-cpath |ctx/val" {
+	type? first { |ctx/val }
+} 'cpath
+
+assert\display "get-cpath ?ctx/val" {
+	type? first { ?ctx/val }
+} 'cpath
+
+; ============================================
+; URI edge cases
+; ============================================
+
+assert\display "URI with port" {
+	type? first { http://localhost:8080 }
+} 'uri
+
+assert\display "URI with path and query" {
+	type? first { https://api.example.com/v1/users?id=123 }
+} 'uri
+
+assert\display "file URI" {
+	type? first { file:///absolute/path/to/file }
+} 'uri
+
+; ============================================
+; Email edge cases
+; ============================================
+
+assert\display "email with subdomain" {
+	type? first { user@sub.example.com }
+} 'email
+
+; ============================================
+; File path edge cases
+; ============================================
+
+assert\display "file path with extension" {
+	type? first { %script.rye }
+} 'uri
+
+assert\display "file path with directory" {
+	type? first { %path/to/file.txt }
+} 'uri
+
+; ============================================
+; X-word edge cases
+; ============================================
+
+assert\display "x-word <tag> as opword" {
+	type? first { <tag> }
+} 'opword
+
+assert\display "x-word with force <tag*> as opword" {
+	type? first { <tag*> }
+} 'opword
+
+assert\display "ex-word </tag>" {
+	type? first { </tag> }
+} 'exword
+
+; ============================================
+; get-word edge cases
+; ============================================
+
+assert\display "get-word ?word" {
+	type? first { ?word }
+} 'getword
+
+assert\display "get-word ?my-long-name" {
+	type? first { ?my-long-name }
+} 'getword
+
+; ============================================
+; Error cases that should still work
+; ============================================
+
+assert\display "unclosed block errors" {
+	try { do { load "{ 1 2 3" } } |type?
+} 'error
+
+assert\display "comma without surrounding tokens" {
+	load ","
+	|type?
+} 'block
+
+assert\display "single comma in block" {
+	length? { , }
+} 1
+
+; ============================================
+; Token adjacency at boundaries
+; ============================================
+
+assert\display "block immediately after block" {
+	length? { { 1 } { 2 } { 3 } }
+} 3
+
+assert\display "string then word with proper space" {
+	length? { "hello" word }
+} 2
+
+assert\display "number then opword" {
+	length? { 42 + }
+} 2
+
+assert\display "opword then number" {
+	length? { + 42 }
+} 2
+
+; ============================================
+; Multiple tokens on one logical expression
+; ============================================
+
+assert\display "many tokens in single block" {
+	length? { 1 + 2 * 3 .upper |to-string "hello" word 42 }
+} 10
+
+print ""

@@ -1,0 +1,93 @@
+; Run All Internal Tests
+; Usage: cd internal && rye run_all_tests.rye
+;
+; Runs all test suites that use the assert\display + private Load pattern
+
+
+; Load: get-generic? 'Load 'file-uri
+
+Load: fn { x } { .Load }
+
+print "╔══════════════════════════════════════════════════════════════╗"
+print "║              INTERNAL TEST SUITE RUNNER                      ║"
+print "╚══════════════════════════════════════════════════════════════╝"
+print ""
+
+; Test folders using the consistent assert\display pattern
+test-folders: { 
+	"basics"
+	"parsing" 
+	"evaluator" 
+	"closures"
+	"failure_handling" 
+	"cli-parse"
+	"structures"
+	"observer"
+	"control_flow"
+	"higher_order"
+	"loops"
+	"recursion"
+	"context_advanced"
+}
+
+; Track results
+var 'total-passed 0
+var 'total-failed 0
+var 'current-folder ""
+var 'passed 0
+var 'failed 0
+var 'ln ""
+var 'output ""
+var 'shell-cmd ""
+
+; Run each test folder using shell command to properly change directory
+for test-folders { ::current-folder
+	print "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	print join { "  Running: " current-folder }
+	print "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	
+	; Run the test using shell cd && rye to ensure correct working directory
+	shell-cmd:: join { "sh -c 'cd " current-folder " && rye main.rye 2>&1'" }
+	output:: capture-stdout { pipes/exec shell-cmd |pipes/out }
+	
+	; Count OK and FAILED in output
+	passed:: 0
+	failed:: 0
+	
+	; Check each line for OK/FAILED markers
+	output .split newline |for { ::ln
+		if contains ln ": \x1b[32mOK" { inc! 'passed }
+		if contains ln "FAILED" { inc! 'failed }
+	}
+	
+	; Print the output
+	print output
+	
+	; Update totals
+	total-passed:: total-passed + passed
+	total-failed:: total-failed + failed
+	
+	; Print result for this folder
+	print join { "  >> " current-folder ": " passed .string " passed, " failed .string " failed" }
+	print ""
+}
+
+; Print summary
+print "╔══════════════════════════════════════════════════════════════╗"
+print "║                      TEST SUMMARY                            ║"
+print "╚══════════════════════════════════════════════════════════════╝"
+print ""
+print join { "  TOTAL: " total-passed .string " passed, " total-failed .string " failed" }
+print ""
+
+; Final status
+either total-failed > 0 {
+	print "\x1b[31m╔══════════════════════════════════════════════════════════════╗"
+	print "\x1b[31m║  SOME TESTS FAILED                                          ║"
+	print "\x1b[31m╚══════════════════════════════════════════════════════════════╝\x1b[0m"
+	exit 1
+} {
+	print "\x1b[32m╔══════════════════════════════════════════════════════════════╗"
+	print "\x1b[32m║  ALL TESTS PASSED!                                          ║"
+	print "\x1b[32m╚══════════════════════════════════════════════════════════════╝\x1b[0m"
+}

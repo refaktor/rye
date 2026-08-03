@@ -1,0 +1,53 @@
+#!/bin/bash
+# Build Rye for Raspberry Pi with GPIO support (go-rpio)
+#
+# This build includes GPIO builtins (add_gpio) and the HTTP server for
+# remote control, while excluding heavy/desktop batteries to keep the
+# binary lean for embedded use.
+#
+# go-rpio requires CGO (accesses /dev/mem), so we keep CGO_ENABLED=1.
+#
+# Usage:
+#   ./buildrpi                  # Native build on RPi
+#   GOARCH=arm64 ./buildrpi     # Cross-compile for 64-bit RPi (needs aarch64 cross-compiler)
+#   GOARCH=arm GOARM=7 ./buildrpi  # Cross-compile for 32-bit RPi (needs arm cross-compiler)
+
+export CGO_ENABLED=1
+
+# Batteries INCLUDED (useful on RPi):
+#   add_gpio         - GPIO control (go-rpio)
+#   HTTP server      - net/http (standard library, always available)
+#   IO               - files, stdin/stdout, HTTP client
+#   cmd              - running external commands
+#   json             - JSON parsing/writing
+#   structures       - tables, vectors, maps, etc.
+#   conversion       - type conversions
+#   regexp           - regular expressions
+#
+# Batteries EXCLUDED (not needed on RPi, saves ~15-20MB binary):
+#   b_norepl         - interactive console/REPL
+#   no_sqlite        - SQLite database
+#   no_psql          - PostgreSQL database
+#   no_mysql         - MySQL database
+#   no_chitosocket   - Unix socket IPC
+#   no_telegram      - Telegram bot
+#   no_smtpd         - SMTP server
+#   no_tui           - terminal UI (bubbletea)
+#   no_mcp           - MCP protocol
+#   no_prometheus    - Prometheus metrics
+#   no_echarts       - ECharts rendering
+#   no_mqtt          - MQTT client
+#   no_crypto        - crypto/age encryption
+#   no_bcrypt        - bcrypt hashing
+#   no_html          - HTML parsing (goquery)
+#   no_sxml          - SXML templating
+#   no_markdown      - Markdown rendering
+#   no_email         - email sending
+#   no_imap          - IMAP client
+#   no_pipes         - Unix pipes
+#   no_mail          - mail parsing
+
+go build \
+    -tags="add_gpio,b_norepl,no_sqlite,no_psql,no_mysql,no_chitosocket,no_telegram,no_smtpd,no_tui,no_mcp,no_prometheus,no_echarts,no_mqtt,no_crypto,no_bcrypt,no_html,no_markdown,no_email,no_imap,no_pipes,no_mail" \
+    -ldflags="-s -w -X github.com/refaktor/rye/runner.Version=$(git describe --tag --always --broken 2>/dev/null || echo 'dev')" \
+    -o bin/rye-rpi

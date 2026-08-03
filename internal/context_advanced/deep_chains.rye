@@ -1,0 +1,83 @@
+; Deep Context Chain Tests
+print "## Deep Context Chains"
+
+; =============================================================================
+; Three-level context chain
+; =============================================================================
+
+assert\display "three-level chain access leaf" {
+	a1: context { x: 1 }
+	b1: extends a1 { y: 2 }
+	c1: extends b1 { z: 3 }
+	c1/z
+} 3
+
+assert\display "three-level chain access middle" {
+	a2: context { x: 1 }
+	b2: extends a2 { y: 2 }
+	c2: extends b2 { z: 3 }
+	c2/y
+} 2
+
+assert\display "three-level chain access root" {
+	a3: context { x: 1 }
+	b3: extends a3 { y: 2 }
+	c3: extends b3 { z: 3 }
+	c3/x
+} 1
+
+assert\display "three-level sum all" {
+	a4: context { x: 10 }
+	b4: extends a4 { y: 20 }
+	c4: extends b4 { z: 30 }
+	c4/x + c4/y + c4/z
+} 60
+
+; =============================================================================
+; Four-level chain
+; =============================================================================
+
+assert\display "four-level chain" {
+	l15: context { a: 1 }
+	l25: extends l15 { b: 2 }
+	l35: extends l25 { c: 3 }
+	l45: extends l35 { d: 4 }
+	l45/a + l45/b + l45/c + l45/d
+} 10
+
+; =============================================================================
+; Chain with functions
+; =============================================================================
+
+assert\display "chain function sees parent" {
+	base6: context { val: 100 }
+	mid6: extends base6 { mult: 2 }
+	leaf6: extends mid6 { 
+		compute: does { val * mult }
+	}
+	leaf6/compute
+} 200
+
+assert\display "chain function uses all levels" {
+	a7: context { x: 10 }
+	b7: extends a7 { y: 20 }
+	c7: extends b7 { 
+		sum-all: does { x + y + z }
+		z: 30
+	}
+	c7/sum-all
+} 60
+
+; =============================================================================
+; Dynamic chain building
+; =============================================================================
+
+assert\display "loop-built chain" {
+	var 'ctx context { level: 0 }
+	loop 5 {
+		ctx:: extends ctx { level: ctx/level + 1 }
+	}
+	ctx/level
+} 5
+
+print ""

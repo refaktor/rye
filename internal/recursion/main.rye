@@ -1,0 +1,16 @@
+; Recursion Test Suite
+; Tests for recursive functions and patterns
+; Run with: cd internal/recursion && rye main.rye
+
+print "========================================"
+print "         RECURSION TEST SUITE"
+print "========================================"
+print ""
+
+private Load %basic_recursion.rye
+private Load %mutual_recursion.rye
+
+print ""
+print "========================================"
+print "\x1b[32mALL RECURSION TESTS COMPLETED\x1b[0m"
+print "========================================"

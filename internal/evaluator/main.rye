@@ -15,6 +15,8 @@ private Load %force_modifier.rye
 private Load %context_constructors.rye
 private Load %context_paths.rye
 private Load %eval_edge_cases.rye
+private Load %cached_builtin_tests.rye
+private Load %eval_deep_edges.rye
 
 print ""
 print "========================================"

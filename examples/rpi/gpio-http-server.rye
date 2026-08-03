@@ -1,0 +1,108 @@
+; GPIO HTTP Server - Remote control Raspberry Pi GPIO via HTTP
+; Build with: ./buildrpi_sim (desktop) or ./buildrpi (real RPi)
+;
+; Endpoints:
+;   GET  /              - HTML dashboard
+;   GET  /api/status    - JSON status of all pins
+;   POST /api/pin/17/on  - Turn pin 17 on
+;   POST /api/pin/17/off - Turn pin 17 off
+;   GET  /api/pin/17     - Read pin 17 state
+
+print "Starting GPIO HTTP Server on :8080 ..."
+
+gpio-open
+
+; Initialize pins
+led-pin: gpio-pin 17
+led-pin .Output .Low
+print "LED pin 17 ready (output)"
+
+btn-pin: gpio-pin 22
+btn-pin .Input .Pull-up
+print "Button pin 22 ready (input, pull-up)"
+
+; Create HTTP server
+srv: http-server ":8080"
+
+; HTML dashboard with buttons and live status
+srv .Handle "/" fn { w req } {
+    w .Write `<!DOCTYPE html>
+<html>
+<head>
+    <title>Rye GPIO Control</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: sans-serif; max-width: 500px; margin: 40px auto; padding: 20px; }
+        button { padding: 12px 24px; margin: 5px; font-size: 16px; border: none; border-radius: 6px; cursor: pointer; }
+        .on { background: #4CAF50; color: white; }
+        .off { background: #f44336; color: white; }
+        .card { padding: 15px; background: #f0f0f0; border-radius: 6px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Rye GPIO Control</h1>
+    <div class="card">
+        <h3>LED (Pin 17)</h3>
+        <button class="on" onclick="fetch('/api/pin/17/on',{method:'POST'}).then(r=>r.json()).then(function(d){document.getElementById('pin17').textContent='ON'})">ON</button>
+        <button class="off" onclick="fetch('/api/pin/17/off',{method:'POST'}).then(r=>r.json()).then(function(d){document.getElementById('pin17').textContent='OFF'})">OFF</button>
+        <p>State: <span id="pin17">-</span></p>
+    </div>
+    <div class="card">
+        <h3>Button (Pin 22)</h3>
+        <p>State: <span id="pin22">-</span></p>
+        <button onclick="fetch('/api/status').then(r=>r.json()).then(function(d){document.getElementById('pin17').textContent=d.pin17?'ON':'OFF';document.getElementById('pin22').textContent=d.pin22?'HIGH':'LOW'})">Refresh</button>
+    </div>
+</body>
+</html>`
+}
+
+; JSON status endpoint
+srv .Handle "/api/status" fn { w req } {
+    p17: led-pin .Read
+    p22: btn-pin .Read
+    if p17 = 0 {
+        if p22 = 0 {
+            w .Write `{"pin17":0,"pin22":0}`
+        } {
+            w .Write `{"pin17":0,"pin22":1}`
+        }
+    } {
+        if p22 = 0 {
+            w .Write `{"pin17":1,"pin22":0}`
+        } {
+            w .Write `{"pin17":1,"pin22":1}`
+        }
+    }
+}
+
+; Read single pin
+srv .Handle "/api/pin/17" fn { w req } {
+    state: led-pin .Read
+    if state = 0 {
+        w .Write `{"pin17":0}`
+    } {
+        w .Write `{"pin17":1}`
+    }
+}
+
+; Turn pin on
+srv .Handle "/api/pin/17/on" fn { w req } {
+    led-pin .High
+    print "PIN 17 -> ON"
+    w .Write `{"pin17":1}`
+}
+
+; Turn pin off
+srv .Handle "/api/pin/17/off" fn { w req } {
+    led-pin .Low
+    print "PIN 17 -> OFF"
+    w .Write `{"pin17":0}`
+}
+
+print "Server running at http://localhost:8080"
+print "Press Ctrl+C to stop."
+
+; Start serving (blocking call)
+srv .Serve
+
+gpio-close

@@ -1,0 +1,512 @@
+; Evaluator Deep Edge Tests
+; Tests: deep operator chains, error propagation at depth, context path extremes,
+;        void propagation, HOF error handling, word type priority, comma injection
+;
+; Run with: cd internal/evaluator && rye main.rye (auto-loaded)
+
+print "## Evaluator Deep Edge Tests"
+
+; =============================================================================
+; 1. Deep operator chains — mixed word types in long sequences
+;    Stress-tests expression evaluation with many chained operations
+; =============================================================================
+print ""
+print "-- Deep operator chains --"
+
+assert\display "10 opword chain: a + b + c + d + e" {
+	1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10
+} 55
+
+assert\display "5 dotword chain: .upper .lower .upper" {
+	"hello" .upper .lower .upper .lower .upper
+} "HELLO"
+
+assert\display "5 pipeword chain: |+ 10 |+ 20 |+ 30" {
+	1 |+ 10 |+ 20 |+ 30 |+ 40 |+ 50
+} 151
+
+assert\display "mixed word type chain: dot + pipe + op" {
+	"hello" .upper |concat " WORLD" ++ "!!!"
+} "HELLO WORLD!!!"
+
+assert\display "deep math chain: (((1+2)*3)-4)/5" {
+	1 + 2 * 3 - 4 / 5
+} 9.2
+
+; =============================================================================
+; 2. Error propagation through deep call chains
+;    Tests that errors correctly bubble up through many frames
+; =============================================================================
+print ""
+print "-- Error propagation through depth --"
+
+assert\display "error through 5 nested functions" {
+	f1:: fn { } { 1 / 0 }
+	f2:: fn { } { f1 }
+	f3:: fn { } { f2 }
+	f4:: fn { } { f3 }
+	f5:: fn { } { f4 }
+	try { f5 } |type?
+} 'error
+
+assert\display "fix at top of 5-level chain catches error" {
+	f1:: fn { } { 1 / 0 }
+	f2:: fn { } { f1 }
+	f3:: fn { } { f2 }
+	f4:: fn { } { f3 }
+	f5:: fn { } { f4 }
+	f5 |fix { "caught-at-top" }
+} "caught-at-top"
+
+assert\display "fix midway in 5-level chain catches error" {
+	leaf:: fn { } { 1 / 0 }
+	mid1:: fn { } { leaf |fix { "handled-mid" } }
+	mid2:: fn { } { mid1 }
+	mid3:: fn { } { mid2 }
+	root:: fn { } { mid3 }
+	root
+} "handled-mid"
+
+assert\display "check wraps error through 5 levels" {
+	leaf:: fn { } { 1 / 0 }
+	mid1:: fn { } { leaf |^check "level1" }
+	mid2:: fn { } { mid1 |^check "level2" }
+	root:: fn { } { mid2 |^check "level3" }
+	try { root } |message?
+} "level3"
+
+; =============================================================================
+; 3. Context path extremes — deep parent access and long chains
+; =============================================================================
+print ""
+print "-- Context path extremes --"
+
+assert\display "3-level extends chain total sum" {
+	root:: context { a: 1 b: 2 }
+	mid:: extends root { c: 3 }
+	leaf:: extends mid { d: 4 }
+	do\in leaf { a + b + c + d }
+} 10
+
+assert\display "@/ parent access through 3 levels" {
+	grandparent:: context { x: 100 }
+	parent:: context { } bind! parent grandparent
+	child:: context { get-x: does { @/x } } bind! child parent
+	child/get-x
+} 100
+
+assert\display "cpath with 3-part access" {
+	outer:: context {
+		mid: context { inner-val: 99 }
+	}
+	outer/mid/inner-val
+} 99
+
+assert\display "context with function returning cpath" {
+	ctx:: context {
+		val: 42
+		get-val: does { val }
+	}
+	ctx/get-val
+} 42
+
+; =============================================================================
+; 4. Void propagation — void through all word types and chains
+; =============================================================================
+print ""
+print "-- Void propagation --"
+
+assert\display "void as argument to builtin" {
+	_ |type?
+} 'void
+
+assert\display "void chained with pipeword" {
+	try { _ |to-string } |type?
+} 'error
+
+assert\display "void followed by opword errors" {
+	try { _ + 5 } |type?
+} 'error
+
+assert\display "void in pipe left position" {
+	try { _ |+ 10 } |type?
+} 'error
+
+; =============================================================================
+; 5. Error in every arg position of builtin calls
+; =============================================================================
+print ""
+print "-- Error in builtin arg positions --"
+
+assert\display "error in arg0: div 1 / 0" {
+	try { 1 / 0 + 5 } |type?
+} 'error
+
+assert\display "error in arg1: 5 + 1/0" {
+	try { 5 + 1 / 0 } |type?
+} 'error
+
+assert\display "error in arg0 of pipeword" {
+	try { 1 / 0 |+ 5 } |type?
+} 'error
+
+assert\display "error in arg0 of dotword" {
+	try { 1 / 0 .to-string } |type?
+} 'error
+
+; =============================================================================
+; 6. HOF with errors in callbacks
+; =============================================================================
+print ""
+print "-- HOF with error in callbacks --"
+
+assert\display "map with failing callback returns error" {
+	try { map { 1 0 2 } { ::x 10 / x } } |type?
+} 'error
+
+assert\display "filter with failing callback returns error" {
+	try { filter { 1 0 2 } { ::x 10 / x > 0 } } |type?
+} 'error
+
+assert\display "fold with failing callback returns error" {
+	try { fold\do { 1 0 2 } 'acc 0 { ::x 10 / x + acc } } |type?
+} 'error
+
+assert\display "map with fix'd callback survives errors" {
+	map { 2 0 4 } { ::x 10 / x |fix { -1 } }
+} { 5 -1 2 }
+
+assert\display "filter survives with fix in callback" {
+	filter { 2 0 4 0 6 } { ::x 10 / x |fix { -1 } > 2 }
+} { 2 4 6 }
+
+; =============================================================================
+; 7. Word type priority — op/dot/pipe with same base name
+; =============================================================================
+print ""
+print "-- Word type priority --"
+
+assert\display "opword + works as builtin add" {
+	1 + 2
+} 3
+
+assert\display "pipeword |+ works on left arg" {
+	1 |+ 2
+} 3
+
+assert\display "opword concat works" {
+	concat "a" "b"
+} "ab"
+
+assert\display "pipeword |concat works" {
+	"a" |concat "b"
+} "ab"
+
+assert\display "dotword .concat works" {
+	"a" .concat "b"
+} "ab"
+
+; =============================================================================
+; 8. do\in with error scenarios
+; =============================================================================
+print ""
+print "-- do\\in error scenarios --"
+
+assert\display "do\\in with nonexistent context errors" {
+	try { do\in nonexistent_ctx_xyz { 1 + 2 } } |type?
+} 'error
+
+assert\display "do\\in propagates inner error" {
+	ctx:: context { }
+	try { do\in ctx { 1 / 0 } } |type?
+} 'error
+
+assert\display "do\\in with fix catches inner error" {
+	ctx:: context { }
+	try { do\in ctx { 1 / 0 } } |fix { "handled" }
+} "handled"
+
+; =============================================================================
+; 9. Comma injection through error states
+; =============================================================================
+print ""
+print "-- Comma injection edges --"
+
+assert\display "comma in try block returns last non-error" {
+	try { "a" , "b" , "c" }
+} "c"
+
+assert\display "comma after error in try-fix chain" {
+	try { 1 / 0 , "fallback" } |fix { "caught" }
+} "caught"
+
+assert\display "comma in do block preserves last" {
+	do { 1 , 2 , 3 }
+} 3
+
+assert\display "comma with setword assigns last" {
+	do { x: "A" , y: "B" , z: "C" }
+} "C"
+
+; =============================================================================
+; 10. Block modes — all 5 modes working together
+; =============================================================================
+print ""
+print "-- Block mode interactions --"
+
+assert\display "literal block via { }" {
+	type? { 1 2 3 }
+} 'block
+
+assert\display "evaluated block via [ ]" {
+	type? [ 1 2 3 ]
+} 'block
+
+assert\display "group ( ) evaluates last" {
+	( 1 , 2 , 3 )
+} 3
+
+assert\display "list literal l{ }" {
+	type? l{ 1 2 3 }
+} 'list
+
+assert\display "dict literal d{ }" {
+	type? d{ a 1 b 2 }
+} 'dict
+
+assert\display "evaluated list l[ ]" {
+	type? l[ 1 + 0 2 + 0 3 + 0 ]
+} 'list
+
+assert\display "evaluated dict d[ ]" {
+	type? d[ 'key 1 + 0 ]
+} 'dict
+
+assert\display "nested mixed: { [ ( l{ } ) ] }" {
+	length? first { [ ( l{ 1 2 } ) ] }
+} 1
+
+; =============================================================================
+; 11. try-all — multiple expressions, first non-error
+; =============================================================================
+print ""
+print "-- try-all exdges --"
+
+assert\display "try-all returns first non-error" {
+	try-all { 1 / 0 } { "fallback" }
+} "fallback"
+
+assert\display "try-all returns first value" {
+	try-all { 42 } { 99 }
+} 42
+
+assert\display "try-all with all errors returns error" {
+	try { try-all { 1 / 0 } { 1 / 0 } } |type?
+} 'error
+
+; =============================================================================
+; 12. Observer chain reactions — observer triggering observer
+; =============================================================================
+print ""
+print "-- Observer chain reactions --"
+
+assert\display "observer triggers another variable change" {
+	var 'trigger-count 0
+	var 'a-val 10
+	var 'b-val 20
+	a: var 'a 10
+	b: var 'b 20
+	on-change a { inc! 'trigger-count , b:: b + 1 }
+	; changing a triggers b change, but that should not re-trigger a
+	a:: 100
+	trigger-count
+} 1
+
+assert\display "multiple observers, each updates total" {
+	var 'total 0
+	var 'x-val 0
+	x: var 'x 5
+	on-change x { total:: total + 1 }
+	on-change x { total:: total + 10 }
+	x:: 42
+	total
+} 11
+
+; =============================================================================
+; 13. fix\\either fix\\else fix\\continue — branching on failure
+; =============================================================================
+print ""
+print "-- fix branching constructs --"
+
+assert\display "fix\\either on success calls success branch" {
+	42 |fix\either { "error-branch" } { "success-branch" }
+} "success-branch"
+
+assert\display "fix\\either on failure calls error branch" {
+	1 / 0 |fix\either { "error-branch" } { "success-branch" }
+} "error-branch"
+
+assert\display "fix\\else on success returns value" {
+	concat "a" "b" |fix\else { "default" }
+} "ab"
+
+assert\display "fix\\else on failure returns default" {
+	try { concat 1 / 0 "b" } |fix\else { "default" }
+} "default"
+
+; =============================================================================
+; 14. finally — cleanup always runs
+; =============================================================================
+print ""
+print "-- finally keyword --"
+
+assert\display "finally runs after success" {
+	var 'cleaned false
+	try { "ok" } |finally { cleaned:: true , "clean" }
+	cleaned
+} true
+
+assert\display "finally runs after error" {
+	var 'cleaned2 false
+	try { 1 / 0 } |fix { "err" } |finally { cleaned2:: true , "clean" }
+	cleaned2
+} true
+
+; =============================================================================
+; 15. Setword/LSetword/Modword/LModword with errors
+; =============================================================================
+print ""
+print "-- Setword family with errors --"
+
+assert\display "setword does NOT set when RHS errors" {
+	a:: 42
+	try { a:: 1 / 0 }
+	a
+} 42
+
+assert\display "modword does NOT modify when RHS errors" {
+	b:: 10
+	try { b:: 1 / 0 }
+	b
+} 10
+
+assert\display "lsetword does NOT set when RHS errors" {
+	try { 1 / 0 :c }
+	c
+} 0
+
+; =============================================================================
+; 16. loops with various failure/return interactions
+; =============================================================================
+print ""
+print "-- Loop failure interactions --"
+
+assert\display "for loop stops on unhandled error" {
+	var 'count 0
+	try { for { 1 2 3 0 4 } { ::x count:: count + 1 , 10 / x } }
+	count
+} 3
+
+assert\display "for loop with try-fix processes all" {
+	var 'results { }
+	for { 2 0 4 0 6 } { ::x
+		v:: try { 10 / x } |fix { -1 }
+		append! v results
+	}
+	results
+} { 5 -1 2 -1 1 }
+
+assert\display "loop continues after fix inside" {
+	var 'sum 0
+	for { 2 0 3 0 5 } { ::x
+		sum:: sum + ( 10 / x |fix { 0 } )
+	}
+	sum
+} 10
+
+; =============================================================================
+; 17. Large expression evaluation
+; =============================================================================
+print ""
+print "-- Large expression evaluation --"
+
+assert\display "100 additions in one expression" {
+	0 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1
+	+ 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1
+	+ 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1
+	+ 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1
+	+ 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1
+	+ 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1
+	+ 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1
+	+ 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1
+	+ 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1
+	+ 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1
+} 100
+
+assert\display "expression with 20 mixed tokens" {
+	"a" .upper |concat "B" ++ "C" |to-string .lower ++ "d"
+} "abc"
+
+; =============================================================================
+; 18. Deep call stack: function calling function calling function ...
+; =============================================================================
+print ""
+print "-- Deep call stack --"
+
+assert\display "recursive countdown 100->0" {
+	countdown:: fn { n } {
+		either n <= 0 { 0 } { countdown n - 1 }
+	}
+	countdown 100
+} 0
+
+assert\display "mutual recursion even/odd" {
+	even?:: fn { n } {
+		either n = 0 { true } { odd? n - 1 }
+	}
+	odd?:: fn { n } {
+		either n = 0 { false } { even? n - 1 }
+	}
+	even? 10
+} true
+
+assert\display "mutual recursion odd check" {
+	even?:: fn { n } {
+		either n = 0 { true } { odd? n - 1 }
+	}
+	odd?:: fn { n } {
+		either n = 0 { false } { even? n - 1 }
+	}
+	odd? 9
+} true
+
+; =============================================================================
+; 19. variable lifecycle: create, shadow, mutate, access
+; =============================================================================
+print ""
+print "-- Variable lifecycle --"
+
+assert\display "variable created then read" {
+	do { a: 42 , a }
+} 42
+
+assert\display "variable mutated then read" {
+	do { a:: 1 , a:: 2 , a:: 3 , a }
+} 3
+
+assert\display "variable shadowed in nested block" {
+	do { a: 1 , do { a: 2 , a } , a }
+} 1
+
+assert\display "var-ref creation and deref" {
+	r: ref 42
+	deref r
+} 42
+
+assert\display "var-ref mutation" {
+	r: ref 42
+	change! 99 r
+	deref r
+} 99
+
+print ""
