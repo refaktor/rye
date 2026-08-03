@@ -964,6 +964,14 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 		}
 
 		// Capitalized word - generic dispatch path.
+		// If a failure is already pending, escalate to error and stop before
+		// attempting generic dispatch. This prevents masking the original failure
+		// (e.g., from a failing builtin) with a misleading generic-method error.
+		if ps.FailureFlag {
+			ps.ErrorFlag = true
+			ps.Ser.SetPos(pos)
+			return
+		}
 		// Collect the first argument so we can determine its Kind.
 		kind := &genericKind
 		argCollectionFailed := false
@@ -1062,6 +1070,11 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 // Called from: EvalExpression_DispatchType
 // Purpose: Handles words explicitly marked as generic - evaluates next expression and dispatches on its type
 func EvalGenword(ps *env.ProgramState, word env.Genword, leftVal env.Object, toLeft bool) {
+	// If a failure is already pending, escalate to error and stop before dispatching
+	if ps.FailureFlag {
+		ps.ErrorFlag = true
+		return
+	}
 	EvalExpression_DispatchType(ps)
 
 	if ps.ReturnFlag || ps.ErrorFlag {

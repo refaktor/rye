@@ -171,7 +171,8 @@ func (e *Engine) EvalGetObject(code string) (env.Object, error) {
 		return nil, fmt.Errorf("parse error: %s", errObj.Message)
 	}
 	// Update the series on the existing program state, preserving ctx & idx.
-	e.ps.SetBlock(block.(env.Block))
+	b := block.(env.Block)
+	e.ps.SetBlock(&b)
 	e.ps.ErrorFlag = false
 	e.ps.ReturnFlag = false
 	e.ps.FailureFlag = false

@@ -503,7 +503,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						for _, ch := range block.Value {
 							EvalBlockInj(ps, *env.NewString(string(ch)), true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "forever\\with")
-							if ps.ErrorFlag || ps.ReturnFlag {
+							if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 								return ps.Res
 							}
 							ps.Ser.Reset()
@@ -520,7 +520,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						ps.Ser = code.Series
 						for i := 0; i < block.Series.Len(); i++ {
 							EvalBlockInj(ps, block.Series.Get(i), true)
-							if ps.ErrorFlag || ps.ReturnFlag {
+							if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 								return ps.Res
 							}
 							ps.Ser.Reset()
@@ -537,7 +537,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						ps.Ser = code.Series
 						for i := 0; i < len(block.Data); i++ {
 							EvalBlockInj(ps, env.ToRyeValue(block.Data[i]), true)
-							if ps.ErrorFlag || ps.ReturnFlag {
+							if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 								return ps.Res
 							}
 							ps.Ser.Reset()
@@ -556,7 +556,7 @@ var builtins_iteration = map[string]*env.Builtin{
 							row := block.Rows[i]
 							row.Uplink = &block
 							EvalBlockInj(ps, row, true)
-							if ps.ErrorFlag || ps.ReturnFlag {
+							if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 								return ps.Res
 							}
 							ps.Ser.Reset()
@@ -1477,7 +1477,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						}
 						res := DirectlyCallBuiltin(ps, block, env.ToRyeValue(item), nil)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "reduce")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							return ps.Res
 						}
 						switch res := res.(type) {
@@ -2276,7 +2276,7 @@ var builtins_iteration = map[string]*env.Builtin{
 								}
 								EvalBlockInj(ps, val, true)
 								MaybeDisplayFailureOrError(ps, ps.Idx, "for\\kv")
-								if ps.ErrorFlag || ps.ReturnFlag {
+								if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 									ps.Ser = ser
 									return ps.Res
 								}
@@ -2299,7 +2299,7 @@ var builtins_iteration = map[string]*env.Builtin{
 								// ERRORING . if we don't display here, nothing of meaning is displayed
 								// just runtime error
 								MaybeDisplayFailureOrError(ps, ps.Idx, "for\\kv")
-								if ps.ErrorFlag || ps.ReturnFlag {
+								if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 									// fmt.Println("IS ERROR 1")
 									// ERRORING . if we return the ser then error location moves to outside of for\kv
 									// so we don't want to
