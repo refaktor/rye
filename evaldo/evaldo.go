@@ -119,15 +119,27 @@ func EvalBlockInj_Rye2(ps *env.ProgramState, inj env.Object, injnow bool) {
 		//   token (Pipeword, Dotword, LSetword, Opword) - an orphaned chain left by ^fix.
 		//   If the next token starts a fresh independent expression, clear ReturnFlag and
 		//   continue so that code after e.g. a "for" loop keeps running.
-		if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
+		if ps.ErrorFlag || ps.ReturnFlag {
 			// fmt.Println("EVAL BLOCK INJ")
 			// fmt.Println(ps.ErrorFlag, ps.ReturnFlag, ps.CallDepth)
-			// At top level (CallDepth == 0), convert unhandled failures to errors
-			// so they are displayed and stop evaluation (same semantics as tryHandleFailure)
-			if ps.FailureFlag && ps.CallDepth == 0 && !ps.ErrorFlag {
-				ps.ErrorFlag = true
-				return
-			}
+			// At top level (CallDepth == 0), a FailureFlag without ErrorFlag should
+			// not be immediately converted to error. Check if a handler token follows
+			// (pipeword, dotword, etc.) that could process the failure (e.g. |disarm,
+			// |fix, |check). If so, let the loop continue so the handler can act.
+			/* if ps.FailureFlag && ps.CallDepth == 0 && !ps.ErrorFlag {
+				if ps.Ser.Pos() < ps.Ser.Len() {
+					switch ps.Ser.Peek().(type) {
+					case env.Pipeword, env.Dotword, env.LSetword, env.Opword:
+						// Handler token follows — let the loop continue
+					default:
+						ps.ErrorFlag = true
+						return
+					}
+				} else {
+					ps.ErrorFlag = true
+					return
+				}
+			}*/
 			if ps.ErrorFlag || ps.CallDepth > 0 {
 				return
 			}
@@ -230,7 +242,7 @@ func EvalExpression(ps *env.ProgramState, inj env.Object, injnow bool, limited b
 		}
 		// Eval expression that doesn't get value from the left
 		EvalExpression_DispatchType(ps)
-		if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
+		if ps.ReturnFlag || ps.ErrorFlag { // W0607
 			return injnow
 		}
 	} else {
@@ -278,7 +290,7 @@ func EvalExpressionInjLimited(ps *env.ProgramState, inj env.Object, injnow bool)
 // allowDotwords=false: prevents nested dotwords from being consumed as arguments (set when collecting dotword args)
 func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, limited bool, allowOpwords bool, allowDotwords bool) {
 	// fmt.Println("--OptionallyEvalExpressionRight:1")
-	if nextObj == nil || ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
+	if nextObj == nil || ps.ReturnFlag || ps.ErrorFlag { // W0607
 		return
 	}
 	// exit quickly for most common value types - any type that DispatchType
@@ -322,7 +334,7 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 			var firstVal env.Object
 			if pipeSecond && !ps.Ser.AtLast() {
 				EvalExpression_CollectArg(ps, true, false)
-				if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
+				if ps.ReturnFlag || ps.ErrorFlag { // W0607
 					return
 				}
 				firstVal = ps.Res
@@ -338,7 +350,7 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 		default:
 			return
 		}
-		if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
+		if ps.ReturnFlag || ps.ErrorFlag { // W0607
 			return
 		}
 		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords, allowDotwords)
@@ -363,7 +375,7 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 		ps.Ser.Next()
 		// Pass dotword=true so argument collection blocks further dotwords (symmetric to opword blocking opwords)
 		EvalWord(ps, opword.ToWord(), ps.Res, false, opword.Force > 0, true, true)
-		if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
+		if ps.ReturnFlag || ps.ErrorFlag { // W0607
 			return
 		}
 		// Continue dotword chain if another dotword follows (at same level, allowDotwords unchanged).
@@ -994,7 +1006,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 				// first, then call Read on that URI. Previously, EvalExpression_DispatchType
 				// only grabbed the bare next atom (%file), giving generic words wrong priority.
 				EvalExpression_CollectArg(ps, true, false)
-				if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
+				if ps.ReturnFlag || ps.ErrorFlag { // W0607
 					// Don't return yet - fall through to "Word not found" error.
 					// This handles cases like "undefined_word |Print" where pipeword barrier
 					// would otherwise mask the real error.
@@ -1010,7 +1022,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 		if pipeSecond && !argCollectionFailed {
 			if !ps.Ser.AtLast() {
 				EvalExpression_CollectArg(ps, true, false)
-				if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
+				if ps.ReturnFlag || ps.ErrorFlag { // W0607
 					argCollectionFailed = true
 					argCollectionError = ps.Res // preserve the real error
 					ps.ErrorFlag = false
@@ -1964,7 +1976,7 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 		if checkForFailureWithBuiltin(bi, ps, 1) {
 			return
 		}
-		if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
+		if ps.ReturnFlag || ps.ErrorFlag { // W0607
 			ps.Res = env.NewError4(0, "Argument 2 of "+strconv.Itoa(bi.Argsn)+" missing for builtin "+FormatBuiltinReference(bi.Doc)+". Check that all required arguments are provided.", getParentErr(), nil)
 			return
 		}
@@ -1978,7 +1990,7 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 		if checkForFailureWithBuiltin(bi, ps, 2) {
 			return
 		}
-		if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
+		if ps.ReturnFlag || ps.ErrorFlag { // W0607
 			ps.Res = env.NewError4(0, "Argument 3 missing. Check that all required arguments are provided for the builtin function.", getParentErr(), nil)
 			return
 		}
@@ -1991,7 +2003,7 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 		if checkForFailureWithBuiltin(bi, ps, 3) {
 			return
 		}
-		if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
+		if ps.ReturnFlag || ps.ErrorFlag { // W0607
 			ps.Res = env.NewError4(0, "Argument 4 missing. Check that all required arguments are provided for the builtin function.", getParentErr(), nil)
 			return
 		}
@@ -2004,7 +2016,7 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 		if checkForFailureWithBuiltin(bi, ps, 4) {
 			return
 		}
-		if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
+		if ps.ReturnFlag || ps.ErrorFlag { // W0607
 			ps.Res = env.NewError4(0, "Argument 5 missing. Check that all required arguments are provided for the builtin function.", getParentErr(), nil)
 			return
 		}
@@ -2517,7 +2529,8 @@ func trace(s string) {}
 // tryHandleFailure attempts to handle a failure by calling context error handlers.
 // Called from: EvalBlockInj
 // Purpose: Checks for failure flag and tries to invoke error-handler word from context.
-// At top-level (CallDepth == 0), an unhandled failure (including returned ones) becomes an error.
+// At top-level (CallDepth == 0), an unhandled failure (including returned ones) becomes
+// an error only if no handler token (pipeword, dotword, etc.) follows in the series.
 // Inside functions, returned failures propagate up; non-returned failures become errors.
 func tryHandleFailure(ps *env.ProgramState) bool {
 	if ps.FailureFlag && !ps.InErrHandler {
@@ -2527,11 +2540,18 @@ func tryHandleFailure(ps *env.ProgramState) bool {
 			return false // Successfully handled
 		}*/
 
-		// At top-level (CallDepth == 0), any unhandled failure becomes an error
-		// This includes failures that were explicitly returned via ^fail
+		// At top-level (CallDepth == 0), only convert failure to error if there is
+		// no handler token (pipeword, dotword, etc.) next in the series that could
+		// process the failure. Handlers like |disarm, |fix, |check have AcceptFailure
+		// and need the failure to reach them.
 		if ps.CallDepth == 0 {
-			// fmt.Println("**Err tryHandleFailure at top-level: T**")
-			return true // Convert to error at top level
+			if false && ps.Ser.Pos() < ps.Ser.Len() {
+				switch ps.Ser.Peek().(type) {
+				case env.Pipeword, env.Dotword, env.LSetword, env.Opword:
+					return false // Handler may process the failure
+				}
+			}
+			return true // No handler available — convert to error
 		}
 
 		// Inside a function: check if failure should be converted to error or propagated

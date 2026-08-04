@@ -18,7 +18,7 @@ do-merge: fn { num } {
 Request ( url ++ repo ++ "/pulls?state=open" ) 'GET "" |set-headers
 |Call
 |^ensure\with { .Status? = 200 } "request to github failed"
-|Reader .Read\string .parse-json
+|Reader |Read\string |probe |parse-json
 |filter { -> "user" -> "login" |= bot }
 |pass { .length? .embed "{} pull requests found" |print }
 |for { -> "number" ::num ,
