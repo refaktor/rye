@@ -23,7 +23,7 @@ func Eyr_CallBuiltinPipe(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object)
 		if evaldo.CheckForFailureWithBuiltin(bi, ps, 0) {
 			return ps
 		}
-		if ps.ErrorFlag || ps.ReturnFlag {
+		if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 			return ps
 		}
 		if ps.ErrorFlag {
@@ -51,7 +51,7 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 		if evaldo.CheckForFailureWithBuiltin(bi, ps, 0) {
 			return ps
 		}
-		if ps.ErrorFlag || ps.ReturnFlag {
+		if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 			return ps
 		}
 		ps.Res = bi.Fn(ps, nil, nil, nil, nil, nil)
@@ -62,7 +62,7 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 		if evaldo.CheckForFailureWithBuiltin(bi, ps, 0) {
 			return ps
 		}
-		if ps.ErrorFlag || ps.ReturnFlag {
+		if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 			return ps
 		}
 		arg0 = ps.Stack.Pop(ps)
@@ -78,7 +78,7 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 			if evaldo.CheckForFailureWithBuiltin(bi, ps, 1) {
 				return ps
 			}
-			if ps.ErrorFlag || ps.ReturnFlag {
+			if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 				return ps
 			}
 
@@ -97,7 +97,7 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 				if evaldo.CheckForFailureWithBuiltin(bi, ps, 0) {
 					return ps
 				}
-				if ps.ErrorFlag || ps.ReturnFlag {
+				if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 					return ps
 				}
 
@@ -344,7 +344,7 @@ func Eyr_EvalBlockInside(ps *env.ProgramState, inj env.Object, injnow bool) *env
 			// fmt.Println("yy")
 			return ps
 		}
-		if ps.ReturnFlag || ps.ErrorFlag {
+		if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 			/* fmt.Println(ps.ReturnFlag)
 			fmt.Println(ps.ErrorFlag)
 			fmt.Println("xx") */
@@ -366,7 +366,7 @@ func Eyr_EvalBlock(ps *env.ProgramState, full bool) *env.ProgramState {
 			// fmt.Println("yy")
 			return ps
 		}
-		if ps.ReturnFlag || ps.ErrorFlag {
+		if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 			/* fmt.Println(ps.ReturnFlag)
 			fmt.Println(ps.ErrorFlag)
 			fmt.Println("xx") */

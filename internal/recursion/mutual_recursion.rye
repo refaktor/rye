@@ -1,0 +1,79 @@
+; Mutual Recursion Tests
+print "## Mutual Recursion"
+
+; =============================================================================
+; Classic is-even / is-odd mutual recursion
+; =============================================================================
+
+; Note: These need to be defined together so they can see each other
+
+assert\display "mutual recursion even 10" {
+	is-even1: fn { n } { either n = 0 { true } { is-odd1 n - 1 } }
+	is-odd1: fn { n } { either n = 0 { false } { is-even1 n - 1 } }
+	is-even1 10
+} true
+
+assert\display "mutual recursion odd 10" {
+	is-even2: fn { n } { either n = 0 { true } { is-odd2 n - 1 } }
+	is-odd2: fn { n } { either n = 0 { false } { is-even2 n - 1 } }
+	is-odd2 10
+} false
+
+assert\display "mutual recursion even 7" {
+	is-even3: fn { n } { either n = 0 { true } { is-odd3 n - 1 } }
+	is-odd3: fn { n } { either n = 0 { false } { is-even3 n - 1 } }
+	is-even3 7
+} false
+
+assert\display "mutual recursion odd 7" {
+	is-even4: fn { n } { either n = 0 { true } { is-odd4 n - 1 } }
+	is-odd4: fn { n } { either n = 0 { false } { is-even4 n - 1 } }
+	is-odd4 7
+} true
+
+; =============================================================================
+; Ping-pong mutual recursion
+; =============================================================================
+
+assert\display "ping-pong counts down" {
+	ping5: fn { n } { either n = 0 { "done" } { pong5 n - 1 } }
+	pong5: fn { n } { either n = 0 { "done" } { ping5 n - 1 } }
+	ping5 10
+} "done"
+
+; =============================================================================
+; Mutual recursion building result
+; =============================================================================
+
+assert\display "mutual builds string" {
+	a-fn6: fn { n } { 
+		either n = 0 { "" } { "A" ++ b-fn6 n - 1 }
+	}
+	b-fn6: fn { n } { 
+		either n = 0 { "" } { "B" ++ a-fn6 n - 1 }
+	}
+	a-fn6 6
+} "ABABAB"
+
+assert\display "mutual from b" {
+	a-fn7: fn { n } { 
+		either n = 0 { "" } { "A" ++ b-fn7 n - 1 }
+	}
+	b-fn7: fn { n } { 
+		either n = 0 { "" } { "B" ++ a-fn7 n - 1 }
+	}
+	b-fn7 6
+} "BABABA"
+
+; =============================================================================
+; Three-way mutual recursion
+; =============================================================================
+
+assert\display "three-way mutual" {
+	fn-a8: fn { n } { either n = 0 { 0 } { 1 + fn-b8 n - 1 } }
+	fn-b8: fn { n } { either n = 0 { 0 } { 1 + fn-c8 n - 1 } }
+	fn-c8: fn { n } { either n = 0 { 0 } { 1 + fn-a8 n - 1 } }
+	fn-a8 9
+} 9
+
+print ""

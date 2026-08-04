@@ -168,6 +168,8 @@ func Rye00_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, t
 				ps.ErrorFlag = true
 				return
 			}
+			// AcceptFailure: preserve the failure value instead of overwriting with generic error
+			return
 		}
 
 		if ps.ErrorFlag || ps.ReturnFlag {
@@ -189,6 +191,8 @@ func Rye00_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, t
 				ps.ErrorFlag = true
 				return
 			}
+			// AcceptFailure: preserve the failure value instead of overwriting with generic error
+			return
 		}
 
 		if ps.ErrorFlag || ps.ReturnFlag {
@@ -210,6 +214,8 @@ func Rye00_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, t
 				ps.ErrorFlag = true
 				return
 			}
+			// AcceptFailure: preserve the failure value instead of overwriting with generic error
+			return
 		}
 
 		if ps.ErrorFlag || ps.ReturnFlag {

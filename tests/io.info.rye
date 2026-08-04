@@ -923,6 +923,9 @@ section "Unix Domain Socket Operations " "Unix domain socket operations for IPC"
 
 }
 
+section "Default" "" {
+}
+
 section "Command Operations " "Running other programs" {
 	group "cmd" 
 	"Create a command."

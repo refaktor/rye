@@ -2912,7 +2912,7 @@ var builtins_collection = map[string]*env.Builtin{
 					switch s3 := arg2.(type) {
 					case env.Function:
 						inter := IntersectStringsCustom(s1, s2, ps, s3)
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							return ps.Res
 						}
 						return *env.NewString(inter)
@@ -2928,7 +2928,7 @@ var builtins_collection = map[string]*env.Builtin{
 					switch s3 := arg2.(type) {
 					case env.Function:
 						inter := IntersectBlocksCustom(s1, b2, ps, s3)
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							return ps.Res
 						}
 						return *env.NewBlock(*env.NewTSeries(inter))
@@ -3739,7 +3739,7 @@ var builtins_collection = map[string]*env.Builtin{
 				for ps.Ser.Pos() < ps.Ser.Len() {
 					// ps, injnow = EvalExpressionInj(ps, inj, injnow)
 					EvalExpression_CollectArg(ps, false, false)
-					if ps.ReturnFlag || ps.ErrorFlag {
+					if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 						return ps.Res
 					}
 					res = append(res, ps.Res)

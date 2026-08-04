@@ -29,7 +29,7 @@ var builtins_combinators = map[string]*env.Builtin{
 				ps.Ser = bloc.Series
 				EvalBlockInj(ps, arg0, true)
 				MaybeDisplayFailureOrError(ps, ps.Idx, "pass")
-				if ps.ErrorFlag || ps.ReturnFlag {
+				if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 					ps.Ser = ser
 					return ps.Res
 				}
@@ -60,7 +60,7 @@ var builtins_combinators = map[string]*env.Builtin{
 					ps.Ser = wrap.Series
 					EvalBlockInj(ps, arg0, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "wrap")
-					if ps.ErrorFlag || ps.ReturnFlag {
+					if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 						ps.Ser = ser
 						return ps.Res
 					}
@@ -68,7 +68,7 @@ var builtins_combinators = map[string]*env.Builtin{
 					ps.Ser = bloc.Series
 					EvalBlockInj(ps, arg0, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "wrap")
-					if ps.ErrorFlag || ps.ReturnFlag {
+					if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 						ps.Ser = ser
 						return ps.Res
 					}
@@ -77,7 +77,7 @@ var builtins_combinators = map[string]*env.Builtin{
 					ps.Ser = wrap.Series
 					EvalBlockInj(ps, arg0, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "wrap")
-					if ps.ErrorFlag || ps.ReturnFlag {
+					if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 						ps.Ser = ser
 						return ps.Res
 					}
@@ -112,7 +112,7 @@ var builtins_combinators = map[string]*env.Builtin{
 					ps.Ser = b1.Series
 					EvalBlockInj(ps, arg0, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "keep")
-					if ps.ErrorFlag || ps.ReturnFlag {
+					if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 						ps.Ser = ser
 						return ps.Res
 					}
@@ -120,7 +120,7 @@ var builtins_combinators = map[string]*env.Builtin{
 					ps.Ser = b2.Series
 					EvalBlockInj(ps, arg0, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "keep")
-					if ps.ErrorFlag || ps.ReturnFlag {
+					if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 						ps.Ser = ser
 						return ps.Res
 					}

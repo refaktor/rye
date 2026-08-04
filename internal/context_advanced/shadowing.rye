@@ -1,0 +1,91 @@
+; Context Shadowing Tests
+print "## Context Shadowing"
+
+; =============================================================================
+; Basic shadowing
+; =============================================================================
+
+assert\display "child shadows parent" {
+	parent1: context { x: 100 }
+	child1: extends parent1 { x: 1 }
+	child1/x
+} 1
+
+assert\display "parent unchanged after shadow" {
+	parent2: context { x: 100 }
+	child2: extends parent2 { x: 1 }
+	parent2/x
+} 100
+
+assert\display "sibling shadows independently" {
+	parent3: context { x: 100 }
+	child3a: extends parent3 { x: 1 }
+	child3b: extends parent3 { x: 2 }
+	child3a/x + child3b/x
+} 3
+
+; =============================================================================
+; Partial shadowing
+; =============================================================================
+
+assert\display "shadow some not all" {
+	parent4: context { x: 10 y: 20 z: 30 }
+	child4: extends parent4 { y: 200 }
+	child4/x + child4/y + child4/z
+} 240
+
+assert\display "multi-level shadow" {
+	a5: context { x: 1 }
+	b5: extends a5 { x: 2 }
+	c5: extends b5 { x: 3 }
+	c5/x
+} 3
+
+assert\display "middle shadow" {
+	a6: context { x: 1 }
+	b6: extends a6 { x: 2 }
+	c6: extends b6 { }
+	c6/x
+} 2
+
+; =============================================================================
+; Shadowing with functions
+; =============================================================================
+
+assert\display "shadow function" {
+	parent7: context { greet: does { "hello from parent" } }
+	child7: extends parent7 { greet: does { "hello from child" } }
+	child7/greet
+} "hello from child"
+
+assert\display "function uses shadowed value" {
+	parent8: context { val: 10 get-val: does { val } }
+	child8: extends parent8 { val: 99 }
+	child8/get-val
+} 99
+
+; =============================================================================
+; Shadowing with var
+; =============================================================================
+
+assert\display "shadow var with var" {
+	parent9: context { var 'x 100 }
+	child9: extends parent9 { var 'x 1 }
+	child9/x
+} 1
+
+assert\display "modify shadowed var" {
+	parent10: context { var 'x 100 }
+	child10: extends parent10 { var 'x 1 }
+	do\inside child10 { x:: 50 }
+	child10/x
+} 50
+
+assert\display "parent var unchanged" {
+	parent11: context { var 'x 100 }
+	child11: extends parent11 { var 'x 1 }
+	child11/x:: 50
+	parent11/x
+} 100
+
+print ""

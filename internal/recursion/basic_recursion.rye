@@ -1,0 +1,134 @@
+; Basic Recursion Tests
+print "## Basic Recursion"
+
+; =============================================================================
+; Classic recursive functions
+; =============================================================================
+
+assert\display "factorial of 5" {
+	fact1: fn { n } { either n < 2 { 1 } { n * fact1 n - 1 } }
+	fact1 5
+} 120
+
+assert\display "factorial of 0" {
+	fact2: fn { n } { either n < 2 { 1 } { n * fact2 n - 1 } }
+	fact2 0
+} 1
+
+assert\display "factorial of 1" {
+	fact3: fn { n } { either n < 2 { 1 } { n * fact3 n - 1 } }
+	fact3 1
+} 1
+
+assert\display "factorial of 10" {
+	fact4: fn { n } { either n < 2 { 1 } { n * fact4 n - 1 } }
+	fact4 10
+} 3628800
+
+; =============================================================================
+; Sum recursion
+; =============================================================================
+
+assert\display "sum to n" {
+	sum-to5: fn { n } { either n = 0 { 0 } { n + sum-to5 n - 1 } }
+	sum-to5 10
+} 55
+
+assert\display "sum to 100" {
+	sum-to6: fn { n } { either n = 0 { 0 } { n + sum-to6 n - 1 } }
+	sum-to6 100
+} 5050
+
+; =============================================================================
+; Fibonacci (inefficient but tests recursion)
+; =============================================================================
+
+assert\display "fibonacci 0" {
+	fib7: fn { n } { 
+		either n < 2 { n } { ( fib7 n - 1 ) + fib7 n - 2 }
+	}
+	fib7 0
+} 0
+
+assert\display "fibonacci 1" {
+	fib8: fn { n } { 
+		either n < 2 { n } { ( fib8 n - 1 ) + fib8 n - 2 }
+	}
+	fib8 1
+} 1
+
+assert\display "fibonacci 10" {
+	fib9: fn { n } { 
+		either n < 2 { n } { ( fib9 n - 1 ) + fib9 n - 2 }
+	}
+	fib9 10
+} 55
+
+; =============================================================================
+; List recursion
+; =============================================================================
+
+assert\display "recursive length" {
+	len10: fn { b } { 
+		either is-empty b { 0 } { 1 + len10 rest b }
+	}
+	len10 { 1 2 3 4 5 }
+} 5
+
+assert\display "recursive sum of block" {
+	sum-block11: fn { b } {
+		either is-empty b { 0 } { ( first b ) + sum-block11 rest b }
+	}
+	sum-block11 { 1 2 3 4 5 }
+} 15
+
+; =============================================================================
+; Countdown
+; =============================================================================
+
+assert\display "countdown to string" {
+	countdown12: fn { n } {
+		either n = 0 
+			{ "0" } 
+			{ ( n .string ) ++ " " ++ countdown12 n - 1 }
+	}
+	countdown12 5
+} "5 4 3 2 1 0"
+
+; =============================================================================
+; Power function
+; =============================================================================
+
+assert\display "power 2^10" {
+	pow13: fn { base exp } {
+		either exp = 0 { 1 } { base * pow13 base exp - 1 }
+	}
+	pow13 2 10
+} 1024
+
+assert\display "power 3^4" {
+	pow14: fn { base exp } {
+		either exp = 0 { 1 } { base * pow14 base exp - 1 }
+	}
+	pow14 3 4
+} 81
+
+; =============================================================================
+; GCD (Euclidean algorithm)
+; =============================================================================
+
+assert\display "gcd 48 18" {
+	gcd15: fn { a b } {
+		either b = 0 { a } { gcd15 b ( a % b ) }
+	}
+	gcd15 48 18
+} 6
+
+assert\display "gcd 100 25" {
+	gcd16: fn { a b } {
+		either b = 0 { a } { gcd16 b ( a % b ) }
+	}
+	gcd16 100 25
+} 25
+
+print ""

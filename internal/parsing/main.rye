@@ -20,6 +20,8 @@ private Load %11-edge-cases.rye
 private Load %12-error-detection.rye
 private Load %13-comments.rye
 private Load %bad_tokens.rye
+private Load %fixes1050.rye
+private Load %14-loader-edges.rye
 
 print ""
 print "========================================"

@@ -1,0 +1,120 @@
+; Parent Context Access Tests
+print "## Parent Access (@/)"
+
+; =============================================================================
+; Basic @/ access
+; =============================================================================
+
+assert\display "@/ accesses parent" {
+	parent1: context { x: 100 }
+	child1: extends parent1 { 
+		x: 1 
+		get-parent-x: does { @/x }
+	}
+	child1/get-parent-x
+} 1
+
+assert\display "@/ with shadowed value" {
+	parent2: context { val: "parent" }
+	child2: extends parent2 { 
+		val: "child" 
+		get-both: fn\inside { } current { val ++ " and " ++ @/val }
+	}
+	child2/get-both
+} "child and parent"
+
+; =============================================================================
+; @/@/ for grandparent
+; =============================================================================
+
+assert\display "@/@/ accesses grandparent" {
+	gp3: context { x: 1000 }
+	p3: extends gp3 { x: 100 }
+	c3: extends p3 { 
+		x: 10 
+		get-gp: does { @/@/x }
+	}
+	c3/get-gp
+} 100
+
+assert\display "@/@/ chain of values" {
+	gp4: context { level: "grandparent" }
+	p4: extends gp4 { level: "parent" }
+	c4: extends p4 { 
+		level: "child"
+		all-levels: fn\inside { } current { level ++ ", " ++ @/level ++ ", " ++ @/@/level }
+	}
+	c4/all-levels
+} "child, parent, grandparent"
+
+; =============================================================================
+; @/ in computations
+; =============================================================================
+
+assert\display "@/ in arithmetic" {
+	parent5: context { base: 100 }
+	child5: extends parent5 { 
+		base: 10
+		combined: does { base + @/@/base }
+	}
+	child5/combined
+} 110
+
+assert\display "@/ calling parent function" {
+	parent6: context { 
+		val: 5
+		double: does { val * 2 }
+	}
+	child6: extends parent6 { 
+		val: 50
+		compare: fn\inside { } current { [ double @/double ] }
+	}
+	child6/compare
+} [ 100 10 ]
+
+; =============================================================================
+; current context
+; =============================================================================
+
+assert\display "current returns context type" {
+	ctx7: context { 
+		x: 42 
+		get-self: does { current }
+	}
+	type? ctx7/get-self
+} 'context
+
+assert\display "current allows self-reference" {
+	ctx8: context {
+		val: 10
+		get-val-via-current: does { 
+			c: current
+			c/val
+		}
+	}
+	ctx8/get-val-via-current
+} 10
+
+; =============================================================================
+; bind! changes parent
+; =============================================================================
+
+assert\display "bind! sets new parent" {
+	new-parent9: context { x: 999 }
+	orphan9: context { get-x: does { x } }
+	bind! orphan9 new-parent9
+	orphan9/get-x
+} 999
+
+assert\display "bind! replaces parent" {
+	old-parent10: context { x: 1 }
+	new-parent10: context { x: 2 }
+	child10: extends old-parent10 { get-x: does { x } }
+	; Initially sees old parent
+	first-val: child10/get-x
+	bind! child10 new-parent10
+	; Now sees new parent
+	[ first-val child10/get-x ]
+} [ 1 2 ]
+
+print ""

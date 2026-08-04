@@ -119,9 +119,15 @@ func EvalBlockInj_Rye2(ps *env.ProgramState, inj env.Object, injnow bool) {
 		//   token (Pipeword, Dotword, LSetword, Opword) - an orphaned chain left by ^fix.
 		//   If the next token starts a fresh independent expression, clear ReturnFlag and
 		//   continue so that code after e.g. a "for" loop keeps running.
-		if ps.ErrorFlag || ps.ReturnFlag {
+		if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 			// fmt.Println("EVAL BLOCK INJ")
 			// fmt.Println(ps.ErrorFlag, ps.ReturnFlag, ps.CallDepth)
+			// At top level (CallDepth == 0), convert unhandled failures to errors
+			// so they are displayed and stop evaluation (same semantics as tryHandleFailure)
+			if ps.FailureFlag && ps.CallDepth == 0 && !ps.ErrorFlag {
+				ps.ErrorFlag = true
+				return
+			}
 			if ps.ErrorFlag || ps.CallDepth > 0 {
 				return
 			}
@@ -224,7 +230,7 @@ func EvalExpression(ps *env.ProgramState, inj env.Object, injnow bool, limited b
 		}
 		// Eval expression that doesn't get value from the left
 		EvalExpression_DispatchType(ps)
-		if ps.ReturnFlag || ps.ErrorFlag {
+		if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 			return injnow
 		}
 	} else {
@@ -272,7 +278,7 @@ func EvalExpressionInjLimited(ps *env.ProgramState, inj env.Object, injnow bool)
 // allowDotwords=false: prevents nested dotwords from being consumed as arguments (set when collecting dotword args)
 func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, limited bool, allowOpwords bool, allowDotwords bool) {
 	// fmt.Println("--OptionallyEvalExpressionRight:1")
-	if nextObj == nil || ps.ReturnFlag || ps.ErrorFlag {
+	if nextObj == nil || ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 		return
 	}
 	// exit quickly for most common value types - any type that DispatchType
@@ -316,7 +322,7 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 			var firstVal env.Object
 			if pipeSecond && !ps.Ser.AtLast() {
 				EvalExpression_CollectArg(ps, true, false)
-				if ps.ReturnFlag || ps.ErrorFlag {
+				if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 					return
 				}
 				firstVal = ps.Res
@@ -332,7 +338,7 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 		default:
 			return
 		}
-		if ps.ReturnFlag || ps.ErrorFlag {
+		if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 			return
 		}
 		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords, allowDotwords)
@@ -357,7 +363,7 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 		ps.Ser.Next()
 		// Pass dotword=true so argument collection blocks further dotwords (symmetric to opword blocking opwords)
 		EvalWord(ps, opword.ToWord(), ps.Res, false, opword.Force > 0, true, true)
-		if ps.ReturnFlag || ps.ErrorFlag {
+		if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 			return
 		}
 		// Continue dotword chain if another dotword follows (at same level, allowDotwords unchanged).
@@ -523,7 +529,7 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 			res := make([]env.Object, 0)
 			for ps.Ser.Pos() < ps.Ser.Len() {
 				EvalExpression_CollectArg(ps, false, false)
-				if ps.ReturnFlag || ps.ErrorFlag {
+				if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 					return
 				}
 				res = append(res, ps.Res)
@@ -535,7 +541,8 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 			ser := ps.Ser
 			ps.Ser = block.Series
 			Eval(ps)
-			if ps.ErrorFlag || ps.FailureFlag {
+			if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
+				ps.Ser = ser
 				return
 			}
 			ps.Ser = ser
@@ -551,7 +558,7 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 			injVal := ps.Res // Use current result as injection value
 			for ps.Ser.Pos() < ps.Ser.Len() {
 				injnow = EvalExpressionInj(ps, injVal, injnow)
-				if ps.ReturnFlag || ps.ErrorFlag {
+				if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 					return
 				}
 				res = append(res, ps.Res)
@@ -566,7 +573,8 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 			ps.Ser = block.Series
 			injVal := ps.Res // Use current result as injection value
 			EvalBlockInj(ps, injVal, true)
-			if ps.ErrorFlag || ps.FailureFlag {
+			if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
+				ps.Ser = ser
 				return
 			}
 			ps.Ser = ser
@@ -588,7 +596,7 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 			res := make([]any, 0)
 			for ps.Ser.Pos() < ps.Ser.Len() {
 				EvalExpression_CollectArg(ps, false, false)
-				if ps.ReturnFlag || ps.ErrorFlag {
+				if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 					ps.Ser = ser
 					return
 				}
@@ -604,7 +612,7 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 			res := make([]env.Object, 0)
 			for ps.Ser.Pos() < ps.Ser.Len() {
 				EvalExpression_CollectArg(ps, false, false)
-				if ps.ReturnFlag || ps.ErrorFlag {
+				if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 					ps.Ser = ser
 					return
 				}
@@ -964,6 +972,14 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 		}
 
 		// Capitalized word - generic dispatch path.
+		// If a failure is already pending, escalate to error and stop before
+		// attempting generic dispatch. This prevents masking the original failure
+		// (e.g., from a failing builtin) with a misleading generic-method error.
+		if ps.FailureFlag {
+			ps.ErrorFlag = true
+			ps.Ser.SetPos(pos)
+			return
+		}
 		// Collect the first argument so we can determine its Kind.
 		kind := &genericKind
 		argCollectionFailed := false
@@ -978,7 +994,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 				// first, then call Read on that URI. Previously, EvalExpression_DispatchType
 				// only grabbed the bare next atom (%file), giving generic words wrong priority.
 				EvalExpression_CollectArg(ps, true, false)
-				if ps.ReturnFlag || ps.ErrorFlag {
+				if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 					// Don't return yet - fall through to "Word not found" error.
 					// This handles cases like "undefined_word |Print" where pipeword barrier
 					// would otherwise mask the real error.
@@ -994,7 +1010,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 		if pipeSecond && !argCollectionFailed {
 			if !ps.Ser.AtLast() {
 				EvalExpression_CollectArg(ps, true, false)
-				if ps.ReturnFlag || ps.ErrorFlag {
+				if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 					argCollectionFailed = true
 					argCollectionError = ps.Res // preserve the real error
 					ps.ErrorFlag = false
@@ -1062,9 +1078,14 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 // Called from: EvalExpression_DispatchType
 // Purpose: Handles words explicitly marked as generic - evaluates next expression and dispatches on its type
 func EvalGenword(ps *env.ProgramState, word env.Genword, leftVal env.Object, toLeft bool) {
+	// If a failure is already pending, escalate to error and stop before dispatching
+	if ps.FailureFlag {
+		ps.ErrorFlag = true
+		return
+	}
 	EvalExpression_DispatchType(ps)
 
-	if ps.ReturnFlag || ps.ErrorFlag {
+	if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 		return
 	}
 
@@ -1152,7 +1173,7 @@ func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toL
 func EvalSetword(ps *env.ProgramState, word env.Setword) {
 	// es1 := EvalExpression(es)
 	EvalExpressionInj(ps, nil, false)
-	if ps.ErrorFlag || ps.FailureFlag {
+	if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 		return
 	}
 	idx := word.Index
@@ -1179,7 +1200,7 @@ func EvalSetword(ps *env.ProgramState, word env.Setword) {
 func EvalModword(ps *env.ProgramState, word env.Modword) {
 	// es1 := EvalExpression(es)
 	EvalExpressionInj(ps, nil, false)
-	if ps.ErrorFlag || ps.FailureFlag {
+	if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 		return
 	}
 	idx := word.Index
@@ -1312,7 +1333,7 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 		// When pipeSecond is true but firstVal is nil (non-generic word),
 		// evaluate the next expression to get arg0
 		EvalExpression_CollectArg(ps, true, opword)
-		if ps.ReturnFlag || ps.ErrorFlag {
+		if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 			return
 		}
 		arg0 = ps.Res
@@ -1441,7 +1462,7 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 	// collect arguments
 	for i := ii; i < fn.Argsn; i += 1 {
 		evalExprFn(ps, true, opword)
-		if ps.ReturnFlag || ps.ErrorFlag {
+		if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 			return
 		}
 		// Refuse a live failure in the argument, just like a non-AcceptFailure builtin would.
@@ -1542,7 +1563,7 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 // Returns (psX, cleanup, true) on success; (nil, nil, false) when a guard check fails.
 func setupFunctionCall(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx) (*env.ProgramState, func(), bool) {
 	fnCtx, fromPool := DetermineContext(fn, ps, ctx)
-	if ps.ReturnFlag || ps.ErrorFlag {
+	if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 		return nil, nil, false
 	}
 
@@ -1852,7 +1873,7 @@ func CallCurriedCaller(cc env.CurriedCaller, ps *env.ProgramState, arg0_ env.Obj
 	// Collect remaining unfilled arguments from code stream
 	for collected < argsToCollect {
 		evalExprFn(ps, true, opword)
-		if ps.ReturnFlag || ps.ErrorFlag {
+		if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 			return
 		}
 		fillNextNilSlot(&arg0, &arg1, &arg2, &arg3, &arg4, ps.Res, &collected)
@@ -1943,7 +1964,7 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 		if checkForFailureWithBuiltin(bi, ps, 1) {
 			return
 		}
-		if ps.ReturnFlag || ps.ErrorFlag {
+		if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 			ps.Res = env.NewError4(0, "Argument 2 of "+strconv.Itoa(bi.Argsn)+" missing for builtin "+FormatBuiltinReference(bi.Doc)+". Check that all required arguments are provided.", getParentErr(), nil)
 			return
 		}
@@ -1957,7 +1978,7 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 		if checkForFailureWithBuiltin(bi, ps, 2) {
 			return
 		}
-		if ps.ReturnFlag || ps.ErrorFlag {
+		if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 			ps.Res = env.NewError4(0, "Argument 3 missing. Check that all required arguments are provided for the builtin function.", getParentErr(), nil)
 			return
 		}
@@ -1970,7 +1991,7 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 		if checkForFailureWithBuiltin(bi, ps, 3) {
 			return
 		}
-		if ps.ReturnFlag || ps.ErrorFlag {
+		if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 			ps.Res = env.NewError4(0, "Argument 4 missing. Check that all required arguments are provided for the builtin function.", getParentErr(), nil)
 			return
 		}
@@ -1983,7 +2004,7 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 		if checkForFailureWithBuiltin(bi, ps, 4) {
 			return
 		}
-		if ps.ReturnFlag || ps.ErrorFlag {
+		if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 			ps.Res = env.NewError4(0, "Argument 5 missing. Check that all required arguments are provided for the builtin function.", getParentErr(), nil)
 			return
 		}
@@ -2022,7 +2043,7 @@ func CallVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, arg0_ env.Object, t
 			ii++
 		} else if bi.Argsn > 0 {
 			EvalExpression(ps, nil, false, true, opword, dotword)
-			if ps.ReturnFlag || ps.ErrorFlag {
+			if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 				return
 			}
 
@@ -2035,7 +2056,7 @@ func CallVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, arg0_ env.Object, t
 			ii++
 		} else if bi.Argsn > 1 {
 			EvalExpression(ps, nil, false, true, opword, dotword)
-			if ps.ReturnFlag || ps.ErrorFlag {
+			if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 				return
 			}
 
@@ -2045,7 +2066,7 @@ func CallVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, arg0_ env.Object, t
 		//variadic version
 		for i := 2; i < bi.Argsn; i += 1 {
 			EvalExpression(ps, nil, false, true, opword, dotword)
-			if ps.ReturnFlag || ps.ErrorFlag {
+			if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 				return
 			}
 

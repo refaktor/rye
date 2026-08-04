@@ -45,7 +45,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 						// If failure or error happened show it here
 						MaybeDisplayFailureOrError(ps, ps.Idx, "if")
 						// If error hapened or return flag was initiated set ps.Ser back to parent and return
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
@@ -102,7 +102,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 					ps.Ser = condBlock.Series
 					EvalBlockInj(ps, arg0, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "when")
-					if ps.ErrorFlag || ps.ReturnFlag {
+					if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 						ps.Ser = ser
 						return ps.Res
 					}
@@ -113,7 +113,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 						ps.Ser = actionBlock.Series
 						EvalBlockInj(ps, arg0, true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "when")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
@@ -168,7 +168,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 					ps.Ser = condBlock.Series
 					EvalBlockInj(ps, arg0, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "when")
-					if ps.ErrorFlag || ps.ReturnFlag {
+					if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 						ps.Ser = ser
 						return ps.Res
 					}
@@ -179,7 +179,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 						ps.Ser = actionBlock.Series
 						EvalBlockInj(ps, arg0, true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "when")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
@@ -242,7 +242,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 						ps.Ser = condBlock.Series
 						EvalBlockInj(ps, arg0, true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "whether")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
@@ -255,7 +255,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 						}
 						EvalBlockInj(ps, arg0, true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "whether")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
@@ -301,7 +301,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 						ps.Ser = bloc.Series
 						EvalBlockInj(ps, arg0, true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "^if")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
@@ -355,7 +355,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 						}
 						EvalBlockInj(ps, arg0, true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "either")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
@@ -479,7 +479,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 						// Inj means we inject the condition value into the block, because it costs us very little. we could do "if name { .print }"
 						EvalBlockInj(ps, arg0, true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "switch")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
@@ -553,7 +553,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 						// Inj means we inject the condition value into the block, because it costs us very little. we could do "if name { .print }"
 						Eval(ps)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "cases")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
@@ -576,7 +576,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 						// Inj means we inject the condition value into the block, because it costs us very little. we could do "if name { .print }"
 						EvalBlockInj(ps, cumul, true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "cases")
-						if ps.ErrorFlag || ps.ReturnFlag {
+						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							ps.Ser = ser
 							return ps.Res
 						}

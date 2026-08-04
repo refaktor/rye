@@ -1,0 +1,17 @@
+; Advanced Context Test Suite
+; Tests for deep context chains, shadowing, parent access
+; Run with: cd internal/context_advanced && rye main.rye
+
+print "========================================"
+print "      ADVANCED CONTEXT TESTS"
+print "========================================"
+print ""
+
+private Load %deep_chains.rye
+private Load %shadowing.rye
+private Load %parent_access.rye
+
+print ""
+print "========================================"
+print "\x1b[32mALL ADVANCED CONTEXT TESTS COMPLETED\x1b[0m"
+print "========================================"
