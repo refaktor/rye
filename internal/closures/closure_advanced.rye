@@ -1,0 +1,252 @@
+print "## Advanced Closure Tests"
+
+; ============================================================================
+; fn\cc - captures current context
+; ============================================================================
+
+assert\display "fn\\cc captures current context" {
+	y1: 5
+	f1: fn\cc { x } { x + y1 }
+	f1 3
+} 8
+
+assert\display "fn\\cc captures multiple vars" {
+	a1: 10
+	b1: 20
+	f2: fn\cc { x } { x + a1 + b1 }
+	f2 5
+} 35
+
+assert\display "fn\\cc late binding" {
+	var 'counter1 0
+	inc-counter1: fn\cc { } { inc! 'counter1 }
+	inc-counter1
+	inc-counter1
+	inc-counter1
+	counter1
+} 3
+
+; ============================================================================
+; Closures with multiple arguments
+; NOTE: Use inc!/dec! to modify closure state, not ::
+; The :: modword creates LOCAL bindings inside closures
+; ============================================================================
+
+assert\display "closure with 2 args using loop+inc" {
+	make-adder2: does {
+		var 'total 0
+		closure { a b } { 
+			loop a { inc! 'total }
+			loop b { inc! 'total }
+			total
+		}
+	}
+	adder2: make-adder2
+	adder2 1 2
+	adder2 3 4
+} 10
+
+; Note: Accumulating into blocks/lists inside closures requires
+; specific builtins. The simplest pattern is using inc!/dec! for numbers.
+
+; ============================================================================
+; Closures returning closures (factory pattern)
+; ============================================================================
+
+assert\display "closure factory" {
+	make-adder: fn { n } {
+		closure { x } { x + n }
+	}
+	add5: make-adder 5
+	add10: make-adder 10
+	add5 3 + add10 3
+} 21
+
+assert\display "nested closure factory" {
+	make-mult-add: fn { mult add-val } {
+		closure { x } { x * mult + add-val }
+	}
+	times2-plus5: make-mult-add 2 5
+	times2-plus5 10
+} 25
+
+; ============================================================================
+; Closures with state - different patterns
+; ============================================================================
+
+assert\display "closure pair sharing state" {
+	make-pair: does {
+		var 'shared 0
+		[
+			closure { } { inc! 'shared }
+			closure { } { shared }
+		]
+	}
+	pair: make-pair
+	inc-it: first pair
+	get-it: second pair
+	inc-it
+	inc-it
+	inc-it
+	get-it
+} 3
+
+assert\display "up-down counter with inc/dec" {
+	make-updown: does {
+		var 'val 0
+		closure { dir } {
+			either dir = "up" { inc! 'val } { dec! 'val }
+		}
+	}
+	ud: make-updown
+	ud "up"
+	ud "up"
+	ud "up"
+	ud "down"
+	ud "up"
+} 3
+
+; ============================================================================
+; fn\inside with arguments
+; ============================================================================
+
+assert\display "fn\\inside with args modifies context" {
+	ctx3: context { var 'sum 0 }
+	add-to-sum: fn\inside { n } ctx3 { sum:: sum + n , sum }
+	add-to-sum 5
+	add-to-sum 10
+	add-to-sum 3
+} 18
+
+assert\display "fn\\inside with multiple args" {
+	ctx4: context { var 'history "" }
+	log2: fn\inside { a b } ctx4 { 
+		history:: concat history join { a ":" b ";" }
+		history
+	}
+	log2 "x" 1
+	log2 "y" 2
+} "x:1;y:2;"
+
+; ============================================================================
+; fn\in with arguments  
+; ============================================================================
+
+assert\display "fn\\in with args reads context" {
+	ctx5: context { multiplier: 10 }
+	mult2: fn\in { x y } ctx5 { x * multiplier + y }
+	mult2 5 3
+} 53
+
+assert\display "fn\\in doesn't modify context" {
+	ctx6: context { var 'base 100 }
+	calc2: fn\in { x } ctx6 { base:: base + x , base }
+	calc2 10
+	calc2 20
+	ctx6/base
+} 100
+
+; ============================================================================
+; Closures accessing nested context values
+; ============================================================================
+
+assert\display "closure reads nested context" {
+	outer2: context {
+		inner2: context {
+			secret: 42
+		}
+	}
+	get-secret2: fn\cc { } { outer2/inner2/secret }
+	get-secret2
+} 42
+
+; ============================================================================
+; Error handling inside closures
+; ============================================================================
+
+assert\display "try inside closure" {
+	safe-div: closure { a b } {
+		try { a / b } |fix { 0.0 }
+	}
+	safe-div 10 2 + safe-div 10 0
+} 5.0
+
+assert\display "closure propagates error" {
+	make-checker: does {
+		closure { x } {
+			either x > 0 { x } { fail "negative" }
+		}
+	}
+	checker: make-checker
+	try { checker -5 } |type?
+} 'error
+
+; ============================================================================
+; Closure with conditional state changes
+; ============================================================================
+
+assert\display "toggle closure" {
+	make-toggle: does {
+		var 'state false
+		closure { } { 
+			state:: not state
+			state
+		}
+	}
+	toggle2: make-toggle
+	toggle2
+	toggle2
+	toggle2
+} true
+
+assert\display "bounded counter" {
+	make-bounded: does {
+		var 'count 0
+		closure { max } {
+			either count < max { 
+				inc! 'count 
+			} { 
+				count 
+			}
+		}
+	}
+	bc: make-bounded
+	bc 5
+	bc 5
+	bc 5
+	bc 5
+	bc 5
+	bc 5  ; should stay at 5
+	bc 5
+} 5
+
+; ============================================================================
+; Important: :: vs inc!/change! in closures (INTENTIONAL DESIGN)
+; :: always modifies local context, never parent
+; Use inc!/dec!/change! to modify parent context
+; ============================================================================
+
+assert\display ":: modifies local only (intentional)" {
+	make-local-counter: does {
+		var 'n 0
+		closure { } { n:: n + 1 , n }  ; :: creates local each call
+	}
+	local-c: make-local-counter
+	local-c
+	local-c
+	local-c  ; always returns 1 - local n is fresh each call
+} 1
+
+assert\display "inc! modifies parent context" {
+	make-parent-counter: does {
+		var 'n 0
+		closure { } { inc! 'n }  ; inc! modifies parent
+	}
+	parent-c: make-parent-counter
+	parent-c
+	parent-c
+	parent-c
+} 3
+
+print ""
+print "Advanced closure tests completed."

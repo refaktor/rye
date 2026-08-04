@@ -1,0 +1,184 @@
+; Context Behaviors Test Suite
+; Tests the different semantics of fn\inside, fn\in, do\inside, do\in, and closure
+print "## Context Behaviors"
+
+; ============================================================================
+; fn\inside - executes DIRECTLY in the given context
+; ============================================================================
+
+assert\display "fn\\inside persists changes" {
+	ctx1: context { var 'x 100 }
+	f1: fn\inside { } ctx1 { x:: x + 1 , x }
+	f1
+	f1
+	f1
+} 103
+
+assert\display "fn\\inside modifies context" {
+	ctx2: context { var 'x 100 }
+	f2: fn\inside { } ctx2 { x:: x + 1 , x }
+	f2
+	f2
+	ctx2/x
+} 102
+
+; ============================================================================
+; fn\in - context becomes PARENT (non-destructive)
+; ============================================================================
+
+assert\display "fn\\in fresh each call" {
+	ctx3: context { var 'x 100 }
+	f3: fn\in { } ctx3 { x:: x + 1 , x }
+	f3
+	f3
+	f3
+} 101
+
+assert\display "fn\\in doesn't modify context" {
+	ctx4: context { var 'x 100 }
+	f4: fn\in { } ctx4 { x:: x + 1 , x }
+	f4
+	f4
+	ctx4/x
+} 100
+
+assert\display "fn\\in reads parent" {
+	ctx5: context { multiplier: 10 }
+	multiply5: fn\in { n } ctx5 { n * multiplier }
+	multiply5 5
+} 50
+
+; ============================================================================
+; do\inside - executes block DIRECTLY in context
+; ============================================================================
+
+assert\display "do\\inside sets value" {
+	ctx6: context { var 'value 0 }
+	do\inside ctx6 { value:: 42 }
+	ctx6/value
+} 42
+
+assert\display "do\\inside can define new vars" {
+	ctx7: context { var 'x 0 }
+	do\inside ctx7 { var 'extra 100 }
+	ctx7/extra
+} 100
+
+; ============================================================================
+; do\in - context becomes PARENT (non-destructive)
+; ============================================================================
+
+assert\display "do\\in returns computed value" {
+	ctx8: context { var 'x 100 }
+	do\in ctx8 { x:: x + 50 , x }
+} 150
+
+assert\display "do\\in doesn't modify context" {
+	ctx9: context { var 'x 100 }
+	do\in ctx9 { x:: x + 50 , x }
+	ctx9/x
+} 100
+
+; ============================================================================
+; closure - captures context, shares state via inc!/dec!
+; ============================================================================
+
+assert\display "closure counter" {
+	make-counter10: does { 
+		var 'count 0 
+		closure { } { inc! 'count } 
+	}
+	counter10: make-counter10
+	counter10
+	counter10
+	counter10
+} 3
+
+assert\display "independent counters" {
+	make-counter11: does { var 'count 0 , closure { } { inc! 'count } }
+	c11a: make-counter11
+	c11b: make-counter11
+	c11a
+	c11a
+	c11b
+	c11a
+} 3
+
+assert\display "up-down counter" {
+	make-updown12: does {
+		var 'value 0
+		closure { dir } { 
+			either dir = "up" { inc! 'value } { dec! 'value }
+		}
+	}
+	udc12: make-updown12
+	udc12 "up"
+	udc12 "up"
+	udc12 "up"
+	udc12 "down"
+	udc12 "up"
+} 3
+
+; ============================================================================
+; Context paths with nested contexts
+; ============================================================================
+
+assert\display "nested context access" {
+	outer13: context {
+		name: "outer"
+		inner: context {
+			name: "inner"
+			value: 42
+		}
+	}
+	outer13/inner/value
+} 42
+
+; ============================================================================
+; Stability tests
+; ============================================================================
+
+assert\display "fn\\inside then closure works" {
+	stab-ctx14: context { var 'x 0 }
+	stab-f14: fn\inside { } stab-ctx14 { inc! 'x }
+	stab-f14
+	stab-f14
+	stab-f14
+	make-counter14: does { var 'c 0 , closure { } { inc! 'c } }
+	stab-c14: make-counter14
+	stab-c14
+	stab-c14
+	stab-c14
+} 3
+
+assert\display "closure via cpath" {
+	obj15: context {
+		var 'n 0
+		bump: closure { } { inc! 'n }
+	}
+	obj15/bump
+	obj15/bump
+	obj15/bump
+	obj15/bump
+	obj15/bump
+	obj15/n
+} 5
+
+assert\display "nested closure via cpath" {
+	outer16: context {
+		var 'a 0
+		inner: context {
+			var 'b 0
+			inc-b: closure { } { inc! 'b }
+		}
+		inc-a: closure { } { inc! 'a }
+	}
+	outer16/inc-a
+	outer16/inc-a
+	outer16/inner/inc-b
+	outer16/inner/inc-b
+	outer16/inner/inc-b
+	outer16/inner/b
+} 3
+
+print ""
