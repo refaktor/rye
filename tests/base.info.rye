@@ -7434,161 +7434,48 @@ section "Combinators " "Functions that combine other functions or control execut
 
 }
 
-section "Printing " "Functions for displaying and formatting values" {
-	group "prns" 
-	"Prints a value followed by a space, returning the input value."
-	{
-		argsn 1
-		arg `value: Any value to print`
-		returns `the input value (for chaining)`
-	}
-
-	{
-		stdout { prns "xy" } "xy "
-	}
-
-	{
-	}
-
-	group "prn" 
-	"Prints a value without adding a newline, returning the input value."
-	{
-		argsn 1
-		arg `value: Any value to print`
-		returns `the input value (for chaining)`
-	}
-
-	{
-		stdout { prn "xy" } "xy"
-	}
-
-	{
-	}
-
-	group "print" 
-	"Prints a value followed by a newline, returning the input value."
-	{
-		argsn 1
-		arg `value: Any value to print`
-		returns `the input value (for chaining)`
-	}
-
-	{
-		stdout { print "xy" } "xy\n"
-	}
-
-	{
-	}
-
-	group "print2" 
-	"Prints two values separated by a space and followed by a newline, returning the second value."
-	{
-		argsn 2
-		arg `value1: First value to print`
-		arg `value2: Second value to print`
-		returns `the second input value`
-	}
-
-	{
-		stdout { print2 "hello" "world" } "hello world\n"
-	}
-
-	{
-	}
-
-	group "prn2" 
-	"Prints two values separated by a space without adding a newline, returning the second value."
-	{
-		argsn 2
-		arg `value1: First value to print`
-		arg `value2: Second value to print`
-		returns `the second input value`
-	}
-
-	{
-		stdout { prn2 "hello" "world" } "hello world"
-	}
-
-	{
-	}
-
-	group "prns2" 
-	"Prints two values separated by a space and followed by a space, returning the second value."
-	{
-		argsn 2
-		arg `value1: First value to print`
-		arg `value2: Second value to print`
-		returns `the second input value`
-	}
-
-	{
-		stdout { prns2 "hello" "world" } "hello world "
-	}
-
-	{
-	}
-
+section "Default" "" {
 	group "format" 
-	"Formats a value according to Go's sprintf format specifiers, returning the formatted string. If the format argument is a URI, the format specifiers are applied to the URI path and a new URI is returned."
+	"Formats a block of values using a format string with {} placeholders, returning the resulting string."
 	{
 		argsn 2
 		argtypes {
-			1 [ String Decimal Integer Block Uri ]
-			2 [ String Uri ]
+			1 [ String ]
+			2 [ Block ]
 		}
-		arg `value: Value to format (string, integer, decimal, block, or URI)`
-		arg `format: String or URI containing Go's sprintf format specifiers`
-		returns `formatted string, or URI with its path formatted (preserving scheme)`
 	}
 
 	{
-		equal { format 123 "num: %d" } "num: 123"
-		equal { format "hello" "%s world" } "hello world"
-		equal { format 3.14159 "pi: %.2f" } "pi: 3.14"
-		equal { format 42 http://example.com/items/%d } http://example.com/items/42
-		equal { format "bob" http://example.com/users/%s } http://example.com/users/bob
 	}
 
 	{
 	}
 
 	group "prnf" 
-	"Formats a value according to Go's sprintf format specifiers and prints it without a newline, returning the input value."
+	"Formats and prints a value by replacing {} in the template string, without a newline."
 	{
 		argsn 2
 		argtypes {
-			1 [ String Decimal Integer Block ]
 			2 [ String ]
 		}
-		arg `value: Value to format (string, integer, decimal, or block of multiple values)`
-		arg `format: String containing Go's sprintf format specifiers`
-		returns `the input value (for chaining)`
 	}
 
 	{
-		stdout { prnf 123 "num: %d" } "num: 123"
-		stdout { prnf { "hello" 42 } "%s is %d" } "hello is 42"
 	}
 
 	{
 	}
 
 	group "printf" 
-	"Formats a value according to Go's sprintf format specifiers and prints it followed by a newline, returning the input value."
+	"Formats and prints a value by replacing {} in the template string, followed by a newline."
 	{
 		argsn 2
 		argtypes {
-			1 [ String Decimal Integer Block ]
 			2 [ String ]
 		}
-		arg `value: Value to format (string, integer, decimal, or block of multiple values)`
-		arg `format: String containing Go's sprintf format specifiers`
-		returns `the input value (for chaining)`
 	}
 
 	{
-		stdout { printf 123 "num: %d" } "num: 123\n"
-		stdout { printf { "hello" 42 } "%s is %d" } "hello is 42\n"
 	}
 
 	{
@@ -7601,14 +7488,9 @@ section "Printing " "Functions for displaying and formatting values" {
 		argtypes {
 			1 [ String Uri ]
 		}
-		arg `value: Value to embed`
-		arg `template: String or URI containing {} as a placeholder`
-		returns `string or URI with the placeholder replaced by the value`
 	}
 
 	{
-		equal { embed 101 "val {}" } "val 101"
-		equal { embed "world" "hello {}" } "hello world"
 	}
 
 	{
@@ -7621,13 +7503,9 @@ section "Printing " "Functions for displaying and formatting values" {
 		argtypes {
 			1 [ String ]
 		}
-		arg `value: Value to embed`
-		arg `template: String containing {} as a placeholder`
-		returns `the input value (for chaining)`
 	}
 
 	{
-		stdout { prnv 101 "val {}" } "val 101"
 	}
 
 	{
@@ -7640,58 +7518,9 @@ section "Printing " "Functions for displaying and formatting values" {
 		argtypes {
 			1 [ String ]
 		}
-		arg `value: Value to embed`
-		arg `template: String containing {} as a placeholder`
-		returns `the input value (for chaining)`
 	}
 
 	{
-		stdout { printv 101 "val {}" } "val 101\n"
-	}
-
-	{
-	}
-
-	group "print\\ssv" 
-	"Prints a block of values as space-separated values followed by a newline, returning the input block."
-	{
-		argsn 1
-		arg `block: Block of values to format as space-separated values`
-		returns `the input block (for chaining)`
-	}
-
-	{
-		stdout { print\ssv { 101 "asd" } } "101 asd\n"
-	}
-
-	{
-	}
-
-	group "print\\csv" 
-	"Prints a block of values as comma-separated values followed by a newline, returning the input block."
-	{
-		argsn 1
-		arg `block: Block of values to format as comma-separated values`
-		returns `the input block (for chaining)`
-	}
-
-	{
-		stdout { print\csv { 101 "asd" } } "101,asd\n"
-	}
-
-	{
-	}
-
-	group "probe" 
-	"Prints detailed type and value information about a value, followed by a newline, returning the input value."
-	{
-		argsn 1
-		arg `value: Any value to inspect`
-		returns `the input value (for chaining)`
-	}
-
-	{
-		stdout { probe 101 } "[Integer: 101]\n"
 	}
 
 	{
@@ -7704,28 +7533,9 @@ section "Printing " "Functions for displaying and formatting values" {
 		argtypes {
 			2 [ String ]
 		}
-		arg `value: Any value to inspect`
-		arg `prefix: String to print before the probed value`
-		returns `the input value (for chaining)`
 	}
 
 	{
-		stdout { probe\ 101 "value:" } "value: [Integer: 101]\n"
-	}
-
-	{
-	}
-
-	group "inspect" 
-	"Returns a string containing detailed type and value information about a value."
-	{
-		argsn 1
-		arg `value: Any value to inspect`
-		returns `string containing detailed type and value information`
-	}
-
-	{
-		equal { inspect 101 } "[Integer: 101]"
 	}
 
 	{
@@ -7738,12 +7548,9 @@ section "Printing " "Functions for displaying and formatting values" {
 		argtypes {
 			1 [ String ]
 		}
-		arg `sequence: String to append to the escape character`
-		returns `string with escape sequence`
 	}
 
 	{
-		; equal { esc "[33m" } "\033[33m"   ; we can't represent hex or octal in strings yet
 	}
 
 	{
@@ -7756,65 +7563,17 @@ section "Printing " "Functions for displaying and formatting values" {
 		argtypes {
 			2 [ String ]
 		}
-		arg `value: Value to embed`
-		arg `template: String containing {} as a placeholder`
-		returns `string with escape sequence and embedded value`
-	}
-
-	{
-		; equal { esc-val "[33m" "Error" } "\033[33mError"  ; we can't represent hex or octal in strings yet
 	}
 
 	{
 	}
 
-	group "display" 
-	"Interactively displays a value (Block, Dict, Table, TableRow, or Markdown) in the terminal with navigation capabilities."
-	{
-		argsn 1
-		pure
-		arg `value: Block, Dict, Table, TableRow, or Markdown to display interactively`
-		returns `the input value or selected item from interactive display`
-	}
-
-	{
-		; display { 1 2 3 }  ; interactive display, can't test in automated tests
-	}
-
 	{
 	}
 
-	group "_.." 
-	"Shorthand alias for 'display' - interactively displays a value in the terminal with navigation capabilities."
-	{
-		argsn 1
-		arg `value: Block, Dict, Table, or TableRow to display interactively`
-		returns `the input value or selected item from interactive display`
-	}
+}
 
-	{
-		; _.. { 1 2 3 }  ; interactive display, can't test in automated tests
-	}
-
-	{
-	}
-
-	group "display\\custom" 
-	"Interactively displays a Table in the terminal with a custom rendering function for each row."
-	{
-		argsn 2
-		arg `value: Table to display interactively`
-		arg `renderer: Function that takes a row and current position indicator`
-		returns `the input value or selected item from interactive display`
-	}
-
-	{
-		; display\custom my-table { |row curr| ... }  ; interactive display with custom renderer
-	}
-
-	{
-	}
-
+section "Default" "" {
 }
 
 section "Default" "" {
