@@ -13,7 +13,8 @@ import "github.com/refaktor/rye/env"
 // that need to validate a Dict/RyeCtx against a spec block.
 // Batteries set this to batteries.BuiValidate.
 var BatteryValidateHook func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) env.Object = func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) env.Object {
-	return MakeBuiltinError(ps, "Validation requires the batteries package (call batteries.RegisterBatteries first).", "validate")
+	// Now implemented in evaldo (moved from batteries)
+	return BuiValidate(ps, arg0, arg1)
 }
 
 // BatteryConvertHook is called by base builtins that perform Kind-based conversion.

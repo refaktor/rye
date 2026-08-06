@@ -8,9 +8,6 @@ import (
 // registerHooks wires battery functions into the hook variables in evaldo,
 // so that base evaldo code can call battery functionality without an import cycle.
 func registerHooks() {
-	evaldo.BatteryValidateHook = func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) env.Object {
-		return BuiValidate(ps, arg0, arg1)
-	}
 	evaldo.BatteryConvertHook = func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) env.Object {
 		return BuiConvert(ps, arg0, arg1)
 	}
@@ -37,18 +34,13 @@ func registerHooks() {
 // Call this after evaldo.RegisterBuiltins to get the full standard set of Rye builtins.
 func RegisterBatteries(ps *env.ProgramState) {
 	registerHooks()
-	evaldo.RegisterBuiltins2(Builtins_error_creation, ps, "error-creation")
-	evaldo.RegisterBuiltins2(Builtins_error_inspection, ps, "error-inspection")
-	evaldo.RegisterBuiltins2(Builtins_error_handling, ps, "error-handling")
 	evaldo.RegisterBuiltins2(Builtins_match, ps, "match")
-	evaldo.RegisterBuiltins2(Builtins_table, ps, "table")
 	evaldo.RegisterBuiltins2(Builtins_vector, ps, "vector")
 	evaldo.RegisterBuiltins2(Builtins_matrix, ps, "matrix")
 	evaldo.RegisterBuiltins2(Builtins_complex, ps, "complex")
 	evaldo.RegisterBuiltins2(Builtins_io, ps, "io")
 	evaldo.RegisterBuiltins2(Builtins_cmd, ps, "cmd")
 	evaldo.RegisterBuiltins2(Builtins_regexp, ps, "regexp")
-	evaldo.RegisterBuiltins2(Builtins_validation, ps, "validation")
 	evaldo.RegisterBuiltins2(Builtins_cli, ps, "cli")
 	evaldo.RegisterBuiltins2(Builtins_conversion, ps, "conversion")
 	evaldo.RegisterBuiltins2(Builtins_web, ps, "web")

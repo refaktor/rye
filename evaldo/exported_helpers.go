@@ -41,3 +41,8 @@ func GreaterThanNew(arg0 env.Object, arg1 env.Object) bool {
 func LesserThanNew(arg0 env.Object, arg1 env.Object) bool {
 	return lesserThanNew(arg0, arg1)
 }
+
+// The following wrappers expose validation helpers moved from batteries to evaldo
+func EvalToInteger(val any) (any, env.Object) { return evalInteger(val) }
+func EvalToDecimal(val any) (any, env.Object) { return evalDecimal(val) }
+func EvalToBoolean(val any) (any, env.Object) { return evalBoolean(val) }

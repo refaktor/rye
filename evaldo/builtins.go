@@ -2682,6 +2682,13 @@ func RegisterBaseBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(builtins_functions, ps, "base")
 	RegisterBuiltins2(builtins_intents, ps, "base")
 
+	// Moved from batteries: core error handling and validation/table builtins
+	RegisterBuiltins2(Builtins_error_creation, ps, "error-creation")
+	RegisterBuiltins2(Builtins_error_inspection, ps, "error-inspection")
+	RegisterBuiltins2(Builtins_error_handling, ps, "error-handling")
+	RegisterBuiltins2(Builtins_table, ps, "table")
+	RegisterBuiltins2(Builtins_validation, ps, "validation")
+
 	// Execute initialization code after base builtins are loaded
 	executeInitializationCode(ps)
 }
@@ -2884,6 +2891,12 @@ var allBuiltinGroups = []builtinGroup{
 	{"base", builtins_contexts, false},
 	{"base", builtins_functions, false},
 	{"base", builtins_intents, false},
+	// Moved from batteries: core error + table/validation builtins
+	{"error-creation", Builtins_error_creation, false},
+	{"error-inspection", Builtins_error_inspection, false},
+	{"error-handling", Builtins_error_handling, false},
+	{"table", Builtins_table, false},
+	{"validation", Builtins_validation, false},
 	// NOTE: Battery groups (match, io, http, sqlite, etc.) are registered via
 	// batteries.RegisterBatteries(ps) - see the batteries/ package.
 }

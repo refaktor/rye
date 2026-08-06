@@ -512,7 +512,7 @@ func coerceToType(value env.Object, valueType string, es *env.ProgramState) (env
 			return *env.NewInteger(int64(v.Value)), nil
 		case env.String:
 			// Try to parse string as integer
-			result, verr := evalInteger(v)
+			result, verr := evaldo.EvalToInteger(v)
 			if verr != nil {
 				return nil, fmt.Errorf("expected integer, got string: %s", v.Value)
 			}
@@ -530,7 +530,7 @@ func coerceToType(value env.Object, valueType string, es *env.ProgramState) (env
 		case env.Integer:
 			return *env.NewDecimal(float64(v.Value)), nil
 		case env.String:
-			result, verr := evalDecimal(v)
+			result, verr := evaldo.EvalToDecimal(v)
 			if verr != nil {
 				return nil, fmt.Errorf("expected decimal, got string: %s", v.Value)
 			}
@@ -561,7 +561,7 @@ func coerceToType(value env.Object, valueType string, es *env.ProgramState) (env
 		case env.Integer:
 			return env.Boolean{Value: v.Value != 0}, nil
 		case env.String:
-			result, verr := evalBoolean(v)
+			result, verr := evaldo.EvalToBoolean(v)
 			if verr != nil {
 				return nil, fmt.Errorf("expected boolean, got %T", value)
 			}
