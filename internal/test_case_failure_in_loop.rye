@@ -1,0 +1,43 @@
+process6: fn { items } {
+  do {  ; loop for and do act the same in when function is called in try block 
+    10 / 0
+  }
+  223
+}
+
+process5: fn { items } {
+  var 'sum5 0
+  for items { ::x5
+    sum5:: sum5 + 10 / x5
+  }
+  sum5
+}
+
+process4: fn { items } {
+  sum5:: 10 / first items
+  sum5
+}
+process3: fn { items } {
+  10 / first items
+}
+process2: fn { items } {
+  print 10 / first items
+}
+
+; print process6 { 1 2 3 } ; OK
+print try { print process6 { 1 2 3 } } ; TODO: returns 223
+
+; print process5 { 1 2 3 } ; OK
+; print process5 { 0 } ; works OK
+; process5 { 1 0 2 }   ; OK
+print try { process5 { 5 0 3 } } ; TODO: try causes func to return sum not failure, find out how and why
+print "-"
+
+; process4 { 0 1 2 } 
+print try { process4 { 0 1 2 } }
+print "--"
+; process3 { 0 1 2 } ; TODO: block reported is topline not in the function which it should be ... so we shouldn't just return failure unexplicitly
+print try { process3 { 0 1 2 } }
+print "---"
+; process2 { 0 1 2 }   ; block is reported correctly here
+print try { process2 { 0 1 2 } }

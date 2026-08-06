@@ -1,0 +1,19 @@
+; Closure Test Suite
+; Run with: cd internal/closures && rye main.rye
+
+print "========================================"
+print "        CLOSURE TEST SUITE"
+print "========================================"
+print ""
+
+private Load %01-count.rye
+private Load %04-multiple-in-contexts.rye
+private Load %closure_advanced.rye
+private Load %comprehensive.rye
+private Load %context_behaviors.rye
+private Load %try-do.rye
+
+print ""
+print "========================================"
+print "\x1b[32mALL CLOSURE TESTS COMPLETED\x1b[0m"
+print "========================================"

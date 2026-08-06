@@ -1,0 +1,18 @@
+; Control Flow Test Suite
+; Tests for ^if, ^check, ^fix, ^ensure and return semantics
+; Run with: cd internal/control_flow && rye main.rye
+
+print "========================================"
+print "      CONTROL FLOW TEST SUITE"
+print "========================================"
+print ""
+
+private Load %return_words.rye
+private Load %early_exit.rye
+private Load %nested_returns.rye
+private Load %repl_lines_semantics.rye
+
+print ""
+print "========================================"
+print "\x1b[32mALL CONTROL FLOW TESTS COMPLETED\x1b[0m"
+print "========================================"

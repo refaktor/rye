@@ -1,0 +1,15 @@
+; Observer Test Suite
+; Run with: cd internal/observer && rye main.rye
+
+print "========================================"
+print "        OBSERVER TEST SUITE"
+print "========================================"
+print ""
+
+private Load %test_observers_simple.rye
+private Load %test_observers.rye
+
+print ""
+print "========================================"
+print "\x1b[32mALL OBSERVER TESTS COMPLETED\x1b[0m"
+print "========================================"

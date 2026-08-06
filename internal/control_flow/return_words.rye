@@ -1,0 +1,134 @@
+; Return Words Tests (^if, ^check, ^fix, ^ensure)
+print "## Return Words (^ prefix)"
+
+; =============================================================================
+; ^if - returns from function if condition true
+; =============================================================================
+
+assert\display "^if returns when true" {
+	f1: fn { x } { ^if x > 10 { "big" } , "small" }
+	f1 15
+} "big"
+
+assert\display "^if continues when false" {
+	f2: fn { x } { ^if x > 10 { "big" } , "small" }
+	f2 5
+} "small"
+
+assert\display "^if with equality" {
+	f3: fn { x } { ^if x = 0 { "zero" } , "nonzero" }
+	f3 0
+} "zero"
+
+assert\display "^if returns value from block" {
+	f4: fn { x } { ^if x > 0 { x * 2 } , 0 }
+	f4 5
+} 10
+
+assert\display "^if false returns nothing continues" {
+	f5: fn { x } { ^if x < 0 { "negative" } , x + 100 }
+	f5 5
+} 105
+
+; =============================================================================
+; Multiple ^if in sequence (guard clauses pattern)
+; =============================================================================
+
+assert\display "multiple ^if first matches" {
+	classify6: fn { x } {
+		^if x < 0 { "negative" }
+		^if x = 0 { "zero" }
+		^if x < 10 { "small" }
+		"large"
+	}
+	classify6 -5
+} "negative"
+
+assert\display "multiple ^if second matches" {
+	classify7: fn { x } {
+		^if x < 0 { "negative" }
+		^if x = 0 { "zero" }
+		^if x < 10 { "small" }
+		"large"
+	}
+	classify7 0
+} "zero"
+
+assert\display "multiple ^if third matches" {
+	classify8: fn { x } {
+		^if x < 0 { "negative" }
+		^if x = 0 { "zero" }
+		^if x < 10 { "small" }
+		"large"
+	}
+	classify8 5
+} "small"
+
+assert\display "multiple ^if none match" {
+	classify9: fn { x } {
+		^if x < 0 { "negative" }
+		^if x = 0 { "zero" }
+		^if x < 10 { "small" }
+		"large"
+	}
+	classify9 100
+} "large"
+
+; =============================================================================
+; ^check - returns error from function if failure
+; =============================================================================
+
+assert\display "^check passes on success" {
+	f10: fn { x } { x |^check "failed" , x + 1 }
+	f10 10
+} 11
+
+assert\display "^check returns error on failure" {
+	f11: fn { } { 1 / 0 |^check "div error" }
+	try { f11 } |message?
+} "div error"
+
+assert\display "^check preserves cause" {
+	f12: fn { } { 1 / 0 |^check "wrapped" }
+	try { f12 } |cause? |type?
+} 'error
+
+; =============================================================================
+; ^fix - returns from function with fixed value on failure  
+; =============================================================================
+
+assert\display "^fix passes on success" {
+	f13: fn { x } { x |^fix { 0 } , x * 2 }
+	f13 5
+} 10
+
+assert\display "^fix returns fixed value on failure" {
+	f14: fn { } { 1 / 0 |^fix { -1 } }
+	f14
+} -1
+
+assert\display "^fix continues after success" {
+	f15: fn { x } { x |^fix { 0 } |+ 100 }
+	f15 5
+} 105
+
+; =============================================================================
+; ^ensure - returns error from function if value falsy
+; =============================================================================
+
+assert\display "^ensure passes on truthy" {
+	f16: fn { x } { x |^ensure "must be truthy" , x + 1 }
+	f16 10
+} 11
+
+assert\display "^ensure returns error on false" {
+	f17: fn { } { false |^ensure "was false" }
+	try { f17 } |message?
+} "was false"
+
+assert\display "^ensure passes true" {
+	f18: fn { } { true |^ensure "won't happen" , "ok" }
+	f18
+} "ok"
+
+print ""
