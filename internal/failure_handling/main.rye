@@ -18,6 +18,7 @@ private Load %02-inspection.rye
 private Load %03-handling.rye
 private Load %04-propagation.rye
 private Load %05-advanced.rye
+private Load %06-loops-do.rye
 
 print ""
 print "========================================"

@@ -1,0 +1,37 @@
+print "## Failure in do/for inside function (regression tests)"
+
+; A function that fails inside a do block should return a failure when called via try,
+; and the tail expression after do must NOT leak as the function's result.
+assert\display "try returns error when fn fails inside do" {
+	f:: fn { } { do { 10 / 0 } 223 }
+	try { f } |type?
+} 'error
+
+; A function that iterates with for and one iteration fails must cause failure
+; to be the result under try, not the partial accumulator value.
+assert\display "try returns error when fn fails during for iteration" {
+	f:: fn { items } {
+		var 'sum 0
+		for items { ::x
+			sum:: sum + 10 / x
+		}
+		sum
+	}
+	try { f { 5 0 3 } } |type?
+} 'error
+
+; Same scenario as above but with do used as a simple single-iteration holder
+; (mirrors the original manual test case).
+assert\display "do failure inside fn is propagated by try" {
+	f:: fn { } { do { 10 / 0 } 999 }
+	try { f } |type?
+} 'error
+
+; Expression failure inside function (no loop/do) still propagates correctly under try.
+assert\display "expression failure in fn propagates with try" {
+	f:: fn { items } { 10 / first items }
+	try { f { 0 1 2 } } |type?
+} 'error
+
+print ""
+print "do/for failure-in-fn tests completed."

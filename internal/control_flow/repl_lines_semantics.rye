@@ -1,0 +1,106 @@
+; REPL Lines Semantics - checks/fix/print interaction (from user REPL examples)
+print "## REPL Lines: check/fix/print semantics"
+
+; 1) Plain error followed by another expression on same line should not run the latter
+assert\display "error halts subsequent print on same line" {
+	capture-stdout { try { 1 / 0 print 123 } }
+} ""
+
+; 2) ^fix at top-level: returns fixed value
+assert\display "^fix at top-level returns fixed value" {
+	1 / 0 |^fix { 10 }
+} 10
+
+; 3) ^check at top-level: wraps and returns error
+assert\display "^check at top-level wraps error with message" {
+	try { 1 / 0 |^check "hello" } |message?
+} "hello"
+
+; 4) ^check twice: second doesn't execute (first already returned)
+assert\display "^check then ^check: second not executed" {
+	try { 1 / 0 |^check "hello" |^check "asdasd" } |message?
+} "hello"
+
+; 5) check then ^check: outer ^check wins, wraps with its message
+assert\display "check then ^check: ^check wraps with new message" {
+	try { 1 / 0 |check "hello" |^check "asdasd" } |message?
+} "asdasd"
+
+; and preserves original cause
+assert\display "check then ^check: cause preserved under wrapper" {
+	try { 1 / 0 |check "hello" |^check "asdasd" } |cause? |type?
+} 'error
+
+; 6) check then check: outermost message visible, inner kept as cause
+assert\display "double check: outer message, inner cause" {
+	try { 1 / 0 |check "hello" |check "asdasd" } |message?
+} "asdasd"
+
+assert\display "double check: root cause preserved" {
+	try { 1 / 0 |check "hello" |check "asdasd" } |cause? |message? |contains "divide by Zero"
+} true
+
+; 7) after check+check, adjacent print still shouldn't run
+assert\display "error after checks stops adjacent print (no comma)" {
+	capture-stdout { try { 1 / 0 |check "hello" |check "asdasd" print 123 } }
+} ""
+
+; 8) Same but with comma separation: still should not run print due to ^check
+assert\display "^check stops subsequent expression (with comma)" {
+	ff1:: fn { } { 1 / 0 |check { 100 } }
+	capture-stdout { try { ff1 |^check { 200 } , print 123 } }
+} ""
+
+; Also verify the error message from the ^check case above
+assert\display "^check with comma returns its status code" {
+	ff2:: fn { } { 1 / 0 |check { 100 } }
+	try { ff2 |^check { 200 } } |status?
+} 200
+
+; 9) Function that fails, then various pipelines
+assert\display "zero-arg fn call fails" {
+	fA:: fn { } { 1 / 0 }
+	try { fA } |type?
+} 'error
+
+assert\display "pipe print after fn failure does not execute" {
+	fB:: fn { } { 1 / 0 }
+	capture-stdout { try { fB |print } }
+} ""
+
+assert\display "fn with check returns wrapped error (message)" {
+	fC:: fn { } { 1 / 0 |check { "oop" } }
+	try { fC } |message?
+} "oop"
+
+assert\display "fix handles failing fn and returns value" {
+	ff:: fn { } { 1 / 0 |check { "oop" } }
+	ff |fix { 100 }
+} 100
+
+assert\display "check on failing fn sets status code" {
+	ff:: fn { } { 1 / 0 |check { "oop" } }
+	try { ff |check { 100 } } |status?
+} 100
+
+assert\display "print not executed after check (still failing)" {
+	ff:: fn { } { 1 / 0 |check { "oop" } }
+	capture-stdout { try { ff |check { 100 } |print } }
+} ""
+
+assert\display "^check after check sets new status code" {
+	ff:: fn { } { 1 / 0 |check { "oop" } }
+	try { ff |check { 100 } |^check { 200 } } |status?
+} 200
+
+assert\display "^check with comma prevents following print" {
+	ff:: fn { } { 1 / 0 |check { "oop" } }
+	capture-stdout { try { ff |check { 100 } |^check { 200 } , print 123 } }
+} ""
+
+assert\display "^check without comma still prevents following print" {
+	ff:: fn { } { 1 / 0 |check { "oop" } }
+	capture-stdout { try { ff |check { 100 } |^check { 200 } print 123 } }
+} ""
+
+print ""
