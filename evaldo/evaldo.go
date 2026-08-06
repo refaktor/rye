@@ -152,10 +152,14 @@ func EvalBlockInj_Rye2(ps *env.ProgramState, inj env.Object, injnow bool) {
 			}
 			ps.ReturnFlag = false // next is an independent expression – safe to continue
 		}
+		// TODO: check this whole function if we really need all internal logic or we can clean it up and get more consistent behaviour
 		if tryHandleFailure(ps) {
 			ps.ErrorFlag = true
 			// MaybeDisplayFailureOrError(ps, ps.Idx, "evalblockinj")
 			// fmt.Println("EVALBLOCKINJ RETURNING")
+			return
+		}
+		if ps.FailureFlag { // TODO: should we check for return flag too?
 			return
 		}
 		// Handle comma expression guards.
@@ -2444,7 +2448,7 @@ func MaybeDisplayFailureOrError2(es *env.ProgramState, genv *env.Idxs, tag strin
 			OfferDebuggingOptionsHook(es, genv, tag)
 		}
 
-		// es.SkipFlag = false
+		es.SkipFlag = true
 	}
 	if topLevel {
 		es.SkipFlag = false

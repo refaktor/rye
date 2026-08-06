@@ -1,7 +1,7 @@
 //go:build !no_validation
 // +build !no_validation
 
-package batteries
+package evaldo
 
 import (
 	"fmt"
@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/refaktor/rye/env"
-	"github.com/refaktor/rye/evaldo"
 	"github.com/refaktor/rye/util"
 )
 
@@ -229,7 +228,7 @@ func evalWord(word env.Word, es *env.ProgramState, val any) (any, env.Object) {
 		case env.Block:
 			ser := es.Ser
 			es.Ser = blk.Series
-			evaldo.EvalBlockInj(es, val.(env.Object), true)
+			EvalBlockInj(es, val.(env.Object), true)
 			if es.ErrorFlag {
 				es.Ser = ser
 				return val, es.Res
@@ -248,7 +247,7 @@ func evalWord(word env.Word, es *env.ProgramState, val any) (any, env.Object) {
 		case env.Block:
 			ser := es.Ser
 			es.Ser = blk.Series
-			evaldo.EvalBlockInj(es, val.(env.Object), true)
+			EvalBlockInj(es, val.(env.Object), true)
 			if es.ErrorFlag {
 				es.Ser = ser
 				return val, es.Res
@@ -617,7 +616,7 @@ func BuiValidate(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object) env.O
 			return val
 		}
 	default:
-		return evaldo.MakeArgError(env1, 2, []env.Type{env.BlockType}, "validate")
+		return MakeArgError(env1, 2, []env.Type{env.BlockType}, "validate")
 	}
 }
 

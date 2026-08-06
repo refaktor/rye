@@ -1143,12 +1143,13 @@ db .Exec { INSERT INTO users ( name , age ) VALUES ( ?name , 42 ) }
 	{
 		argsn 2
 		arg `db: SQLite database connection`
-		arg `sql: SQL query as string or block`
+		arg `sql: SQL query as string, SQL-DSL block, or a block where first value is SQL string and the rest are parameters`
 		returns `table containing query results`
 	}
 
 	{
 		equal { Open sqlite://test.db |Query "SELECT * FROM test" |type? } 'table
+		Also supports: db .Query { "SELECT * FROM test WHERE id = ?" 123 }
 	}
 
 	{

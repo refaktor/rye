@@ -3,7 +3,7 @@
 //go:build !no_table
 // +build !no_table
 
-package batteries
+package evaldo
 
 import (
 	"encoding/csv"
@@ -16,7 +16,6 @@ import (
 	"strings"
 
 	"github.com/refaktor/rye/env"
-	"github.com/refaktor/rye/evaldo"
 	"github.com/refaktor/rye/util"
 	"github.com/xuri/excelize/v2"
 )
@@ -70,7 +69,7 @@ var Builtins_table = map[string]*env.Builtin{
 					}
 					return *spr
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.BlockType}, "table")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "table")
 				}
 				/* for data.Pos() < data.Len() {
 					rowd := make([]any, header.Len())
@@ -81,7 +80,7 @@ var Builtins_table = map[string]*env.Builtin{
 					spr.AddRow(*env.NewTableRow(rowd, spr))
 				} */
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.BlockType}, "table")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "table")
 			}
 		},
 	},
@@ -136,7 +135,7 @@ var Builtins_table = map[string]*env.Builtin{
 				}
 				return *spr
 			default:
-				return evaldo.MakeArgError(ps, 2, []env.Type{env.BlockType, env.ListType}, "table\\rows")
+				return MakeArgError(ps, 2, []env.Type{env.BlockType, env.ListType}, "table\\rows")
 			}
 		},
 	},
@@ -156,7 +155,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case env.Block:
 				data := block.Series
 				if data.Len() == 0 {
-					return evaldo.MakeBuiltinError(ps, "Block is empty", "to-table")
+					return MakeBuiltinError(ps, "Block is empty", "to-table")
 				}
 				k := make(map[string]struct{})
 				for _, obj := range data.S {
@@ -166,7 +165,7 @@ var Builtins_table = map[string]*env.Builtin{
 							k[key] = struct{}{}
 						}
 					default:
-						return evaldo.MakeBuiltinError(ps, "Block must contain only dicts", "to-table")
+						return MakeBuiltinError(ps, "Block must contain only dicts", "to-table")
 					}
 				}
 				var keys []string
@@ -193,7 +192,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case env.List:
 				data := block.Data
 				if len(data) == 0 {
-					return evaldo.MakeBuiltinError(ps, "List is empty", "to-table")
+					return MakeBuiltinError(ps, "List is empty", "to-table")
 				}
 				k := make(map[string]struct{})
 				for _, obj := range data {
@@ -207,7 +206,7 @@ var Builtins_table = map[string]*env.Builtin{
 							k[key] = struct{}{}
 						}
 					default:
-						return evaldo.MakeBuiltinError(ps, "List must contain only dicts", "to-table")
+						return MakeBuiltinError(ps, "List must contain only dicts", "to-table")
 					}
 				}
 				var keys []string
@@ -242,7 +241,7 @@ var Builtins_table = map[string]*env.Builtin{
 				return *spr
 
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "to-table")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "to-table")
 			}
 		},
 	},
@@ -268,10 +267,10 @@ var Builtins_table = map[string]*env.Builtin{
 			case *env.Table:
 				spr = s
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "to-dict")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "to-dict")
 			}
 			if len(spr.Cols) != 2 {
-				return evaldo.MakeBuiltinError(ps, fmt.Sprintf("to-dict requires a table with exactly 2 columns, got %d", len(spr.Cols)), "to-dict")
+				return MakeBuiltinError(ps, fmt.Sprintf("to-dict requires a table with exactly 2 columns, got %d", len(spr.Cols)), "to-dict")
 			}
 			data := make(map[string]any, len(spr.Rows))
 			for _, row := range spr.Rows {
@@ -287,7 +286,7 @@ var Builtins_table = map[string]*env.Builtin{
 				case env.Decimal:
 					keyStr = fmt.Sprintf("%g", k.Value)
 				default:
-					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("to-dict: key column values must be strings or numbers, got %s", keyObj.Inspect(*ps.Idx)), "to-dict")
+					return MakeBuiltinError(ps, fmt.Sprintf("to-dict: key column values must be strings or numbers, got %s", keyObj.Inspect(*ps.Idx)), "to-dict")
 				}
 				data[keyStr] = env.ToRyeValue(row.Values[1])
 			}
@@ -318,7 +317,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case env.Table:
 				spr = &s
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "where-equal")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-equal")
 			}
 			switch col := arg1.(type) {
 			case env.Word:
@@ -326,7 +325,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case env.String:
 				return WhereEquals(ps, spr, col.Value, arg2)
 			default:
-				return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-equal")
+				return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-equal")
 			}
 		},
 	},
@@ -348,7 +347,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case env.Table:
 				spr = &s
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "where-not-equal")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-not-equal")
 			}
 			switch col := arg1.(type) {
 			case env.Word:
@@ -356,7 +355,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case env.String:
 				return WhereNotEquals(ps, spr, col.Value, arg2)
 			default:
-				return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-not-equal")
+				return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-not-equal")
 			}
 		},
 	},
@@ -382,7 +381,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case env.Table:
 				spr = &s
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "where-void")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-void")
 			}
 			switch col := arg1.(type) {
 			case env.Word:
@@ -390,7 +389,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case env.String:
 				return WhereEquals(ps, spr, col.Value, env.NewVoid())
 			default:
-				return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-void")
+				return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-void")
 			}
 		},
 	},
@@ -416,13 +415,13 @@ var Builtins_table = map[string]*env.Builtin{
 			case *env.Table:
 				spr = sheet
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "where-match")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-match")
 			}
 			switch reNative := arg2.(type) {
 			case env.Native:
 				re, ok := reNative.Value.(*regexp.Regexp)
 				if !ok {
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.NativeType}, "where-match")
+					return MakeArgError(ps, 2, []env.Type{env.NativeType}, "where-match")
 				}
 				switch col := arg1.(type) {
 				case env.Word:
@@ -430,10 +429,10 @@ var Builtins_table = map[string]*env.Builtin{
 				case env.String:
 					return WhereMatch(ps, spr, col.Value, re)
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-match")
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-match")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 3, []env.Type{env.NativeType}, "where-match")
+				return MakeArgError(ps, 3, []env.Type{env.NativeType}, "where-match")
 			}
 		},
 	},
@@ -459,7 +458,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case *env.Table:
 				spr = sheet
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "where-contains")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-contains")
 			}
 			switch s := arg2.(type) {
 			case env.String:
@@ -469,10 +468,10 @@ var Builtins_table = map[string]*env.Builtin{
 				case env.String:
 					return WhereContains(ps, spr, col.Value, s.Value, false)
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-contains")
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-contains")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType}, "where-contains")
+				return MakeArgError(ps, 3, []env.Type{env.StringType}, "where-contains")
 			}
 		},
 	},
@@ -498,7 +497,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case *env.Table:
 				spr = sheet
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "where-not-contains")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-not-contains")
 			}
 			switch s := arg2.(type) {
 			case env.String:
@@ -508,10 +507,10 @@ var Builtins_table = map[string]*env.Builtin{
 				case env.String:
 					return WhereContains(ps, spr, col.Value, s.Value, true)
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-not-contains")
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-not-contains")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType}, "where-not-contains")
+				return MakeArgError(ps, 3, []env.Type{env.StringType}, "where-not-contains")
 			}
 		},
 	},
@@ -536,7 +535,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case *env.Table:
 				spr = sheet
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "where-greater")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-greater")
 			}
 			switch col := arg1.(type) {
 			case env.Word:
@@ -544,7 +543,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case env.String:
 				return WhereGreater(ps, spr, col.Value, arg2)
 			default:
-				return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-greater")
+				return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-greater")
 			}
 		},
 	},
@@ -569,7 +568,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case *env.Table:
 				spr = sheet
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "where-lesser")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-lesser")
 			}
 			switch col := arg1.(type) {
 			case env.Word:
@@ -577,7 +576,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case env.String:
 				return WhereLesser(ps, spr, col.Value, arg2)
 			default:
-				return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-lesser")
+				return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-lesser")
 			}
 		},
 	},
@@ -605,7 +604,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case *env.Table:
 				spr = sheet
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "where-between")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-between")
 			}
 			switch col := arg1.(type) {
 			case env.Word:
@@ -613,7 +612,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case env.String:
 				return WhereBetween(ps, spr, col.Value, arg2, arg3, false)
 			default:
-				return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-between")
+				return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-between")
 			}
 		},
 	},
@@ -639,7 +638,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case *env.Table:
 				spr = sheet
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "where-between\\inclusive")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-between\\inclusive")
 			}
 			switch col := arg1.(type) {
 			case env.Word:
@@ -647,7 +646,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case env.String:
 				return WhereBetween(ps, spr, col.Value, arg2, arg3, true)
 			default:
-				return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-between\\inclusive")
+				return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-between\\inclusive")
 			}
 		},
 	},
@@ -675,7 +674,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case *env.Table:
 				spr = s
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "where-in")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-in")
 			}
 			switch vals := arg2.(type) {
 			case env.Block:
@@ -685,10 +684,10 @@ var Builtins_table = map[string]*env.Builtin{
 				case env.String:
 					return WhereIn(ps, spr, col.Value, vals.Series.S)
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-in")
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-in")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 3, []env.Type{env.BlockType}, "where-in")
+				return MakeArgError(ps, 3, []env.Type{env.BlockType}, "where-in")
 			}
 		},
 	},
@@ -716,7 +715,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case *env.Table:
 				spr = s
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "where-not-in")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-not-in")
 			}
 			switch vals := arg2.(type) {
 			case env.Block:
@@ -726,10 +725,10 @@ var Builtins_table = map[string]*env.Builtin{
 				case env.String:
 					return WhereNotIn(ps, spr, col.Value, vals.Series.S)
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-not-in")
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-not-in")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 3, []env.Type{env.BlockType}, "where-not-in")
+				return MakeArgError(ps, 3, []env.Type{env.BlockType}, "where-not-in")
 			}
 		},
 	},
@@ -760,7 +759,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case *env.Table:
 				spr = table
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "where")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where")
 			}
 
 			switch col := arg1.(type) {
@@ -774,7 +773,7 @@ var Builtins_table = map[string]*env.Builtin{
 				case env.Function:
 					return WhereFunction(ps, spr, colName, block)
 				default:
-					return evaldo.MakeArgError(ps, 3, []env.Type{env.BlockType, env.BuiltinType, env.FunctionType}, "where")
+					return MakeArgError(ps, 3, []env.Type{env.BlockType, env.BuiltinType, env.FunctionType}, "where")
 				}
 			case env.String:
 				colName := col.Value
@@ -786,17 +785,17 @@ var Builtins_table = map[string]*env.Builtin{
 				case env.Function:
 					return WhereFunction(ps, spr, colName, block)
 				default:
-					return evaldo.MakeArgError(ps, 3, []env.Type{env.BlockType, env.BuiltinType, env.FunctionType}, "where")
+					return MakeArgError(ps, 3, []env.Type{env.BlockType, env.BuiltinType, env.FunctionType}, "where")
 				}
 			case env.Block:
 				switch block := arg2.(type) {
 				case env.Block:
 					return WhereBlockMultiCol(ps, spr, col, block)
 				default:
-					return evaldo.MakeArgError(ps, 3, []env.Type{env.BlockType}, "where")
+					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "where")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType, env.BlockType}, "where")
+				return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType, env.BlockType}, "where")
 			}
 		},
 	},
@@ -823,7 +822,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case *env.Table:
 				spr = s
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "distinct")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "distinct")
 			}
 			switch col := arg1.(type) {
 			case env.Word:
@@ -841,12 +840,12 @@ var Builtins_table = map[string]*env.Builtin{
 					case env.String:
 						cols = append(cols, w.Value)
 					default:
-						return evaldo.MakeBuiltinError(ps, "Column names block must contain only words or strings.", "distinct")
+						return MakeBuiltinError(ps, "Column names block must contain only words or strings.", "distinct")
 					}
 				}
 				return Distinct(ps, spr, cols)
 			default:
-				return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType, env.BlockType}, "distinct")
+				return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType, env.BlockType}, "distinct")
 			}
 		},
 	},
@@ -873,7 +872,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case *env.Table:
 				spr = s
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "fill-void")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "fill-void")
 			}
 			var colName string
 			switch col := arg1.(type) {
@@ -882,7 +881,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case env.String:
 				colName = col.Value
 			default:
-				return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "fill-void")
+				return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "fill-void")
 			}
 			return FillVoid(ps, spr, colName, arg2)
 		},
@@ -911,7 +910,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case *env.Table:
 				spr = table
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "count-where")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "count-where")
 			}
 
 			switch col := arg1.(type) {
@@ -925,7 +924,7 @@ var Builtins_table = map[string]*env.Builtin{
 				case env.Function:
 					return CountWhereFunction(ps, spr, colName, block)
 				default:
-					return evaldo.MakeArgError(ps, 3, []env.Type{env.BlockType, env.BuiltinType, env.FunctionType}, "count-where")
+					return MakeArgError(ps, 3, []env.Type{env.BlockType, env.BuiltinType, env.FunctionType}, "count-where")
 				}
 			case env.String:
 				colName := col.Value
@@ -937,17 +936,17 @@ var Builtins_table = map[string]*env.Builtin{
 				case env.Function:
 					return CountWhereFunction(ps, spr, colName, block)
 				default:
-					return evaldo.MakeArgError(ps, 3, []env.Type{env.BlockType, env.BuiltinType, env.FunctionType}, "count-where")
+					return MakeArgError(ps, 3, []env.Type{env.BlockType, env.BuiltinType, env.FunctionType}, "count-where")
 				}
 			case env.Block:
 				switch block := arg2.(type) {
 				case env.Block:
 					return CountWhereBlockMultiCol(ps, spr, col, block)
 				default:
-					return evaldo.MakeArgError(ps, 3, []env.Type{env.BlockType}, "count-where")
+					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "count-where")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType, env.BlockType}, "count-where")
+				return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType, env.BlockType}, "count-where")
 			}
 		},
 	},
@@ -984,10 +983,10 @@ var Builtins_table = map[string]*env.Builtin{
 					table.AddRow(*env.NewTableRow(vals, &table))
 					return table
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.BlockType, env.ListType}, "add-row")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.ListType}, "add-row")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "add-row")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "add-row")
 			}
 		},
 	},
@@ -1007,7 +1006,7 @@ var Builtins_table = map[string]*env.Builtin{
 				rows := spr.GetRows()
 				return *env.NewNative(ps.Idx, rows, "table-rows")
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "get-rows")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "get-rows")
 			}
 		},
 	},
@@ -1064,10 +1063,10 @@ var Builtins_table = map[string]*env.Builtin{
 					return spr
 				default:
 					fmt.Println(data1.Inspect(*ps.Idx))
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.BlockType, env.NativeType}, "add-rows")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.NativeType}, "add-rows")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "add-rows")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "add-rows")
 			}
 		},
 	},
@@ -1106,7 +1105,7 @@ var Builtins_table = map[string]*env.Builtin{
 					spr.Rows = append(spr.Rows, data1.Value.([]env.TableRow)...)
 					return spr
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.BlockType, env.NativeType}, "add-rows!")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.NativeType}, "add-rows!")
 				}
 			case *env.PersistentTable:
 				switch data1 := arg1.(type) {
@@ -1122,10 +1121,10 @@ var Builtins_table = map[string]*env.Builtin{
 					}
 					return spr
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.BlockType}, "add-rows!")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "add-rows!")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType, env.PersistentTableType}, "add-rows!")
+				return MakeArgError(ps, 1, []env.Type{env.TableType, env.PersistentTableType}, "add-rows!")
 			}
 		},
 	},
@@ -1160,21 +1159,21 @@ var Builtins_table = map[string]*env.Builtin{
 				case env.Integer:
 					if idx.Value < 1 || (idx.Value-1) > int64(len(spr.Rows)) {
 						errMsg := fmt.Sprintf("update-row! called with row index %d, but table only has %d rows", idx.Value, len(spr.Rows))
-						return evaldo.MakeError(ps, errMsg)
+						return MakeError(ps, errMsg)
 					}
 					switch updater := arg2.(type) {
 					case env.Function:
-						evaldo.CallFunction_CollectArgs(updater, ps, spr.Rows[idx.Value-1], false, ps.Ctx)
+						CallFunction_CollectArgs(updater, ps, spr.Rows[idx.Value-1], false, ps.Ctx)
 						ret := ps.Res
 						if ok, err, row := RyeValueToTableRow(spr, ret); ok {
 							spr.Rows[idx.Value-1] = *row
 							return spr
 						} else if len(err) > 0 {
-							return evaldo.MakeError(ps, err)
+							return MakeError(ps, err)
 						} else {
-							return evaldo.MakeError(ps, fmt.Sprintf(
+							return MakeError(ps, fmt.Sprintf(
 								"Function given to update-row! should have returned a Dict or a TableRow, but returned a %s %#v instead",
-								evaldo.NameOfRyeType(ret.Type()), ret,
+								NameOfRyeType(ret.Type()), ret,
 							))
 						}
 					case env.Dict:
@@ -1184,7 +1183,7 @@ var Builtins_table = map[string]*env.Builtin{
 						for keyStr, val := range updater.Data {
 							index := spr.GetColumnIndex(keyStr)
 							if index < 0 {
-								return evaldo.MakeError(ps, "Column "+keyStr+" was not found")
+								return MakeError(ps, "Column "+keyStr+" was not found")
 							}
 							row.Values[index] = val
 						}
@@ -1193,13 +1192,13 @@ var Builtins_table = map[string]*env.Builtin{
 						spr.Rows[idx.Value-1] = updater
 						return spr
 					default:
-						return evaldo.MakeArgError(ps, 3, []env.Type{env.FunctionType, env.DictType, env.TableRowType}, "update-row!")
+						return MakeArgError(ps, 3, []env.Type{env.FunctionType, env.DictType, env.TableRowType}, "update-row!")
 					}
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.IntegerType}, "update-row!")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "update-row!")
 				}
 			default:
-				return evaldo.MakeNeedsThawedArgError(ps, "update-row!")
+				return MakeNeedsThawedArgError(ps, "update-row!")
 			}
 
 		},
@@ -1226,13 +1225,13 @@ var Builtins_table = map[string]*env.Builtin{
 						spr.RemoveRowByIndex(data1.Value - 1)
 						return spr
 					} else {
-						return evaldo.MakeError(ps, fmt.Sprintf("Table had less then %d rows", data1.Value))
+						return MakeError(ps, fmt.Sprintf("Table had less then %d rows", data1.Value))
 					}
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.BlockType, env.NativeType}, "remove-row!")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.NativeType}, "remove-row!")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "remove-row!")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "remove-row!")
 			}
 		},
 	},
@@ -1269,21 +1268,21 @@ var Builtins_table = map[string]*env.Builtin{
 						case env.LSetword:
 							// Rename the previous column
 							if len(colNames) == 0 {
-								return evaldo.MakeBuiltinError(ps, "LSetword :"+ps.Idx.GetWord(ww.Index)+" found but no previous column to rename", "columns?")
+								return MakeBuiltinError(ps, "LSetword :"+ps.Idx.GetWord(ww.Index)+" found but no previous column to rename", "columns?")
 							}
 							// Replace the last column name with the new name from lsetword
 							newName := ps.Idx.GetWord(ww.Index)
 							colNames[len(colNames)-1] = newName
 						default:
-							return evaldo.MakeBuiltinError(ps, "Expected string, tagword, or lsetword in columns specification", "columns?")
+							return MakeBuiltinError(ps, "Expected string, tagword, or lsetword in columns specification", "columns?")
 						}
 					}
 					return spr.ColumnsRenamed(ps, cols, colNames)
 				default:
-					return evaldo.MakeArgError(ps, 1, []env.Type{env.BlockType}, "columns?")
+					return MakeArgError(ps, 1, []env.Type{env.BlockType}, "columns?")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "columns?")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "columns?")
 			}
 		},
 	},
@@ -1303,7 +1302,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case env.Table:
 				return spr.GetColumns()
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "headers?")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "headers?")
 			}
 		},
 	},
@@ -1334,30 +1333,30 @@ var Builtins_table = map[string]*env.Builtin{
 					}
 					return res
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "column?")
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "column?")
 				}
 			case env.Block:
 				switch col := arg1.(type) {
 				case env.Integer:
 					col1 := make([]env.Object, len(spr.Series.S))
 					if col.Value < 0 {
-						return evaldo.MakeBuiltinError(ps, "Index can't be negative", "column?")
+						return MakeBuiltinError(ps, "Index can't be negative", "column?")
 					}
 					for i, item_ := range spr.Series.S {
 						switch item := item_.(type) {
 						case env.Block:
 							if len(item.Series.S) < int(col.Value) {
-								return evaldo.MakeBuiltinError(ps, "index out of bounds for item: "+strconv.Itoa(i), "column?")
+								return MakeBuiltinError(ps, "index out of bounds for item: "+strconv.Itoa(i), "column?")
 							}
 							col1[i] = item.Series.S[col.Value]
 						}
 					}
 					return *env.NewBlock(*env.NewTSeries(col1))
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "column?")
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "column?")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "column?")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "column?")
 			}
 		},
 	},
@@ -1382,10 +1381,10 @@ var Builtins_table = map[string]*env.Builtin{
 				case env.Block:
 					return DropColumnBlock(ps, spr, rmCol)
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType, env.BlockType}, "drop-column")
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType, env.BlockType}, "drop-column")
 				}
 			}
-			return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "drop-column")
+			return MakeArgError(ps, 1, []env.Type{env.TableType}, "drop-column")
 		},
 	},
 	// Tests:
@@ -1403,13 +1402,13 @@ var Builtins_table = map[string]*env.Builtin{
 					case env.String:
 						return RenameColumn(ps, spr, oldName, newName)
 					default:
-						return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType, env.BlockType}, "rename-column")
+						return MakeArgError(ps, 2, []env.Type{env.WordType, env.BlockType}, "rename-column")
 					}
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType, env.BlockType}, "rename-column")
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.BlockType}, "rename-column")
 				}
 			}
-			return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "rename-column")
+			return MakeArgError(ps, 1, []env.Type{env.TableType}, "rename-column")
 		},
 	},
 	// TODO: also create gen-column\i 'name { +100 }   ( or  \idx \pos)
@@ -1438,25 +1437,25 @@ var Builtins_table = map[string]*env.Builtin{
 						case env.Block:
 							return GenerateColumn(ps, spr, newCol, fromCols, code)
 						default:
-							return evaldo.MakeArgError(ps, 4, []env.Type{env.BlockType}, "gen-column")
+							return MakeArgError(ps, 4, []env.Type{env.BlockType}, "gen-column")
 						}
 					case env.Word:
 						switch replaceBlock := arg3.(type) {
 						case env.Block:
 							if replaceBlock.Series.Len() != 2 {
-								return evaldo.MakeBuiltinError(ps, "Replacement block must contain a regex object and replacement string.", "genadd-umn")
+								return MakeBuiltinError(ps, "Replacement block must contain a regex object and replacement string.", "genadd-umn")
 							}
 							regexNative, ok := replaceBlock.Series.S[0].(env.Native)
 							if !ok {
-								return evaldo.MakeBuiltinError(ps, "First element of replacement block must be a regex object.", "genaddumn")
+								return MakeBuiltinError(ps, "First element of replacement block must be a regex object.", "genaddumn")
 							}
 							regex, ok := regexNative.Value.(*regexp.Regexp)
 							if !ok {
-								return evaldo.MakeBuiltinError(ps, "First element of replacement block must be a regex object.", "gen-column")
+								return MakeBuiltinError(ps, "First element of replacement block must be a regex object.", "gen-column")
 							}
 							replaceStr, ok := replaceBlock.Series.S[1].(env.String)
 							if !ok {
-								return evaldo.MakeBuiltinError(ps, "Second element of replacement block must be a string.", "gen-column")
+								return MakeBuiltinError(ps, "Second element of replacement block must be a string.", "gen-column")
 							}
 							err := GenerateColumnRegexReplace(ps, &spr, newCol, fromCols, regex, replaceStr.Value)
 							if err != nil {
@@ -1464,16 +1463,16 @@ var Builtins_table = map[string]*env.Builtin{
 							}
 							return spr
 						default:
-							return evaldo.MakeArgError(ps, 3, []env.Type{env.BlockType}, "gen-column")
+							return MakeArgError(ps, 3, []env.Type{env.BlockType}, "gen-column")
 						}
 					default:
-						return evaldo.MakeArgError(ps, 3, []env.Type{env.BlockType}, "gen-column")
+						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "gen-column")
 					}
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType}, "gen-column")
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "gen-column")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "gen-column")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "gen-column")
 			}
 		},
 	},
@@ -1503,19 +1502,19 @@ var Builtins_table = map[string]*env.Builtin{
 				case env.String:
 					colName = col.Value
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "update-column!")
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "update-column!")
 				}
 
 				colIdx := slices.Index(spr.Cols, colName)
 				if colIdx < 0 {
-					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Column '%s' not found", colName), "update-column!")
+					return MakeBuiltinError(ps, fmt.Sprintf("Column '%s' not found", colName), "update-column!")
 				}
 
 				switch updater := arg2.(type) {
 				case env.Function:
 					for i := range spr.Rows {
 						cell := env.ToRyeValue(spr.Rows[i].Values[colIdx])
-						evaldo.CallFunctionArgs2(updater, ps, cell, spr.Rows[i], ps.Ctx)
+						CallFunctionArgs2(updater, ps, cell, spr.Rows[i], ps.Ctx)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -1523,10 +1522,10 @@ var Builtins_table = map[string]*env.Builtin{
 					}
 					return spr
 				default:
-					return evaldo.MakeArgError(ps, 3, []env.Type{env.FunctionType}, "update-column!")
+					return MakeArgError(ps, 3, []env.Type{env.FunctionType}, "update-column!")
 				}
 			default:
-				return evaldo.MakeNeedsThawedArgError(ps, "update-column!")
+				return MakeNeedsThawedArgError(ps, "update-column!")
 			}
 		},
 	},
@@ -1552,7 +1551,7 @@ var Builtins_table = map[string]*env.Builtin{
 				case env.String:
 					colName = col.Value
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "add-column")
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "add-column")
 				}
 
 				numRows := len(spr.Rows)
@@ -1561,7 +1560,7 @@ var Builtins_table = map[string]*env.Builtin{
 				case env.Block:
 
 					if data.Series.Len() != numRows {
-						return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Column data has %d values but table has %d rows", data.Series.Len(), numRows), "add-column")
+						return MakeBuiltinError(ps, fmt.Sprintf("Column data has %d values but table has %d rows", data.Series.Len(), numRows), "add-column")
 					}
 					// Add column name
 					spr.Cols = append(spr.Cols, colName)
@@ -1573,7 +1572,7 @@ var Builtins_table = map[string]*env.Builtin{
 					return spr
 				case env.List:
 					if len(data.Data) != numRows {
-						return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Column data has %d values but table has %d rows", len(data.Data), numRows), "add-column")
+						return MakeBuiltinError(ps, fmt.Sprintf("Column data has %d values but table has %d rows", len(data.Data), numRows), "add-column")
 					}
 					// Add column name
 					spr.Cols = append(spr.Cols, colName)
@@ -1584,10 +1583,10 @@ var Builtins_table = map[string]*env.Builtin{
 					}
 					return spr
 				default:
-					return evaldo.MakeArgError(ps, 3, []env.Type{env.BlockType, env.ListType}, "add-column")
+					return MakeArgError(ps, 3, []env.Type{env.BlockType, env.ListType}, "add-column")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "add-column")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "add-column")
 			}
 		},
 	},
@@ -1607,7 +1606,7 @@ var Builtins_table = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			dir, ok := arg2.(env.Word)
 			if !ok {
-				return evaldo.MakeArgError(ps, 3, []env.Type{env.WordType}, "sort-by!")
+				return MakeArgError(ps, 3, []env.Type{env.WordType}, "sort-by!")
 			}
 			var dirAsc bool
 			if dir.Index == ps.Idx.IndexWord("asc") {
@@ -1615,7 +1614,7 @@ var Builtins_table = map[string]*env.Builtin{
 			} else if dir.Index == ps.Idx.IndexWord("desc") {
 				dirAsc = false
 			} else {
-				return evaldo.MakeBuiltinError(ps, "Direction can be just asc or desc.", "sort-by!")
+				return MakeBuiltinError(ps, "Direction can be just asc or desc.", "sort-by!")
 			}
 			switch spr := arg0.(type) {
 			case env.Table:
@@ -1635,10 +1634,10 @@ var Builtins_table = map[string]*env.Builtin{
 					}
 					return spr
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType}, "sort-by!")
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "sort-by!")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "sort-by!")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "sort-by!")
 			}
 		},
 	},
@@ -1655,7 +1654,7 @@ var Builtins_table = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			dir, ok := arg2.(env.Word)
 			if !ok {
-				return evaldo.MakeArgError(ps, 3, []env.Type{env.WordType}, "sort-by!")
+				return MakeArgError(ps, 3, []env.Type{env.WordType}, "sort-by!")
 			}
 			var dirAsc bool
 			if dir.Index == ps.Idx.IndexWord("asc") {
@@ -1663,7 +1662,7 @@ var Builtins_table = map[string]*env.Builtin{
 			} else if dir.Index == ps.Idx.IndexWord("desc") {
 				dirAsc = false
 			} else {
-				return evaldo.MakeBuiltinError(ps, "Direction can be just asc or desc.", "sort-by!")
+				return MakeBuiltinError(ps, "Direction can be just asc or desc.", "sort-by!")
 			}
 			switch spr := arg0.(type) {
 			case env.Table:
@@ -1687,10 +1686,10 @@ var Builtins_table = map[string]*env.Builtin{
 					}
 					return *newSpr
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType}, "sort-by!")
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "sort-by!")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "sort-by!")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "sort-by!")
 			}
 		},
 	},
@@ -1712,7 +1711,7 @@ var Builtins_table = map[string]*env.Builtin{
 						case env.Word:
 							colWords[c] = ww
 						default:
-							return evaldo.MakeError(ps, "Block of tagwords needed")
+							return MakeError(ps, "Block of tagwords needed")
 						}
 					}
 					err := AddIndexes(ps, &spr, colWords)
@@ -1721,10 +1720,10 @@ var Builtins_table = map[string]*env.Builtin{
 					}
 					return spr
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.BlockType}, "add-indexes!")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "add-indexes!")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "add-indexes!")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "add-indexes!")
 			}
 		},
 	},
@@ -1743,7 +1742,7 @@ var Builtins_table = map[string]*env.Builtin{
 				}
 				return *env.NewBlock(*env.NewTSeries(res))
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "indexes?")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "indexes?")
 			}
 		},
 	},
@@ -1760,10 +1759,10 @@ var Builtins_table = map[string]*env.Builtin{
 				case env.Decimal:
 					return AutoType(ps, &spr, percent.Value)
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.DecimalType}, "autotype")
+					return MakeArgError(ps, 2, []env.Type{env.DecimalType}, "autotype")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "autotype")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "autotype")
 			}
 		},
 	},
@@ -1796,23 +1795,23 @@ var Builtins_table = map[string]*env.Builtin{
 					case env.Word:
 						col2, ok := arg3.(env.Word)
 						if !ok {
-							return evaldo.MakeArgError(ps, 4, []env.Type{env.WordType}, "left-join")
+							return MakeArgError(ps, 4, []env.Type{env.WordType}, "left-join")
 						}
 						return LeftJoin(ps, spr1, spr2, ps.Idx.GetWord(col1.Index), ps.Idx.GetWord(col2.Index), false)
 					case env.String:
 						col2, ok := arg3.(env.String)
 						if !ok {
-							evaldo.MakeArgError(ps, 4, []env.Type{env.StringType}, "left-join")
+							MakeArgError(ps, 4, []env.Type{env.StringType}, "left-join")
 						}
 						return LeftJoin(ps, spr1, spr2, col1.Value, col2.Value, false)
 					default:
-						return evaldo.MakeArgError(ps, 3, []env.Type{env.WordType, env.StringType}, "left-join")
+						return MakeArgError(ps, 3, []env.Type{env.WordType, env.StringType}, "left-join")
 					}
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.TableType}, "left-join")
+					return MakeArgError(ps, 2, []env.Type{env.TableType}, "left-join")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "left-join")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "left-join")
 			}
 		},
 	},
@@ -1846,23 +1845,23 @@ var Builtins_table = map[string]*env.Builtin{
 					case env.Word:
 						col2, ok := arg3.(env.Word)
 						if !ok {
-							return evaldo.MakeArgError(ps, 4, []env.Type{env.WordType}, "inner-join")
+							return MakeArgError(ps, 4, []env.Type{env.WordType}, "inner-join")
 						}
 						return LeftJoin(ps, spr1, spr2, ps.Idx.GetWord(col1.Index), ps.Idx.GetWord(col2.Index), true)
 					case env.String:
 						col2, ok := arg3.(env.String)
 						if !ok {
-							evaldo.MakeArgError(ps, 4, []env.Type{env.StringType}, "inner-join")
+							MakeArgError(ps, 4, []env.Type{env.StringType}, "inner-join")
 						}
 						return LeftJoin(ps, spr1, spr2, col1.Value, col2.Value, true)
 					default:
-						return evaldo.MakeArgError(ps, 3, []env.Type{env.WordType, env.StringType}, "inner-join")
+						return MakeArgError(ps, 3, []env.Type{env.WordType, env.StringType}, "inner-join")
 					}
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.TableType}, "inner-join")
+					return MakeArgError(ps, 2, []env.Type{env.TableType}, "inner-join")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "inner-join")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "inner-join")
 			}
 		},
 	},
@@ -1894,14 +1893,14 @@ var Builtins_table = map[string]*env.Builtin{
 				switch aggBlock := arg2.(type) {
 				case env.Block:
 					if len(aggBlock.Series.S)%2 != 0 {
-						return evaldo.MakeBuiltinError(ps, "Aggregation block must contain pairs of column name and function for each aggregation.", "group-by")
+						return MakeBuiltinError(ps, "Aggregation block must contain pairs of column name and function for each aggregation.", "group-by")
 					}
 					aggregations := make(map[string][]string)
 					for i := 0; i < len(aggBlock.Series.S); i += 2 {
 						col := aggBlock.Series.S[i]
 						fun, ok := aggBlock.Series.S[i+1].(env.Word)
 						if !ok {
-							return evaldo.MakeBuiltinError(ps, "Aggregation function must be a word", "group-by")
+							return MakeBuiltinError(ps, "Aggregation function must be a word", "group-by")
 						}
 						colStr := ""
 						switch col := col.(type) {
@@ -1910,7 +1909,7 @@ var Builtins_table = map[string]*env.Builtin{
 						case env.String:
 							colStr = col.Value
 						default:
-							return evaldo.MakeBuiltinError(ps, "Aggregation column must be a word or string", "group-by")
+							return MakeBuiltinError(ps, "Aggregation column must be a word or string", "group-by")
 						}
 						funStr := ps.Idx.GetWord(fun.Index)
 						aggregations[colStr] = append(aggregations[colStr], funStr)
@@ -1931,18 +1930,18 @@ var Builtins_table = map[string]*env.Builtin{
 							case env.Word:
 								cols[c] = ps.Idx.GetWord(ww.Index)
 							default:
-								return evaldo.MakeBuiltinError(ps, "Block must contain only strings or words for column names", "group-by")
+								return MakeBuiltinError(ps, "Block must contain only strings or words for column names", "group-by")
 							}
 						}
 						return GroupBy(ps, spr, cols, aggregations)
 					default:
-						return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType, env.BlockType}, "group-by")
+						return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType, env.BlockType}, "group-by")
 					}
 				default:
-					return evaldo.MakeArgError(ps, 3, []env.Type{env.BlockType}, "group-by")
+					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "group-by")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "group-by")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "group-by")
 			}
 		},
 	},
@@ -2046,7 +2045,7 @@ var Builtins_table = map[string]*env.Builtin{
 				f, err := os.Open(file.GetPath())
 				if err != nil {
 					// log.Fatal("Unable to read input file "+filePath, err)
-					return evaldo.MakeBuiltinError(ps, "Unable to read input file:"+err.Error(), "Load\\csv")
+					return MakeBuiltinError(ps, "Unable to read input file:"+err.Error(), "Load\\csv")
 				}
 				defer f.Close()
 
@@ -2054,10 +2053,10 @@ var Builtins_table = map[string]*env.Builtin{
 				rows, err := csvReader.ReadAll()
 				if err != nil {
 					// log.Fatal("Unable to parse file as CSV for "+filePath, err)
-					return evaldo.MakeBuiltinError(ps, "Unable to parse file as CSV: "+err.Error(), "Load\\csv")
+					return MakeBuiltinError(ps, "Unable to parse file as CSV: "+err.Error(), "Load\\csv")
 				}
 				if len(rows) == 0 {
-					return evaldo.MakeBuiltinError(ps, "File is empty", "Load\\csv")
+					return MakeBuiltinError(ps, "File is empty", "Load\\csv")
 				}
 				spr := env.NewTable(rows[0])
 				//				for i, row := range rows {
@@ -2076,7 +2075,7 @@ var Builtins_table = map[string]*env.Builtin{
 				}
 				return *spr
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType}, "Load\\csv")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "Load\\csv")
 			}
 		},
 	},
@@ -2108,22 +2107,22 @@ var Builtins_table = map[string]*env.Builtin{
 					f, err := os.Open(file.GetPath())
 					if err != nil {
 						// log.Fatal("Unable to read input file "+filePath, err)
-						return evaldo.MakeBuiltinError(ps, "Unable to read input file:"+err.Error(), "Load\\csv")
+						return MakeBuiltinError(ps, "Unable to read input file:"+err.Error(), "Load\\csv")
 					}
 					defer f.Close()
 
 					csvReader := csv.NewReader(f)
 					if len(separator.Value) != 1 {
-						return evaldo.MakeBuiltinError(ps, "Separator must be exactly 1 character long", "Load\\csv\\")
+						return MakeBuiltinError(ps, "Separator must be exactly 1 character long", "Load\\csv\\")
 					}
 					csvReader.Comma = rune(separator.Value[0])
 					rows, err := csvReader.ReadAll()
 					if err != nil {
 						// log.Fatal("Unable to parse file as CSV for "+filePath, err)
-						return evaldo.MakeBuiltinError(ps, "Unable to parse file as CSV: "+err.Error(), "Load\\csv")
+						return MakeBuiltinError(ps, "Unable to parse file as CSV: "+err.Error(), "Load\\csv")
 					}
 					if len(rows) == 0 {
-						return evaldo.MakeBuiltinError(ps, "File is empty", "Load\\csv")
+						return MakeBuiltinError(ps, "File is empty", "Load\\csv")
 					}
 					spr := env.NewTable(rows[0])
 					//				for i, row := range rows {
@@ -2142,10 +2141,10 @@ var Builtins_table = map[string]*env.Builtin{
 					}
 					return *spr
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "Load\\csv\\")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Load\\csv\\")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType}, "Load\\csv\\")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "Load\\csv\\")
 			}
 		},
 	},
@@ -2174,7 +2173,7 @@ var Builtins_table = map[string]*env.Builtin{
 				f, err := os.Open(file.GetPath())
 				if err != nil {
 					// log.Fatal("Unable to read input file "+filePath, err)
-					return evaldo.MakeBuiltinError(ps, "Unable to read input file:"+err.Error(), "Load\\csv")
+					return MakeBuiltinError(ps, "Unable to read input file:"+err.Error(), "Load\\csv")
 				}
 				defer f.Close()
 
@@ -2183,10 +2182,10 @@ var Builtins_table = map[string]*env.Builtin{
 				rows, err := csvReader.ReadAll()
 				if err != nil {
 					// log.Fatal("Unable to parse file as CSV for "+filePath, err)
-					return evaldo.MakeBuiltinError(ps, "Unable to parse file as CSV: "+err.Error(), "Load\\csv")
+					return MakeBuiltinError(ps, "Unable to parse file as CSV: "+err.Error(), "Load\\csv")
 				}
 				if len(rows) == 0 {
-					return evaldo.MakeBuiltinError(ps, "File is empty", "Load\\csv")
+					return MakeBuiltinError(ps, "File is empty", "Load\\csv")
 				}
 				spr := env.NewTable(rows[0])
 				//				for i, row := range rows {
@@ -2205,7 +2204,7 @@ var Builtins_table = map[string]*env.Builtin{
 				}
 				return *spr
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType}, "Load\\csv")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "Load\\csv")
 			}
 		},
 	},
@@ -2235,7 +2234,7 @@ var Builtins_table = map[string]*env.Builtin{
 					f, err := os.Create(file.GetPath())
 					if err != nil {
 						// log.Fatal("Unable to read input file "+filePath, err)
-						return evaldo.MakeBuiltinError(ps, "Unable to create input file.", "file-uri//Save\\csv")
+						return MakeBuiltinError(ps, "Unable to create input file.", "file-uri//Save\\csv")
 					}
 					defer f.Close()
 
@@ -2245,7 +2244,7 @@ var Builtins_table = map[string]*env.Builtin{
 
 					err1 := csvWriter.Write(spr.Cols)
 					if err1 != nil {
-						return evaldo.MakeBuiltinError(ps, "Unable to create write header.", "file-uri//Save\\csv")
+						return MakeBuiltinError(ps, "Unable to create write header.", "file-uri//Save\\csv")
 					}
 
 					for ir, row := range spr.Rows {
@@ -2273,17 +2272,17 @@ var Builtins_table = map[string]*env.Builtin{
 						}
 						err := csvWriter.Write(strVals)
 						if err != nil {
-							return evaldo.MakeBuiltinError(ps, "Unable to write line: "+strconv.Itoa(ir), "file-uri//Save\\csv")
+							return MakeBuiltinError(ps, "Unable to write line: "+strconv.Itoa(ir), "file-uri//Save\\csv")
 						}
 					}
 					csvWriter.Flush()
 					f.Close()
 					return spr
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.TableType}, "file-uri//Save\\csv")
+					return MakeArgError(ps, 2, []env.Type{env.TableType}, "file-uri//Save\\csv")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType}, "file-uri//Save\\csv")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-uri//Save\\csv")
 			}
 		},
 	},
@@ -2315,7 +2314,7 @@ var Builtins_table = map[string]*env.Builtin{
 					f, err := os.Create(file.GetPath())
 					if err != nil {
 						// log.Fatal("Unable to read input file "+filePath, err)
-						return evaldo.MakeBuiltinError(ps, "Unable to create input file.", "file-uri//Save\\tsv")
+						return MakeBuiltinError(ps, "Unable to create input file.", "file-uri//Save\\tsv")
 					}
 					defer f.Close()
 
@@ -2325,7 +2324,7 @@ var Builtins_table = map[string]*env.Builtin{
 					csvWriter.Comma = '\t'
 					err1 := csvWriter.Write(spr.Cols)
 					if err1 != nil {
-						return evaldo.MakeBuiltinError(ps, "Unable to create write header.", "file-uri//Save\\tsv")
+						return MakeBuiltinError(ps, "Unable to create write header.", "file-uri//Save\\tsv")
 					}
 
 					for ir, row := range spr.Rows {
@@ -2353,17 +2352,17 @@ var Builtins_table = map[string]*env.Builtin{
 						}
 						err := csvWriter.Write(strVals)
 						if err != nil {
-							return evaldo.MakeBuiltinError(ps, "Unable to write line: "+strconv.Itoa(ir), "file-uri//Save\\tsv")
+							return MakeBuiltinError(ps, "Unable to write line: "+strconv.Itoa(ir), "file-uri//Save\\tsv")
 						}
 					}
 					csvWriter.Flush()
 					f.Close()
 					return spr
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.TableType}, "file-uri//Save\\tsv")
+					return MakeArgError(ps, 2, []env.Type{env.TableType}, "file-uri//Save\\tsv")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType}, "file-uri//Save\\tsv")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-uri//Save\\tsv")
 			}
 		},
 	},
@@ -2388,33 +2387,33 @@ var Builtins_table = map[string]*env.Builtin{
 			case env.Uri:
 				f, err := excelize.OpenFile(file.GetPath())
 				if err != nil {
-					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Unable to open file: %s", err), "Load\\xlsx")
+					return MakeBuiltinError(ps, fmt.Sprintf("Unable to open file: %s", err), "Load\\xlsx")
 				}
 				defer f.Close()
 
 				sheetMap := f.GetSheetMap()
 				if len(sheetMap) == 0 {
-					return evaldo.MakeBuiltinError(ps, "No sheets found in file", "Load\\xlsx")
+					return MakeBuiltinError(ps, "No sheets found in file", "Load\\xlsx")
 				}
 				// sheets map index is 1-based
 				sheetName := sheetMap[1]
 				rows, err := f.Rows(sheetName)
 				if err != nil {
-					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Unable to get rows from sheet: %s", err), "Load\\xlsx")
+					return MakeBuiltinError(ps, fmt.Sprintf("Unable to get rows from sheet: %s", err), "Load\\xlsx")
 				}
 				rows.Next()
 				header, err := rows.Columns()
 				if err != nil {
-					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Unable to get columns from sheet: %s", err), "Load\\xlsx")
+					return MakeBuiltinError(ps, fmt.Sprintf("Unable to get columns from sheet: %s", err), "Load\\xlsx")
 				}
 				if len(header) == 0 {
-					return evaldo.MakeBuiltinError(ps, "Header row is empty", "Load\\xlsx")
+					return MakeBuiltinError(ps, "Header row is empty", "Load\\xlsx")
 				}
 				spr := env.NewTable(header)
 				for rows.Next() {
 					row, err := rows.Columns()
 					if err != nil {
-						return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Unable to get row: %s", err), "Load\\xlsx")
+						return MakeBuiltinError(ps, fmt.Sprintf("Unable to get row: %s", err), "Load\\xlsx")
 					}
 					anyRow := make([]any, len(row))
 					for i, v := range row {
@@ -2428,7 +2427,7 @@ var Builtins_table = map[string]*env.Builtin{
 				}
 				return *spr
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType}, "Load\\xlsx")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "Load\\xlsx")
 			}
 		},
 	},
@@ -2458,11 +2457,11 @@ var Builtins_table = map[string]*env.Builtin{
 					f := excelize.NewFile()
 					index, err := f.NewSheet(sheetName)
 					if err != nil {
-						return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Unable to create new sheet: %s", err), "file-uri//Save\\xlsx")
+						return MakeBuiltinError(ps, fmt.Sprintf("Unable to create new sheet: %s", err), "file-uri//Save\\xlsx")
 					}
 					err = f.SetSheetRow(sheetName, "A1", &spr.Cols)
 					if err != nil {
-						return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Unable to set header row: %s", err), "file-uri//Save\\xlsx")
+						return MakeBuiltinError(ps, fmt.Sprintf("Unable to set header row: %s", err), "file-uri//Save\\xlsx")
 					}
 					for i, row := range spr.Rows {
 						// 1-based and skip header row
@@ -2483,25 +2482,25 @@ var Builtins_table = map[string]*env.Builtin{
 							case float64:
 								vals[j] = val
 							default:
-								return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Unable to save table: unsupported type %T", val), "file-uri//Save\\xlsx")
+								return MakeBuiltinError(ps, fmt.Sprintf("Unable to save table: unsupported type %T", val), "file-uri//Save\\xlsx")
 							}
 						}
 						err = f.SetSheetRow(sheetName, fmt.Sprintf("A%d", rowIndex), &vals)
 						if err != nil {
-							return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Unable to set row %d: %s", rowIndex, err), "file-uri//Save\\xlsx")
+							return MakeBuiltinError(ps, fmt.Sprintf("Unable to set row %d: %s", rowIndex, err), "file-uri//Save\\xlsx")
 						}
 					}
 					f.SetActiveSheet(index)
 					err = f.SaveAs(file.GetPath())
 					if err != nil {
-						return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Unable to save table: %s", err), "file-uri//Save\\xlsx")
+						return MakeBuiltinError(ps, fmt.Sprintf("Unable to save table: %s", err), "file-uri//Save\\xlsx")
 					}
 					return spr
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.TableType}, "file-uri//Save\\xlsx")
+					return MakeArgError(ps, 2, []env.Type{env.TableType}, "file-uri//Save\\xlsx")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType}, "file-uri//Save\\xlsx")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-uri//Save\\xlsx")
 			}
 		},
 	},
@@ -2617,14 +2616,14 @@ var Builtins_table = map[string]*env.Builtin{
 				case env.String:
 					pt, err := env.NewPersistentTable(cols, dbPath.Value, tableName.Value)
 					if err != nil {
-						return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Failed to create persistent table: %v", err), "persistent-table")
+						return MakeBuiltinError(ps, fmt.Sprintf("Failed to create persistent table: %v", err), "persistent-table")
 					}
 					return pt
 				default:
-					return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType}, "persistent-table")
+					return MakeArgError(ps, 3, []env.Type{env.StringType}, "persistent-table")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "persistent-table")
+				return MakeArgError(ps, 2, []env.Type{env.StringType}, "persistent-table")
 			}
 		},
 	},
@@ -2642,11 +2641,11 @@ var Builtins_table = map[string]*env.Builtin{
 			case *env.PersistentTable:
 				err := pt.Close()
 				if err != nil {
-					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Failed to close persistent table: %v", err), "close-persistent-table!")
+					return MakeBuiltinError(ps, fmt.Sprintf("Failed to close persistent table: %v", err), "close-persistent-table!")
 				}
 				return pt
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.PersistentTableType}, "close-persistent-table!")
+				return MakeArgError(ps, 1, []env.Type{env.PersistentTableType}, "close-persistent-table!")
 			}
 		},
 	},
@@ -2666,10 +2665,10 @@ var Builtins_table = map[string]*env.Builtin{
 				csvReader := csv.NewReader(strings.NewReader(csvData.Value))
 				rows, err := csvReader.ReadAll()
 				if err != nil {
-					return evaldo.MakeBuiltinError(ps, "Unable to parse string as CSV: "+err.Error(), "parse\\csv")
+					return MakeBuiltinError(ps, "Unable to parse string as CSV: "+err.Error(), "parse\\csv")
 				}
 				if len(rows) == 0 {
-					return evaldo.MakeBuiltinError(ps, "CSV data is empty", "parse\\csv")
+					return MakeBuiltinError(ps, "CSV data is empty", "parse\\csv")
 				}
 				spr := env.NewTable(rows[0])
 				if len(rows) > 1 {
@@ -2683,7 +2682,7 @@ var Builtins_table = map[string]*env.Builtin{
 				}
 				return *spr
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType}, "parse\\csv")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "parse\\csv")
 			}
 		},
 	},
@@ -2704,16 +2703,16 @@ var Builtins_table = map[string]*env.Builtin{
 				switch separator := arg1.(type) {
 				case env.String:
 					if len(separator.Value) != 1 {
-						return evaldo.MakeBuiltinError(ps, "Separator must be exactly 1 character long", "parse\\csv\\separator")
+						return MakeBuiltinError(ps, "Separator must be exactly 1 character long", "parse\\csv\\separator")
 					}
 					csvReader := csv.NewReader(strings.NewReader(csvData.Value))
 					csvReader.Comma = rune(separator.Value[0])
 					rows, err := csvReader.ReadAll()
 					if err != nil {
-						return evaldo.MakeBuiltinError(ps, "Unable to parse string as CSV: "+err.Error(), "parse\\csv\\separator")
+						return MakeBuiltinError(ps, "Unable to parse string as CSV: "+err.Error(), "parse\\csv\\separator")
 					}
 					if len(rows) == 0 {
-						return evaldo.MakeBuiltinError(ps, "CSV data is empty", "parse\\csv\\separator")
+						return MakeBuiltinError(ps, "CSV data is empty", "parse\\csv\\separator")
 					}
 					spr := env.NewTable(rows[0])
 					if len(rows) > 1 {
@@ -2727,10 +2726,10 @@ var Builtins_table = map[string]*env.Builtin{
 					}
 					return *spr
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "parse\\csv\\separator")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "parse\\csv\\separator")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType}, "parse\\csv\\separator")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "parse\\csv\\separator")
 			}
 		},
 	},
@@ -2751,10 +2750,10 @@ var Builtins_table = map[string]*env.Builtin{
 				csvReader.Comma = '\t'
 				rows, err := csvReader.ReadAll()
 				if err != nil {
-					return evaldo.MakeBuiltinError(ps, "Unable to parse string as TSV: "+err.Error(), "parse\\tsv")
+					return MakeBuiltinError(ps, "Unable to parse string as TSV: "+err.Error(), "parse\\tsv")
 				}
 				if len(rows) == 0 {
-					return evaldo.MakeBuiltinError(ps, "TSV data is empty", "parse\\tsv")
+					return MakeBuiltinError(ps, "TSV data is empty", "parse\\tsv")
 				}
 				spr := env.NewTable(rows[0])
 				if len(rows) > 1 {
@@ -2768,7 +2767,7 @@ var Builtins_table = map[string]*env.Builtin{
 				}
 				return *spr
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType}, "parse\\tsv")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "parse\\tsv")
 			}
 		},
 	},
@@ -2793,7 +2792,7 @@ var Builtins_table = map[string]*env.Builtin{
 				// Write header
 				err1 := csvWriter.Write(spr.Cols)
 				if err1 != nil {
-					return evaldo.MakeBuiltinError(ps, "Unable to write header.", "format\\csv")
+					return MakeBuiltinError(ps, "Unable to write header.", "format\\csv")
 				}
 
 				// Write data rows
@@ -2822,13 +2821,13 @@ var Builtins_table = map[string]*env.Builtin{
 					}
 					err := csvWriter.Write(strVals)
 					if err != nil {
-						return evaldo.MakeBuiltinError(ps, "Unable to write line: "+strconv.Itoa(ir), "format\\csv")
+						return MakeBuiltinError(ps, "Unable to write line: "+strconv.Itoa(ir), "format\\csv")
 					}
 				}
 				csvWriter.Flush()
 				return *env.NewString(buf.String())
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "format\\csv")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "format\\csv")
 			}
 		},
 	},
@@ -2854,7 +2853,7 @@ var Builtins_table = map[string]*env.Builtin{
 				// Write header
 				err1 := csvWriter.Write(spr.Cols)
 				if err1 != nil {
-					return evaldo.MakeBuiltinError(ps, "Unable to write header.", "format\\tsv")
+					return MakeBuiltinError(ps, "Unable to write header.", "format\\tsv")
 				}
 
 				// Write data rows
@@ -2883,13 +2882,13 @@ var Builtins_table = map[string]*env.Builtin{
 					}
 					err := csvWriter.Write(strVals)
 					if err != nil {
-						return evaldo.MakeBuiltinError(ps, "Unable to write line: "+strconv.Itoa(ir), "format\\tsv")
+						return MakeBuiltinError(ps, "Unable to write line: "+strconv.Itoa(ir), "format\\tsv")
 					}
 				}
 				csvWriter.Flush()
 				return *env.NewString(buf.String())
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "format\\tsv")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "format\\tsv")
 			}
 		},
 	},
@@ -2911,13 +2910,13 @@ var Builtins_table = map[string]*env.Builtin{
 			case env.Bytes:
 				data = input.Value
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType, env.BytesType}, "parse\\xlsx")
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BytesType}, "parse\\xlsx")
 			}
 
 			// Create a temporary file to write the binary data
 			tmpFile, err := os.CreateTemp("", "parse_xlsx_*.xlsx")
 			if err != nil {
-				return evaldo.MakeBuiltinError(ps, "Unable to create temporary file: "+err.Error(), "parse\\xlsx")
+				return MakeBuiltinError(ps, "Unable to create temporary file: "+err.Error(), "parse\\xlsx")
 			}
 			defer os.Remove(tmpFile.Name())
 			defer tmpFile.Close()
@@ -2925,40 +2924,40 @@ var Builtins_table = map[string]*env.Builtin{
 			// Write the binary data to the temporary file
 			_, err = tmpFile.Write(data)
 			if err != nil {
-				return evaldo.MakeBuiltinError(ps, "Unable to write to temporary file: "+err.Error(), "parse\\xlsx")
+				return MakeBuiltinError(ps, "Unable to write to temporary file: "+err.Error(), "parse\\xlsx")
 			}
 			tmpFile.Close()
 
 			// Open and parse the xlsx file
 			f, err := excelize.OpenFile(tmpFile.Name())
 			if err != nil {
-				return evaldo.MakeBuiltinError(ps, "Unable to open xlsx data: "+err.Error(), "parse\\xlsx")
+				return MakeBuiltinError(ps, "Unable to open xlsx data: "+err.Error(), "parse\\xlsx")
 			}
 			defer f.Close()
 
 			sheetMap := f.GetSheetMap()
 			if len(sheetMap) == 0 {
-				return evaldo.MakeBuiltinError(ps, "No sheets found in xlsx data", "parse\\xlsx")
+				return MakeBuiltinError(ps, "No sheets found in xlsx data", "parse\\xlsx")
 			}
 			// sheets map index is 1-based
 			sheetName := sheetMap[1]
 			rows, err := f.Rows(sheetName)
 			if err != nil {
-				return evaldo.MakeBuiltinError(ps, "Unable to get rows from sheet: "+err.Error(), "parse\\xlsx")
+				return MakeBuiltinError(ps, "Unable to get rows from sheet: "+err.Error(), "parse\\xlsx")
 			}
 			rows.Next()
 			header, err := rows.Columns()
 			if err != nil {
-				return evaldo.MakeBuiltinError(ps, "Unable to get columns from sheet: "+err.Error(), "parse\\xlsx")
+				return MakeBuiltinError(ps, "Unable to get columns from sheet: "+err.Error(), "parse\\xlsx")
 			}
 			if len(header) == 0 {
-				return evaldo.MakeBuiltinError(ps, "Header row is empty", "parse\\xlsx")
+				return MakeBuiltinError(ps, "Header row is empty", "parse\\xlsx")
 			}
 			spr := env.NewTable(header)
 			for rows.Next() {
 				row, err := rows.Columns()
 				if err != nil {
-					return evaldo.MakeBuiltinError(ps, "Unable to get row: "+err.Error(), "parse\\xlsx")
+					return MakeBuiltinError(ps, "Unable to get row: "+err.Error(), "parse\\xlsx")
 				}
 				anyRow := make([]any, len(header))
 				for i, v := range row {
@@ -2991,11 +2990,11 @@ var Builtins_table = map[string]*env.Builtin{
 				f := excelize.NewFile()
 				index, err := f.NewSheet(sheetName)
 				if err != nil {
-					return evaldo.MakeBuiltinError(ps, "Unable to create new sheet: "+err.Error(), "format\\xlsx")
+					return MakeBuiltinError(ps, "Unable to create new sheet: "+err.Error(), "format\\xlsx")
 				}
 				err = f.SetSheetRow(sheetName, "A1", &spr.Cols)
 				if err != nil {
-					return evaldo.MakeBuiltinError(ps, "Unable to set header row: "+err.Error(), "format\\xlsx")
+					return MakeBuiltinError(ps, "Unable to set header row: "+err.Error(), "format\\xlsx")
 				}
 				for i, row := range spr.Rows {
 					// 1-based and skip header row
@@ -3016,12 +3015,12 @@ var Builtins_table = map[string]*env.Builtin{
 						case float64:
 							vals[j] = val
 						default:
-							return evaldo.MakeBuiltinError(ps, "Unable to format table: unsupported type "+fmt.Sprintf("%T", val), "format\\xlsx")
+							return MakeBuiltinError(ps, "Unable to format table: unsupported type "+fmt.Sprintf("%T", val), "format\\xlsx")
 						}
 					}
 					err = f.SetSheetRow(sheetName, fmt.Sprintf("A%d", rowIndex), &vals)
 					if err != nil {
-						return evaldo.MakeBuiltinError(ps, "Unable to set row "+strconv.Itoa(rowIndex)+": "+err.Error(), "format\\xlsx")
+						return MakeBuiltinError(ps, "Unable to set row "+strconv.Itoa(rowIndex)+": "+err.Error(), "format\\xlsx")
 					}
 				}
 				f.SetActiveSheet(index)
@@ -3029,25 +3028,25 @@ var Builtins_table = map[string]*env.Builtin{
 				// Create temporary file to write xlsx data
 				tmpFile, err := os.CreateTemp("", "format_xlsx_*.xlsx")
 				if err != nil {
-					return evaldo.MakeBuiltinError(ps, "Unable to create temporary file: "+err.Error(), "format\\xlsx")
+					return MakeBuiltinError(ps, "Unable to create temporary file: "+err.Error(), "format\\xlsx")
 				}
 				defer os.Remove(tmpFile.Name())
 				defer tmpFile.Close()
 
 				err = f.SaveAs(tmpFile.Name())
 				if err != nil {
-					return evaldo.MakeBuiltinError(ps, "Unable to save xlsx data: "+err.Error(), "format\\xlsx")
+					return MakeBuiltinError(ps, "Unable to save xlsx data: "+err.Error(), "format\\xlsx")
 				}
 
 				// Read the binary data back
 				data, err := os.ReadFile(tmpFile.Name())
 				if err != nil {
-					return evaldo.MakeBuiltinError(ps, "Unable to read xlsx data: "+err.Error(), "format\\xlsx")
+					return MakeBuiltinError(ps, "Unable to read xlsx data: "+err.Error(), "format\\xlsx")
 				}
 
 				return *env.NewBytes(data)
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.TableType}, "format\\xlsx")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "format\\xlsx")
 			}
 		},
 	},
@@ -3075,7 +3074,7 @@ func ColNames(ps *env.ProgramState, from env.Object, fnName string) ([]string, e
 		colNames := columns.Series
 		numCols := colNames.Len()
 		if numCols == 0 {
-			return nil, evaldo.MakeBuiltinError(ps, "Block of column names is empty", fnName)
+			return nil, MakeBuiltinError(ps, "Block of column names is empty", fnName)
 		}
 		cols := make([]string, numCols)
 		for colNames.Pos() < numCols {
@@ -3087,7 +3086,7 @@ func ColNames(ps *env.ProgramState, from env.Object, fnName string) ([]string, e
 			case env.Tagword:
 				cols[i] = ps.Idx.GetWord(k.Index)
 			default:
-				return nil, evaldo.MakeBuiltinError(ps, fmt.Sprintf("Expected a string or word instead of %V", k), fnName)
+				return nil, MakeBuiltinError(ps, fmt.Sprintf("Expected a string or word instead of %V", k), fnName)
 			}
 			// TODO: Error here?
 		}
@@ -3096,7 +3095,7 @@ func ColNames(ps *env.ProgramState, from env.Object, fnName string) ([]string, e
 		colNames := columns.Data
 		numCols := len(colNames)
 		if numCols == 0 {
-			return nil, evaldo.MakeBuiltinError(ps, "Block of column names is empty", fnName)
+			return nil, MakeBuiltinError(ps, "Block of column names is empty", fnName)
 		}
 		cols := make([]string, numCols)
 		for i, k1 := range colNames {
@@ -3106,18 +3105,18 @@ func ColNames(ps *env.ProgramState, from env.Object, fnName string) ([]string, e
 			case env.Word:
 				cols[i] = ps.Idx.GetWord(k.Index)
 			default:
-				return nil, evaldo.MakeBuiltinError(ps, fmt.Sprintf("Expected a string or word instead of %V", k), fnName)
+				return nil, MakeBuiltinError(ps, fmt.Sprintf("Expected a string or word instead of %V", k), fnName)
 			}
 			// TODO: Error here?
 		}
 		return cols, nil
 	default:
-		return nil, evaldo.MakeBuiltinError(ps, fmt.Sprintf("Expected a block or a list instead of %V", from), fnName)
+		return nil, MakeBuiltinError(ps, fmt.Sprintf("Expected a block or a list instead of %V", from), fnName)
 	}
 }
 
 func MakeColError(ps *env.ProgramState, builtinName string, colName string, expectedRowCount int, actualRowCount int) *env.Error {
-	return evaldo.MakeBuiltinError(
+	return MakeBuiltinError(
 		ps,
 		fmt.Sprintf("Column %s should have %d rows of data, but has %d instead",
 			colName,
@@ -3155,7 +3154,7 @@ func GetNumRowsFrom(ps *env.ProgramState, data any) (int, *env.Error) {
 	case env.List:
 		return len(firstCol.Data), nil
 	default:
-		return -1, evaldo.MakeBuiltinError(ps, fmt.Sprintf("Expected a block or a list instead of %V", firstCol), "table\\columns")
+		return -1, MakeBuiltinError(ps, fmt.Sprintf("Expected a block or a list instead of %V", firstCol), "table\\columns")
 	}
 }
 
@@ -3205,7 +3204,7 @@ func SheetFromColumnsMapData(ps *env.ProgramState, cols []string, arg1 env.Objec
 		}
 		return spr
 	default:
-		return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Expected either a Block of a list of data columns, got %v instead", colSet), "table\\columns")
+		return MakeBuiltinError(ps, fmt.Sprintf("Expected either a Block of a list of data columns, got %v instead", colSet), "table\\columns")
 	}
 }
 
@@ -3222,7 +3221,7 @@ func TableRowsFromBlockOrList(ps *env.ProgramState, spr *env.Table, numCols int,
 	switch row := arg1.(type) {
 	case env.Block:
 		if len(row.Series.S) != numCols {
-			return nil, evaldo.MakeBuiltinError(
+			return nil, MakeBuiltinError(
 				ps,
 				fmt.Sprintf("All rows must have the same number elements as the number of columns (%d)", numCols),
 				"table\\rows",
@@ -3236,7 +3235,7 @@ func TableRowsFromBlockOrList(ps *env.ProgramState, spr *env.Table, numCols int,
 		return env.NewTableRow(rowAny, spr), nil
 	case env.List:
 		if len(row.Data) != numCols {
-			return nil, evaldo.MakeBuiltinError(
+			return nil, MakeBuiltinError(
 				ps,
 				fmt.Sprintf("All rows must have the same number elements as the number of columns (%d)", numCols),
 				"table\\rows",
@@ -3244,7 +3243,7 @@ func TableRowsFromBlockOrList(ps *env.ProgramState, spr *env.Table, numCols int,
 		}
 		return env.NewTableRow(row.Data, spr), nil
 	default:
-		return nil, evaldo.MakeBuiltinError(ps, "Rows must be blocks or lists", "table\\rows")
+		return nil, MakeBuiltinError(ps, "Rows must be blocks or lists", "table\\rows")
 	}
 }
 
@@ -3255,7 +3254,7 @@ func DropColumnBlock(ps *env.ProgramState, s env.Table, names env.Block) env.Obj
 		case env.Word:
 			toDrop = append(toDrop, *env.NewString(ps.Idx.GetWord(word.Index)))
 		default:
-			return evaldo.MakeError(ps, "Cannot use a non-word to specify a column to drop")
+			return MakeError(ps, "Cannot use a non-word to specify a column to drop")
 		}
 	}
 	return DropColumns(ps, s, toDrop)
@@ -3343,7 +3342,7 @@ func GenerateColumn(ps *env.ProgramState, s env.Table, name env.Word, extractCol
 				}
 				// fmt.Println(val)
 				if er != nil {
-					return evaldo.MakeBuiltinError(ps, er.Error(), "gen-column")
+					return MakeBuiltinError(ps, er.Error(), "gen-column")
 				}
 				if firstVal == nil {
 					var ok bool
@@ -3362,7 +3361,7 @@ func GenerateColumn(ps *env.ProgramState, s env.Table, name env.Word, extractCol
 		// execute the block of code injected with first value
 		ser := ps.Ser
 		ps.Ser = code.Series
-		evaldo.EvalBlockInCtxInj(ps, ctx, firstVal, firstVal != nil)
+		EvalBlockInCtxInj(ps, ctx, firstVal, firstVal != nil)
 		if ps.ErrorFlag {
 			return ps.Res
 		}
@@ -3383,7 +3382,7 @@ func GenerateColumnRegexReplace(ps *env.ProgramState, s *env.Table, name env.Wor
 		// get value from current row
 		val, err := s.GetRowValue(ps.Idx.GetWord(fromColName.Index), row)
 		if err != nil {
-			return evaldo.MakeError(ps, fmt.Sprintf("Couldn't retrieve value at row %d (%s)", ix, err))
+			return MakeError(ps, fmt.Sprintf("Couldn't retrieve value at row %d (%s)", ix, err))
 		}
 
 		var newVal any
@@ -3409,7 +3408,7 @@ func AddIndexes(ps *env.ProgramState, s *env.Table, columns []env.Word) env.Obje
 		for ir, row := range s.Rows {
 			val, err := s.GetRowValue(colstr, row)
 			if err != nil {
-				return evaldo.MakeError(ps, "Couldn't retrieve index at row "+strconv.Itoa(ir))
+				return MakeError(ps, "Couldn't retrieve index at row "+strconv.Itoa(ir))
 			}
 			if subidx, ok := s.Indexes[colstr][val]; ok {
 				s.Indexes[colstr][val] = append(subidx, ir)
@@ -3432,7 +3431,7 @@ func SortByColumn(ps *env.ProgramState, s *env.Table, name string) {
 		if s.Rows[j].Values[idx] == nil {
 			return false
 		}
-		return evaldo.GreaterThanNew(s.Rows[j].Values[idx].(env.Object), s.Rows[i].Values[idx].(env.Object))
+		return greaterThanNew(s.Rows[j].Values[idx].(env.Object), s.Rows[i].Values[idx].(env.Object))
 	}
 
 	sort.Slice(s.Rows, compareCol)
@@ -3448,7 +3447,7 @@ func SortByColumnDesc(ps *env.ProgramState, s *env.Table, name string) {
 		if s.Rows[i].Values[idx] == nil {
 			return false
 		}
-		return evaldo.GreaterThanNew(s.Rows[i].Values[idx].(env.Object), s.Rows[j].Values[idx].(env.Object))
+		return greaterThanNew(s.Rows[i].Values[idx].(env.Object), s.Rows[j].Values[idx].(env.Object))
 	}
 
 	sort.Slice(s.Rows, compareCol)
@@ -3457,7 +3456,7 @@ func SortByColumnDesc(ps *env.ProgramState, s *env.Table, name string) {
 func WhereEquals(ps *env.ProgramState, s *env.Table, name string, val env.Object) env.Object {
 	idx := slices.Index(s.Cols, name)
 	if idx < 0 {
-		return evaldo.MakeBuiltinError(ps, "Column not found.", "where-equal")
+		return MakeBuiltinError(ps, "Column not found.", "where-equal")
 	}
 	nspr := env.NewTable(s.Cols)
 	if index, ok := s.Indexes[name]; ok {
@@ -3480,7 +3479,7 @@ func WhereEquals(ps *env.ProgramState, s *env.Table, name string, val env.Object
 func WhereNotEquals(ps *env.ProgramState, s *env.Table, name string, val env.Object) env.Object {
 	idx := slices.Index(s.Cols, name)
 	if idx < 0 {
-		return evaldo.MakeBuiltinError(ps, "Column not found.", "where-not-equal")
+		return MakeBuiltinError(ps, "Column not found.", "where-not-equal")
 	}
 	nspr := env.NewTable(s.Cols)
 	for _, row := range s.Rows {
@@ -3496,7 +3495,7 @@ func WhereNotEquals(ps *env.ProgramState, s *env.Table, name string, val env.Obj
 func WhereMatch(ps *env.ProgramState, s *env.Table, name string, r *regexp.Regexp) env.Object {
 	idx := slices.Index(s.Cols, name)
 	if idx < 0 {
-		return evaldo.MakeBuiltinError(ps, "Column not found.", "where-match")
+		return MakeBuiltinError(ps, "Column not found.", "where-match")
 	}
 	nspr := env.NewTable(s.Cols)
 	for _, row := range s.Rows {
@@ -3514,7 +3513,7 @@ func WhereMatch(ps *env.ProgramState, s *env.Table, name string, r *regexp.Regex
 func WhereContains(ps *env.ProgramState, s *env.Table, name string, val string, not bool) env.Object {
 	idx := slices.Index(s.Cols, name)
 	if idx < 0 {
-		return evaldo.MakeBuiltinError(ps, "Column not found.", "where-contains")
+		return MakeBuiltinError(ps, "Column not found.", "where-contains")
 	}
 	nspr := env.NewTable(s.Cols)
 	for _, row := range s.Rows {
@@ -3533,7 +3532,7 @@ func WhereContains(ps *env.ProgramState, s *env.Table, name string, val string, 
 func WhereIn(ps *env.ProgramState, s *env.Table, name string, b []env.Object) env.Object {
 	idx := slices.Index(s.Cols, name)
 	if idx < 0 {
-		return evaldo.MakeBuiltinError(ps, "Column not found.", "where-in")
+		return MakeBuiltinError(ps, "Column not found.", "where-in")
 	}
 	nspr := env.NewTable(s.Cols)
 	for _, row := range s.Rows {
@@ -3550,7 +3549,7 @@ func WhereIn(ps *env.ProgramState, s *env.Table, name string, b []env.Object) en
 func WhereNotIn(ps *env.ProgramState, s *env.Table, name string, b []env.Object) env.Object {
 	idx := slices.Index(s.Cols, name)
 	if idx < 0 {
-		return evaldo.MakeBuiltinError(ps, "Column not found.", "where-not-in")
+		return MakeBuiltinError(ps, "Column not found.", "where-not-in")
 	}
 	nspr := env.NewTable(s.Cols)
 	for _, row := range s.Rows {
@@ -3567,7 +3566,7 @@ func WhereNotIn(ps *env.ProgramState, s *env.Table, name string, b []env.Object)
 func WhereBlock(ps *env.ProgramState, s *env.Table, name string, block env.Block) env.Object {
 	idx := slices.Index(s.Cols, name)
 	if idx < 0 {
-		return evaldo.MakeBuiltinError(ps, "Column not found.", "where")
+		return MakeBuiltinError(ps, "Column not found.", "where")
 	}
 	nspr := env.NewTable(s.Cols)
 	ser := ps.Ser
@@ -3575,7 +3574,7 @@ func WhereBlock(ps *env.ProgramState, s *env.Table, name string, block env.Block
 		if len(row.Values) > idx {
 			val := env.ToRyeValue(row.Values[idx])
 			ps.Ser = block.Series
-			evaldo.EvalBlockInj(ps, val, true)
+			EvalBlockInj(ps, val, true)
 			if ps.ErrorFlag {
 				ps.Ser = ser
 				return ps.Res
@@ -3593,13 +3592,13 @@ func WhereBlock(ps *env.ProgramState, s *env.Table, name string, block env.Block
 func WhereBuiltin(ps *env.ProgramState, s *env.Table, name string, builtin env.Builtin) env.Object {
 	idx := slices.Index(s.Cols, name)
 	if idx < 0 {
-		return evaldo.MakeBuiltinError(ps, "Column not found.", "where")
+		return MakeBuiltinError(ps, "Column not found.", "where")
 	}
 	nspr := env.NewTable(s.Cols)
 	for _, row := range s.Rows {
 		if len(row.Values) > idx {
 			val := env.ToRyeValue(row.Values[idx])
-			res := evaldo.DirectlyCallBuiltin(ps, builtin, val, nil)
+			res := DirectlyCallBuiltin(ps, builtin, val, nil)
 			if ps.ErrorFlag {
 				return ps.Res
 			}
@@ -3614,13 +3613,13 @@ func WhereBuiltin(ps *env.ProgramState, s *env.Table, name string, builtin env.B
 func WhereFunction(ps *env.ProgramState, s *env.Table, name string, fn env.Function) env.Object {
 	idx := slices.Index(s.Cols, name)
 	if idx < 0 {
-		return evaldo.MakeBuiltinError(ps, "Column not found.", "where")
+		return MakeBuiltinError(ps, "Column not found.", "where")
 	}
 	nspr := env.NewTable(s.Cols)
 	for _, row := range s.Rows {
 		if len(row.Values) > idx {
 			val := env.ToRyeValue(row.Values[idx])
-			evaldo.CallFunctionArgsN(fn, ps, ps.Ctx, val)
+			CallFunctionArgsN(fn, ps, ps.Ctx, val)
 			if ps.ErrorFlag {
 				return ps.Res
 			}
@@ -3649,12 +3648,12 @@ func WhereBlockMultiCol(ps *env.ProgramState, s *env.Table, cols env.Block, code
 				wordIdx = w.Index
 			default:
 				ps.Ser = ser
-				return evaldo.MakeBuiltinError(ps, "Column names block must contain only words.", "where")
+				return MakeBuiltinError(ps, "Column names block must contain only words.", "where")
 			}
 			val, err := s.GetRowValue(ps.Idx.GetWord(wordIdx), row)
 			if err != nil {
 				ps.Ser = ser
-				return evaldo.MakeBuiltinError(ps, err.Error(), "where")
+				return MakeBuiltinError(ps, err.Error(), "where")
 			}
 			if val == nil {
 				val = env.NewVoid()
@@ -3667,7 +3666,7 @@ func WhereBlockMultiCol(ps *env.ProgramState, s *env.Table, cols env.Block, code
 		}
 		// execute the block of code in context, injected with first value
 		ps.Ser = code.Series
-		evaldo.EvalBlockInCtxInj(ps, ctx, firstVal, firstVal != nil)
+		EvalBlockInCtxInj(ps, ctx, firstVal, firstVal != nil)
 		if ps.ErrorFlag {
 			ps.Ser = ser
 			return ps.Res
@@ -3687,7 +3686,7 @@ func Distinct(ps *env.ProgramState, s *env.Table, colNames []string) env.Object 
 	for i, name := range colNames {
 		idx := slices.Index(s.Cols, name)
 		if idx < 0 {
-			return evaldo.MakeBuiltinError(ps, "Column not found: "+name, "distinct")
+			return MakeBuiltinError(ps, "Column not found: "+name, "distinct")
 		}
 		colIdxs[i] = idx
 	}
@@ -3722,7 +3721,7 @@ func Distinct(ps *env.ProgramState, s *env.Table, colNames []string) env.Object 
 func FillVoid(ps *env.ProgramState, s *env.Table, colName string, fillValue env.Object) env.Object {
 	idx := slices.Index(s.Cols, colName)
 	if idx < 0 {
-		return evaldo.MakeBuiltinError(ps, "Column not found.", "fill-void")
+		return MakeBuiltinError(ps, "Column not found.", "fill-void")
 	}
 
 	nspr := env.NewTable(s.Cols)
@@ -3745,7 +3744,7 @@ func FillVoid(ps *env.ProgramState, s *env.Table, colName string, fillValue env.
 func CountWhereBlock(ps *env.ProgramState, s *env.Table, name string, block env.Block) env.Object {
 	idx := slices.Index(s.Cols, name)
 	if idx < 0 {
-		return evaldo.MakeBuiltinError(ps, "Column not found.", "count-where")
+		return MakeBuiltinError(ps, "Column not found.", "count-where")
 	}
 	count := 0
 	ser := ps.Ser
@@ -3753,7 +3752,7 @@ func CountWhereBlock(ps *env.ProgramState, s *env.Table, name string, block env.
 		if len(row.Values) > idx {
 			val := env.ToRyeValue(row.Values[idx])
 			ps.Ser = block.Series
-			evaldo.EvalBlockInj(ps, val, true)
+			EvalBlockInj(ps, val, true)
 			if ps.ErrorFlag {
 				ps.Ser = ser
 				return ps.Res
@@ -3771,13 +3770,13 @@ func CountWhereBlock(ps *env.ProgramState, s *env.Table, name string, block env.
 func CountWhereBuiltin(ps *env.ProgramState, s *env.Table, name string, builtin env.Builtin) env.Object {
 	idx := slices.Index(s.Cols, name)
 	if idx < 0 {
-		return evaldo.MakeBuiltinError(ps, "Column not found.", "count-where")
+		return MakeBuiltinError(ps, "Column not found.", "count-where")
 	}
 	count := 0
 	for _, row := range s.Rows {
 		if len(row.Values) > idx {
 			val := env.ToRyeValue(row.Values[idx])
-			res := evaldo.DirectlyCallBuiltin(ps, builtin, val, nil)
+			res := DirectlyCallBuiltin(ps, builtin, val, nil)
 			if ps.ErrorFlag {
 				return ps.Res
 			}
@@ -3792,13 +3791,13 @@ func CountWhereBuiltin(ps *env.ProgramState, s *env.Table, name string, builtin 
 func CountWhereFunction(ps *env.ProgramState, s *env.Table, name string, fn env.Function) env.Object {
 	idx := slices.Index(s.Cols, name)
 	if idx < 0 {
-		return evaldo.MakeBuiltinError(ps, "Column not found.", "count-where")
+		return MakeBuiltinError(ps, "Column not found.", "count-where")
 	}
 	count := 0
 	for _, row := range s.Rows {
 		if len(row.Values) > idx {
 			val := env.ToRyeValue(row.Values[idx])
-			evaldo.CallFunctionArgsN(fn, ps, ps.Ctx, val)
+			CallFunctionArgsN(fn, ps, ps.Ctx, val)
 			if ps.ErrorFlag {
 				return ps.Res
 			}
@@ -3827,12 +3826,12 @@ func CountWhereBlockMultiCol(ps *env.ProgramState, s *env.Table, cols env.Block,
 				wordIdx = w.Index
 			default:
 				ps.Ser = ser
-				return evaldo.MakeBuiltinError(ps, "Column names block must contain only words.", "count-where")
+				return MakeBuiltinError(ps, "Column names block must contain only words.", "count-where")
 			}
 			val, err := s.GetRowValue(ps.Idx.GetWord(wordIdx), row)
 			if err != nil {
 				ps.Ser = ser
-				return evaldo.MakeBuiltinError(ps, err.Error(), "count-where")
+				return MakeBuiltinError(ps, err.Error(), "count-where")
 			}
 			if val == nil {
 				val = env.NewVoid()
@@ -3845,7 +3844,7 @@ func CountWhereBlockMultiCol(ps *env.ProgramState, s *env.Table, cols env.Block,
 		}
 		// execute the block of code in context, injected with first value
 		ps.Ser = code.Series
-		evaldo.EvalBlockInCtxInj(ps, ctx, firstVal, firstVal != nil)
+		EvalBlockInCtxInj(ps, ctx, firstVal, firstVal != nil)
 		if ps.ErrorFlag {
 			ps.Ser = ser
 			return ps.Res
@@ -3862,13 +3861,13 @@ func CountWhereBlockMultiCol(ps *env.ProgramState, s *env.Table, cols env.Block,
 func WhereGreater(ps *env.ProgramState, s *env.Table, name string, val env.Object) env.Object {
 	idx := slices.Index(s.Cols, name)
 	if idx < 0 {
-		return evaldo.MakeBuiltinError(ps, "Column not found.", "where-greater")
+		return MakeBuiltinError(ps, "Column not found.", "where-greater")
 	}
 	nspr := env.NewTable(s.Cols)
 	for _, row := range s.Rows {
 		if len(row.Values) > idx {
 			rv := env.ToRyeValue(row.Values[idx])
-			if evaldo.GreaterThanNew(rv, val) {
+			if greaterThanNew(rv, val) {
 				nspr.AddRow(row)
 			}
 		}
@@ -3879,13 +3878,13 @@ func WhereGreater(ps *env.ProgramState, s *env.Table, name string, val env.Objec
 func WhereLesser(ps *env.ProgramState, s *env.Table, name string, val env.Object) env.Object {
 	idx := slices.Index(s.Cols, name)
 	if idx < 0 {
-		return evaldo.MakeBuiltinError(ps, "Column not found.", "where-lesser")
+		return MakeBuiltinError(ps, "Column not found.", "where-lesser")
 	}
 	nspr := env.NewTable(s.Cols)
 	for _, row := range s.Rows {
 		if len(row.Values) > idx {
 			rv := env.ToRyeValue(row.Values[idx])
-			if evaldo.LesserThanNew(rv, val) {
+			if lesserThanNew(rv, val) {
 				nspr.AddRow(row)
 			}
 		}
@@ -3896,18 +3895,18 @@ func WhereLesser(ps *env.ProgramState, s *env.Table, name string, val env.Object
 func WhereBetween(ps *env.ProgramState, s *env.Table, name string, val1 env.Object, val2 env.Object, inclusiveMode bool) env.Object {
 	idx := slices.Index(s.Cols, name)
 	if idx < 0 {
-		return evaldo.MakeBuiltinError(ps, "Column not found.", "where-between")
+		return MakeBuiltinError(ps, "Column not found.", "where-between")
 	}
 	nspr := env.NewTable(s.Cols)
 	for _, row := range s.Rows {
 		if len(row.Values) > idx {
 			rv := env.ToRyeValue(row.Values[idx])
 			if inclusiveMode {
-				if !evaldo.GreaterThanNew(rv, val2) && !evaldo.LesserThanNew(rv, val1) {
+				if !greaterThanNew(rv, val2) && !lesserThanNew(rv, val1) {
 					nspr.AddRow(row)
 				}
 			} else {
-				if evaldo.GreaterThanNew(rv, val1) && evaldo.LesserThanNew(rv, val2) {
+				if greaterThanNew(rv, val1) && lesserThanNew(rv, val2) {
 					nspr.AddRow(row)
 				}
 			}
@@ -3999,10 +3998,10 @@ func AutoType(ps *env.ProgramState, s *env.Table, percent float64) env.Object {
 
 func LeftJoin(ps *env.ProgramState, s1 env.Table, s2 env.Table, col1 string, col2 string, innerJoin bool) env.Object {
 	if !slices.Contains(s1.Cols, col1) {
-		return evaldo.MakeBuiltinError(ps, "Column not found in first table.", "left-join")
+		return MakeBuiltinError(ps, "Column not found in first table.", "left-join")
 	}
 	if !slices.Contains(s2.Cols, col2) {
-		return evaldo.MakeBuiltinError(ps, "Column not found in second table.", "left-join")
+		return MakeBuiltinError(ps, "Column not found in second table.", "left-join")
 	}
 
 	combinedCols := make([]string, len(s1.Cols)+len(s2.Cols))
@@ -4018,7 +4017,7 @@ func LeftJoin(ps *env.ProgramState, s1 env.Table, s2 env.Table, col1 string, col
 	for i, row1 := range s1.GetRows() {
 		val1, err := s1.GetRowValue(col1, row1)
 		if err != nil {
-			return evaldo.MakeError(ps, fmt.Sprintf("Couldn't retrieve value at row %d (%s)", i, err))
+			return MakeError(ps, fmt.Sprintf("Couldn't retrieve value at row %d (%s)", i, err))
 		}
 
 		// the row ids of the second table which match the values in the current first table row
@@ -4032,7 +4031,7 @@ func LeftJoin(ps *env.ProgramState, s1 env.Table, s2 env.Table, col1 string, col
 			for j, row2 := range s2.GetRows() {
 				val2, err := s2.GetRowValue(col2, row2)
 				if err != nil {
-					return evaldo.MakeError(ps, fmt.Sprintf("Couldn't retrieve value at row %d (%s)", j, err))
+					return MakeError(ps, fmt.Sprintf("Couldn't retrieve value at row %d (%s)", j, err))
 				}
 				val1o, ok := val1.(env.Object)
 				if ok {
@@ -4099,7 +4098,7 @@ func GroupBy(ps *env.ProgramState, s env.Table, cols []string, aggregations map[
 	// Validate that all grouping columns exist
 	for _, col := range cols {
 		if !slices.Contains(s.Cols, col) {
-			return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Column '%s' not found.", col), "group-by")
+			return MakeBuiltinError(ps, fmt.Sprintf("Column '%s' not found.", col), "group-by")
 		}
 	}
 
@@ -4111,7 +4110,7 @@ func GroupBy(ps *env.ProgramState, s env.Table, cols []string, aggregations map[
 		for j, col := range cols {
 			groupingVal, err := s.GetRowValue(col, row)
 			if err != nil {
-				return evaldo.MakeError(ps, fmt.Sprintf("Couldn't retrieve value at row %d (%s)", i, err))
+				return MakeError(ps, fmt.Sprintf("Couldn't retrieve value at row %d (%s)", i, err))
 			}
 			var groupValStr string
 			switch val := groupingVal.(type) {
@@ -4124,7 +4123,7 @@ func GroupBy(ps *env.ProgramState, s env.Table, cols []string, aggregations map[
 			case int:
 				groupValStr = strconv.Itoa(val)
 			default:
-				return evaldo.MakeBuiltinError(ps, "Grouping column value must be a string or number", "group-by")
+				return MakeBuiltinError(ps, "Grouping column value must be a string or number", "group-by")
 			}
 			groupKeyParts[j] = groupValStr
 		}
@@ -4149,14 +4148,14 @@ func GroupBy(ps *env.ProgramState, s env.Table, cols []string, aggregations map[
 						}
 					}
 					if !isGroupingCol {
-						return evaldo.MakeBuiltinError(ps, "Count aggregation can only be applied on the grouping columns", "group-by")
+						return MakeBuiltinError(ps, "Count aggregation can only be applied on the grouping columns", "group-by")
 					}
 					groupAggregates[colAgg]++
 					continue
 				}
 				valObj, err := s.GetRowValue(aggCol, row)
 				if err != nil {
-					return evaldo.MakeError(ps, fmt.Sprintf("Couldn't retrieve value at row %d (%s)", i, err))
+					return MakeError(ps, fmt.Sprintf("Couldn't retrieve value at row %d (%s)", i, err))
 				}
 				var val float64
 				switch valObj := env.ToRyeValue(valObj).(type) {
@@ -4165,7 +4164,7 @@ func GroupBy(ps *env.ProgramState, s env.Table, cols []string, aggregations map[
 				case env.Decimal:
 					val = valObj.Value
 				default:
-					return evaldo.MakeBuiltinError(ps, "Aggregation column value must be a number", "group-by")
+					return MakeBuiltinError(ps, "Aggregation column value must be a number", "group-by")
 				}
 				switch fun {
 				case "sum":
@@ -4182,7 +4181,7 @@ func GroupBy(ps *env.ProgramState, s env.Table, cols []string, aggregations map[
 						groupAggregates[colAgg] = val
 					}
 				default:
-					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Unknown aggregation function: %s", fun), "group-by")
+					return MakeBuiltinError(ps, fmt.Sprintf("Unknown aggregation function: %s", fun), "group-by")
 				}
 			}
 		}

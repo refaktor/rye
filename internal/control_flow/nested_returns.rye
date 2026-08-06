@@ -1,0 +1,105 @@
+; Nested Return Behavior
+print "## Nested Return Behavior"
+
+; =============================================================================
+; ^if only returns from immediate function, not outer
+; =============================================================================
+
+assert\display "inner fn ^if doesn't affect outer" {
+	inner1: fn { x } { ^if x > 10 { "big" } , "small" }
+	outer1: fn { x } { inner1 x , "outer done" }
+	outer1 15
+} "outer done"
+
+assert\display "^if in inner returns to outer" {
+	inner2: fn { x } { ^if x < 0 { "negative" } , x .string }
+	outer2: fn { x } { 
+		result2: inner2 x
+		result2 ++ "!"
+	}
+	outer2 -5
+} "negative!"
+
+; =============================================================================
+; ^check/^fix in nested calls
+; =============================================================================
+
+assert\display "^check in inner propagates" {
+	risky3: fn { x } { x / 0 |^check "inner fail" }
+	safe3: fn { x } { 
+		try { risky3 x } |fix { "caught" }
+	}
+	safe3 10
+} "caught"
+
+assert\display "^fix in inner returns fixed" {
+	maybe-div4: fn { a b } { a / b |^fix { 0 } }
+	compute4: fn { a b } { maybe-div4 a b |+ 100 }
+	compute4 10 0
+} 100
+
+; =============================================================================
+; Multiple levels of nesting
+; =============================================================================
+
+assert\display "three level nesting" {
+	level35: fn { x } { ^if x = 3 { "three" } , "not three" }
+	level25: fn { x } { level35 x }
+	level15: fn { x } { level25 x , "done" }
+	level15 3
+} "done"
+
+assert\display "^if at each level" {
+	c6: fn { x } { ^if x = "c" { "found c" } , x }
+	b6: fn { x } { ^if x = "b" { "found b" } , c6 x }
+	a6: fn { x } { ^if x = "a" { "found a" } , b6 x }
+	a6 "c"
+} "found c"
+
+; =============================================================================
+; ^if with closures
+; =============================================================================
+
+assert\display "^if inside closure with var" {
+	var 'target7 10
+	finder7: closure { x } { ^if x = target7 { "match!" } , "no match" }
+	finder7 10
+} "match!"
+
+assert\display "closure ^if returns only from closure" {
+	var 'limit8 50
+	checker8: closure { x } { ^if x > limit8 { "over" } , "under" }
+	wrapper8: fn { y } { checker8 y , "wrapper done" }
+	wrapper8 100
+} "wrapper done"
+
+; =============================================================================
+; ^if with map/for (returns from the fn block, not outer)
+; =============================================================================
+
+; Note: ^if in map block returns from the map's fn block, not replace value
+; This is expected behavior - ^if returns from containing function
+assert\display "^if in map with conditional" {
+	map { 1 2 3 } { ::x9 either x9 = 2 { 99 } { x9 } }
+} { 1 99 3 }
+
+assert\display "early return pattern with fold" {
+	; This tests that ^if inside fold's block returns from that block
+	find-first9: fn { items pred } {
+		var 'found _
+		for items { ::x
+			^if do pred x { found:: x , ^if true { found } }
+		}
+		found
+	}
+	; Simplified version
+	first-even: fn { items } {
+		for items { ::x
+			^if ( x % 2 ) = 0 { x }
+		}
+		_
+	}
+	first-even { 1 3 5 4 7 }
+} 4
+
+print ""

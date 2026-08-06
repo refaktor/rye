@@ -13,7 +13,8 @@ import "github.com/refaktor/rye/env"
 // that need to validate a Dict/RyeCtx against a spec block.
 // Batteries set this to batteries.BuiValidate.
 var BatteryValidateHook func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) env.Object = func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) env.Object {
-	return MakeBuiltinError(ps, "Validation requires the batteries package (call batteries.RegisterBatteries first).", "validate")
+	// Now implemented in evaldo (moved from batteries)
+	return BuiValidate(ps, arg0, arg1)
 }
 
 // BatteryConvertHook is called by base builtins that perform Kind-based conversion.
@@ -21,6 +22,20 @@ var BatteryValidateHook func(ps *env.ProgramState, arg0 env.Object, arg1 env.Obj
 var BatteryConvertHook func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) env.Object = func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) env.Object {
 	return MakeBuiltinError(ps, "Conversion requires the batteries package (call batteries.RegisterBatteries first).", "convert")
 }
+
+// BatteryScenarioGetHook lets batteries (or a scenario runner) provide mocked
+// values for declared input intents. It returns (found, value). Default is no-op.
+var BatteryScenarioGetHook func(ps *env.ProgramState, name string) (bool, env.Object) = func(ps *env.ProgramState, name string) (bool, env.Object) {
+	return false, nil
+}
+
+// BatteryIsScenarioHook lets batteries signal that scenario/simulation mode is active.
+// Default is false.
+var BatteryIsScenarioHook func(ps *env.ProgramState) bool = func(ps *env.ProgramState) bool { return false }
+
+// BatteryScenarioCaptureOutputHook lets batteries capture output intents in scenario mode.
+// Return true to indicate capture/handling succeeded (advisory), false otherwise.
+var BatteryScenarioCaptureOutputHook func(ps *env.ProgramState, payload env.Object) bool = func(ps *env.ProgramState, payload env.Object) bool { return false }
 
 // BatteryMarkdownDisplayHook is called by the base printing builtins to render
 // markdown blocks in the REPL.  Batteries set this to their markdown renderer.
