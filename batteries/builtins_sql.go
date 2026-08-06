@@ -90,6 +90,10 @@ func sqlResultToJS(res env.Object) any {
 		return v.Value
 	case *env.Decimal:
 		return v.Value
+	case env.Boolean:
+		return v.Value
+	case *env.Boolean:
+		return v.Value
 	case env.Void:
 		return nil
 	default:

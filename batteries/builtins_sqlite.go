@@ -124,9 +124,10 @@ var Builtins_sqlite = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { Open sqlite://test.db |Query "SELECT * FROM test" |type? } 'table
+	// Also supports: db .Query { "SELECT * FROM test WHERE id = ?" 123 }
 	// Args:
 	// * db: SQLite database connection
-	// * sql: SQL query as string or block
+	// * sql: SQL query as string, SQL-DSL block, or a block where first value is SQL string and the rest are parameters
 	// Returns:
 	// * table containing query results
 	"Rye-sqlite//Query": {
@@ -135,17 +136,72 @@ var Builtins_sqlite = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sqlstr string
 			var vals []any
+
+			// helper: convert Rye object to a Go value suitable for database/sql
+			paramToAny := func(o env.Object) any {
+				switch v := o.(type) {
+				case env.Getword:
+					val, _ := ps.Ctx.Get(v.Index)
+					return sqlResultToJS(val)
+				case env.Word:
+					val, _ := ps.Ctx.Get(v.Index)
+					return sqlResultToJS(val)
+				case env.String:
+					return v.Value
+				case *env.String:
+					return v.Value
+				case env.Integer:
+					return v.Value
+				case *env.Integer:
+					return v.Value
+				case env.Decimal:
+					return v.Value
+				case *env.Decimal:
+					return v.Value
+				case env.Boolean:
+					return v.Value
+				case *env.Boolean:
+					return v.Value
+				case env.Void:
+					return nil
+				default:
+					return sqlResultToJS(o)
+				}
+			}
+
 			switch db1 := arg0.(type) {
 			case env.Native:
 				switch str := arg1.(type) {
 				case env.Block:
-					//fmt.Println("BLOCK ****** *****")
-					ser := ps.Ser
-					ps.Ser = str.Series
-					values := make([]any, 0)
-					_, vals = SQL_EvalBlock(ps, MODE_SQLITE, values)
-					sqlstr = ps.Res.(env.String).Value
-					ps.Ser = ser
+					// Two modes:
+					// 1) SQL-DSL: { SELECT * FROM t WHERE id = ?id }
+					// 2) SQL with parameters: { "SELECT * FROM t WHERE id = ?" 123 }
+					if str.Series.Len() > 0 {
+						first := str.Series.Get(0)
+						if s, ok := first.(env.String); ok {
+							// Treat block as [sql-string, params...]
+							sqlstr = s.Value
+							for i := 1; i < str.Series.Len(); i++ {
+								p := str.Series.Get(i)
+								// Skip commas if used for readability
+								if _, isComma := p.(env.Comma); isComma {
+									continue
+								}
+								vals = append(vals, paramToAny(p))
+							}
+						} else {
+							// Fallback to SQL-DSL evaluation
+							ser := ps.Ser
+							ps.Ser = str.Series
+							values := make([]any, 0)
+							_, vals = SQL_EvalBlock(ps, MODE_SQLITE, values)
+							sqlstr = ps.Res.(env.String).Value
+							ps.Ser = ser
+						}
+					} else {
+						// Empty block
+						return evaldo.MakeBuiltinError(ps, "Sql block is empty.", "Rye-sqlite//Query")
+					}
 				case env.String:
 					sqlstr = str.Value
 				default:

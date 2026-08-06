@@ -2680,6 +2680,7 @@ func RegisterBaseBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(builtins_iteration, ps, "base")
 	RegisterBuiltins2(builtins_contexts, ps, "base")
 	RegisterBuiltins2(builtins_functions, ps, "base")
+	RegisterBuiltins2(builtins_intents, ps, "base")
 
 	// Execute initialization code after base builtins are loaded
 	executeInitializationCode(ps)
@@ -2882,6 +2883,7 @@ var allBuiltinGroups = []builtinGroup{
 	{"base", builtins_iteration, false},
 	{"base", builtins_contexts, false},
 	{"base", builtins_functions, false},
+	{"base", builtins_intents, false},
 	// NOTE: Battery groups (match, io, http, sqlite, etc.) are registered via
 	// batteries.RegisterBatteries(ps) - see the batteries/ package.
 }
