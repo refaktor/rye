@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+	"strings"
 
 	"github.com/refaktor/rye/env"
 )
@@ -149,51 +150,119 @@ var builtins_intents = map[string]*env.Builtin{
 
 	// output-intent builtin: logs the payload and conditionally executes the side-effect block.
 	// Usage:
-	//   output-intent { payload } { side-effect-block }
+	//   output-intent name-or-payload { log-fields-block } { side-effect-block }
 	// Behavior:
-	//   - Always appends a log entry to output.log with timestamp and payload Inspect.
+	//   - Always appends a log entry to output.log with timestamp, name/payload Inspect, and inline-inspected fields from the second block (space-separated on one line).
 	//   - If scenario mode is active, it does NOT execute the side-effect block (simulation mode).
 	//   - Otherwise, evaluates the side-effect block normally.
-	//   - Returns the payload value (so it can be captured or piped if desired).
+	//   - Returns the first argument (payload/name) so it can be captured or piped if desired.
 	"output-intent": {
-		Argsn: 2,
-		Doc:   "Logs an output payload to output.log and executes the side-effect block unless in scenario mode, where the side-effect is skipped. Returns the payload.",
+		Argsn: 3,
+		Doc:   "Logs an output with optional inline fields and executes the side-effect block unless in scenario mode. Usage: output-intent payload-or-name { fields } { side-effect }.",
 		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			payload := arg0
-			// Log to output.log
-			logLine := fmt.Sprintf("%s | %s\n", time.Now().Format(time.RFC3339), payload.Inspect(*ps.Idx))
-			fn := "output.log"
-			if ps.WorkingPath != "" {
-				fn = filepath.Join(ps.WorkingPath, fn)
-			}
-			_ = appendToFile(fn, []byte(logLine))
 
-			// If a batteries hook wants to capture outputs, let it (non-blocking decision for side-effects)
+			// Evaluate fields block to gather additional log items (do not alter payload)
+			var fieldsStr string
+			switch fb := arg1.(type) {
+			case env.Block:
+				serSaved := ps.Ser
+				ps.Ser = fb.Series
+				EvalBlockInj(ps, nil, false)
+				MaybeDisplayFailureOrError(ps, ps.Idx, "output-intent fields")
+				ps.Ser = serSaved
+				if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
+					return ps.Res
+				}
+				if ps.Res != nil && ps.Res.Type() != env.VoidType {
+					// Keep probing values, but if result is a block/list, produce a space-separated string
+					// and for strings, include them as-is.
+					switch v := ps.Res.(type) {
+					case env.Block:
+						var parts []string
+						for _, it := range v.Series.GetAll() {
+							if it == nil { continue }
+							// For each item: strings printed, others inspected
+							switch iv := it.(type) {
+							case env.String:
+								parts = append(parts, iv.Value)
+							default:
+								parts = append(parts, it.Inspect(*ps.Idx))
+							}
+						}
+						fieldsStr = strings.Join(parts, " ")
+					case env.List:
+						var parts []string
+						for _, raw := range v.Data {
+							if raw == nil { continue }
+							switch iv := raw.(type) {
+							case env.String:
+								parts = append(parts, iv.Value)
+							case string:
+								parts = append(parts, iv)
+							default:
+								if obj, ok := raw.(env.Object); ok {
+									parts = append(parts, obj.Inspect(*ps.Idx))
+								} else {
+									parts = append(parts, fmt.Sprintf("%v", raw))
+								}
+							}
+						}
+						fieldsStr = strings.Join(parts, " ")
+					case env.String:
+						fieldsStr = v.Value
+					default:
+						fieldsStr = ps.Res.Inspect(*ps.Idx)
+					}
+				}
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "output-intent")
+			}
+
+			// Build inline log text: print payload directly (no Inspect), keep fields probed (Inspect)
+			p := payload.Print(*ps.Idx)
+			inline := p
+			if fieldsStr != "" && fieldsStr != "void" {
+				inline = fmt.Sprintf("%s | %s", p, fieldsStr)
+			}
+
+			// Only write output.log in dry-run/scenario mode
+			if isScenarioMode(ps) {
+				logLine := fmt.Sprintf("%s | %s\n", time.Now().Format(time.RFC3339), inline)
+				fn := "output.log"
+				if ps.WorkingPath != "" {
+					fn = filepath.Join(ps.WorkingPath, fn)
+				}
+				_ = appendToFile(fn, []byte(logLine))
+			}
+
+			// Allow batteries to capture outputs (advisory)
 			if BatteryScenarioCaptureOutputHook != nil {
 				_ = BatteryScenarioCaptureOutputHook(ps, payload)
 			}
 
-			// Scenario mode: skip executing the side-effect block
+			// Scenario mode: skip side-effect block after logging
 			if isScenarioMode(ps) {
 				return payload
 			}
 
-			// Execute the side-effect block normally
-			switch blk := arg1.(type) {
+			// Execute side-effect block
+			switch sb := arg2.(type) {
 			case env.Block:
 				ser := ps.Ser
-				ps.Ser = blk.Series
+				ps.Ser = sb.Series
 				EvalBlockInj(ps, nil, false)
-				MaybeDisplayFailureOrError(ps, ps.Idx, "output-intent")
+				MaybeDisplayFailureOrError(ps, ps.Idx, "output-intent side-effect")
 				ps.Ser = ser
 				if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 					return ps.Res
 				}
-				return payload // Preserve pass-through feel; payload stays as returned value
+				return payload
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "output-intent")
+				return MakeArgError(ps, 3, []env.Type{env.BlockType}, "output-intent")
 			}
 		},
 	},
@@ -213,6 +282,10 @@ func appendToFile(path string, data []byte) error {
 // Helper: detect scenario mode via batteries hook or presence of 'scenario' in context
 func isScenarioMode(ps *env.ProgramState) bool {
 	if BatteryIsScenarioHook != nil && BatteryIsScenarioHook(ps) {
+		return true
+	}
+	// Honor CLI dry-run via env var
+	if os.Getenv("RYE_DRY_RUN") == "1" {
 		return true
 	}
 	if idx, found := ps.Idx.GetIndex("scenario"); found {

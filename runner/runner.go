@@ -75,6 +75,10 @@ var (
 
 	// Inspect/debugging options
 	NoInspect = flag.Bool("noinspect", false, "Exit immediately on error without showing debugging options")
+
+	// Scenario/dry-run options
+	DryRun       = flag.Bool("dry-run", false, "Activate output-intent dry-run mode: log outputs but skip side-effect blocks")
+	ScenarioFile = flag.String("scenario", "", "Path to a Rye file to preload before script; can register input-intent overrides via Rye-itself callbacks")
 )
 
 // TODO 20251107: This is temporary experiment, to make builtins like forever respond to ctrl+d, ctrl+z, ...
@@ -264,11 +268,25 @@ func DoMain(regfn func(*env.ProgramState) error) {
 		fmt.Println("\033[33m  rye -histfile hist.rye               \033[36m# append console history to specified file hist.rye")
 		fmt.Println("\033[33m  rye -http 8080                       \033[36m# start HTTP REPL mode on port 8080 (localhost only)")
 		fmt.Println("\033[33m  rye -http 8080 main.rye              \033[36m# load main.rye and expose via HTTP console on port 8080")
+		fmt.Println("\033[33m  rye --dry-run script.rye             \033[36m# simulate outputs: log payloads, skip side-effects in output-intent")
+		fmt.Println("\033[33m  rye --scenario scenario.rye file.rye \033[36m# preload scenario.rye to register input-intent value providers")
 		fmt.Println("\033[0m\n Thank you for trying out \033[1mRye\033[22m ...")
 		fmt.Println("")
 	}
 	// Parse flags
 	flag.Parse()
+
+	// If a scenario preload file is provided, remember it in an env var for later load
+	if *ScenarioFile != "" {
+		os.Setenv("RYE_SCENARIO_FILE", *ScenarioFile)
+	}
+
+	// Record dry-run flag to env var so lower layers can pick it up
+	if *DryRun {
+		os.Setenv("RYE_DRY_RUN", "1")
+	} else {
+		os.Unsetenv("RYE_DRY_RUN")
+	}
 
 	// PARENT RE-EXEC: If --unshare is requested (via CLI flag or .ryesec policy),
 	// re-exec this process inside Linux namespaces now, before any interpreter
@@ -682,6 +700,24 @@ func main_rye_http_repl(port string, file string, code string, lang string, regf
 		if err := regfn(ps); err != nil {
 			fmt.Println(err.Error())
 			return
+		}
+
+		// Apply dry-run and scenario preload if requested
+		if *DryRun {
+			idxScenario := ps.Idx.IndexWord("scenario")
+			ps.Ctx.Set(idxScenario, *env.NewDict(map[string]interface{}{}))
+		}
+		if scFile := os.Getenv("RYE_SCENARIO_FILE"); scFile != "" {
+			if content, err := os.ReadFile(scFile); err == nil {
+				blk := loader.LoadString(string(content), security.CurrentCodeSigEnabled, ps)
+				if b, ok := blk.(env.Block); ok {
+					ser := ps.Ser
+					ps.Ser = b.Series
+					evaldo.EvalBlockInj(ps, nil, true)
+					evaldo.MaybeDisplayFailureOrError2(ps, ps.Idx, "scenario preload", true, true)
+					ps.Ser = ser
+				}
+			}
 		}
 
 		// Load the file content plus any additional code
@@ -1241,6 +1277,23 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 	if err := regfn(es); err != nil {
 		fmt.Println(err.Error())
 		return
+	}
+	// Apply dry-run and scenario preload for HTTP REPL too
+	if *DryRun {
+		idxScenario := es.Idx.IndexWord("scenario")
+		es.Ctx.Set(idxScenario, *env.NewDict(map[string]interface{}{}))
+	}
+	if scFile := os.Getenv("RYE_SCENARIO_FILE"); scFile != "" {
+		if content, err := os.ReadFile(scFile); err == nil {
+			blk := loader.LoadString(string(content), false, es)
+			if b, ok := blk.(env.Block); ok {
+				ser := es.Ser
+				es.Ser = b.Series
+				evaldo.EvalBlockInj(es, nil, true)
+				evaldo.MaybeDisplayFailureOrError2(es, es.Idx, "scenario preload", true, true)
+				es.Ser = ser
+			}
+		}
 	}
 
 	// Setup signal handling for interrupting operations

@@ -85,6 +85,7 @@ func RegisterBatteries(ps *env.ProgramState) {
 	evaldo.RegisterBuiltinsInContext(Builtins_flui, ps, "flui")
 	evaldo.RegisterBuiltins2(Builtins_js_interop, ps, "jsinterop")
 	evaldo.RegisterBuiltins2(Builtins_gpio, ps, "gpio")
+	// Rye runtime helpers (Linux+landlock only build)
 	// evaldo.RegisterBuiltinsInContext(Builtins_flui_v2, ps, "flui2")
 	// ## Archived / contrib modules (not included in batteries):
 	// evaldo.RegisterBuiltins2(Builtins_gtk, ps, "gtk")
