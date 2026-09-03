@@ -17,6 +17,9 @@ import (
 	"strings"
 	"time"
 
+	"path/filepath"
+
+	"github.com/landlock-lsm/go-landlock/landlock"
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
 	"github.com/refaktor/rye/loader"
@@ -298,16 +301,6 @@ var builtins_baseio = map[string]*env.Builtin{
 	// -------------------------------------------------------------------------
 
 	// Example:
-	// Rye-itself//args?
-	"Rye-itself//args?": {
-		Argsn: 0,
-		Doc:   "Returns command line arguments as a block of parsed values. Each argument is converted to appropriate type (integer, float, or string).",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return ryeItselfArgsParsed(ps)
-		},
-	},
-
-	// Example:
 	// Rye-itself//Args?
 	"Rye-itself//Args?": {
 		Argsn: 0,
@@ -351,6 +344,57 @@ var builtins_baseio = map[string]*env.Builtin{
 			default:
 				return evaldo.MakeArgError(ps, 1, []env.Type{env.IntegerType}, "Rye-itself//history")
 			}
+		},
+	},
+
+	"Rye-itself//Landlock-to-cwd": {
+		Argsn: 0,
+		Doc:   "Restrict filesystem access to the current working directory and its subdirectories using Landlock (Linux only). Call early in the script.",
+		Pure:  false,
+		Fn: func(ps *env.ProgramState, _ env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
+			// Determine base dir: prefer ProgramState.WorkingPath
+			base := ps.WorkingPath
+			if base == "" {
+				wd, err := os.Getwd()
+				if err != nil {
+					return *env.NewError(fmt.Sprintf("failed to get working directory: %v", err))
+				}
+				base = wd
+			}
+			abs, err := filepath.Abs(base)
+			if err == nil {
+				base = abs
+			}
+
+			// Build rules: read/write everything under base directory (dirs+files)
+			rules := []landlock.Rule{
+				landlock.RWDirs(base),
+				landlock.RWFiles(base),
+			}
+
+			if err := landlock.V1.BestEffort().RestrictPaths(rules...); err != nil {
+				return *env.NewError(fmt.Sprintf("failed to apply landlock: %v", err))
+			}
+
+			// Expose state for inspection
+			os.Setenv("RYE_LANDLOCK_PROFILE", "cwd-rw")
+			return env.Tagword{Index: ps.Idx.IndexWord("ok")}
+		},
+	},
+
+	"Rye-itself//Is-dry-run": {
+		Argsn: 0,
+		Doc:   "Returns true if Rye is running in dry-run/scenario mode (activated via --dry-run or scenario context)",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, _ env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
+			if os.Getenv("RYE_DRY_RUN") == "1" {
+				return *env.NewBoolean(true)
+			}
+			// Fallback to evaldo's scenario detector
+			if evaldo_BatteryIsScenario(ps) {
+				return *env.NewBoolean(true)
+			}
+			return *env.NewBoolean(false)
 		},
 	},
 
@@ -454,4 +498,19 @@ func ryeItselfArgsParsed(ps *env.ProgramState) env.Object {
 		lst[i] = *env.NewString(arg)
 	}
 	return *env.NewBlock(*env.NewTSeries(lst))
+}
+
+// Bridge to evaldo.isScenarioMode without export; we re-use its logic parts available:
+func evaldo_BatteryIsScenario(ps *env.ProgramState) bool {
+	// If batteries expose a hook, use it
+	if evaldo.BatteryIsScenarioHook != nil && evaldo.BatteryIsScenarioHook(ps) {
+		return true
+	}
+	// Check context sentinel 'scenario'
+	if idx, found := ps.Idx.GetIndex("scenario"); found {
+		if obj, ok := ps.Ctx.Get(idx); ok && obj != nil {
+			return true
+		}
+	}
+	return false
 }

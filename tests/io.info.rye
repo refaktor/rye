@@ -970,18 +970,6 @@ section "Default" "" {
 `; exit 0
 `	}
 
-	group "Rye-itself//args?" 
-	"Returns command line arguments as a block of parsed values. Each argument is converted to appropriate type (integer, float, or string)."
-	{
-	}
-
-	{
-	}
-
-	{
-`Rye-itself//args?
-`	}
-
 	group "Rye-itself//Args?" 
 	"Returns command line arguments as a block of parsed values. Each argument is converted to appropriate type (integer, float, or string)."
 	{

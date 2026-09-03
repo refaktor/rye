@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
 )
 
 type Type int
@@ -899,7 +898,10 @@ func (b Block) Inspect(e Idxs) string {
 				r.WriteString("^")
 			}
 			r.WriteString(b.Series.Get(i).Inspect(e))
-			r.WriteString(" ")
+			// add a space only between items, not after the last
+			if i < b.Series.Len()-1 {
+				r.WriteString(" ")
+			}
 		}
 	}
 	r.WriteString("]")
@@ -908,16 +910,20 @@ func (b Block) Inspect(e Idxs) string {
 
 func (b Block) Print(e Idxs) string {
 	var r strings.Builder
-	// r.WriteString("{ ")
 	for i := 0; i < b.Series.Len(); i += 1 {
 		if b.Series.Get(i) != nil {
 			r.WriteString(b.Series.Get(i).Print(e))
-			r.WriteString(" ")
+			// add a space only between items, not after the last
+			if i < b.Series.Len()-1 {
+				r.WriteString(" ")
+			}
 		} else {
 			r.WriteString("[NIL]")
+			if i < b.Series.Len()-1 {
+				r.WriteString(" ")
+			}
 		}
 	}
-	// r.WriteString("}")
 	return r.String()
 }
 
@@ -3223,7 +3229,7 @@ func (i Time) Equal(o Object) bool {
 }
 
 func (i Time) Dump(e Idxs) string {
-	return fmt.Sprintf("datetime \"%s\"", i.Value.Format("2006-01-02T15:04:05"))
+	return i.Value.Format("2006-01-02T15:04:05")
 }
 
 //
