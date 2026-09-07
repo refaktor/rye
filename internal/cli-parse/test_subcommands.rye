@@ -3,13 +3,13 @@ print "## Subcommand Tests"
 
 ; Basic subcommand
 assert\display "basic subcommand" {
-	( parse-args { init --force } { 
+	( parse-args { init } { 
 		-v|verbose flag 
 		subcommand { 
-			init { -f|force flag doc "Force initialization" } 
-			build { -o|output string doc "Output directory" }
+			'init { -f|force flag doc "Force initialization" } 
+			'build { -o|output string doc "Output directory" }
 		} 
-	} ) -> "command"
+	} ) |probe -> "command"
 } "init"
 
 ; Subcommand force flag
@@ -17,8 +17,8 @@ assert\display "subcommand flag" {
 	( parse-args { init --force } { 
 		-v|verbose flag 
 		subcommand { 
-			init { -f|force flag } 
-			build { -o|output string }
+			'init { -f|force flag } 
+			'build { -o|output string }
 		} 
 	} ) -> "force"
 } true
@@ -28,8 +28,8 @@ assert\display "subcommand with global flag" {
 	( parse-args { --verbose init } { 
 		-v|verbose flag 
 		subcommand { 
-			init { -f|force flag } 
-			build { -o|output string }
+			'init { -f|force flag } 
+			'build { -o|output string }
 		} 
 	} ) -> "verbose"
 } true
@@ -41,11 +41,11 @@ assert\display "nested subcommand" {
 			'remote {
 				doc "Manage remotes"
 				subcommand {
-					add { 
+					'add { 
 						name: string required doc "Remote name"
 						url: string required doc "Remote URL"
 					}
-					remove { 
+					'remove { 
 						name: string required 
 					}
 				}
@@ -60,14 +60,14 @@ assert\display "nested subcommand positional args" {
 		subcommand {
 			'remote {
 				subcommand {
-					add { 
+					'add { 
 						name: string required
 						url: string required
 					}
 				}
 			}
 		}
-	} ) -> "_name"
+	} ) |probe -> "name"
 } "origin"
 
 ; Command path length
@@ -76,7 +76,7 @@ assert\display "command path length" {
 		subcommand {
 			'remote {
 				subcommand {
-					add { name: string required url: string required }
+					'add { name: string required url: string required }
 				}
 			}
 		}
@@ -88,8 +88,8 @@ assert\display "string subcommand from CLI" {
 	( parse-args { "init" "--force" } { 
 		-v|verbose flag 
 		subcommand { 
-			init { -f|force flag } 
-			build { -o|output string }
+			'init { -f|force flag } 
+			'build { -o|output string }
 		} 
 	} ) -> "command"
 } "init"

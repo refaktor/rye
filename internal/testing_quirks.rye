@@ -855,6 +855,11 @@ assert\display "prns prints with space" {
 	capture-stdout { prns "hello" }
 } "hello "
 
+; added: capture block printing spacing (no trailing space)
+assert\display "block print spacing - no trailing space" {
+	capture-stdout { print [ 1 2 ] }
+} "1 2\n"
+
 ; ══════════════════════════════════════════════════════════════════════════════
 ; 30. MATH CONTEXT QUIRKS
 ; ══════════════════════════════════════════════════════════════════════════════
