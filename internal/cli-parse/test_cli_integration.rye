@@ -27,7 +27,29 @@ assert\display "full spec positional value" {
 		-v|verbose flag
 		-o|output string
 		input: string
-	} ) -> "_input"
+	} ) -> "input"
 } "in.txt"
 
 print ""
+
+
+assert\display "my test 1" {
+	; Minimal variant: imgtool convert                                                                                                                                                                                
+ spec2: {                                                                                                                                                                                                     
+   program "imgtool"                                                                                                                                                                                               
+   -v|verbose flag                                                                                                                                                                                                 
+   -q|quality integer optional 85 doc "JPEG quality"                                                                                                                                                               
+   input: string required doc "Input image"                                                                                                                                                                        
+   output: string optional "out.jpg" doc "Output image"                                                                                                                                                            
+ }                                                                                                                                                                                                                 
+                                                                                                                                                                                                                   
+ argv2: { "-v" "-q" 92 "in.png" "out.jpg" }                                                                                                                                                                   
+ args2: parse-args argv2 spec2                                                                                                                                                                                
+                                                                                                                                                                                                                   
+ [ ( args2 -> "verbose" )    ; true                                                                                                                                                                              
+ ( args2 -> "quality" )    ; 92                                                                                                                                                                                
+ ( args2 |probe -> "input" )  ; "in.png"                                                                                                                                                                       
+ ( args2 |probe -> "output" ) ; "out.jpg"                                                                                                                                                                  
+ ] 
+                                                
+} [ "" "" ]

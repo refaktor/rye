@@ -26,8 +26,8 @@ assert\display "help contains subcommand" {
 	contains generate-help {
 		program "git-like"
 		subcommand {
-			init { doc "Initialize repo" }
-			clone { doc "Clone repo" }
+			'init { doc "Initialize repo" }
+			'clone { doc "Clone repo" }
 		}
 	} "init"
 } true
@@ -40,7 +40,7 @@ assert\display "help for subcommand" {
 			'remote {
 				doc "Manage remotes"
 				subcommand {
-					add { doc "Add a remote" }
+					'add { doc "Add a remote" }
 				}
 			}
 		}

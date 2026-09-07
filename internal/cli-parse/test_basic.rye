@@ -33,12 +33,12 @@ assert\display "integer option provided" {
 
 ; Positional argument
 assert\display "positional argument" {
-	( parse-args { "file.txt" } { file: string required } ) -> "_file"
+	( parse-args { "file.txt" } { file: string required } ) -> "file"
 } "file.txt"
 
 ; Multiple positional arguments (many)
 assert\display "multiple positional arguments" {
-	length? ( parse-args { "a.txt" "b.txt" "c.txt" } { files: string many } ) -> "_files"
+	length? ( parse-args { "a.txt" "b.txt" "c.txt" } { files: string many } ) -> "files"
 } 3
 
 print ""
