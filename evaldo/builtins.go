@@ -107,6 +107,20 @@ func MakeArgError(env1 *env.ProgramState, N int, typ []env.Type, fn string) *env
 	return err
 }
 
+// MakeArgError2 is like MakeArgError but also reports the actual type of the provided value
+func MakeArgError2(env1 *env.ProgramState, N int, typ []env.Type, fn string, got env.Object) *env.Error {
+	env1.FailureFlag = true
+	msg := MakeArgErrorMessage(N, typ, fn)
+	// Append actual type information
+	actual := fmt.Sprintf("%T", got)
+	if i := strings.LastIndex(actual, "."); i >= 0 {
+		actual = actual[i+1:]
+	}
+	err := env.NewError(msg + " Got: " + actual + ".")
+	err.CodeBlock = env1.Ser
+	return err
+}
+
 func MakeNeedsThawedArgError(env1 *env.ProgramState, fn string) *env.Error {
 	env1.FailureFlag = true
 	err := env.NewError("`" + fn + "`: first argument must be a thawed table.")

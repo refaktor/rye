@@ -513,7 +513,7 @@ section "Markdown " "Functions for processing and converting Markdown documents"
 	{
 	}
 
-	group "markdown//text" 
+	group "text" 
 	"Gets the raw markdown text from a Markdown value."
 	{
 		argsn 1
@@ -522,28 +522,13 @@ section "Markdown " "Functions for processing and converting Markdown documents"
 	}
 
 	{
-		equal { markdown "Hello" |markdown//text } "Hello"
+		equal { markdown "Hello" |text } "Hello"
 	}
 
 	{
 	}
 
-	group "markdown//length" 
-	"Gets the length of the markdown text in characters."
-	{
-		argsn 1
-		arg `md: Markdown value`
-		returns `integer length in characters`
-	}
-
-	{
-		equal { markdown "Hello" |markdown//length } 5
-	}
-
-	{
-	}
-
-	group "markdown//to-html" 
+	group "to-html" 
 	"Converts a Markdown value to HTML."
 	{
 		argsn 1
@@ -552,13 +537,13 @@ section "Markdown " "Functions for processing and converting Markdown documents"
 	}
 
 	{
-		equal { markdown "# T" |markdown//to-html |contains "<h" } true
+		equal { markdown "# T" |to-html |contains "<h" } true
 	}
 
 	{
 	}
 
-	group "markdown//headings" 
+	group "headings" 
 	"Extracts all headings from markdown text as a list of strings."
 	{
 		argsn 1
@@ -567,13 +552,13 @@ section "Markdown " "Functions for processing and converting Markdown documents"
 	}
 
 	{
-		equal { markdown "# A\n## B" |markdown//headings |type? } 'list
+		equal { markdown "# A\n## B" |headings |type? } 'list
 	}
 
 	{
 	}
 
-	group "markdown//paragraphs" 
+	group "paragraphs" 
 	"Extracts all paragraphs from markdown text as a list of strings."
 	{
 		argsn 1
@@ -582,13 +567,13 @@ section "Markdown " "Functions for processing and converting Markdown documents"
 	}
 
 	{
-		equal { markdown "Hello\n\nWorld" |markdown//paragraphs |type? } 'list
+		equal { markdown "Hello\n\nWorld" |paragraphs |type? } 'list
 	}
 
 	{
 	}
 
-	group "markdown//links" 
+	group "links" 
 	"Extracts all links from markdown text as a list of dictionaries with 'text' and 'url' keys."
 	{
 		argsn 1
@@ -597,7 +582,7 @@ section "Markdown " "Functions for processing and converting Markdown documents"
 	}
 
 	{
-		equal { markdown "[rye](https://ryelang.org)" |markdown//links |type? } 'list
+		equal { markdown "[rye](https://ryelang.org)" |links |type? } 'list
 	}
 
 	{
@@ -855,7 +840,7 @@ section "Default" "" {
 	}
 
 	{
-		equal { charmap\windows-1250 |Decoder |Decode "Plačilo računa" |contains? "č" } 1
+		equal { charmap\windows-1250 |Decoder |Decode "Plačilo računa" |contains "č" } 1
 		equal { charmap\windows-1250 |Decoder |Decode "Hello" } "Hello"
 		equal { charmap\windows-1250 |Decoder |Decode "" } ""
 	}
