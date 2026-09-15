@@ -927,9 +927,6 @@ section "Strings " "" {
 	{
 		argsn 1
 		pure
-		argtypes {
-			1 [ String ]
-		}
 		arg `string: String to append a newline to`
 		returns `a new string with a newline character appended`
 	}
@@ -2360,9 +2357,6 @@ section "Collections " "" {
 	"Creates a new collection with all items except the first one from the input collection."
 	{
 		argsn 1
-		argtypes {
-			1 [ Block String List Vector Matrix ]
-		}
 		arg `collection: Block, list, string, vector or matrix to get all but the first item from`
 		returns `a new collection containing all items except the first one (for matrix: all rows except first)`
 	}
@@ -2408,10 +2402,6 @@ section "Collections " "" {
 	"Creates a new collection with the last n items from the input collection, or all but the first |n| items if n is negative."
 	{
 		argsn 2
-		argtypes {
-			1 [ Block List String Vector Matrix ]
-			2 [ Integer ]
-		}
 		arg `collection: Block, list, string, table, vector or matrix to get the last items from`
 		arg `n: Number of items to retrieve from the end; if negative, all but the first |n| items`
 		returns `a new collection containing the last n items (for matrix: last n rows), or all except the first |n| if n is negative`
@@ -2438,9 +2428,6 @@ section "Collections " "" {
 	"Retrieves the second item from a collection (block, list, string, vector, matrix, or bytes)."
 	{
 		argsn 1
-		argtypes {
-			1 [ Block List String Vector Matrix Bytes ]
-		}
 		arg `collection: Block, list, string, vector or matrix to get the second item from`
 		returns `the second item in the collection (for matrix: second row as vector)`
 	}
@@ -2461,9 +2448,6 @@ section "Collections " "" {
 	"Retrieves the third item from a collection (block, list, string, vector, matrix, or bytes)."
 	{
 		argsn 1
-		argtypes {
-			1 [ Block List String Vector Matrix Bytes ]
-		}
 		arg `collection: Block, list, string, vector or matrix to get the third item from`
 		returns `the third item in the collection (for matrix: third row as vector)`
 	}
@@ -2587,9 +2571,6 @@ section "Collections " "" {
 	"Creates a new collection with items sorted in ascending order."
 	{
 		argsn 1
-		argtypes {
-			1 [ Block List String ]
-		}
 		arg `collection: Block, list or string to sort`
 		returns `a new collection with items sorted in ascending order`
 	}
@@ -2610,9 +2591,6 @@ section "Collections " "" {
 	"Sorts a block or list in-place in ascending order and returns the modified collection."
 	{
 		argsn 1
-		argtypes {
-			1 [ Block List ]
-		}
 		arg `collection: Reference to a block or list to sort in-place`
 		returns `the sorted collection (same reference, modified in-place)`
 	}
@@ -2631,7 +2609,6 @@ section "Collections " "" {
 	{
 		argsn 2
 		argtypes {
-			1 [ Block List ]
 			2 [ Function ]
 		}
 		arg `collection: Block or list to sort`
@@ -2654,7 +2631,6 @@ section "Collections " "" {
 	{
 		argsn 2
 		argtypes {
-			1 [ Block List ]
 			2 [ Block ]
 		}
 		arg `collection: Block or list to sort`
@@ -2677,9 +2653,6 @@ section "Collections " "" {
 	"Creates a new collection with duplicate values removed, keeping only the first occurrence of each value."
 	{
 		argsn 1
-		argtypes {
-			1 [ List Block String ]
-		}
 		arg `collection: Block, list or string to remove duplicates from`
 		returns `a new collection with duplicate values removed`
 	}
@@ -2701,9 +2674,6 @@ section "Collections " "" {
 	"Creates a new collection with items in reverse order from the input collection."
 	{
 		argsn 1
-		argtypes {
-			1 [ Block String List ]
-		}
 		arg `collection: Block, list or string to reverse`
 		returns `a new collection with items in reverse order`
 	}
@@ -2722,9 +2692,6 @@ section "Collections " "" {
 	"Reverses a block or list in-place and returns the modified collection."
 	{
 		argsn 1
-		argtypes {
-			1 [ Block String List ]
-		}
 		arg `collection: Reference to a block or list to reverse in-place`
 		returns `the reversed collection (same reference, modified in-place)`
 	}
