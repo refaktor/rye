@@ -2337,9 +2337,6 @@ section "Collections " "" {
 	"Retrieves the first item from a collection (block, list, string, table, vector, matrix, or bytes)."
 	{
 		argsn 1
-		argtypes {
-			1 [ Table Block String List Vector Matrix Bytes ]
-		}
 		arg `collection: Block, list, string, table, vector, matrix or bytes to get the first item from`
 		returns `the first item in the collection (for matrix: first row as vector)`
 	}
@@ -2487,9 +2484,6 @@ section "Collections " "" {
 	"Retrieves the last item from a collection (block, list, string, vector, matrix, or bytes)."
 	{
 		argsn 1
-		argtypes {
-			1 [ Block List String Vector Matrix Bytes ]
-		}
 		arg `collection: Block, list, string, vector, matrix or bytes to get the last item from`
 		returns `the last item in the collection (for matrix: last row as vector)`
 	}
@@ -2511,9 +2505,6 @@ section "Collections " "" {
 	"Creates a new collection with all items except the last one from the input collection."
 	{
 		argsn 1
-		argtypes {
-			1 [ Block List String Vector Matrix ]
-		}
 		arg `collection: Block, list, string, vector or matrix to get all but the last item from`
 		returns `a new collection containing all items except the last one (for matrix: all rows except last)`
 	}
@@ -2535,10 +2526,6 @@ section "Collections " "" {
 	"Creates a new collection with the first n items from the input collection, or all but the last |n| items if n is negative."
 	{
 		argsn 2
-		argtypes {
-			1 [ Block List String Table Vector Matrix ]
-			2 [ Integer ]
-		}
 		arg `collection: Block, list, string or table to get the first items from`
 		arg `n: Number of items to retrieve (if positive) or number to exclude from the end (if negative)`
 		returns `a new collection containing the first n items or all but the last |n| items`
@@ -2584,9 +2571,6 @@ section "Collections " "" {
 	"Extracts all values from a dictionary and returns them as a list."
 	{
 		argsn 1
-		argtypes {
-			1 [ Dict ]
-		}
 		arg `dict: Dictionary object to extract values from`
 		returns `list containing all values from the dictionary`
 	}
@@ -2884,9 +2868,6 @@ section "Collections " "" {
 	"Returns the number of elements in a collection."
 	{
 		argsn 1
-		argtypes {
-			2 [ String Dict List Block Table Vector Bytes ]
-		}
 		arg `collection: String, block, dict, list, table, context, vector or bytes to measure`
 		returns `integer count of elements in the collection`
 	}
@@ -2908,9 +2889,6 @@ section "Collections " "" {
 	"Returns the maximum valid index in a collection (length? - 1)."
 	{
 		argsn 1
-		argtypes {
-			2 [ String Dict List Block Table Vector ]
-		}
 		arg `collection: String, block, dict, list, table, context or vector to measure`
 		returns `integer index of the last element in the collection`
 	}
@@ -3379,10 +3357,6 @@ section "Collections " "" {
 	"Sets the cursor position in a block to the specified index and returns the block."
 	{
 		argsn 2
-		argtypes {
-			1 [ Block ]
-			2 [ Integer ]
-		}
 		arg `block: Block to set cursor position in`
 		arg `position: Integer position to set the cursor to (0-based)`
 		returns `the block with its cursor set to the specified position`
