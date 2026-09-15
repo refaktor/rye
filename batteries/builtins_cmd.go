@@ -17,7 +17,9 @@ type command struct {
 	// pipe holds any commands that pipe into cmd.
 	pipe []*exec.Cmd
 	// files holds files that must be closed after the command finishes.
-	files []*os.File
+	files   []*os.File
+	started bool
+	closed  bool
 }
 
 func (c *command) StartPipe() error {
@@ -380,6 +382,104 @@ var Builtins_cmd = map[string]*env.Builtin{
 	// Args:
 	// * command: native command object
 	// Returns:
+	// * the same command after starting it (does not wait)
+	"command//Start": {
+		Argsn: 1,
+		Doc:   "Start a command (and any piped commands) without waiting.",
+		Fn: commandFn("Start", func(ps *env.ProgramState, c *command, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if c.started {
+				return arg0
+			}
+			if err := c.StartPipe(); err != nil {
+				ps.FailureFlag = true
+				return evaldo.MakeBuiltinError(ps, err.Error(), "Start")
+			}
+			if err := c.cmd.Start(); err != nil {
+				ps.FailureFlag = true
+				return evaldo.MakeBuiltinError(ps, err.Error(), "Start")
+			}
+			c.started = true
+			return arg0
+		}),
+	},
+	// Args:
+	// * command: native command object
+	// Returns:
+	// * boolean true; kills the process (and any started piped processes)
+	"command//Kill": {
+		Argsn: 1,
+		Doc:   "Kill a started command (and any started piped commands).",
+		Fn: commandFn("Kill", func(ps *env.ProgramState, c *command, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var firstErr error
+			if c.cmd != nil && c.cmd.Process != nil {
+				if err := c.cmd.Process.Kill(); err != nil && firstErr == nil {
+					firstErr = err
+				}
+			}
+			for _, pc := range c.pipe {
+				if pc != nil && pc.Process != nil {
+					if err := pc.Process.Kill(); err != nil && firstErr == nil {
+						firstErr = err
+					}
+				}
+			}
+			_ = c.Close()
+			c.closed = true
+			if firstErr != nil {
+				ps.FailureFlag = true
+				return evaldo.MakeBuiltinError(ps, firstErr.Error(), "Kill")
+			}
+			return *env.NewBoolean(true)
+		}),
+	},
+	// Args:
+	// * command: native command object
+	// Returns:
+	// * process id of the main command or -1 if not started
+	"command//Pid": {
+		Argsn: 1,
+		Doc:   "Return the process id of the main command (or -1 if not started).",
+		Fn: commandFn("Pid", func(ps *env.ProgramState, c *command, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if c.cmd == nil || c.cmd.Process == nil {
+				return *env.NewInteger(-1)
+			}
+			return *env.NewInteger(int64(c.cmd.Process.Pid))
+		}),
+	},
+	// Args:
+	// * command: native command object
+	// Returns:
+	// * exit status (or list for pipelines) after waiting
+	"command//Wait": {
+		Argsn: 1,
+		Doc:   "Wait for a started command to finish and return its exit status.",
+		Fn: commandFn("Wait", func(ps *env.ProgramState, c *command, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if !c.started {
+				ps.FailureFlag = true
+				return evaldo.MakeBuiltinError(ps, "command not started", "Wait")
+			}
+			err := c.cmd.Wait()
+			_ = c.Close()
+			c.closed = true
+			status := c.cmd.ProcessState.ExitCode()
+			if err != nil && status == -1 {
+				ps.FailureFlag = true
+				return evaldo.MakeBuiltinError(ps, err.Error(), "Wait")
+			}
+			if len(c.pipe) > 0 {
+				var statusList []any
+				for _, pc := range c.pipe {
+					statusList = append(statusList, *env.NewInteger(int64(pc.ProcessState.ExitCode())))
+				}
+				statusList = append(statusList, *env.NewInteger(int64(status)))
+				return *env.NewList(statusList)
+			}
+			return *env.NewInteger(int64(status))
+		}),
+	},
+	// Args:
+	// * command: native command object
+	// Returns:
 	// * for simple command: exit status integer
 	// * for pipeline: list of exit status integers
 	// Tests:
@@ -459,6 +559,27 @@ var Builtins_cmd = map[string]*env.Builtin{
 				return evaldo.MakeBuiltinError(ps, err.Error(), "CombinedOutput")
 			}
 			return *env.NewString(string(out))
+		}),
+	},
+	// Args:
+	// * command: native command object
+	// Returns:
+	// * the original command object after redirecting stdin/stdout/stderr to /dev/null
+	"command//Detach!": {
+		Argsn: 1,
+		Doc:   "Redirect stdin, stdout, and stderr of a command to /dev/null.",
+		Fn: commandFn("Detach!", func(ps *env.ProgramState, c *command, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// Open /dev/null once and reuse for all three.
+			f, err := os.OpenFile("/dev/null", os.O_RDWR, 0)
+			if err != nil {
+				ps.FailureFlag = true
+				return evaldo.MakeBuiltinError(ps, err.Error(), "Detach!")
+			}
+			c.files = append(c.files, f)
+			c.cmd.Stdin = f
+			c.cmd.Stdout = f
+			c.cmd.Stderr = f
+			return arg0
 		}),
 	},
 }
