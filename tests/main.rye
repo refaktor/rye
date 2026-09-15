@@ -183,9 +183,9 @@ test {
 	}
 	if sections .length? > 0 {  ; todo add is-empty builtin
 		var 'errors 0
-		for sections {
-			.string .pass { term/bold , prns "\n#" , .upper .prns , print "#\n" }
-			|++ ".info.rye" |file |Load |^check { "Group does not exist!" } |do\inside* test-framework |+ errors |fix { errors } ::errors }
+		for probe sections {
+			.pass { term/bold , prns "\n#" , .upper .prns , print "#\n" }
+			|++ ".info.rye" |probe |file |Load |^check { "Group does not exist!" } |do\inside* test-framework |+ errors |fix { errors } ::errors }
 		print ""
 	
 		; if ( length? sections ) > 1 {

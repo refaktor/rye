@@ -65,7 +65,7 @@ rm -f base.info.rye baseio.info.rye batteries.info.rye \
 ../cmd/rbit/rbit ../batteries/builtins_ssh.go >> batteries.info.rye
 ../cmd/rbit/rbit ../batteries/builtins_goroutines.go >> batteries.info.rye
 ../cmd/rbit/rbit ../batteries/builtins_complex.go >> batteries.info.rye
-../cmd/rbit/rbit ../batteries/builtins_pipes.go >> batteries.info.rye
+#../cmd/rbit/rbit ../batteries/builtins_pipes.go >> batteries.info.rye
 ../cmd/rbit/rbit ../batteries/builtins_structures.go >> batteries.info.rye
 
 # Keep generating per-topic .info.rye for existing individual pages (unchanged below)
