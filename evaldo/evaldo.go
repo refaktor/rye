@@ -58,6 +58,7 @@ func EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) {
 	case env.Rye00Dialect:
 		Rye00_EvalBlockInj(ps, inj, injnow) // Simplified dialect for builtins and integers
 	default:
+		panic("Dialect not selected")
 		// TODO fail
 	}
 }

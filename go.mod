@@ -39,7 +39,7 @@ require (
 	github.com/jwalton/go-supportscolor v1.2.0
 	github.com/kopoli/go-terminal-size v0.0.0-20170219200355-5c97524c8b54
 	github.com/labstack/echo v3.3.10+incompatible
-	github.com/landlock-lsm/go-landlock v0.8.1
+	github.com/landlock-lsm/go-landlock v0.10.0
 	github.com/lib/pq v1.12.3
 	github.com/mattn/go-runewidth v0.0.24
 	github.com/mhale/smtpd v0.8.3
@@ -71,6 +71,7 @@ require (
 	github.com/GianlucaP106/gotmux v0.5.0
 	github.com/mlange-42/ark v0.8.3
 	github.com/spf13/cobra v1.10.2
+	github.com/stianeikeland/go-rpio/v4 v4.6.0
 	github.com/tliron/glsp v0.2.2
 	google.golang.org/genai v1.59.0
 )
@@ -123,7 +124,6 @@ require (
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
 	github.com/sourcegraph/jsonrpc2 v0.2.0 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
-	github.com/stianeikeland/go-rpio/v4 v4.6.0 // indirect
 	github.com/tidwall/gjson v1.18.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect

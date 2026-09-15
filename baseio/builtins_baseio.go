@@ -23,6 +23,7 @@ import (
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
 	"github.com/refaktor/rye/loader"
+	"github.com/refaktor/rye/security"
 	"github.com/refaktor/rye/util"
 
 	"golang.org/x/sync/errgroup"
@@ -344,6 +345,87 @@ var builtins_baseio = map[string]*env.Builtin{
 			default:
 				return evaldo.MakeArgError(ps, 1, []env.Type{env.IntegerType}, "Rye-itself//history")
 			}
+		},
+	},
+
+	"Rye-itself//Landlock": {
+		Argsn: 0,
+		Doc:   "Create a landlock builder object that can be configured and then enforced.",
+		Fn: func(ps *env.ProgramState, _ env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
+			return *env.NewNative(ps.Idx, security.NewLandlockBuilder(), "landlock")
+		},
+	},
+	"landlock//Limit-to-cwd": {
+		Argsn: 1,
+		Doc:   "Limit landlock to current working directory (configure; does not enforce yet).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, _, _, _, _ env.Object) env.Object {
+			if n, ok := arg0.(env.Native); ok {
+				if b, ok2 := n.Value.(*security.LandlockBuilder); ok2 {
+					b.LimitToCwd()
+					return arg0
+				}
+			}
+			return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "Limit-to-cwd")
+		},
+	},
+	"landlock//Allow": {
+		Argsn: 2,
+		Doc:   "Allow access to a specific path (file or directory).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, _, _, _ env.Object) env.Object {
+			var p string
+			switch v := arg1.(type) {
+			case env.Uri:
+				p = v.Path
+			case env.String:
+				p = v.Value
+			default:
+				return evaldo.MakeArgError(ps, 2, []env.Type{env.UriType, env.StringType}, "Allow")
+			}
+			if n, ok := arg0.(env.Native); ok {
+				if b, ok2 := n.Value.(*security.LandlockBuilder); ok2 {
+					b.AllowPath(p)
+					return arg0
+				}
+			}
+			return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "Allow")
+		},
+	},
+	"landlock//Allow-exec": {
+		Argsn: 2,
+		Doc:   "Allow execute access to a specific file (or RX for all files under a directory).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, _, _, _ env.Object) env.Object {
+			var p string
+			switch v := arg1.(type) {
+			case env.Uri:
+				p = v.Path
+			case env.String:
+				p = v.Value
+			default:
+				return evaldo.MakeArgError(ps, 2, []env.Type{env.UriType, env.StringType}, "Allow-exec")
+			}
+			if n, ok := arg0.(env.Native); ok {
+				if b, ok2 := n.Value.(*security.LandlockBuilder); ok2 {
+					b.AllowExec(p)
+					return arg0
+				}
+			}
+			return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "Allow-exec")
+		},
+	},
+	"landlock//Enforce": {
+		Argsn: 1,
+		Doc:   "Enforce the configured landlock ruleset exactly once.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, _, _, _, _ env.Object) env.Object {
+			if n, ok := arg0.(env.Native); ok {
+				if b, ok2 := n.Value.(*security.LandlockBuilder); ok2 {
+					if err := b.Enforce(); err != nil {
+						ps.FailureFlag = true
+						return env.NewError("failed to enforce landlock: " + err.Error())
+					}
+					return arg0
+				}
+			}
+			return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "Enforce")
 		},
 	},
 
