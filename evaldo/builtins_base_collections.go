@@ -1070,7 +1070,7 @@ var builtins_collection = map[string]*env.Builtin{
 				}
 				return *env.NewInteger(int64(s1.Value[0]))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType, env.BlockType, env.StringType, env.ListType, env.VectorType, env.MatrixType, env.BytesType}, "first")
+				return MakeArgError2(ps, 1, []env.Type{env.TableType, env.BlockType, env.StringType, env.ListType, env.VectorType, env.MatrixType, env.BytesType}, "first", arg0)
 			}
 		},
 	},
@@ -1129,7 +1129,7 @@ var builtins_collection = map[string]*env.Builtin{
 				copy(newData, s1.Data[s1.Cols:])
 				return *env.NewMatrixWithData(newRows, s1.Cols, newData)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.StringType, env.ListType, env.VectorType, env.MatrixType}, "rest")
+				return MakeArgError2(ps, 1, []env.Type{env.BlockType, env.StringType, env.ListType, env.VectorType, env.MatrixType}, "rest", arg0)
 			}
 		},
 	},
@@ -1367,10 +1367,10 @@ var builtins_collection = map[string]*env.Builtin{
 					copy(newData, s1.Data[startRow*s1.Cols:])
 					return *env.NewMatrixWithData(numVal, s1.Cols, newData)
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType, env.VectorType, env.MatrixType}, "tail")
+					return MakeArgError2(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType, env.VectorType, env.MatrixType}, "tail", arg0)
 				}
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "tail")
+				return MakeArgError2(ps, 2, []env.Type{env.IntegerType}, "tail", arg1)
 			}
 		},
 	},
@@ -1427,7 +1427,7 @@ var builtins_collection = map[string]*env.Builtin{
 				}
 				return *env.NewInteger(int64(s1.Value[1]))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType, env.VectorType, env.MatrixType, env.BytesType}, "second")
+				return MakeArgError2(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType, env.VectorType, env.MatrixType, env.BytesType}, "second", arg0)
 			}
 		},
 	},
@@ -1484,7 +1484,7 @@ var builtins_collection = map[string]*env.Builtin{
 				}
 				return *env.NewInteger(int64(s1.Value[2]))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType, env.VectorType, env.MatrixType, env.BytesType}, "third")
+				return MakeArgError2(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType, env.VectorType, env.MatrixType, env.BytesType}, "third", arg0)
 			}
 		},
 	},
@@ -1541,7 +1541,7 @@ var builtins_collection = map[string]*env.Builtin{
 				}
 				return *env.NewInteger(int64(s1.Value[len(s1.Value)-1]))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType, env.VectorType, env.MatrixType, env.BytesType}, "last")
+				return MakeArgError2(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType, env.VectorType, env.MatrixType, env.BytesType}, "last", arg0)
 			}
 		},
 	},
@@ -1595,7 +1595,7 @@ var builtins_collection = map[string]*env.Builtin{
 				copy(newData, s1.Data[:newRows*s1.Cols])
 				return *env.NewMatrixWithData(newRows, s1.Cols, newData)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType, env.VectorType, env.MatrixType}, "all-before-last")
+				return MakeArgError2(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType, env.VectorType, env.MatrixType}, "all-before-last", arg0)
 			}
 		},
 	},
@@ -1716,10 +1716,10 @@ var builtins_collection = map[string]*env.Builtin{
 					copy(newData, s1.Data[0:numVal*s1.Cols])
 					return *env.NewMatrixWithData(numVal, s1.Cols, newData)
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType, env.TableType, env.VectorType, env.MatrixType}, "head")
+					return MakeArgError2(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType, env.TableType, env.VectorType, env.MatrixType}, "head", arg0)
 				}
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "head")
+				return MakeArgError2(ps, 2, []env.Type{env.IntegerType}, "head", arg1)
 			}
 		},
 	},
@@ -1803,7 +1803,7 @@ var builtins_collection = map[string]*env.Builtin{
 				}
 				return *env.NewList(newl)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.DictType}, "values")
+				return MakeArgError2(ps, 1, []env.Type{env.DictType}, "values", arg0)
 			}
 		},
 	},
@@ -1840,7 +1840,7 @@ var builtins_collection = map[string]*env.Builtin{
 				sort.Sort(RyeStringSort(copied))
 				return *env.NewString(string(copied))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "sort")
+				return MakeArgError2(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "sort", arg0)
 			}
 		},
 	},
@@ -1867,7 +1867,7 @@ var builtins_collection = map[string]*env.Builtin{
 				sort.Sort(RyeListSort(ss))
 				return *env.NewList(ss)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "sort!") // TODO make it report ref
+				return MakeArgError2(ps, 1, []env.Type{env.BlockType, env.ListType}, "sort!", arg0) // TODO make it report ref
 			}
 		},
 	},
@@ -1956,7 +1956,7 @@ var builtins_collection = map[string]*env.Builtin{
 					return MakeArgError(ps, 2, []env.Type{env.FunctionType}, "sort\\by")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "sort\\by")
+				return MakeArgError2(ps, 1, []env.Type{env.BlockType, env.ListType}, "sort\\by", arg0)
 			}
 		},
 	},
@@ -2096,7 +2096,7 @@ var builtins_collection = map[string]*env.Builtin{
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "sort\\by\\key")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "sort\\by\\key")
+				return MakeArgError2(ps, 1, []env.Type{env.BlockType, env.ListType}, "sort\\by\\key", arg0)
 			}
 		},
 	},
@@ -2146,7 +2146,7 @@ var builtins_collection = map[string]*env.Builtin{
 				unique := util.RemoveDuplicatesString(block.Value)
 				return *env.NewString(unique)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.ListType, env.BlockType, env.StringType}, "unique")
+				return MakeArgError2(ps, 1, []env.Type{env.ListType, env.BlockType, env.StringType}, "unique", arg0)
 			}
 		},
 	},
@@ -2198,7 +2198,7 @@ var builtins_collection = map[string]*env.Builtin{
 				}
 				return *env.NewList(reverseList)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.StringType, env.ListType}, "reverse")
+				return MakeArgError2(ps, 1, []env.Type{env.BlockType, env.StringType, env.ListType}, "reverse", arg0)
 			}
 		},
 	},
@@ -2232,7 +2232,7 @@ var builtins_collection = map[string]*env.Builtin{
 				}
 				return *env.NewList(dataSlice)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.StringType, env.ListType}, "reverse!")
+				return MakeArgError2(ps, 1, []env.Type{env.BlockType, env.StringType, env.ListType}, "reverse!", arg0)
 			}
 		},
 	},
@@ -2668,9 +2668,10 @@ var builtins_collection = map[string]*env.Builtin{
 				return *env.NewInteger(int64(s1.Value.Len()))
 			case env.Bytes:
 				return *env.NewInteger(int64(len(s1.Value)))
+			case env.Markdown:
+				return *env.NewInteger(int64(len([]rune(s1.Value))))
 			default:
-				// fmt.Println(s1)
-				return MakeArgError(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.TableType, /*env.PersistentTableType,*/ env.VectorType, env.BytesType}, "length?")
+				return MakeArgError2(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.TableType, /*env.PersistentTableType,*/ env.VectorType, env.BytesType, env.MarkdownType}, "length?", arg0)
 			}
 		},
 	},
@@ -2707,8 +2708,7 @@ var builtins_collection = map[string]*env.Builtin{
 			case env.Vector:
 				return *env.NewInteger(int64(s1.Value.Len() - 1))
 			default:
-				// fmt.Println(s1)
-				return MakeArgError(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.TableType, /*env.PersistentTableType,*/ env.VectorType}, "length?")
+				return MakeArgError2(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.TableType, /*env.PersistentTableType,*/ env.VectorType}, "length?", arg0)
 			}
 		},
 	},
@@ -3710,10 +3710,10 @@ var builtins_collection = map[string]*env.Builtin{
 					s1.Series.SetPos(int(pos.Value))
 					return s1
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "at")
+					return MakeArgError2(ps, 2, []env.Type{env.IntegerType}, "at", arg1)
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "at")
+				return MakeArgError2(ps, 1, []env.Type{env.BlockType}, "at", arg0)
 			}
 		},
 	},

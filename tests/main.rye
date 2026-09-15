@@ -135,6 +135,7 @@ generate-menu: fn { menu } {
 }
 
 generate-doc-file: fn { filename menu } {
+  probe filename
 	join [
 		Read %tpl/header.html
 		|replace "{{title}}" capitalize join [ "Rye function reference: " filename " ( updated: " string date? now " )" ]

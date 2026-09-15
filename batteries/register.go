@@ -43,7 +43,7 @@ func RegisterBatteries(ps *env.ProgramState) {
 	evaldo.RegisterBuiltins2(Builtins_regexp, ps, "regexp")
 	evaldo.RegisterBuiltins2(Builtins_cli, ps, "cli")
 	evaldo.RegisterBuiltins2(Builtins_conversion, ps, "conversion")
-	evaldo.RegisterBuiltins2(Builtins_web, ps, "web")
+	//	evaldo.RegisterBuiltins2(Builtins_web, ps, "web")
 	evaldo.RegisterBuiltins2(Builtins_markdown, ps, "markdown")
 	evaldo.RegisterBuiltins2(Builtins_sxml, ps, "sxml")
 	evaldo.RegisterBuiltins2(Builtins_html, ps, "html")

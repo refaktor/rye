@@ -456,11 +456,11 @@ func (s *MLState) tabComplete(p []rune, line []rune, pos int, mode int) ([]rune,
 
 	// Set flag to indicate we're in tab completion mode
 	s.inTabCompletion = true
-	
+
 	// Extract the current word being completed
 	s.currentTabWord = s.extractCurrentWord(string(line), pos)
-	fmt.Printf("Tab completion started for: '%s'\n", s.currentTabWord)
-	
+	// fmt.Printf("Tab completion started for: '%s'\n", s.currentTabWord)
+
 	defer func() {
 		// Always clear the flag and suggestion space when exiting tab completion
 		s.inTabCompletion = false
@@ -547,7 +547,7 @@ func (s *MLState) tabComplete(p []rune, line []rune, pos int, mode int) ([]rune,
 			fmt.Printf("Ctrl+X triggered! Word: '%s', Has state: %v\n", s.currentTabWord, s.programState != nil)
 			if s.programState != nil && s.currentTabWord != "" {
 				// Display word info without exiting tab completion
-				
+
 				// Get word information
 				wordInfo := FindWordInfo(s.programState, s.currentTabWord)
 				if wordInfo != "" {
@@ -555,7 +555,7 @@ func (s *MLState) tabComplete(p []rune, line []rune, pos int, mode int) ([]rune,
 				} else {
 					fmt.Printf("No documentation found for '%s'\n", s.currentTabWord)
 				}
-				
+
 				// Refresh the completion display
 				err = s.refresh(p, completedLine, newPos)
 				if err != nil {
@@ -1826,7 +1826,7 @@ startOfHere:
 					if s.inTabCompletion && s.currentTabWord != "" && s.programState != nil {
 						// We're in tab completion mode - show word information
 						s.sendBack("\n") // Move to a new line
-						
+
 						// Get word information
 						wordInfo := FindWordInfo(s.programState, s.currentTabWord)
 						if wordInfo != "" {
@@ -1834,10 +1834,10 @@ startOfHere:
 						} else {
 							fmt.Printf("No documentation found for '%s'\n", s.currentTabWord)
 						}
-						
+
 						// Force refresh to redraw the prompt
 						s.needRefresh = true
-						
+
 					} else if s.programState != nil && s.programState.Res != nil && s.displayValue != nil {
 						// Move to a new line
 						s.sendBack("\n")

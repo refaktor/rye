@@ -68,7 +68,7 @@ var builtins_string = map[string]*env.Builtin{
 			case env.String:
 				return *env.NewString(s1.Value + "\n")
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "ln")
+				return MakeArgError2(ps, 1, []env.Type{env.StringType}, "ln", arg0)
 			}
 		},
 	},

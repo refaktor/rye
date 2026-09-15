@@ -1006,18 +1006,18 @@ var Builtins_markdown = map[string]*env.Builtin{
 
 	// Get raw markdown text from Markdown value
 	// Tests:
-	// equal { markdown "Hello" |markdown//text } "Hello"
+	// equal { markdown "Hello" |text } "Hello"
 	// Args:
 	// * md: Markdown value
 	// Returns:
 	// * raw markdown text as string
-	"markdown//text": {
+	"text": {
 		Argsn: 1,
 		Doc:   "Gets the raw markdown text from a Markdown value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			md, ok := arg0.(env.Markdown)
 			if !ok {
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.MarkdownType}, "markdown//text")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.MarkdownType}, "text")
 			}
 			return *env.NewString(md.Value)
 		},
@@ -1025,42 +1025,31 @@ var Builtins_markdown = map[string]*env.Builtin{
 
 	// Get length of markdown text
 	// Tests:
-	// equal { markdown "Hello" |markdown//length } 5
+	// equal { markdown "Hello" |length? } 5
 	// Args:
 	// * md: Markdown value
 	// Returns:
 	// * integer length in characters
-	"markdown//length": {
-		Argsn: 1,
-		Doc:   "Gets the length of the markdown text in characters.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			md, ok := arg0.(env.Markdown)
-			if !ok {
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.MarkdownType}, "markdown//length")
-			}
-			return *env.NewInteger(int64(len(md.Value)))
-		},
-	},
 
 	// Convert Markdown value to HTML
 	// Tests:
-	// equal { markdown "# T" |markdown//to-html |contains "<h" } true
+	// equal { markdown "# T" |to-html |contains "<h" } true
 	// Args:
 	// * md: Markdown value
 	// Returns:
 	// * string containing HTML
-	"markdown//to-html": {
+	"to-html": {
 		Argsn: 1,
 		Doc:   "Converts a Markdown value to HTML.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			md, ok := arg0.(env.Markdown)
 			if !ok {
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.MarkdownType}, "markdown//to-html")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.MarkdownType}, "to-html")
 			}
 
 			html, err := markdown_to_html(ps, md.Value)
 			if err != nil {
-				return evaldo.MakeBuiltinError(ps, err.Error(), "markdown//to-html")
+				return evaldo.MakeBuiltinError(ps, err.Error(), "to-html")
 			}
 
 			return *env.NewString(html)
@@ -1069,18 +1058,18 @@ var Builtins_markdown = map[string]*env.Builtin{
 
 	// Extract headings from markdown text
 	// Tests:
-	// equal { markdown "# A\n## B" |markdown//headings |type? } 'list
+	// equal { markdown "# A\n## B" |headings |type? } 'list
 	// Args:
 	// * md: Markdown value
 	// Returns:
 	// * list of strings with headings
-	"markdown//headings": {
+	"headings": {
 		Argsn: 1,
 		Doc:   "Extracts all headings from markdown text as a list of strings.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			md, ok := arg0.(env.Markdown)
 			if !ok {
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.MarkdownType}, "markdown//headings")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.MarkdownType}, "headings")
 			}
 
 			headings := extractHeadings(md.Value)
@@ -1094,18 +1083,18 @@ var Builtins_markdown = map[string]*env.Builtin{
 
 	// Extract paragraphs from markdown text
 	// Tests:
-	// equal { markdown "Hello\n\nWorld" |markdown//paragraphs |type? } 'list
+	// equal { markdown "Hello\n\nWorld" |paragraphs |type? } 'list
 	// Args:
 	// * md: Markdown value
 	// Returns:
 	// * list of strings with paragraphs
-	"markdown//paragraphs": {
+	"paragraphs": {
 		Argsn: 1,
 		Doc:   "Extracts all paragraphs from markdown text as a list of strings.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			md, ok := arg0.(env.Markdown)
 			if !ok {
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.MarkdownType}, "markdown//paragraphs")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.MarkdownType}, "paragraphs")
 			}
 
 			paragraphs := extractParagraphs(md.Value)
@@ -1119,18 +1108,18 @@ var Builtins_markdown = map[string]*env.Builtin{
 
 	// Extract links from markdown text
 	// Tests:
-	// equal { markdown "[rye](https://ryelang.org)" |markdown//links |type? } 'list
+	// equal { markdown "[rye](https://ryelang.org)" |links |type? } 'list
 	// Args:
 	// * md: Markdown value
 	// Returns:
 	// * list of dicts with 'text and 'url keys
-	"markdown//links": {
+	"links": {
 		Argsn: 1,
 		Doc:   "Extracts all links from markdown text as a list of dictionaries with 'text' and 'url' keys.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			md, ok := arg0.(env.Markdown)
 			if !ok {
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.MarkdownType}, "markdown//links")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.MarkdownType}, "links")
 			}
 
 			links := extractLinks(md.Value)

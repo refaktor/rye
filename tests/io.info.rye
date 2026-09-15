@@ -1135,6 +1135,62 @@ section "Command Operations " "Running other programs" {
 	{
 	}
 
+	group "command//Start" 
+	"Start a command (and any piped commands) without waiting."
+	{
+		argsn 1
+		arg `command: native command object`
+		returns `the same command after starting it (does not wait)`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "command//Kill" 
+	"Kill a started command (and any started piped commands)."
+	{
+		argsn 1
+		arg `command: native command object`
+		returns `boolean true; kills the process (and any started piped processes)`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "command//Pid" 
+	"Return the process id of the main command (or -1 if not started)."
+	{
+		argsn 1
+		arg `command: native command object`
+		returns `process id of the main command or -1 if not started`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "command//Wait" 
+	"Wait for a started command to finish and return its exit status."
+	{
+		argsn 1
+		arg `command: native command object`
+		returns `exit status (or list for pipelines) after waiting`
+	}
+
+	{
+	}
+
+	{
+	}
+
 	group "command//Status" 
 	"Start a command, wait for it to finish, and return its exit status."
 	{
@@ -1172,6 +1228,20 @@ section "Command Operations " "Running other programs" {
 		argsn 1
 		arg `command: native command object`
 		returns `string containing data written to the command's standard output and error`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "command//Detach!" 
+	"Redirect stdin, stdout, and stderr of a command to /dev/null."
+	{
+		argsn 1
+		arg `command: native command object`
+		returns `the original command object after redirecting stdin/stdout/stderr to /dev/null`
 	}
 
 	{

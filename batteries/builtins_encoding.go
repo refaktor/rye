@@ -274,7 +274,7 @@ var Builtins_encoding = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { charmap\windows-1250 |Decoder |Decode "Plačilo računa" |contains? "č" } 1
+	// equal { charmap\windows-1250 |Decoder |Decode "Plačilo računa" |contains "č" } 1
 	// equal { charmap\windows-1250 |Decoder |Decode "Hello" } "Hello"
 	// equal { charmap\windows-1250 |Decoder |Decode "" } ""
 	// Args:
