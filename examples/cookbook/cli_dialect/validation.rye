@@ -1,0 +1,18 @@
+; Validation with check (canonical)
+
+; Flag validation
+spec: { -p|port integer check { >= 1024 } "port must be >= 1024" }
+
+parse-args { --port 80 } spec 
+|fix { 
+  .format-parse-errors |print
+}
+; => Error: --port port must be >= 1024
+
+; Positional validation
+spec2: { file: string check { .ends-with? ".txt" } "must be .txt file" }
+
+parse-args { "notes.pdf" } spec2 
+|fix {
+  .format-parse-errors |print
+}

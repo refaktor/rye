@@ -1,0 +1,22 @@
+; Tiny CLI (canonical)
+
+args: rye .Args?         ; read argv as a Rye block
+
+spec: {
+  program "minitool"
+  description "Demo CLI"
+  -v|verbose flag doc "Verbose"
+  -o|output string required doc "Output file"
+  input: string required doc "Input file"
+}
+
+res: parse-args args spec
+|^fix {
+  print generate-help spec
+  print "" ,
+  .format-parse-errors .print ,
+  exit 1
+}
+
+if res."verbose" { print "Verbose mode ON" }
+Write file res."output" Read file res."input"

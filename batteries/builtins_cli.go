@@ -1169,7 +1169,7 @@ var Builtins_cli = map[string]*env.Builtin{
 	// equal { parse-args { --enabled "true" } { -e|enabled boolean } -> "enabled" } true
 	// equal { parse-args { --disabled "false" } { -d|disabled boolean } -> "disabled" } false
 	//
-	// ## List/Repeated Options Tests  
+	// ## List/Repeated Options Tests
 	// equal { parse-args { -I "/usr/include" -I "/opt/include" } { -I|include string list } -> "include" |length? } 2
 	// equal { parse-args { --exclude "*.tmp" --exclude "*.log" } { -x|exclude string list } -> "exclude" |length? } 2
 	//
@@ -1201,7 +1201,7 @@ var Builtins_cli = map[string]*env.Builtin{
 	// equal { parse-args { remote add origin "url" } { subcommand { remote { subcommand { add { _name string required _url string required } } } } } -> "_name" } "origin"
 	//
 	// ## Git-like CLI Example
-	// equal { parse-args { --verbose commit -m "message" --amend } { 
+	// equal { parse-args { --verbose commit -m "message" --amend } {
 	//   -v|verbose flag
 	//   subcommand {
 	//     commit {
@@ -1215,7 +1215,7 @@ var Builtins_cli = map[string]*env.Builtin{
 	//   }
 	// } -> "message" } "message"
 	//
-	// ## Docker-like CLI Example  
+	// ## Docker-like CLI Example
 	// equal { parse-args { run --detach --port "8080:80" nginx } {
 	//   subcommand {
 	//     run {
@@ -1236,7 +1236,7 @@ var Builtins_cli = map[string]*env.Builtin{
 	// equal { generate-help { subcommand { test { doc "Run tests" } } } |.contains? "test" } true
 	//
 	// Args:
-	// * args: Block of Rye values representing command line arguments  
+	// * args: Block of Rye values representing command line arguments
 	// * spec: Block containing argument specifications
 	// Returns:
 	// * Dict with parsed argument values or error if parsing fails
@@ -1268,7 +1268,7 @@ var Builtins_cli = map[string]*env.Builtin{
 			switch dict := result.(type) {
 			case env.Dict:
 				// Convert Dict to Context
-				ctx := env.NewEnv(nil)
+				ctx := env.NewEnv(es.Ctx)
 				for k, v := range dict.Data {
 					idx := es.Idx.IndexWord(k)
 					if obj, ok := v.(env.Object); ok {

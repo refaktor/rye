@@ -1,0 +1,32 @@
+; Subcommands (git-like and nested) - canonical
+
+spec: {
+  -v|verbose flag
+  subcommand {
+    'commit {
+      -m|message string required doc "Commit message"
+      -a|amend  flag doc "Amend last commit"
+    }
+    'remote {
+      doc "Manage remotes"
+      subcommand {
+        'add {
+          name: string required
+          url:  string required
+        }
+      }
+    }
+  }
+}
+
+; commit
+r1: parse-args { commit -m "Init" } spec
+print r1."command"      ; "commit"
+print r1."message"      ; "Init"
+
+; nested: remote add
+r2: parse-args { remote add origin "https://example.com" } spec
+print r2."command"      ; "remote add"
+print r2."command-path" ; ["remote" "add"]
+print r2."name"         ; "origin"
+print r2."url"          ; "https://example.com"

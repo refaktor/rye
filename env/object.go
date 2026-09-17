@@ -808,7 +808,7 @@ func (i Uri) Equal(o Object) bool {
 
 func (i Uri) Dump(e Idxs) string {
 	if i.Scheme.Print(e) == "file" {
-		return "%" + i.GetPath()
+		return i.GetPath()
 	}
 	return e.GetWord(i.Scheme.Index) + "://" + i.GetPath()
 }
