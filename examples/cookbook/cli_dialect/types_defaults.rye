@@ -1,0 +1,12 @@
+; Types and defaults (canonical)
+
+res: parse-args\ctx { } {
+  -n|count integer optional 3 doc "How many"
+  -r|rate  decimal optional 1.5
+  -q|quiet flag 
+}
+|do\in {
+  probe count    ; [Integer: 3]
+  probe rate     ; [Decimal: 1.5]
+  probe quiet    ; [Boolean: false]
+}  

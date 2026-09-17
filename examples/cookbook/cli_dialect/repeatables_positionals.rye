@@ -1,0 +1,11 @@
+; Repeatable options and positional lists (canonical)
+
+parse-args 
+{ -I "/usr/include" -I "./include" } 
+{ -I|include string list }
+|-> "include" |length? |print  ; 2
+
+parse-args 
+{ "a.txt" "b.txt" "c.txt" } 
+{ files: string many }
+|-> "files" |length? |print    ; 3

@@ -1,0 +1,21 @@
+; Basics (canonical from cookbook/server-side/cli_dialect.md)
+
+; argv simulated as a block for examples
+args: { "--verbose" "-o" "out.txt" "in.txt" }
+
+spec: {
+  program "mytool"
+  description "Example tool using Rye's CLI dialect"
+
+  -v|verbose flag doc "Enable verbose output"
+  -o|output  string required doc "Output file"
+  input: string required doc "Input file"
+}
+
+result: parse-args args spec |^fix {
+  print format-parse-errors result
+}
+
+print2 "verbose: " result."verbose"
+print2 "output: "  result."output"
+print2 "input: "   result."input"
