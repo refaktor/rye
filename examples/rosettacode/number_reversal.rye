@@ -1,0 +1,17 @@
+ ; # Rosetta Code: Integer reversal
+;   https://rosettacode.org/wiki/Reverse_a_string
+
+reverse-number: fn { n } {
+	string n |reverse |to-integer
+}
+
+x: 123
+
+print join { "Reverse of 12345: " string reverse-number 12345 }
+print join { "Reverse of 100: " string reverse-number 100 }
+print join { "Reverse of 54321: " string reverse-number 54321 }
+
+; Prints:
+;  Reverse of 12345: 54321
+;  Reverse of 100: 1
+;  Reverse of 54321: 12345

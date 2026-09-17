@@ -1,0 +1,33 @@
+; # Rosetta Code: Fibonacci sequence
+;   https://rosettacode.org/wiki/Fibonacci_sequence
+
+; Solution 1: Recursive
+fib-rec: fn { n } { either n < 2 { n } { fib-rec n - 1 |+ fib-rec n - 2 } }
+
+; Solution 2: Using produce (iterative, accumulator style)
+fib: fn { n } {
+	either n < 2 { n } {
+		produce n - 1 { 0 1 } { ::pair , pair .second ::b , { b first pair |+ b } }
+		|second
+	}
+}
+
+; Solution 3: Generate first N fibonacci numbers
+fib-seq: fn { n } {
+	produce n - 2 { 0 1 } { ::acc , last acc |+ acc -> acc .length? - 2 |concat* acc }
+}
+
+print "Recursive:"
+range 0 15 |for { .fib-rec .prns }
+print ""
+
+print "Iterative:"
+range 0 15 |for { .fib .prns }
+print ""
+
+print "Sequence:"
+fib-seq 16 |for { .prns }
+print ""
+
+; Prints:
+; 0 1 1 2 3 5 8 13 21 34 55 89 144 233 377 610

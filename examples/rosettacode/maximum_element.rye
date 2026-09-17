@@ -1,0 +1,19 @@
+; # Rosetta Code: Greatest element of a list
+;   https://rosettacode.org/wiki/Greatest_element_of_a_list
+
+max-of: fn { nums } {
+	first nums ::best
+	for nums { ::n
+		if n > best { best:: n }
+	}
+	best
+}
+
+print max-of { 5 2 8 1 9 3 }       ; 9
+print max-of { -5 -2 -8 -1 }       ; -1
+print max-of { 42 }                 ; 42
+
+; Prints:
+;  9
+;  -1
+;  42

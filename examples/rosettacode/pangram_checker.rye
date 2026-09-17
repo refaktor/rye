@@ -1,0 +1,20 @@
+; # Rosetta Code: Pangram checker
+;   https://rosettacode.org/wiki/Pangram_checker
+
+is-pangram: fn { text } {
+	alpha: "abcdefghijklmnopqrstuvwxyz"
+	letters: alpha .map { ::ch , ch }
+	ltext: lower text
+	var 'ok true
+	for letters { ::ch
+		if not ltext .contains ch { ok:: false }
+	}
+	ok
+}
+
+print join { "The quick brown fox...: " string is-pangram "The quick brown fox jumps over the lazy dog." }
+print join { "Hello world: " string is-pangram "Hello world" }
+
+; Prints:
+;  The quick brown fox...: true
+;  Hello world: false

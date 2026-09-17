@@ -1,0 +1,16 @@
+; # Rosetta Code: Sum of a series
+;   https://rosettacode.org/wiki/Sum_of_a_series
+;
+; Sum of 1/k^2 for k=1 to 1000
+
+var 'total 0.0
+for range 1 1000 { ::k
+	k * 1.0 ::kd
+	total:: total + 1.0 / ( kd * kd )
+}
+
+print join { "Sum of 1/k^2 for k=1..1000: " string total }
+
+; Prints approximately:
+;  Sum of 1/k^2 for k=1..1000: 1.6439345666815615
+;  (approaches pi^2/6 ≈ 1.6449340668...)

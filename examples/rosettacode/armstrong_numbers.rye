@@ -1,0 +1,28 @@
+; # Rosetta Code: Armstrong numbers
+;   https://rosettacode.org/wiki/Armstrong_numbers
+
+pow: fn { base exp } {
+	var 'result 1
+	for range 1 exp { ::_ , result:: result * base }
+	result
+}
+
+digits-of: fn { n } {
+	string n |map { .to-integer }
+}
+
+is-armstrong: fn { n } {
+	digits: digits-of n
+	count: length? digits
+	total: digits |map { ::d , pow d count } |sum
+	total |= n
+}
+
+armstrongs: range 1 1000 |filter { ::n , is-armstrong n }
+
+print "Armstrong numbers up to 1000:"
+armstrongs |for { .prns }
+
+; Prints:
+;  Armstrong numbers up to 1000:
+;  1 2 3 4 5 6 7 8 9 153 370 371 407

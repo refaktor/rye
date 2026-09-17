@@ -1,0 +1,18 @@
+; # Rosetta Code: 100 doors
+;   https://rosettacode.org/wiki/100_doors
+;
+; Optimized: only perfect squares remain open
+
+print "Open doors:"
+var 'i 1
+var 'sq 1
+while { sq <= 100 } {
+	prns sq
+	i:: i + 1
+	sq:: i * i
+}
+print ""
+
+; Prints:
+;  Open doors:
+;  1 4 9 16 25 36 49 64 81 100

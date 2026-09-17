@@ -1,0 +1,18 @@
+; # Rosetta Code: Sum and product of an array
+;   https://rosettacode.org/wiki/Sum_and_product_of_an_array
+
+nums: { 1 2 3 4 5 6 7 8 9 10 }
+
+; Sum
+var 'total 0
+for nums { ::n , total:: total + n }
+print join { "Sum: " string total }
+
+; Product
+var 'product 1
+for nums { ::n , product:: product * n }
+print join { "Product: " string product }
+
+; Prints:
+;  Sum: 55
+;  Product: 3628800

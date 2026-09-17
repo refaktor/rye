@@ -1,0 +1,41 @@
+; # Rosetta Code: String matching
+;   https://rosettacode.org/wiki/String_matching
+
+; Check if string starts with a given prefix
+starts-with: fn { s prefix } {
+	if ( length? prefix ) > length? s { return false }
+	plen: length? prefix
+	( substring s 0 plen ) = prefix
+}
+
+; Check if string ends with a given suffix
+ends-with: fn { s suffix } {
+	if ( length? suffix ) > length? s { return false }
+	slen: length? s
+	suflen: length? suffix
+	start: slen - suflen
+	( substring s start slen ) = suffix
+}
+
+print "Starts with:"
+print join { "  'abcdef' starts with 'abc': " string starts-with "abcdef" "abc" }
+print join { "  'abcdef' starts with 'xyz': " string starts-with "abcdef" "xyz" }
+
+print "Contains:"
+print join { "  'abcdef' contains 'bcd': " string "abcdef" .contains "bcd" }
+print join { "  'abcdef' contains 'xyz': " string "abcdef" .contains "xyz" }
+
+print "Ends with:"
+print join { "  'abcdef' ends with 'def': " string ends-with "abcdef" "def" }
+print join { "  'abcdef' ends with 'xyz': " string ends-with "abcdef" "xyz" }
+
+; Prints:
+;  Starts with:
+;    'abcdef' starts with 'abc': true
+;    'abcdef' starts with 'xyz': false
+;  Contains:
+;    'abcdef' contains 'bcd': true
+;    'abcdef' contains 'xyz': false
+;  Ends with:
+;    'abcdef' ends with 'def': true
+;    'abcdef' ends with 'xyz': false

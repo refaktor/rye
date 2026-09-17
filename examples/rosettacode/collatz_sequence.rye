@@ -1,0 +1,29 @@
+; # Rosetta Code: Hailstone sequence (Collatz conjecture)
+;   https://rosettacode.org/wiki/Hailstone_sequence
+
+hailstone: fn { n } {
+	var 'seq ref { }
+	append! n 'seq
+	var 'current n
+	while { current > 1 } {
+		current:: either current .is-even
+			{ current / 2 |to-integer }
+			{ current * 3 + 1 }
+		append! current 'seq
+	}
+	seq
+}
+
+; Show the hailstone sequence for 27
+seq27: hailstone 27
+
+print "Hailstone sequence for 27:"
+print join { "Length: " string length? seq27 }
+print join { "First 4: " head seq27 4 |join\with " " }
+print join { "Last 4:  " tail seq27 4 |join\with " " }
+
+; Prints:
+;  Hailstone sequence for 27:
+;  Length: 112
+;  First 4: 27 82 41 124
+;  Last 4:  8 4 2 1

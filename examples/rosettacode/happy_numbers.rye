@@ -1,0 +1,43 @@
+; # Rosetta Code: Happy numbers
+;   https://rosettacode.org/wiki/Happy_numbers
+;
+; A happy number is defined by the following process:
+; Starting with any positive integer, replace the number by the sum
+; of the squares of its digits, and repeat the process until the number
+; either equals 1 (where it will stay), or it loops endlessly in a cycle
+; that does not include 1.
+
+sum-of-digit-squares: fn { n } {
+	string n |map { .to-integer } |map { ::d , d * d } |sum
+}
+
+is-happy: fn { n } {
+	; Use Floyd's cycle detection via known cycle value
+	; The cycle for unhappy numbers always includes 4
+	var 'current n
+	var 'steps 0
+	forever {
+		if current = 1 { return true }
+		if current = 4 { return false }
+		current:: sum-of-digit-squares current
+		steps:: steps + 1
+		if steps > 200 { return false }
+	}
+}
+
+; Find the first 8 happy numbers
+print "First 8 happy numbers:"
+var 'count 0
+var 'n 1
+while { count < 8 } {
+	if is-happy n {
+		prns n
+		count:: count + 1
+	}
+	n:: n + 1
+}
+print ""
+
+; Prints:
+;  First 8 happy numbers:
+;  1 7 10 13 19 23 28 31

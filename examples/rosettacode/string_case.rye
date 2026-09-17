@@ -1,0 +1,13 @@
+; # Rosetta Code: String case
+;   https://rosettacode.org/wiki/String_case
+
+s: "Hello World"
+
+print join { "Original:   " s }
+print join { "Upper case: " upper s }
+print join { "Lower case: " lower s }
+
+; Prints:
+;  Original:   Hello World
+;  Upper case: HELLO WORLD
+;  Lower case: hello world

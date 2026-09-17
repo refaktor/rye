@@ -1,0 +1,15 @@
+; # Rosetta Code: String concatenation
+;   https://rosettacode.org/wiki/String_concatenation
+
+s1: "Hello"
+s2: "World"
+
+; Using join
+print join { s1 " " s2 }
+
+; Using concat (+ operator on strings is not available, use join)
+print join { s1 s2 }
+
+; Prints:
+;  Hello World
+;  HelloWorld

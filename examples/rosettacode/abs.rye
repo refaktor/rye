@@ -1,0 +1,17 @@
+; # Rosetta Code: Absolute value
+;   https://rosettacode.org/wiki/Absolute_value
+
+abs: fn { n } {
+	either n < 0 { 0 - n } { n }
+}
+
+print abs -5       ; 5
+print abs 5        ; 5
+print abs 0        ; 0
+print abs -42      ; 42
+
+; Prints:
+;  5
+;  5
+;  0
+;  42

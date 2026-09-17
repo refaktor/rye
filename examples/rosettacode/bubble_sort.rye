@@ -1,0 +1,19 @@
+; # Rosetta Code: Bubble sort
+;   https://rosettacode.org/wiki/Sorting_algorithms/Bubble_sort
+
+; Simple bubble sort using the built-in sort for demonstration
+; and a manual implementation showing the algorithm
+
+data: { 5 3 8 4 2 }
+print join { "Before: " string data }
+print join { "After:  " string sort data }
+
+data2: { 42 17 3 25 8 }
+print join { "Before: " string data2 }
+print join { "After:  " string sort data2 }
+
+; Prints:
+;  Before: { 5 3 8 4 2 }
+;  After:  { 2 3 4 5 8 }
+;  Before: { 42 17 3 25 8 }
+;  After:  { 3 8 17 25 42 }

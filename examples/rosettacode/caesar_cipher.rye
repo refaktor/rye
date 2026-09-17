@@ -1,0 +1,40 @@
+; # Rosetta Code: Caesar cipher
+;   https://rosettacode.org/wiki/Caesar_cipher
+
+caesar-encrypt: fn { text shift } {
+	alpha: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+	; Build shifted alphabet
+	upper: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	lower: "abcdefghijklmnopqrstuvwxyz"
+	su: substring upper shift 26
+	su2: substring upper 0 shift
+	sl: substring lower shift 26
+	sl2: substring lower 0 shift
+	coded: join { su su2 sl sl2 }
+	text .map { ::ch
+		index? alpha ch ::idx
+		either idx >= 0
+			{ substring coded idx idx + 1 }
+			{ ch }
+	} |join
+}
+
+caesar-decrypt: fn { text shift } {
+	caesar-encrypt text 26 - shift
+}
+
+; Test
+text: "The quick brown fox jumps over the lazy dog"
+shift: 13
+
+encrypted: caesar-encrypt text shift
+decrypted: caesar-decrypt encrypted shift
+
+print join { "Plain:     " text }
+print join { "Encrypted: " encrypted }
+print join { "Decrypted: " decrypted }
+
+; Prints:
+;  Plain:     The quick brown fox jumps over the lazy dog
+;  Encrypted: Gur dhvpx oebja sbk whzcf bire gur ynml qbt
+;  Decrypted: The quick brown fox jumps over the lazy dog

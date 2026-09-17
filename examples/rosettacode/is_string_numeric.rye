@@ -1,0 +1,25 @@
+; # Rosetta Code: Determine if a string is numeric
+;   https://rosettacode.org/wiki/Determine_if_a_string_is_numeric
+
+is-numeric: fn { s } {
+	if s = "" { return false }
+	; Try parsing as integer
+	result: try { to-integer s }
+	if not result .is-error { return true }
+	; Try parsing as decimal
+	result2: try { to-decimal s }
+	not result2 .is-error
+}
+
+for { "1" "3.14" "-42" "abc" "" "1e5" "123abc" } { ::s
+	print join { "  '" s "' is numeric: " string is-numeric s }
+}
+
+; Prints:
+;  '1' is numeric: true
+;  '3.14' is numeric: true
+;  '-42' is numeric: true
+;  'abc' is numeric: false
+;  '' is numeric: false
+;  '1e5' is numeric: true
+;  '123abc' is numeric: false

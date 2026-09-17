@@ -1,0 +1,29 @@
+; # Rosetta Code: Greatest common divisor
+;   https://rosettacode.org/wiki/Greatest_common_divisor
+
+; Solution 1: Recursive (Euclidean algorithm)
+gcd: fn { a b } {
+	either b = 0 { a } { gcd b a .mod b }
+}
+
+; Solution 2: Using produce\while
+gcd2: fn { a b } {
+	var 'x a var 'y b
+	produce\while { y > 0 } x {
+		::a , y .mod* a ::y
+	}
+}
+
+print "GCD examples:"
+print join { "gcd(12, 8) = " string gcd 12 8 }
+print join { "gcd(100, 75) = " string gcd 100 75 }
+print join { "gcd(48, 18) = " string gcd 48 18 }
+print join { "gcd(0, 5) = " string gcd 0 5 }
+print join { "gcd(7, 13) = " string gcd 7 13 }
+
+; Prints:
+;  gcd(12, 8) = 4
+;  gcd(100, 75) = 25
+;  gcd(48, 18) = 6
+;  gcd(0, 5) = 5
+;  gcd(7, 13) = 1

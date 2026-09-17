@@ -1,0 +1,18 @@
+; # Rosetta Code: Remove duplicate elements
+;   https://rosettacode.org/wiki/Remove_duplicate_elements
+
+data: { 1 2 3 2 4 1 5 3 6 }
+print "Original:"
+data |for { .prns }
+print ""
+
+result: unique data
+print "Unique:"
+result |for { .prns }
+print ""
+
+; Prints:
+;  Original:
+;  1 2 3 2 4 1 5 3 6
+;  Unique:
+;  1 2 3 4 5 6

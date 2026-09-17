@@ -1,0 +1,22 @@
+; # Rosetta Code: Empty string
+;   https://rosettacode.org/wiki/Empty_string
+
+; Check if a string is empty
+is-empty: fn { s } { s = "" }
+
+; Test with empty and non-empty strings
+print join { "Empty string is empty: " string is-empty "" }
+print join { "'hello' is empty: " string is-empty "hello" }
+
+; Assign and check
+s: ""
+print join { "s is empty: " string s = "" }
+
+s2: "not empty"
+print join { "s2 is empty: " string s2 = "" }
+
+; Prints:
+;  Empty string is empty: true
+;  'hello' is empty: false
+;  s is empty: true
+;  s2 is empty: false
