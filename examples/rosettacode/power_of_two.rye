@@ -1,0 +1,29 @@
+; # Rosetta Code: Power of two
+;   https://rosettacode.org/wiki/Powers_of_2
+
+; Check if a number is a power of two
+is-power-of-two: fn { n } {
+	and n > 0 ( n .mod 2 |= 0 ) |or n |= 1
+}
+
+; Generate powers of 2 up to 2^10
+print "Powers of 2 up to 2^10:"
+var 'p 1
+for range 0 10 { ::i
+	print join { "  2^" string i " = " string p }
+	p:: p * 2
+}
+
+; Prints:
+;  Powers of 2 up to 2^10:
+;    2^0 = 1
+;    2^1 = 2
+;    2^2 = 4
+;    2^3 = 8
+;    2^4 = 16
+;    2^5 = 32
+;    2^6 = 64
+;    2^7 = 128
+;    2^8 = 256
+;    2^9 = 512
+;    2^10 = 1024

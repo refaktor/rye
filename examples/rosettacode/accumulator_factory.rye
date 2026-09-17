@@ -1,0 +1,29 @@
+; # Rosetta Code: Accumulator factory
+;   https://rosettacode.org/wiki/Accumulator_factory
+;
+; A function that takes a number n and returns an accumulator function.
+; The returned function takes a number i and returns n incremented by i.
+; Uses closure with inc! pattern from Rye's counter idiom.
+
+mk-counter: does {
+	var 'c 0
+	closure { } { inc! 'c }
+}
+
+; Test counter
+cnt: mk-counter
+print cnt     ; 1
+print cnt     ; 2
+print cnt     ; 3
+
+; Independent counter
+cnt2: mk-counter
+print cnt2    ; 1
+print cnt     ; 4 (cnt is independent)
+
+; Prints:
+;  1
+;  2
+;  3
+;  1
+;  4

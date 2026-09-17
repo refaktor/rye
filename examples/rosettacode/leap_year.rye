@@ -1,0 +1,26 @@
+; # Rosetta Code: Leap year
+;   https://rosettacode.org/wiki/Leap_year
+
+is-leap-year: fn { year } {
+	either year .is-multiple-of 400 { true }
+	{ either year .is-multiple-of 100 { false }
+	{ year .is-multiple-of 4 } }
+}
+
+; Test with notable years
+for { 1900 2000 1996 1997 2024 2025 2100 2400 } { ::year
+	year .is-leap-year
+	|either { "is" } { "is not" }
+	|embed join { string year " {} a leap year" }
+	|print
+}
+
+; Prints:
+;  1900 is not a leap year
+;  2000 is a leap year
+;  1996 is a leap year
+;  1997 is not a leap year
+;  2024 is a leap year
+;  2025 is not a leap year
+;  2100 is not a leap year
+;  2400 is a leap year

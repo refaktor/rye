@@ -1,0 +1,31 @@
+; # Rosetta Code: Sieve of Eratosthenes
+;   https://rosettacode.org/wiki/Sieve_of_Eratosthenes
+;
+; Prime finder using trial division
+
+check-div: fn { num divisor } {
+	sq: divisor * divisor
+	if sq > num { return true }
+	if ( num .mod divisor ) = 0 { return false }
+	check-div num divisor + 2
+}
+
+is-prime-fn: fn { num } {
+	if num < 2 { return false }
+	if num < 4 { return true }
+	if num .is-even { return false }
+	check-div num 3
+}
+
+primes: range 2 100 |filter { ::num , is-prime-fn num }
+
+print "Primes up to 100:"
+primes |for { .prns }
+print ""
+
+print join { "Count: " string length? primes }
+
+; Prints:
+;  Primes up to 100:
+;  2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97
+;  Count: 25

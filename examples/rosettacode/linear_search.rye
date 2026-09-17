@@ -1,0 +1,19 @@
+; # Rosetta Code: Linear search
+;   https://rosettacode.org/wiki/Linear_search
+
+linear-search: fn { nums target } {
+	var 'idx 1
+	for nums { ::n
+		if n = target { return idx }
+		idx:: idx + 1
+	}
+	-1
+}
+
+nums: { 4 8 15 16 23 42 }
+print join { "Index of 15: " string linear-search nums 15 }
+print join { "Index of 7: " string linear-search nums 7 }
+
+; Prints:
+;  Index of 15: 3
+;  Index of 7: -1

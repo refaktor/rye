@@ -1,0 +1,20 @@
+; # Rosetta Code: Even or odd
+;   https://rosettacode.org/wiki/Even_or_odd
+
+for { 1 2 3 4 5 6 7 8 9 10 } { ::n
+	either n .is-even
+		{ print join { string n " is even" } }
+		{ print join { string n " is odd" } }
+}
+
+; Prints:
+;  1 is odd
+;  2 is even
+;  3 is odd
+;  4 is even
+;  5 is odd
+;  6 is even
+;  7 is odd
+;  8 is even
+;  9 is odd
+;  10 is even

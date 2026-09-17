@@ -1,0 +1,25 @@
+; # Rosetta Code: Reverse a string
+;   https://rosettacode.org/wiki/Reverse_a_string
+
+; Solution 1: Using built-in reverse
+"asdf" .reverse |print
+
+; Solution 2: Using fold
+"asdf" .reduce 'acc { ++ acc } |print
+
+; Test with various strings
+for { "Hello, World!" "racecar" "Rye" "" "a" } { ::s
+	s .reverse
+	|embed "\"{}\" reversed"
+	|embed join { "\"" s "\" -> " }
+	|print
+}
+
+; Prints:
+;  fdsa
+;  fdsa
+;  "Hello, World!" -> "!dlroW ,olleH" reversed
+;  "racecar" -> "racecar" reversed
+;  "Rye" -> "eyR" reversed
+;  "" -> "" reversed
+;  "a" -> "a" reversed

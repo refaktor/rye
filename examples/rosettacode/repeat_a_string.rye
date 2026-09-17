@@ -1,0 +1,19 @@
+; # Rosetta Code: Repeat a string
+;   https://rosettacode.org/wiki/Repeat_a_string
+
+repeat-str: fn { s n } {
+	var 'result ""
+	var 'i 0
+	while { i < n } {
+		result:: join { result s }
+		i:: i + 1
+	}
+	result
+}
+
+print repeat-str "ha" 5
+print repeat-str "*" 20
+
+; Prints:
+;  hahahahaha
+;  ********************

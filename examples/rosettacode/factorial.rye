@@ -1,0 +1,38 @@
+; # Rosetta Code: Factorial
+;   https://rosettacode.org/wiki/Factorial
+
+; Solution 1: Recursive
+fac-rec: fn { n } { either n > 1 { n * fac-rec n - 1 } { 1 } }
+
+; Solution 2: Using range and mul
+fac-mul: fn1 { .range* 1 |mul }
+
+; Solution 3: Using fold
+fac-fold: fn1 { .range* 1 |fold 1 fn { x acc } { * acc } }
+
+; Solution 4: Using produce
+fac-prod: fn1 { var 'i 0 , .produce 1 { i:: inc i , * i } }
+
+; Solution 5: Using loop
+fac-loop: fn { x } { acc:: 1 , loop x { .inc * acc ::acc } }
+
+print "Factorials of 0 to 12:"
+range 0 12 |for { ::n
+	n .embed "{}! = " |prn
+	fac-rec n |print
+}
+
+; Prints:
+;  0! = 1
+;  1! = 1
+;  2! = 2
+;  3! = 6
+;  4! = 24
+;  5! = 120
+;  6! = 720
+;  7! = 5040
+;  8! = 40320
+;  9! = 362880
+;  10! = 3628800
+;  11! = 39916800
+;  12! = 479001600

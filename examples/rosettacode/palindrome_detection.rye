@@ -1,0 +1,22 @@
+; # Rosetta Code: Palindrome detection
+;   https://rosettacode.org/wiki/Palindrome_detection
+
+is-palindrome: fn { s } { s = reverse s }
+
+; Test with various strings
+for { "racecar" "rosetta" "level" "hello" "madam" "abba" "world" "kayak" } { ::word
+	word .is-palindrome
+	|either { "yes" } { "no" }
+	|embed join { word ": {} is a palindrome" }
+	|print
+}
+
+; Prints:
+;  racecar: yes is a palindrome
+;  rosetta: no is a palindrome
+;  level: yes is a palindrome
+;  hello: no is a palindrome
+;  madam: yes is a palindrome
+;  abba: yes is a palindrome
+;  world: no is a palindrome
+;  kayak: yes is a palindrome

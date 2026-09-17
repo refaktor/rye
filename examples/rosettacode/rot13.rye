@@ -1,0 +1,34 @@
+; # Rosetta Code: ROT-13
+;   https://rosettacode.org/wiki/Rot-13
+
+rot13: fn { text } {
+	alpha: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+	coded: "NOPQRSTUVWXYZABCDEFGHIJKLMnopqrstuvwxyzabcdefghijklm"
+	text .map { ::ch
+		index? alpha ch ::idx
+		either idx >= 0
+			{ substring coded idx idx + 1 }
+			{ ch }
+	} |join
+}
+
+; Test
+print rot13 "Hello, World!"
+print rot13 "Uryyb, Jbeyq!"
+print rot13 "The Quick Brown Fox Jumps Over The Lazy Dog"
+print ""
+
+; Verify round-trip
+text: "Rye is a homoiconic language!"
+print join { "Original:  " text }
+print join { "ROT13:     " rot13 text }
+print join { "Round-trip: " rot13 rot13 text }
+
+; Prints:
+;  Uryyb, Jbeyq!
+;  Hello, World!
+;  Gur Dhvpx Oebja Sbk Whzcf Bire Gur Ynml Qbt
+;
+;  Original:  Rye is a homoiconic language!
+;  ROT13:     Elr vf n ubzbvpbavp ynathntr!
+;  Round-trip: Rye is a homoiconic language!

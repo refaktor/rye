@@ -1,0 +1,18 @@
+; # Rosetta Code: Count occurrences of a substring
+;   https://rosettacode.org/wiki/Count_occurrences_of_a_substring
+
+count-substring: fn { str sub } {
+	split str sub |length? |+ -1
+}
+
+; Tests
+print count-substring "the three truths" "th"       ; 3
+print count-substring "ababababab" "abab"            ; 2
+print count-substring "aaaaaa" "aa"                  ; 3
+print count-substring "hello world" "xyz"            ; 0
+
+; Prints:
+;  3
+;  2
+;  3
+;  0

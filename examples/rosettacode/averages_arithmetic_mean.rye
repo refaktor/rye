@@ -1,0 +1,20 @@
+; # Rosetta Code: Averages/Arithmetic mean
+;   https://rosettacode.org/wiki/Averages/Arithmetic_mean
+
+mean: fn { nums } {
+	var 'total 0.0
+	for nums { ::n
+		total:: total + n
+	}
+	len: length? nums
+	total / ( len * 1.0 )
+}
+
+print join { "Mean of {1 2 3 4 5}: " string mean { 1 2 3 4 5 } }
+print join { "Mean of {10 20 30}: " string mean { 10 20 30 } }
+print join { "Mean of {3 1 4 1 5 9}: " string mean { 3 1 4 1 5 9 } }
+
+; Prints:
+;  Mean of {1 2 3 4 5}: 3.0
+;  Mean of {10 20 30}: 20.0
+;  Mean of {3 1 4 1 5 9}: 3.8333333333333335

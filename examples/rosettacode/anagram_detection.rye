@@ -1,0 +1,23 @@
+; # Rosetta Code: Anagrams
+;   https://rosettacode.org/wiki/Anagrams
+
+normalize: fn { txt } {
+	lower txt |replace " " ""
+}
+
+sorted-chars: fn { txt } {
+	normalize txt |split "" |sort |join
+}
+
+is-anagram: fn { lhs rhs } {
+	sorted-chars lhs |= sorted-chars rhs :asdad
+}
+
+print join { "listen / silent: " string is-anagram "listen" "silent" }
+print join { "Dormitory / dirty room: " string is-anagram "Dormitory" "dirty room" }
+print join { "Rye / Clojure: " string is-anagram "Rye" "Clojure" }
+
+; Prints:
+;  listen / silent: true
+;  Dormitory / dirty room: true
+;  Rye / Clojure: false

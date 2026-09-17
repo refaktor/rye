@@ -1,0 +1,46 @@
+nd ; # Rosetta Code: Letter frequency
+;   https://rosettacode.org/wiki/Letter_frequency
+
+; Count occurrences of ch in text using split trick
+count-ch: fn { text ch } {
+	split text ch |length? |+ -1
+}
+
+letter-frequency: fn { text } {
+	ltext: lower text
+	chars: unique ltext .sort
+	chars |for { ::ch
+		count-ch ltext ch ::freq
+		print join { "  " ch ": " string freq }
+	}
+}
+
+text: "aabbbcccc"
+print join { "Text: " text }
+print "Frequencies:"
+letter-frequency text
+
+print ""
+
+text2: "Hello World"
+print join { "Text: " text2 }
+print "Frequencies:"
+letter-frequency text2
+
+; Prints:
+;  Text: aabbbcccc
+;  Frequencies:
+;    a: 2
+;    b: 3
+;    c: 4
+;
+;  Text: Hello World
+;  Frequencies:
+;     : 1
+;    d: 1
+;    e: 1
+;    h: 1
+;    l: 3
+;    o: 2
+;    r: 1
+;    w: 1

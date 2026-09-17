@@ -1,0 +1,33 @@
+; # Rosetta Code: Flatten a list
+;   https://rosettacode.org/wiki/Flatten_a_list
+
+; Using the built-in unpack for one level of flattening
+print "One level flatten:"
+unpack { { 1 } { 2 } { { 3 4 } 5 } { { } } { { { 6 } } } { 7 8 9 } }
+|print
+
+; Recursive deep flatten
+deep-flatten: fn { lst } {
+	result: ref { }
+	for lst { ::item
+		either item .type? = 'block {
+			deep-flatten item |for { .concat* result ::result }
+		} {
+			append! item 'result
+		}
+	}
+	result
+}
+
+print ""
+print "Deep flatten:"
+deep-flatten { { 1 } { 2 } { { 3 4 } 5 } { { } } { { { 6 } } } { 7 8 9 } }
+|for { .prns }
+print ""
+
+; Prints:
+;  One level flatten:
+;  { 1 2 { 3 4 } 5 { } { { 6 } } 7 8 9 }
+;
+;  Deep flatten:
+;  1 2 3 4 5 6 7 8 9
