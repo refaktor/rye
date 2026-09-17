@@ -6,11 +6,11 @@ assert\display "git-like commit command" {
 	result: parse-args { --verbose commit -m "Initial commit" --amend } {
 		-v|verbose flag doc "Enable verbose output"
 		subcommand {
-			''commit {
+			'commit {
 				-m|message string required doc "Commit message"
 				-a|amend flag doc "Amend last commit" 
 			}
-			''push {
+			'push {
 				-f|force flag doc "Force push"
 				remote: string optional "origin" doc "Remote name"
 			}
@@ -23,7 +23,7 @@ assert\display "git-like commit with global flag" {
 	result: parse-args { --verbose commit -m "test" --amend } {
 		-v|verbose flag
 		subcommand {
-			''commit {
+			'commit {
 				-m|message string required
 				-a|amend flag
 			}
@@ -36,13 +36,13 @@ assert\display "git-like commit with global flag" {
 assert\display "docker run command" {
 	result: parse-args { run --detach --port "8080:80" nginx } {
 		subcommand {
-			''run {
+			'run {
 				-d|detach flag doc "Run in background"
 				-p|port string list doc "Port mapping"
 				image: string required doc "Container image"
 				args: string many doc "Command arguments"
 			}
-			''build {
+			'build {
 				-t|tag string doc "Tag for image"
 				path: string optional "." doc "Build context"
 			}
@@ -54,7 +54,7 @@ assert\display "docker run command" {
 assert\display "docker run with multiple ports" {
 	result: parse-args { run -p "80:80" -p "443:443" nginx } {
 		subcommand {
-			''run {
+			'run {
 				-p|port string list
 				image: string required
 			}
@@ -67,12 +67,12 @@ assert\display "docker run with multiple ports" {
 assert\display "npm install command" {
 	result: parse-args { install lodash --save-dev } {
 		subcommand {
-			''install {
+			'install {
 				-S|save flag doc "Save as dependency"
 				-D|save-dev flag doc "Save as dev dependency"
 				packages: string many doc "Packages to install"
 			}
-			''run {
+			'run {
 				script: string required doc "Script to run"
 			}
 		}
@@ -84,12 +84,12 @@ assert\display "npm install command" {
 assert\display "cargo build command" {
 	result: parse-args { build --release --target "x86_64-unknown-linux-gnu" } {
 		subcommand {
-			''build {
+			'build {
 				-r|release flag doc "Build in release mode"
 				-t|target string doc "Target triple"
 				-j|jobs integer doc "Number of parallel jobs"
 			}
-			''run {
+			'run {
 				--bin string doc "Binary to run"
 				args: string many doc "Arguments to binary"
 			}
@@ -143,13 +143,13 @@ assert\display "aws s3 nested command path" {
 assert\display "kubectl get pods" {
 	result: parse-args { get pods --namespace "default" --selector "app=nginx" } {
 		subcommand {
-			''get {
+			'get {
 				doc "Display resources"
 				-n|namespace string doc "Kubernetes namespace"
 				-l|selector string doc "Label selector" 
 				resource: string required doc "Resource type"
 			}
-			''apply {
+			'apply {
 				doc "Apply configuration"
 				-f|filename string required doc "Configuration file"
 			}
