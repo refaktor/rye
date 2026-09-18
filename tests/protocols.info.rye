@@ -1,0 +1,945 @@
+section "HTTP Server Functions " "Working with HTTP servers and requests." {
+	group "http-server" 
+	"Creates a new HTTP server that listens on the specified address with a 10-second read header timeout."
+	{
+		argsn 1
+		arg `addr: String containing the server address (e.g., ":8080", "localhost:9000")`
+		returns `native Go-server object that can handle HTTP requests`
+	}
+
+	{
+		equal { http-server ":8080" |type? } 'native
+		error { http-server 8080 }
+	}
+
+	{
+	}
+
+	group "Go-server//Serve" 
+	"Starts the HTTP server listening and serving requests on the configured address (blocking call)."
+	{
+		argsn 1
+		arg `server: Native Go-server object created by http-server`
+		returns `the server object after starting listening, or error if unable to serve`
+	}
+
+	{
+	}
+
+	{
+`srv: http-server ":8080"
+srv .Serve
+`	}
+
+	group "Go-server//Handle" 
+	"Registers an HTTP handler for a specific path pattern on the server, accepting string responses, Rye functions, or native Go handlers."
+	{
+		argsn 3
+		arg `server: Native Go-server object`
+		arg `path: String URL path to handle (e.g., "/", "/api", "/static")`
+		arg `handler: String (simple response), Function (w req -> response), or Native HTTP handler`
+		returns `the server object to allow method chaining`
+	}
+
+	{
+	}
+
+	{
+`srv: http-server ":8080"
+srv .Handle "/" "Hello World!"
+srv .Handle "/api" fn { w req } { w .Write "API response" }
+`	}
+
+	group "Go-server-response-writer//Write" 
+	"Writes string content to the HTTP response body, used within HTTP request handlers to send response data to clients."
+	{
+		argsn 2
+		arg `writer: Native Go-server-response-writer object from HTTP handler`
+		arg `content: String content to write to the HTTP response body`
+		returns `the response writer object for method chaining`
+	}
+
+	{
+	}
+
+	{
+`; Inside a handler function { w req }:
+; write w "Hello World!"
+; w .Write "Response content"
+`	}
+
+	group "Go-server-response-writer//Set-content-type" 
+	"Sets the Content-Type header for the HTTP response, determining how the browser interprets the response data."
+	{
+		argsn 2
+		arg `writer: Native Go-server-response-writer object from HTTP handler`
+		arg `contentType: String MIME type (e.g., "text/html", "application/json", "image/png")`
+		returns `the response writer object for method chaining`
+	}
+
+	{
+	}
+
+	{
+`; Inside a handler: w .Set-content-type "application/json"
+; Inside a handler: w .Set-content-type "text/html"
+`	}
+
+	group "Go-server-response-writer//Set-header" 
+	"Sets a custom HTTP header in the response, allowing control over caching, security, and other HTTP behaviors."
+	{
+		argsn 3
+		arg `writer: Native Go-server-response-writer object from HTTP handler`
+		arg `name: Word representing the header name (e.g., 'cache-control, 'x-custom-header)`
+		arg `value: String value to set for the header`
+		returns `the response writer object for method chaining`
+	}
+
+	{
+	}
+
+	{
+`; Inside a handler: w .Set-header 'cache-control "no-cache"
+; Inside a handler: w .Set-header 'x-custom-header "custom-value"
+`	}
+
+	group "Go-server-response-writer//Add-header" 
+	"Adds a custom HTTP header value in the response, preserving existing values for multi-value headers."
+	{
+		argsn 3
+		arg `writer: Native Go-server-response-writer object from HTTP handler`
+		arg `name: Word representing the header name (e.g., 'set-cookie, 'vary)`
+		arg `value: String value to add for the header`
+		returns `the response writer object for method chaining`
+	}
+
+	{
+	}
+
+	{
+`; Inside a handler: w .Add-header 'set-cookie "a=1; Path=/; HttpOnly"
+; Inside a handler: w .Add-header 'vary "Accept-Encoding"
+`	}
+
+	group "Go-server-response-writer//Write-header" 
+	"Sets the HTTP status code for the response (must be called before writing response body)."
+	{
+		argsn 2
+		arg `writer: Native Go-server-response-writer object from HTTP handler`
+		arg `code: Integer HTTP status code (200=OK, 404=Not Found, 500=Internal Server Error, etc.)`
+		returns `the response writer object for method chaining`
+	}
+
+	{
+	}
+
+	{
+`; Inside a handler: w .Write-header 404
+; Inside a handler: w .Write-header 200
+; Inside a handler: w .Write-header 500
+`	}
+
+	group "Go-server//Handle-ws" 
+	"Registers a WebSocket handler for a specific path pattern on the server, upgrading HTTP connections to WebSocket protocol."
+	{
+		argsn 3
+		arg `server: Native Go-server object`
+		arg `path: String URL path to handle WebSocket connections (e.g., "/ws")`
+		arg `handler: Function that receives a WebSocket connection object`
+		returns `the server object to allow method chaining`
+	}
+
+	{
+	}
+
+	{
+`; srv: http-server ":8080"
+; srv .Handle-ws "/ws" fn { conn } { forever { msg: conn .Read , conn .Write "GOT: " + msg } }
+`	}
+
+	group "Go-server-websocket//Read" 
+	"Reads a message from a WebSocket connection, blocking until data is available or an error occurs."
+	{
+		argsn 1
+		arg `conn: Native Go-server-websocket connection object`
+		returns `string containing the message read from the WebSocket, or error if read fails`
+	}
+
+	{
+	}
+
+	{
+`; conn .Read  ; returns the message string received from the WebSocket client
+`	}
+
+	group "Go-server-websocket//Write" 
+	"Writes a message to a WebSocket connection, sending data to the connected client."
+	{
+		argsn 2
+		arg `conn: Native Go-server-websocket connection object`
+		arg `message: String message to send to the WebSocket client`
+		returns `the message string on success, or error if write fails`
+	}
+
+	{
+	}
+
+	{
+`; conn .Write "Hello from server"
+`	}
+
+	group "Go-server-request//Query?" 
+	"Retrieves a query parameter value from the HTTP request URL (e.g., from ?name=value&other=data)."
+	{
+		argsn 2
+		arg `request: Native Go-server-request object from HTTP handler`
+		arg `key: String name of the query parameter to retrieve`
+		returns `string value of the query parameter, or error if key is missing`
+	}
+
+	{
+	}
+
+	{
+`; Inside a handler with request URL "/api?name=john&age=25":
+; equal { req .Query? "name" } "john"
+; equal { req .Query? "age" } "25"
+; error { req .Query? "missing" }
+`	}
+
+	group "Go-server-request//Header?" 
+	"Gets a header value from the HTTP request by name."
+	{
+		argsn 2
+		arg `request: Native Go-server-request object from HTTP handler`
+		arg `name: String header name to retrieve (e.g., "authorization", "content-type")`
+		returns `string header value (empty string if header is missing)`
+	}
+
+	{
+	}
+
+	{
+`; Inside a handler: req .Header? "authorization"
+; Inside a handler: req .Header? "content-type"
+`	}
+
+	group "Go-server-request//Basic-auth?" 
+	"Gets HTTP Basic Authentication credentials from the request as [username password]."
+	{
+		argsn 1
+		arg `request: Native Go-server-request object from HTTP handler`
+		returns `block with username and password strings when Basic Auth is presenterror when Basic Auth credentials are missing`
+	}
+
+	{
+	}
+
+	{
+`; Inside a handler: creds: req .Basic-auth?
+; user: creds |first
+; pass: creds |second
+`	}
+
+	group "Go-server-request//Method?" 
+	"Gets the HTTP request method."
+	{
+		argsn 1
+		arg `request: Native Go-server-request object from HTTP handler`
+		returns `string containing HTTP method (GET, POST, PUT, DELETE, ...)`
+	}
+
+	{
+	}
+
+	{
+`; Inside a handler: req .Method?
+; equal { req .Method? } "GET"
+`	}
+
+	group "Go-server-request//Read-body" 
+	"Reads the HTTP request body as a string."
+	{
+		argsn 1
+		arg `request: Native Go-server-request object from HTTP handler`
+		returns `string containing the request body`
+	}
+
+	{
+	}
+
+	{
+`; Inside a handler: body: req .Read-body
+; Inside a handler: print body
+`	}
+
+	group "Go-server-request//Headers?" 
+	"Gets all HTTP request headers as a dictionary."
+	{
+		argsn 1
+		arg `request: Native Go-server-request object from HTTP handler`
+		returns `dict containing all request headers`
+	}
+
+	{
+	}
+
+	{
+`; Inside a handler: req .Headers?
+; Inside a handler: req .Headers? |print
+`	}
+
+	group "Go-server-request//Url?" 
+	"Extracts the URL object from an HTTP request, providing access to path, query parameters, and other URL components."
+	{
+		argsn 1
+		arg `request: Native Go-server-request object from HTTP handler`
+		returns `native Go-server-url object containing the parsed request URL`
+	}
+
+	{
+	}
+
+	{
+`; Inside a handler: url: req .Url?
+; equal { url .type? } 'native
+; error { "not-request" .Url? }
+`	}
+
+	group "Go-server-url//Path?" 
+	"Extracts the path component from a URL object (the part after the domain and before query parameters)."
+	{
+		argsn 1
+		arg `url: Native Go-server-url object from request URL`
+		returns `string containing the path portion of the URL (without query parameters)`
+	}
+
+	{
+	}
+
+	{
+`; Inside a handler with request to "/api/users/123":
+; url: req .Url?
+; equal { url .Path? } "/api/users/123"
+; error { "not-url" .Path? }
+`	}
+
+	group "Http-handler//Strip-prefix" 
+	"Wraps an HTTP handler to strip a URL prefix from requests, useful for serving static files from a subdirectory."
+	{
+		argsn 2
+		arg `handler: Native Http-handler object (e.g., from new-static-handler)`
+		arg `prefix: String URL prefix to strip from requests before passing to the handler`
+		returns `new Http-handler that strips the prefix from incoming request paths`
+	}
+
+	{
+	}
+
+	{
+`; handler: new-static-handler %static/
+; stripped: handler .Strip-prefix "/static/"
+`	}
+
+	group "https-response//Status?" 
+	"Gets the HTTP status code from a response object."
+	{
+		argsn 1
+		arg `response: native https-response object`
+		returns `integer containing the HTTP status code (200, 404, 500, etc.)`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "https-response//Status-text?" 
+	"Gets the HTTP status text from a response object."
+	{
+		argsn 1
+		arg `response: native https-response object`
+		returns `string containing the HTTP status text (OK, Not Found, Internal Server Error, etc.)`
+	}
+
+	{
+	}
+
+	{
+	}
+
+}
+
+section "Email Message " "Creating and configuring email messages" {
+	group "email-message" 
+	"Creates a new empty email message object that can be configured with headers, body, and attachments."
+	{
+		arg `(none)`
+		returns `native gomail-message object for building email content`
+	}
+
+	{
+	}
+
+	{
+`msg: email-message
+equal { msg |type? } 'native
+`	}
+
+	group "gomail-message//Set-header" 
+	"Sets a standard email header field such as Subject, To, From, Cc, or Bcc with the specified value."
+	{
+		argsn 3
+		arg `message: Native gomail-message object`
+		arg `field: String or Tagword representing header name (e.g., "Subject", 'to, 'from)`
+		arg `value: String or Email containing the header value`
+		returns `the message object for method chaining`
+	}
+
+	{
+	}
+
+	{
+`msg: email-message
+msg .Set-header "Subject" "Test Email"
+msg .Set-header 'to "user@example.com"
+error { msg .Set-header "Subject" 123 }
+`	}
+
+	group "gomail-message//Set-address-header" 
+	"Sets an email address header with both email address and display name, commonly used for From, To, Cc, and Bcc fields."
+	{
+		argsn 4
+		arg `message: Native gomail-message object`
+		arg `field: String header field name (e.g., "From", "To", "Cc", "Bcc")`
+		arg `address: String email address`
+		arg `name: String display name for the email address`
+		returns `the message object for method chaining`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "gomail-message//Set-body" 
+	"Sets the main body content of the email with the specified MIME content type, supporting plain text and HTML formats."
+	{
+		argsn 3
+		arg `message: Native gomail-message object`
+		arg `contentType: String MIME content type (e.g., "text/plain", "text/html")`
+		arg `content: String containing the email body content`
+		returns `the message object for method chaining`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "gomail-message//Attach" 
+	"Attaches a file to the email message using a file URI, making the file available as an email attachment."
+	{
+		argsn 2
+		arg `message: Native gomail-message object`
+		arg `file: Uri pointing to the file to attach (must use file:// scheme)`
+		returns `the message object for method chaining`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "gomail-message//Add-alternative" 
+	"Adds alternative content to the email (e.g., HTML version alongside plain text), allowing email clients to choose their preferred format."
+	{
+		argsn 3
+		arg `message: Native gomail-message object`
+		arg `contentType: String MIME content type for the alternative content`
+		arg `content: String containing the alternative body content`
+		returns `the message object for method chaining`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "new-email-dialer" 
+	"Creates a new SMTP dialer configured with server details and authentication credentials for sending emails."
+	{
+		argsn 4
+		arg `server: String SMTP server hostname (e.g., "smtp.gmail.com", "mail.example.com")`
+		arg `port: Integer SMTP port number (commonly 25, 465, 587, or 2525)`
+		arg `username: String username for SMTP authentication`
+		arg `password: String password for SMTP authentication`
+		returns `native gomail-dialer object configured for sending emails`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "gomail-dialer//Dial-and-send" 
+	"Connects to the SMTP server and sends the specified email message, handling authentication and delivery."
+	{
+		argsn 2
+		arg `dialer: Native gomail-dialer object configured with SMTP settings`
+		arg `message: Native gomail-message object containing the email to send`
+		returns `the dialer object on success, or error object if sending fails`
+	}
+
+	{
+	}
+
+	{
+	}
+
+}
+
+section "Mail " "Email parsing functions" {
+	group "reader//Parse-email" 
+	"Parses email data from a reader."
+	{
+		argsn 1
+		arg `reader: native reader object containing email data`
+		returns `native parsed-email object`
+	}
+
+	{
+	}
+
+	{
+`equal { reader %email.eml |parse-email |type? } 'native
+equal { reader %email.eml |parse-email |kind? } 'parsed-email
+`	}
+
+	group "parsed-email//Subject?" 
+	"Gets the subject from a parsed email."
+	{
+		argsn 1
+		arg `email: native parsed-email object`
+		returns `string containing the email subject`
+	}
+
+	{
+	}
+
+	{
+`equal { reader %email.eml |parse-email |subject? |type? } 'string
+`	}
+
+	group "parsed-email//Message-id?" 
+	"Gets the message ID from a parsed email."
+	{
+		argsn 1
+		arg `email: native parsed-email object`
+		returns `string containing the email message ID`
+	}
+
+	{
+	}
+
+	{
+`equal { reader %email.eml |parse-email |message-id? |type? } 'string
+`	}
+
+	group "parsed-email//Html-body?" 
+	"Gets the HTML body from a parsed email."
+	{
+		argsn 1
+		arg `email: native parsed-email object`
+		returns `string containing the HTML body of the email`
+	}
+
+	{
+	}
+
+	{
+`equal { reader %email.eml |parse-email |html-body? |type? } 'string
+`	}
+
+	group "parsed-email//Text-body?" 
+	"Gets the plain text body from a parsed email."
+	{
+		argsn 1
+		arg `email: native parsed-email object`
+		returns `string containing the plain text body of the email`
+	}
+
+	{
+	}
+
+	{
+`equal { Reader %email.eml |parse-email |text-body? |type? } 'string
+`	}
+
+	group "parsed-email//Attachments?" 
+	"Gets the attachments from a parsed email."
+	{
+		argsn 1
+		arg `email: native parsed-email object`
+		returns `native object containing email attachments`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "parsed-email//Embedded-files?" 
+	"Gets the embedded files from a parsed email."
+	{
+		argsn 1
+		arg `email: native parsed-email object`
+		returns `native object containing embedded files from the email`
+	}
+
+	{
+	}
+
+	{
+	}
+
+}
+
+section "SMTP Server Functions " "Creating and running SMTP mail servers." {
+	group "smtp-server" 
+	"Creates a new SMTP server that can receive incoming email messages on the specified address."
+	{
+		argsn 1
+		arg `address: String containing the server address (e.g., ":2525", "localhost:587")`
+		returns `native smtpd object configured to listen on the specified address`
+	}
+
+	{
+		equal { smtp-server 2525 |type? } 'native
+		equal { smtp-server ":2525" |kind? } 'smtpd
+	}
+
+	{
+	}
+
+	group "smtpd//Serve" 
+	"Starts the SMTP server listening for incoming emails and calls the handler function for each received message."
+	{
+		argsn 4
+		arg `server: Native smtpd object created by smtp-server`
+		arg `handler: Function that processes incoming emails (reader from to origin -> ...)`
+		arg `appname: String name for the SMTP server application`
+		arg `password: String password for SMTP authentication (empty string for no auth)`
+		returns `the server object after starting to listen, or error if unable to serve`
+	}
+
+	{
+	}
+
+	{
+`handler: fn { reader from to origin } { print "Got email from:" from }
+smtp-server ":2525"
+|Serve handler "TestSMTP" ""
+`	}
+
+}
+
+section "MQTT Client Functions " "" {
+	group "mqtt-uri//Open" 
+	"Opens a connection to an MQTT broker."
+	{
+		argsn 1
+		arg `uri: MQTT broker URI (format: mqtt://[user:pass@]host:port/client-id)`
+		returns `native MQTT client connection (type: "mqtt-client")error if connection fails`
+	}
+
+	{
+		example { Open mqtt://localhost:1883/my-client-id }
+		example { Open mqtt://user:pass@localhost:1883/my-client-id }
+	}
+
+	{
+`; Connect to MQTT broker and subscribe to topics
+client: Open mqtt://localhost:1883/my-client
+client .Subscribe "sensors/+" 1 fn { payload msg } {
+print "Topic: " + msg -> "topic"
+print "Data: " + payload
+}
+
+; Publish messages
+client .Publish-simple "sensors/temperature" "23.5"
+client .Publish "sensors/humidity" "65" 1 0
+
+; Clean up
+client .Disconnect
+
+`	}
+
+	group "mqtt-client//Disconnect" 
+	"Disconnects from the MQTT broker."
+	{
+		argsn 1
+		arg `client: MQTT client connection (type: "mqtt-client")`
+		returns `integer 1 for successerror if disconnection fails`
+	}
+
+	{
+		example { client |Disconnect }
+	}
+
+	{
+	}
+
+	group "mqtt-client//Close" 
+	"Closes the MQTT client connection (alias for Disconnect)."
+	{
+		argsn 1
+		arg `client: MQTT client connection (type: "mqtt-client")`
+		returns `integer 1 for successerror if close fails`
+	}
+
+	{
+		equal { client: Open mqtt://localhost:1883/my-client client .Close |type? } 'integer
+	}
+
+	{
+	}
+
+	group "mqtt-client//Publish" 
+	"Publishes a message to an MQTT topic with specified QoS and retain flag."
+	{
+		argsn 5
+		arg `client: MQTT client connection (type: "mqtt-client")`
+		arg `topic: Topic to publish to (string)`
+		arg `payload: Message payload (string)`
+		arg `qos: Quality of Service level (integer 0, 1, or 2)`
+		arg `retain: Whether message should be retained (boolean)`
+		returns `integer 1 for successerror if publish fails`
+	}
+
+	{
+		example { client |Publish "sensors/temperature" "23.5" 0 false }
+	}
+
+	{
+	}
+
+	group "mqtt-client//Publish-simple" 
+	"Publishes a message to an MQTT topic with default settings (QoS 0, no retain)."
+	{
+		argsn 3
+		arg `client: MQTT client connection (type: "mqtt-client")`
+		arg `topic: Topic to publish to (string)`
+		arg `payload: Message payload (string)`
+		returns `integer 1 for success (uses QoS 0, no retain)error if publish fails`
+	}
+
+	{
+		example { client |Publish-simple "sensors/temperature" "23.5" }
+	}
+
+	{
+	}
+
+	group "mqtt-client//Subscribe" 
+	"Subscribes to an MQTT topic with a message handler function."
+	{
+		argsn 4
+		arg `client: MQTT client connection (type: "mqtt-client")`
+		arg `topic: Topic pattern to subscribe to (string, can include wildcards)`
+		arg `qos: Quality of Service level (integer 0, 1, or 2)`
+		arg `handler: Callback function to handle received messages`
+		returns `integer 1 for successerror if subscription fails`
+	}
+
+	{
+		example { client |Subscribe "sensors/+" 1 fn { msg } { print "Received: " + msg } }
+	}
+
+	{
+	}
+
+	group "mqtt-client//Subscribe-simple" 
+	"Subscribes to an MQTT topic with default QoS 0 and a message handler function."
+	{
+		argsn 3
+		arg `client: MQTT client connection (type: "mqtt-client")`
+		arg `topic: Topic pattern to subscribe to (string)`
+		arg `handler: Callback function to handle received messages`
+		returns `integer 1 for success (uses QoS 0)error if subscription fails`
+	}
+
+	{
+		example { client |Subscribe-simple "sensors/temperature" fn { msg } { print msg.payload } }
+	}
+
+	{
+	}
+
+	group "mqtt-client//Unsubscribe" 
+	"Unsubscribes from an MQTT topic."
+	{
+		argsn 2
+		arg `client: MQTT client connection (type: "mqtt-client")`
+		arg `topic: Topic to unsubscribe from (string)`
+		returns `integer 1 for successerror if unsubscription fails`
+	}
+
+	{
+		example { client |Unsubscribe "sensors/temperature" }
+	}
+
+	{
+	}
+
+	group "mqtt-client//Is-connected" 
+	"Checks if the MQTT client is currently connected to the broker."
+	{
+		argsn 1
+		arg `client: MQTT client connection (type: "mqtt-client")`
+		returns `integer 1 if connected, 0 if not connected`
+	}
+
+	{
+		example { client |Connected? }
+	}
+
+	{
+	}
+
+	group "mqtt-options" 
+	"Creates a new MQTT client options object for advanced configuration."
+	{
+		returns `new MQTT client options object (type: "mqtt-options")`
+	}
+
+	{
+		example { mqtt-options |Set-clean-session 1 |Set-keep-alive 60 |Set-timeout 30 }
+	}
+
+	{
+	}
+
+	group "mqtt-options//Set-broker" 
+	"Sets the MQTT broker address in the options."
+	{
+		argsn 2
+		arg `options: MQTT options object (type: "mqtt-options")`
+		arg `broker: Broker URI string`
+		returns `the same options object (for method chaining)`
+	}
+
+	{
+		example { opts |Set-broker "tcp://localhost:1883" }
+	}
+
+	{
+	}
+
+	group "mqtt-options//Set-client-id" 
+	"Sets the client ID in the MQTT options."
+	{
+		argsn 2
+		arg `options: MQTT options object (type: "mqtt-options")`
+		arg `client-id: Client identifier string`
+		returns `the same options object (for method chaining)`
+	}
+
+	{
+		example { opts |Set-client-id "my-unique-client" }
+	}
+
+	{
+	}
+
+	group "mqtt-options//Set-keep-alive" 
+	"Sets the keep alive interval in seconds."
+	{
+		argsn 2
+		arg `options: MQTT options object (type: "mqtt-options")`
+		arg `seconds: Keep alive interval in seconds (integer)`
+		returns `the same options object (for method chaining)`
+	}
+
+	{
+		example { opts |Set-keep-alive 60 }
+	}
+
+	{
+	}
+
+	group "mqtt-options//Set-username" 
+	"Sets the username for MQTT authentication."
+	{
+		argsn 2
+		arg `options: MQTT options object (type: "mqtt-options")`
+		arg `username: Username string for MQTT authentication`
+		returns `the same options object (for method chaining)`
+	}
+
+	{
+		example { opts |Set-username "myuser" }
+	}
+
+	{
+	}
+
+	group "mqtt-options//Set-password" 
+	"Sets the password for MQTT authentication."
+	{
+		argsn 2
+		arg `options: MQTT options object (type: "mqtt-options")`
+		arg `password: Password string for MQTT authentication`
+		returns `the same options object (for method chaining)`
+	}
+
+	{
+		example { opts |Set-password "mypassword" }
+	}
+
+	{
+	}
+
+	group "mqtt-options//Set-will" 
+	"Sets the Last Will and Testament message with QoS and retain flag."
+	{
+		argsn 5
+		arg `options: MQTT options object (type: "mqtt-options")`
+		arg `topic: Will topic string`
+		arg `payload: Will message payload string`
+		arg `qos: Quality of Service level for will message (integer 0, 1, or 2)`
+		arg `retain: Whether will message should be retained (integer 0 = false, 1 = true)`
+		returns `the same options object (for method chaining)`
+	}
+
+	{
+		example { opts |Set-will "client/status" "offline" 1 1 }
+	}
+
+	{
+	}
+
+	group "mqtt-options//Connect-with-options" 
+	"Creates and connects an MQTT client using the configured options."
+	{
+		argsn 1
+		arg `options: MQTT options object (type: "mqtt-options")`
+		returns `native MQTT client connection (type: "mqtt-client")error if connection fails`
+	}
+
+	{
+		example { opts |Connect-with-options }
+	}
+
+	{
+	}
+
+}
+

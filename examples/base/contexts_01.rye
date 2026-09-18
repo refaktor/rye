@@ -1,0 +1,11 @@
+; Base contexts: context, do\in, extends, private
+
+user: context { name: "Jim" greet: does { print join { "Hi, " name } } }
+do\in user { greet }
+
+animal: context { eat: does { print "nom" } }
+dog: extends animal { bark: does { print "woof" } }
+do\in dog { eat , bark }
+
+val: private { x: 12 , x * 2 }
+print join { "private val: " string val }

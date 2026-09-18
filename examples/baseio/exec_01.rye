@@ -1,0 +1,5 @@
+; Base IO: shell exec via pipes/exec and capture-stdout
+
+cmd: "echo hello-baseio"
+out: capture-stdout { pipes/exec cmd |pipes/out }
+print join { "shell: " out }

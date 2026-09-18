@@ -1,0 +1,8 @@
+; Base iteration: for, while, loop
+
+for { "a" "b" "c" } { ::x , print x }
+
+var 'i 0
+while { i < 3 } { print join { "i=" string i } , i:: i + 1 }
+
+loop 3 { .print }

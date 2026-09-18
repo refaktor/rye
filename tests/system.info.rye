@@ -1,0 +1,1568 @@
+section "OS " "OS related functions" {
+	group "cwd?" 
+	"Gets the current working directory."
+	{
+		arg `none`
+		returns `uri representing the current working directory`
+	}
+
+	{
+		; equal { cc os cd %/tmp cwd? cd %.. } %/tmp
+	}
+
+	{
+`cc os
+print cwd?
+ls |for { .print }
+ls\ 'files |for { .print }
+host-info? -> "hostname" |print
+load-avg? -> "1" |print
+virtual-memory? -> "total" |print
+disk-usage? |print
+processes? |first |print
+
+cc os cwd?
+`	}
+
+	group "does-exist" 
+	"Checks if a file or directory exists."
+	{
+		argsn 1
+		arg `path: uri representing the file or directory to check`
+		returns `boolean: true if exists, false if not`
+	}
+
+	{
+		equal { cc os does-exist %main.rye } true
+	}
+
+	{
+`cc os does-exist %./tests/data/file.txt
+`	}
+
+	group "cd" 
+	"Changes the current working directory."
+	{
+		argsn 1
+		arg `path: uri representing the directory to change to`
+		returns `the same uri if successful`
+	}
+
+	{
+		; equal { cc os cd %/tmp cwd?  } %/tmp
+	}
+
+	{
+`cc os cd %.
+`	}
+
+	group "env?" 
+	"Gets the value of an environment variable."
+	{
+		argsn 1
+		arg `variable_name: string containing the name of the environment variable`
+		returns `string containing the value of the environment variable`
+	}
+
+	{
+	}
+
+	{
+`cc os env? "PATH"
+`	}
+
+	group "mkdir" 
+	"Creates a new directory."
+	{
+		argsn 1
+		arg `path: uri representing the directory to create`
+		returns `the same uri if successful`
+	}
+
+	{
+		; equal { cc os mkdir %delme } %delme
+	}
+
+	{
+`cc os mkdir %./tests/delme
+`	}
+
+	group "mktmp" 
+	"Removed: use mktemp instead."
+	{
+		arg `none`
+		returns `uri representing the created temporary directory`
+	}
+
+	{
+	}
+
+	{
+`cc os mktmp
+`	}
+
+	group "rm" 
+	"Removes a file or empty directory."
+	{
+		argsn 1
+		arg `path: uri representing the file or empty directory to remove`
+		returns `the uri if successfulTags: #file #delete`
+	}
+
+	{
+	}
+
+	{
+`cc os rm %./tests/delme
+`	}
+
+	group "rmdir" 
+	"Removes a directory and all its contents recursively."
+	{
+		argsn 1
+		arg `path: uri representing the directory to remove (including contents)`
+		returns `the uri if successfulTags: #file #delete`
+	}
+
+	{
+	}
+
+	{
+`cc os rmdir %./tests/delme
+`	}
+
+	group "cp" 
+	"Copies a file to a new location."
+	{
+		argsn 2
+		arg `source: uri representing the source file`
+		arg `destination: uri representing the destination file`
+		returns `destination uri if successfulTags: #file #copy`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "file-info?" 
+	"Gets detailed information about a file or directory."
+	{
+		argsn 1
+		arg `path: uri representing the file or directory`
+		returns `dict with keys: name, size, mode, mod-time, is-dirTags: #file #info`
+	}
+
+	{
+	}
+
+	{
+`cc os file-info? %./tests/data/file.txt
+`	}
+
+	group "is-dir" 
+	"Checks if a path is a directory. Fails if the path does not exist."
+	{
+		argsn 1
+		arg `path: uri representing the path to check`
+		returns `boolean: true if path is a directory, false otherwise. Fails if the path does not exist.Tags: #file #check`
+	}
+
+	{
+	}
+
+	{
+`cc os is-dir %./tests/data
+`	}
+
+	group "is-file" 
+	"Checks if a path is a regular file (not a directory). Fails if the path does not exist."
+	{
+		argsn 1
+		arg `path: uri representing the path to check`
+		returns `boolean: true if path is a regular file, false otherwise. Fails if the path does not exist.Tags: #file #check`
+	}
+
+	{
+	}
+
+	{
+`cc os is-file %./tests/data/file.txt
+`	}
+
+	group "home-dir?" 
+	"Gets the current user's home directory."
+	{
+		arg `none`
+		returns `uri representing the user's home directoryTags: #file #directory`
+	}
+
+	{
+	}
+
+	{
+`cc os home-dir?
+`	}
+
+	group "tmp-dir?" 
+	"Gets the system's default temporary directory."
+	{
+		arg `none`
+		returns `uri representing the system's temporary directoryTags: #file #directory`
+	}
+
+	{
+	}
+
+	{
+`cc os tmp-dir?
+`	}
+
+	group "glob" 
+	"Returns files matching a glob pattern."
+	{
+		argsn 1
+		arg `pattern: string containing a glob pattern (e.g., "*.txt", "data/*.csv")`
+		returns `block of uris matching the patternTags: #file #search`
+	}
+
+	{
+	}
+
+	{
+`cc os glob "./tests/data/*.pem"
+`	}
+
+	group "mv" 
+	"Moves or renames a file or directory."
+	{
+		argsn 2
+		arg `source: uri representing the source file or directory`
+		arg `destination: uri representing the destination file or directory`
+		returns `destination uri if successful`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "ls" 
+	"Lists files and directories in the current directory."
+	{
+		arg `none`
+		returns `block of uris representing files and directories in the current directory`
+	}
+
+	{
+	}
+
+	{
+`cc os ls
+`	}
+
+	group "ls\\" 
+	"Lists files or directories with absolute paths when possible. If argument is a file-uri, lists that directory (or returns failure if not a directory). Otherwise filters current directory: 'dirs' for directories only, 'files' for files only, a string for partial name matching, or a regexp to match names."
+	{
+		argsn 1
+		arg `filter: file-uri to list directory, word 'dirs' or 'files' to filter by type, string for partial name matching, or regexp to match names`
+		returns `block of uris representing filtered files or directories in the specified directory or current directory`
+	}
+
+	{
+	}
+
+	{
+`cc os ls\ 'files
+`	}
+
+	group "ls\\dirs" 
+	"Lists only directories in the current directory."
+	{
+		arg `none`
+		returns `block of uris representing directories in the current directory`
+	}
+
+	{
+	}
+
+	{
+`cc os ls\\dirs
+`	}
+
+	group "ls\\files" 
+	"Lists only files (non-directories) in the current directory."
+	{
+		arg `none`
+		returns `block of uris representing files (non-directories) in the current directory`
+	}
+
+	{
+	}
+
+	{
+`cc os ls\\files
+`	}
+
+	group "ls\\dirs\\" 
+	"Lists directories in the current directory with filtering. Use a string for partial name matching, or a regexp to match names."
+	{
+		argsn 1
+		arg `filter: string for partial name matching, or regexp to match names`
+		returns `block of uris representing filtered directories in the current directory`
+	}
+
+	{
+	}
+
+	{
+`cc os ls\\dirs\\ "src"
+`	}
+
+	group "ls\\files\\" 
+	"Lists files (non-directories) in the current directory with filtering. Use a string for partial name matching, or a regexp to match names."
+	{
+		argsn 1
+		arg `filter: string for partial name matching, or regexp to match names`
+		returns `block of uris representing filtered files (non-directories) in the current directory`
+	}
+
+	{
+	}
+
+	{
+`cc os ls\\files\\ re "\.go$"
+`	}
+
+	group "symlink" 
+	"Creates a symbolic link."
+	{
+		argsn 2
+		arg `path: uri representing source path`
+		arg `link: uri representing link path to create`
+		returns `link uri if successfulTags: #file #link`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "is-symlink" 
+	"Checks if a path is a symbolic link. Fails if the path does not exist."
+	{
+		argsn 1
+		arg `path: uri representing a path to check`
+		returns `boolean: true if path is a symbolic linkTags: #file #check`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "readlink" 
+	"Reads the target of a symbolic link."
+	{
+		argsn 1
+		arg `path: uri representing a symbolic link`
+		returns `uri representing the target of the symlinkTags: #file #link`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "chmod" 
+	"Changes file or directory permissions."
+	{
+		argsn 2
+		arg `path: uri representing file or directory path`
+		arg `mode: integer representing file mode (e.g., 0755)`
+		returns `path uri if successfulTags: #file #permissions`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "abs-path" 
+	"Removed: use realpath instead."
+	{
+		argsn 1
+		arg `path: uri representing file or directory`
+		returns `string representing the absolute pathTags: #file #path`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "dirname" 
+	"Returns the directory part of a path."
+	{
+		argsn 1
+		arg `path: uri representing a path`
+		returns `uri representing the directory containing the pathTags: #file #path`
+	}
+
+	{
+	}
+
+	{
+`cc os dirname %./tests/data/file.txt
+`	}
+
+	group "basename" 
+	"Returns the filename part of a path."
+	{
+		argsn 1
+		arg `path: uri representing a path`
+		returns `string representing the filename part of the pathTags: #file #path`
+	}
+
+	{
+	}
+
+	{
+`cc os basename %./tests/data/file.txt
+`	}
+
+	group "file-ext" 
+	"Returns the file extension of a path (including the dot)."
+	{
+		argsn 1
+		arg `path: uri representing a file path`
+		returns `string representing the file extension (including the dot)Tags: #file #path`
+	}
+
+	{
+	}
+
+	{
+`cc os file-ext %./tests/data/file.txt
+`	}
+
+	group "join-path" 
+	"Joins path elements into a single path."
+	{
+		argsn 1
+		arg `paths: uri or block of uris to join`
+		returns `uri representing the joined pathTags: #file #path`
+	}
+
+	{
+	}
+
+	{
+`cc os join-path { %./tests "data" "file.txt" }
+`	}
+
+	group "whoami" 
+	"Returns the current user's username."
+	{
+		arg `none`
+		returns `string representing the current user's usernameTags: #system #user`
+	}
+
+	{
+	}
+
+	{
+`cc os whoami
+`	}
+
+	group "which" 
+	"Finds the path to an executable command."
+	{
+		argsn 1
+		arg `command: string representing the command to check`
+		returns `uri representing the path to the executable, or error if not foundTags: #system #command`
+	}
+
+	{
+	}
+
+	{
+`cc os which "sh"
+`	}
+
+	group "cp-r" 
+	"Recursively copies a directory and all its contents."
+	{
+		argsn 2
+		arg `source: uri representing source directory`
+		arg `destination: uri representing destination directory`
+		returns `destination uri if successfulTags: #file #copy #recursive`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "mkdir-p" 
+	"Creates a directory and any necessary parent directories."
+	{
+		argsn 1
+		arg `path: uri representing directory path to create`
+		returns `path uri if successfulTags: #file #directory`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "host-info?" 
+	"Gets information about the host system."
+	{
+		arg `none`
+		returns `dictionary containing information about the host system (hostname, uptime, OS, etc.)`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "users?" 
+	"Gets information about users currently logged into the system."
+	{
+		arg `none`
+		returns `table containing information about users (user, terminal, host, started)`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "load-avg?" 
+	"Gets the system load average over the last 1, 5, and 15 minutes."
+	{
+		arg `none`
+		returns `dictionary with keys "1", "5", and "15" representing load averages`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "virtual-memory?" 
+	"Gets information about virtual memory usage."
+	{
+		arg `none`
+		returns `dictionary containing information about virtual memory (total, free, used-percent)`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "disk-usage?" 
+	"Gets disk usage information for all partitions."
+	{
+		arg `none`
+		returns `table containing disk usage information for all partitions`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "pids?" 
+	"Gets a list of all process IDs currently running."
+	{
+		arg `none`
+		returns `block of integers representing process IDs`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "processes?" 
+	"Gets detailed information about all running processes."
+	{
+		arg `none`
+		returns `table containing detailed information about all running processes`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "process" 
+	"Removed: use process? instead."
+	{
+		argsn 1
+		arg `pid: integer process ID`
+		returns `dictionary containing detailed information about the specified process`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "lookup-address" 
+	"Performs a reverse DNS lookup to get hostnames for an IP address."
+	{
+		argsn 1
+		arg `ip: string containing an IP address`
+		returns `block of strings containing hostnames associated with the IP`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "lookup-ip" 
+	"Performs a DNS lookup to get IP addresses for a hostname."
+	{
+		argsn 1
+		arg `hostname: string containing a hostname`
+		returns `block of strings containing IP addresses associated with the hostname`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "write\\clipboard" 
+	"Writes a string value to the system clipboard."
+	{
+		argsn 1
+		arg `value: string to write to the clipboard`
+		returns `the same string if successful`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "read\\clipboard" 
+	"Reads the current contents of the system clipboard."
+	{
+		arg `none`
+		returns `string containing the current contents of the clipboard`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "tgz" 
+	"Creates a .tar.gz archive from a file or directory."
+	{
+		argsn 2
+		arg `source: uri representing the file or directory to archive`
+		arg `destination: uri representing the output .tar.gz file`
+		returns `destination uri if successfulTags: #archive #compress`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "un-tgz" 
+	"Removed: use untgz instead."
+	{
+		argsn 2
+		arg `source: uri representing the .tar.gz file`
+		arg `destination: uri representing the output directory`
+		returns `destination uri if successfulTags: #archive #extract`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "zip" 
+	"Creates a .zip archive from a file or directory."
+	{
+		argsn 2
+		arg `source: uri representing the file or directory to archive`
+		arg `destination: uri representing the output .zip file`
+		returns `destination uri if successfulTags: #archive #compress`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "unzip" 
+	"Extracts a .zip archive to a directory."
+	{
+		argsn 2
+		arg `source: uri representing the .zip file`
+		arg `destination: uri representing the output directory`
+		returns `destination uri if successfulTags: #archive #extract`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "find" 
+	"Removed: use new-finder instead."
+	{
+		argsn 1
+		arg `path: uri or block of uris representing starting paths`
+		returns `native finder objectTags: #find #files`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "finder//min-depth!" 
+	"Sets the minimum depth for file traversal."
+	{
+		argsn 2
+		arg `finder: native finder object`
+		arg `depth: integer minimum depth`
+		returns `native finder object (for chaining)Tags: #find #filter`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "finder//max-depth!" 
+	"Sets the maximum depth for file traversal."
+	{
+		argsn 2
+		arg `finder: native finder object`
+		arg `depth: integer maximum depth`
+		returns `native finder object (for chaining)Tags: #find #filter`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "finder//type" 
+	"Filters results by type: 'file (or \"f\") for files, 'dir (or \"d\") for directories."
+	{
+		argsn 2
+		arg `finder: native finder object`
+		arg `type: word 'file or 'dir (or string "f" or "d")`
+		returns `native finder object (for chaining)Tags: #find #filter`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "finder//name" 
+	"Filters results by file name using a glob pattern."
+	{
+		argsn 2
+		arg `finder: native finder object`
+		arg `pattern: string glob pattern (e.g., "*.go", "test_*")`
+		returns `native finder object (for chaining)Tags: #find #filter`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "finder//whole-name" 
+	"Filters results by full path using a glob pattern."
+	{
+		argsn 2
+		arg `finder: native finder object`
+		arg `pattern: string glob pattern for the whole path`
+		returns `native finder object (for chaining)Tags: #find #filter`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "finder//regex" 
+	"Filters results by regular expression on the full path."
+	{
+		argsn 2
+		arg `finder: native finder object`
+		arg `regex: native regexp object`
+		returns `native finder object (for chaining)Tags: #find #filter`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "finder//empty" 
+	"Filters for empty files or directories."
+	{
+		argsn 1
+		arg `finder: native finder object`
+		returns `native finder object (for chaining)Tags: #find #filter`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "finder//eval" 
+	"Executes the find operation and returns matching paths as uris."
+	{
+		argsn 1
+		arg `finder: native finder object`
+		returns `block of uris representing found files/directoriesTags: #find #execute`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "file-size" 
+	"Gets the size of a file in bytes."
+	{
+		argsn 1
+		arg `path: uri representing the file`
+		returns `integer size in bytesTags: #file #size`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "touch" 
+	"Creates a file if it doesn't exist, or updates its access time if it does."
+	{
+		argsn 1
+		arg `path: uri representing the file to touch`
+		returns `path uri if successfulTags: #file #create`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "hardlink" 
+	"Creates a hard link to a file."
+	{
+		argsn 2
+		arg `source: uri representing the source file`
+		arg `link: uri representing the hard link to create`
+		returns `link uri if successfulTags: #file #link`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "count-dir" 
+	"Counts the number of files and directories in a directory."
+	{
+		argsn 1
+		arg `path: uri representing the directory (optional, defaults to current dir)`
+		returns `integer count of itemsTags: #file #count`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "pid" 
+	"Gets the current process ID."
+	{
+		arg `none`
+		returns `integer process IDTags: #system #process`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "ppid" 
+	"Gets the parent process ID."
+	{
+		arg `none`
+		returns `integer parent process IDTags: #system #process`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "sleep" 
+	"Sleeps for the specified number of seconds."
+	{
+		argsn 1
+		arg `duration: integer seconds to sleep`
+		returns `integer seconds sleptTags: #system #time`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "tmux-available?" 
+	"Checks if tmux is available on the system."
+	{
+		arg `none`
+		returns `boolean indicating if tmux is availableTags: #tmux #check`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "tmux-new-session" 
+	"Creates a new tmux session with the given name using gotmux library."
+	{
+		argsn 1
+		arg `session-name: string name for the new session`
+		returns `native tmux session objectTags: #tmux #session`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "tmux-list-sessions" 
+	"Lists all tmux sessions using gotmux library."
+	{
+		arg `none`
+		returns `block of native tmux session objectsTags: #tmux #session #list`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "tmux-get-session" 
+	"Gets a tmux session by name using gotmux library."
+	{
+		argsn 1
+		arg `session-name: string name of the session to get`
+		returns `native tmux session objectTags: #tmux #session`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "tmux-new-window" 
+	"Creates a new window in the given tmux session."
+	{
+		argsn 1
+		arg `session: native tmux session object`
+		returns `native tmux window objectTags: #tmux #window`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "tmux-new-window-named" 
+	"Creates a new window in the given tmux session with a specific name."
+	{
+		argsn 2
+		arg `session: native tmux session object`
+		arg `window-name: string name for the window`
+		returns `native tmux window objectTags: #tmux #window`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "tmux-list-windows" 
+	"Lists all windows in the given tmux session."
+	{
+		argsn 1
+		arg `session: native tmux session object`
+		returns `block of native tmux window objectsTags: #tmux #window #list`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "tmux-get-pane" 
+	"Gets a pane from a tmux window by index."
+	{
+		argsn 2
+		arg `window: native tmux window object`
+		arg `index: integer pane index (0-based)`
+		returns `native tmux pane objectTags: #tmux #pane`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "tmux-split-pane" 
+	"Splits a tmux pane horizontally."
+	{
+		argsn 1
+		arg `pane: native tmux pane object`
+		returns `native tmux pane objectTags: #tmux #pane`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "tmux-send-keys" 
+	"Sends keys/command to a tmux pane."
+	{
+		argsn 2
+		arg `pane: native tmux pane object`
+		arg `command: string command to send`
+		returns `native tmux pane objectTags: #tmux #pane #command`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "tmux-kill-session" 
+	"Kills/destroys a tmux session."
+	{
+		argsn 1
+		arg `session: native tmux session object`
+		returns `native tmux session objectTags: #tmux #session`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "net-interface?" 
+	"Looks up a network interface by name and returns it as a native object."
+	{
+		argsn 1
+		arg `name: String name of the network interface (e.g., "eth0", "tailscale0", "lo")`
+		returns `native net-iface object representing the interface, or error if not found`
+	}
+
+	{
+		; equal { net-interface-by-name "lo" |type? } 'native
+		; error { net-interface-by-name "no-such-iface-xyz" }
+	}
+
+	{
+	}
+
+	group "net-iface//Addrs?" 
+	"Returns a block of network addresses assigned to the interface."
+	{
+		argsn 1
+		arg `iface: Native net-iface object`
+		returns `block of native net-addr objects assigned to the interface, or error`
+	}
+
+	{
+	}
+
+	{
+`; iface: net-interface-by-name "lo"
+; addrs: iface .Addrs?
+`	}
+
+	group "net-addr//IPNet?" 
+	"Type-asserts a network address to *net.IPNet (CIDR form). Returns failure if the address is not an IP network."
+	{
+		argsn 1
+		arg `addr: Native net-addr object (from net-iface//Addrs)`
+		returns `native net-ipnet object if the address is an IP network, or failure if it isa plain net.Addr (e.g., a point-to-point address not yet assigned)`
+	}
+
+	{
+	}
+
+	{
+`; addr: iface .Addrs? |first
+; ipnet: addr .IPNet?
+`	}
+
+	group "net-ipnet//Loopback?" 
+	"Reports whether the IP address in the IPNet is a loopback address."
+	{
+		argsn 1
+		arg `ipnet: Native net-ipnet object`
+		returns `boolean – true if the IP is a loopback address, false otherwise`
+	}
+
+	{
+	}
+
+	{
+`; ipnet .Loopback?  ; returns true for 127.0.0.1/8
+`	}
+
+	group "net-ipnet//IPv4?" 
+	"Reports whether the IP address in the IPNet is an IPv4 address (IP.To4() != nil)."
+	{
+		argsn 1
+		arg `ipnet: Native net-ipnet object`
+		returns `boolean – true if the IP address is IPv4, false if it is IPv6-only`
+	}
+
+	{
+	}
+
+	{
+`; ipnet .IPv4?  ; returns true when the address is an IPv4 address
+`	}
+
+	group "net-ipnet//IP-string?" 
+	"Returns the IP address contained in the IPNet as a dotted-decimal (or colon-separated) string."
+	{
+		argsn 1
+		arg `ipnet: Native net-ipnet object`
+		returns `string representation of the IP address (without the prefix length)`
+	}
+
+	{
+	}
+
+	{
+`; ipnet .IP-string?  ; returns "100.64.0.1"
+`	}
+
+}
+
+section "SSH " "SSH server functions" {
+	group "ssh-server" 
+	"Creates a new SSH server that listens on the specified address."
+	{
+		argsn 1
+		arg `address: String containing host:port address to listen on`
+		returns `native SSH server object`
+	}
+
+	{
+		; equal { ssh-server "localhost:2222" |type? } 'native
+	}
+
+	{
+`server: ssh-server "localhost:2222"
+server |Password-auth { pass = "secret123" }
+server |Handle fn { session } {
+session .Write "Welcome to Rye SSH server!\n"
+session .Write "Type 'exit' to quit.\n"
+}
+server |Serve
+
+`	}
+
+	group "ssh-server//Handle" 
+	"Sets a handler function for SSH sessions on the server."
+	{
+		argsn 2
+		arg `server: SSH server object`
+		arg `handler: Function that receives an SSH session object`
+		returns `the SSH server object`
+	}
+
+	{
+		; equal { server: ssh-server "localhost:2222" , server |Handle { session |Write "Hello" } |type? } 'native
+	}
+
+	{
+	}
+
+	group "ssh-server//Password-auth" 
+	"Sets a password authentication handler for the SSH server."
+	{
+		argsn 2
+		arg `server: SSH server object`
+		arg `handler: Function that receives a password string and returns true/false`
+		returns `the SSH server object`
+	}
+
+	{
+		; equal { server: ssh-server "localhost:2222" , server |Password-auth { pass = "secret" } |type? } 'native
+	}
+
+	{
+	}
+
+	group "ssh-server//Serve" 
+	"Starts the SSH server, listening for connections."
+	{
+		argsn 1
+		arg `server: SSH server object`
+		returns `the SSH server object, or error if unable to serve`
+	}
+
+	{
+		; equal { server: ssh-server "localhost:2222" , server |Serve |type? } 'native
+	}
+
+	{
+	}
+
+	group "ssh-session//Write" 
+	"Writes a string to an SSH session."
+	{
+		argsn 2
+		arg `session: SSH session object`
+		arg `text: String to write to the session`
+		returns `the SSH session object`
+	}
+
+	{
+		; equal { session: ssh-session-mock , session |Write "Hello" |type? } 'native
+	}
+
+	{
+	}
+
+}
+
+section "Default" "" {
+	group "go-with" 
+	"Executes a function in a separate goroutine, passing the specified value as an argument."
+	{
+		argsn 2
+		arg `value: Object to pass to the goroutine function`
+		arg `function: Function to execute in a separate goroutine, receives the value as argument`
+		returns `the original value that was passed to the goroutine`
+	}
+
+	{
+		equal { x:: 0 , go-with 5 fn { v } { change! v 'x } , sleep 100 , x } 5
+		equal { y:: 0 , go-with "test" fn { v } { change! length? v 'y } , sleep 100 , y } 4
+	}
+
+	{
+`; Simple goroutine with channel communication
+ch: channel 1
+go fn { } { ch .Send "Hello from goroutine" }
+print ch .Read
+
+; Using waitgroup to coordinate multiple goroutines
+wg: waitgroup
+results: channel 10
+loop 5 { i |
+wg .Add 1
+go-with i fn { n } { results .Send n * 2 , wg .Done }
+}
+wg .Wait
+results .Close
+
+; Mutex for safe shared state
+counter:: 0
+mtx: mutex
+go fn { } { mtx .Lock , change! counter + 1 'counter , mtx .Unlock }
+
+`	}
+
+	group "go" 
+	"Executes a function in a separate goroutine without passing any arguments."
+	{
+		argsn 1
+		arg `function: Function to execute in a separate goroutine (takes no arguments)`
+		returns `the function that was executed`
+	}
+
+	{
+		equal { x:: 0 , go fn { } { change! 42 'x } , sleep 100 , x } 42
+		equal { y:: "unchanged" , go fn { } { change! "changed" 'y } , sleep 100 , y } "changed"
+	}
+
+	{
+	}
+
+	group "channel" 
+	"Creates a new channel with the specified buffer size for goroutine communication."
+	{
+		argsn 1
+		arg `buffer-size: Integer specifying the channel buffer size (0 for unbuffered)`
+		returns `a new channel native object with the specified buffer size`
+	}
+
+	{
+		equal { ch: channel 1 ,  ch .probe .lg .Send 42 , ch .Read } 42
+		equal { ch: channel 2 , ch .Send 1 , ch .Send 2 , ch .Read } 1
+		equal { channel 5 |type? } 'native
+	}
+
+	{
+	}
+
+	group "Rye-channel//Read" 
+	"Reads the next value from a channel, blocking until a value is available or the channel is closed."
+	{
+		argsn 1
+		arg `channel: Channel to read from`
+		returns `the next value from the channel, or an error if the channel is closed`
+	}
+
+	{
+		equal { ch: channel 1 , ch .Send 123 , ch .Read } 123
+		equal { ch: channel 1 , ch .Send "test" , ch .Read } "test"
+		equal { ch: channel 1 , ch .Close , try { ch .Read } |type? } 'error
+	}
+
+	{
+	}
+
+	group "Rye-channel//Send" 
+	"Sends a value through a channel, blocking if the channel is unbuffered or full."
+	{
+		argsn 2
+		arg `channel: Channel to send the value to`
+		arg `value: Value to send through the channel`
+		returns `the channel object`
+	}
+
+	{
+		equal { ch: channel 1 , ch .Send 42 , ch .Read } 42
+		equal { ch: channel 3 , ch .Send "A" , ch .Send "B" , ch .Read } "A"
+		; equal { ch: channel 1 , ch .Send 100 , ch } ch
+	}
+
+	{
+	}
+
+	group "Rye-channel//Close" 
+	"Closes a channel, preventing further sends and causing pending/future reads to return an error."
+	{
+		argsn 1
+		arg `channel: Channel to close`
+		returns `the closed channel object`
+	}
+
+	{
+		equal { ch: channel 1 , ch .Send 42 , ch .Close , ch |type? } 'native
+		equal { ch: channel 1 , ch .Close , ch .Send 123 |disarm |type? } 'error
+		equal { ch: channel 2 , ch .Close , ch .Read |disarm |type? } 'error
+	}
+
+	{
+	}
+
+	group "mutex" 
+	"Creates a new mutex for synchronizing access to shared resources between goroutines."
+	{
+		arg `(none)`
+		returns `a new mutex native object for synchronization`
+	}
+
+	{
+		equal { mutex |type? } 'native
+		equal { mtx: mutex , mtx .Lock , mtx .Unlock , mtx |type? } 'native
+	}
+
+	{
+	}
+
+	group "waitgroup" 
+	"Creates a new waitgroup for coordinating multiple goroutines to wait for completion."
+	{
+		arg `(none)`
+		returns `a new waitgroup native object for coordinating goroutines`
+	}
+
+	{
+		equal { waitgroup |type? } 'native
+		equal { wg: waitgroup , wg .Add 1 , wg .Done , wg .Wait , wg |type? } 'native
+	}
+
+	{
+	}
+
+	group "Rye-mutex//Lock" 
+	"Acquires the lock on a mutex, blocking until the lock becomes available."
+	{
+		argsn 1
+		arg `mutex: Mutex to acquire the lock on`
+		returns `the mutex object`
+	}
+
+	{
+		equal { mtx: mutex , mtx .Lock , mtx |type? } 'native
+		equal { mtx: mutex , mtx .Lock , mtx .Unlock , mtx .Lock , mtx |type? } 'native
+	}
+
+	{
+	}
+
+	group "Rye-mutex//Unlock" 
+	"Releases the lock on a mutex, allowing other goroutines to acquire it."
+	{
+		argsn 1
+		arg `mutex: Mutex to release the lock from`
+		returns `the mutex object, or error if unlocking an unlocked mutex`
+	}
+
+	{
+		equal { mtx: mutex , mtx .Lock , mtx .Unlock , mtx |type? } 'native
+		equal { mtx: mutex , mtx .Unlock |disarm |type? } 'error
+	}
+
+	{
+	}
+
+	group "Rye-waitgroup//Add" 
+	"Adds the specified count to the waitgroup counter, indicating how many goroutines to wait for."
+	{
+		argsn 2
+		arg `waitgroup: Waitgroup to add goroutines to`
+		arg `count: Number of goroutines to add to the wait counter`
+		returns `the waitgroup object`
+	}
+
+	{
+		equal { wg: waitgroup , wg .Add 3 , wg |type? } 'native
+		equal { wg: waitgroup , wg .Add 1 , wg .Add 2 , wg |type? } 'native
+	}
+
+	{
+	}
+
+	group "Rye-waitgroup//Done" 
+	"Decrements the waitgroup counter by one, indicating that a goroutine has completed."
+	{
+		argsn 1
+		arg `waitgroup: Waitgroup to decrement the counter for`
+		returns `the waitgroup object`
+	}
+
+	{
+		equal { wg: waitgroup , wg .Add 1 , wg .Done , wg |type? } 'native
+		equal { wg: waitgroup , wg .Add 2 , wg .Done , wg .Done , wg |type? } 'native
+	}
+
+	{
+	}
+
+	group "Rye-waitgroup//Wait" 
+	"Blocks until the waitgroup counter reaches zero, meaning all goroutines have completed."
+	{
+		argsn 1
+		arg `waitgroup: Waitgroup to wait on`
+		returns `the waitgroup object after all goroutines have completed`
+	}
+
+	{
+		equal { wg: waitgroup , wg .Add 1 , wg .Done , wg .Wait , wg |type? } 'native
+		equal { wg: waitgroup , wg .Wait , wg |type? } 'native
+	}
+
+	{
+	}
+
+	group "select\\fn" 
+	"Performs a select operation on multiple channels, executing functions when channels are ready or a default function."
+	{
+		argsn 1
+		arg `block: Block containing channel-function pairs and optional default function`
+		returns `the original block argument`
+	}
+
+	{
+		equal { ch1: channel 1 , ch2: channel 1 , ch1 .Send 42 , select\fn { ch1 fn { v } { v } ch2 fn { v } { v + 1 } } } 42
+		equal { ch: channel 1 , select\fn { ch fn { v } { v * 2 } fn { } { 999 } } } 999
+	}
+
+	{
+	}
+
+}
+

@@ -1,0 +1,7 @@
+; BSON round-trip example
+
+doc: dict { user: "alice" age: 33 likes: [ "tea" "rye" ] }
+bytes: to-bson doc
+back: from-bson bytes
+print join { "doc user: " (-> "user" back) }
+print join { "doc age:  " string (-> "age" back) }

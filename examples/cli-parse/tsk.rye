@@ -1,0 +1,127 @@
+; tsk.rye - A minimal example of the CLI parsing dialect
+
+; --------------------
+; ## CLI Specification
+
+cli-spec: {
+    program "taskfield"
+    description "Minimal task management CLI tool"
+    
+    ; Global flags (available to all commands)
+    -q|quiet flag doc "Suppress non-essential output"
+    --file string optional "taskfield.data" doc "Task file"
+    
+    ; Subcommands
+    subcommand {
+        
+        ; --- ADD command ---
+        'add {
+            doc "Add a new task"
+            description: string required doc "Task description"
+            -p|priority integer optional 1 check { >= 1 } "Priority must be >= 1" doc "Task priority (1-5)"
+            -d|due iso-date doc "Due date (YYYY-MM-DD)"
+        }
+        
+        ; --- LIST command ---
+        'list {
+            doc "List tasks"
+            -s|status string optional "all" doc "Filter by status: all, pending, done"
+            -l|limit integer optional 20 check { > 0 } "Limit must be positive" doc "Maximum tasks to show"
+        }
+        
+        ; --- DONE command ---
+        'done {
+            doc "Mark tasks as completed"
+            ids: integer many required doc "Task IDs to mark as done"
+        } } }
+
+; -------------------
+; ## Command Handlers
+
+handle-add: fn { result verbose } {
+	.do\in {
+		if not quiet { print [ "Adding task with priority" priority ] }
+		
+		print [ "✓ Created task:" desc ]
+		print [ "  Priority:" priority ]
+		if due != "" { print [ "  Due:" due ] }
+	} }
+
+handle-list: fn { result verbose } {
+	.do\in {
+		if not quiet { print [ "Listing tasks, status=" status ", limit=" limit ] }
+    
+		print "Tasks:"
+		print "------"
+		print "  ○ #1 Learn Rye language (priority: 2)"
+		print "  ○ #2 Write documentation (priority: 1)"
+		print "  ✓ #3 Fix bug #123 (priority: 3) [done]"
+	} }
+
+handle-done: fn { result verbose } {
+	.do\in {
+		if not quiet { print [ "Marking tasks as done:" ids ] }
+    
+		; Use first/rest pattern to iterate without reassignment issues
+		print [ "✓ Marked" length? ids "task(s) as done:" ids ]
+	} }
+
+; ----------------
+; Main Entry Point
+
+main: fn { } {
+    ; Get command line arguments
+    args: rye .Args?
+    
+    ; Check for --help flag or no args - show help
+    if ( length? args ) = 0 {
+        print generate-help cli-spec
+        return 0
+    }
+    if args .contains "--help" {
+        print generate-help cli-spec
+        return 0
+    }
+    if args .contains "-h" {
+        print generate-help cli-spec
+        return 0
+    }
+    
+    ; Parse arguments
+    result: try { parse-args args cli-spec }
+    
+    ; Handle parse errors
+    if is-error result {
+        print "Error parsing arguments:"
+        print format-parse-errors result
+        print ""
+        print "Use --help for usage information."
+        return 1
+    }
+    
+    ; Extract global flags
+    verbose: result -> "verbose"
+    quiet: result -> "quiet"
+    config-file: result -> "config"
+    
+    if verbose { print [ "Using config file:" config-file ] }
+    
+    ; Get command
+    command: result -> "command"
+    
+    ; Route to appropriate handler
+    switch command {
+        "add" { handle-add result verbose }
+        "list" { handle-list result verbose }
+        "done" { handle-done result verbose }
+        _ { 
+            print "Unknown or missing command"
+            print ""
+            print generate-help cli-spec 
+        }
+    }    
+	0
+}
+
+; Run main
+main

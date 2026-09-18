@@ -1,0 +1,916 @@
+section "Default" "" {
+	group "cat" 
+	"Creates a new pipe object from a file."
+	{
+		argsn 1
+		arg `path: URI path to the file`
+		returns `script-pipe containing the file contents`
+	}
+
+	{
+	}
+
+	{
+`cat %./data/file.txt |into-string
+`	}
+
+	group "find" 
+	"Creates a pipe object listing all the files in the directory and its subdirectories recursively, one per line."
+	{
+		argsn 1
+		arg `path: URI path to the directory`
+		returns `script-pipe containing file paths, one per line`
+	}
+
+	{
+	}
+
+	{
+`find %./data |wc\l
+`	}
+
+	group "list" 
+	"Creates a pipe object listing all the files in the directory, one per line. Accepts and URI or glob pattern."
+	{
+		argsn 1
+		arg `path: URI path to directory or glob pattern string`
+		returns `script-pipe containing file paths, one per line`
+	}
+
+	{
+		equal { list %./testdata/ |wc\l > 0 } true
+	}
+
+	{
+	}
+
+	group "from-block" 
+	"Creates a pipe object from a block of strings, one per line."
+	{
+		argsn 1
+		arg `block: Block of strings to convert to pipe lines`
+		returns `script-pipe with each string as a line`
+	}
+
+	{
+		equal { from-block { "apple" "banana" "cherry" } |into-block } { "apple" "banana" "cherry" }
+	}
+
+	{
+	}
+
+	group "echo" 
+	"Creates a pipe object from a string."
+	{
+		argsn 1
+		arg `str: String content for the pipe`
+		returns `script-pipe containing the string`
+	}
+
+	{
+		equal { echo "hello world" |into-string } "hello world\n"
+		equal { echo "line1\nline2" |into-block } { "line1" "line2" }
+	}
+
+	{
+	}
+
+	group "cat\\opt" 
+	"Creates a pipe object from a file if it exists, otherwise returns an empty pipe object."
+	{
+		argsn 1
+		arg `path: URI path to the file`
+		returns `script-pipe containing file contents, or empty pipe if file doesn't exist`
+	}
+
+	{
+		equal { cat\opt %./nonexistent-file.txt |into-string } ""
+	}
+
+	{
+	}
+
+	group "exec" 
+	"Creates a pipe object from a command that is executed."
+	{
+		argsn 1
+		arg `cmd: Shell command string to execute`
+		returns `script-pipe containing command output`
+	}
+
+	{
+		equal { exec "echo hello" |into-string |trim } "hello"
+	}
+
+	{
+	}
+
+	group "exec\\in" 
+	"Executes a command by sending it the contents of the pipe as input and returns a pipe object."
+	{
+		argsn 2
+		arg `pipe: script-pipe whose contents are sent as input to the command`
+		arg `cmd: Shell command string to execute`
+		returns `script-pipe containing command output`
+	}
+
+	{
+		equal { echo "hello" |exec\in "cat" |into-string |trim } "hello"
+	}
+
+	{
+	}
+
+	group "exec\\each" 
+	"Executes a command from a Go template for each line in the pipe and returns a pipe object with the output of each command."
+	{
+		argsn 2
+		arg `pipe: script-pipe with lines to process`
+		arg `cmd: Go template string for command; {{.}} is replaced with each line`
+		returns `script-pipe with combined output of all commands`
+	}
+
+	{
+		equal { echo "hello\nworld" |exec\each "echo {{.}}" |into-block } { "hello" "world" }
+	}
+
+	{
+	}
+
+	group "into-string" 
+	"Returns pipe contents as a string."
+	{
+		argsn 1
+		arg `pipe: script-pipe to read from`
+		returns `string containing all pipe contents`
+	}
+
+	{
+		equal { echo "hello" |into-string } "hello\n"
+		equal { from-block { "a" "b" } |into-string } "a\nb\n"
+	}
+
+	{
+	}
+
+	group "into-file" 
+	"Writes pipe contents to a file and returns the number of bytes written."
+	{
+		argsn 2
+		arg `pipe: script-pipe to read from`
+		arg `path: URI path to the output file`
+		returns `integer number of bytes written`
+	}
+
+	{
+		; into-file writes contents to a file (tested via side effect)
+	}
+
+	{
+	}
+
+	group "out" 
+	"Prints pipe contents to stdout and returns the number of bytes written."
+	{
+		argsn 1
+		arg `pipe: script-pipe to read from`
+		returns `integer number of bytes written to stdout`
+	}
+
+	{
+		; out prints to stdout (tested via side effect)
+	}
+
+	{
+	}
+
+	group "head" 
+	"Returns a pipe with the first n lines from the pipe."
+	{
+		argsn 2
+		arg `pipe: script-pipe to read from`
+		arg `n: number of lines to keep from the beginning`
+		returns `script-pipe with only the first n lines`
+	}
+
+	{
+		equal { echo "a\nb\nc\nd\ne" |head 3 |into-block } { "a" "b" "c" }
+		equal { echo "a\nb" |head 5 |into-block } { "a" "b" }
+	}
+
+	{
+	}
+
+	group "tail" 
+	"Returns a pipe with the last n lines from the pipe."
+	{
+		argsn 2
+		arg `pipe: script-pipe to read from`
+		arg `n: number of lines to keep from the end`
+		returns `script-pipe with only the last n lines`
+	}
+
+	{
+		equal { echo "a\nb\nc\nd\ne" |tail 3 |into-block } { "c" "d" "e" }
+		equal { echo "a\nb" |tail 5 |into-block } { "a" "b" }
+	}
+
+	{
+	}
+
+	group "dirname" 
+	"Reads paths from the pipe, one per line, and returns the directory component of each."
+	{
+		argsn 1
+		arg `pipe: script-pipe containing file paths, one per line`
+		returns `script-pipe with directory component of each path`
+	}
+
+	{
+		equal { echo "/home/user/file.txt" |dirname |into-string |trim } "/home/user"
+		equal { echo "/a/b/c\n/d/e/f" |dirname |into-block } { "/a/b" "/d/e" }
+	}
+
+	{
+	}
+
+	group "basename" 
+	"Reads paths from the pipe, one per line, and removes any leading directory components from each."
+	{
+		argsn 1
+		arg `pipe: script-pipe containing file paths, one per line`
+		returns `script-pipe with only the filename component of each path`
+	}
+
+	{
+		equal { echo "/home/user/file.txt" |basename |into-string |trim } "file.txt"
+		equal { echo "/a/b/c\n/d/e/f" |basename |into-block } { "c" "f" }
+	}
+
+	{
+	}
+
+	group "wc\\l" 
+	"Returns the number of lines in a pipe."
+	{
+		argsn 1
+		arg `pipe: script-pipe to count lines from`
+		returns `integer count of lines`
+	}
+
+	{
+		equal { echo "a\nb\nc" |wc\l } 3
+		equal { echo "" |wc\l } 1
+	}
+
+	{
+	}
+
+	group "freq" 
+	"Returns a pipe object with the frequency of each line in a pipe in descending order."
+	{
+		argsn 1
+		arg `pipe: script-pipe to analyze`
+		returns `script-pipe with "count value" lines sorted by frequency descending`
+	}
+
+	{
+		equal { echo "a\nb\na\na\nb" |freq |head 1 |into-string |trim } "3 a"
+	}
+
+	{
+	}
+
+	group "column" 
+	"Returns a pipe object with the column of each line of input, where the first column is column 1, and columns are delimited by Unicode whitespace."
+	{
+		argsn 2
+		arg `pipe: script-pipe with whitespace-delimited columns`
+		arg `n: column number to extract (1-indexed)`
+		returns `script-pipe with the specified column from each line`
+	}
+
+	{
+		equal { echo "a b c\nd e f" |column 2 |into-block } { "b" "e" }
+		equal { echo "one two three" |column 1 |into-string |trim } "one"
+	}
+
+	{
+	}
+
+	group "jq" 
+	"Executes the jq command on the pipe whose contents are presumed to be JSON and returns a new pipe object with the output."
+	{
+		argsn 2
+		arg `pipe: script-pipe containing JSON data`
+		arg `query: jq query string`
+		returns `script-pipe with jq query results`
+	}
+
+	{
+		; equal { echo `{"name":"test"}` |jq ".name" |into-string |trim } `"test"`
+	}
+
+	{
+	}
+
+	group "match" 
+	"Returns a pipe object with lines that match the string."
+	{
+		argsn 2
+		arg `pipe: script-pipe to filter`
+		arg `str: substring to search for in each line`
+		returns `script-pipe with only lines containing the substring`
+	}
+
+	{
+		equal { echo "apple\nbanana\napricot" |match "ap" |into-block } { "apple" "apricot" }
+		equal { echo "hello\nworld" |match "x" |into-block } { }
+	}
+
+	{
+	}
+
+	group "match\\regexp" 
+	"Returns a pipe object with lines that match the regular expression."
+	{
+		argsn 2
+		arg `pipe: script-pipe to filter`
+		arg `regexp: compiled regexp native to match against each line`
+		returns `script-pipe with only lines matching the regexp`
+	}
+
+	{
+		equal { echo "apple\nbanana\napricot" |match\regexp regexp "^a" |into-block } { "apple" "apricot" }
+	}
+
+	{
+	}
+
+	group "not-match" 
+	"Returns a pipe object with lines that do not match the string."
+	{
+		argsn 2
+		arg `pipe: script-pipe to filter`
+		arg `str: substring to reject in each line`
+		returns `script-pipe with only lines NOT containing the substring`
+	}
+
+	{
+		equal { echo "apple\nbanana\napricot" |not-match "ap" |into-block } { "banana" }
+		equal { echo "hello\nworld" |not-match "o" |into-block } { }
+	}
+
+	{
+	}
+
+	group "not-match\\regexp" 
+	"Returns a pipe object with lines that do not match the regular expression."
+	{
+		argsn 2
+		arg `pipe: script-pipe to filter`
+		arg `regexp: compiled regexp native to reject matches`
+		returns `script-pipe with only lines NOT matching the regexp`
+	}
+
+	{
+		equal { echo "apple\nbanana\napricot" |not-match\regexp regexp "^a" |into-block } { "banana" }
+	}
+
+	{
+	}
+
+	group "replace" 
+	"Replaces all occurrences of a string with another string in the pipe and returns a new pipe object."
+	{
+		argsn 3
+		arg `pipe: script-pipe to process`
+		arg `search: string to search for`
+		arg `replacement: string to replace with`
+		returns `script-pipe with all occurrences replaced`
+	}
+
+	{
+		equal { echo "hello world" |replace "world" "rye" |into-string |trim } "hello rye"
+		equal { echo "aaa" |replace "a" "b" |into-string |trim } "bbb"
+	}
+
+	{
+	}
+
+	group "replace\\regexp" 
+	"Replaces all occurrences of strings that match the regexp pattern with a string in the pipe and returns a new pipe object."
+	{
+		argsn 3
+		arg `pipe: script-pipe to process`
+		arg `regexp: compiled regexp native pattern to search for`
+		arg `replacement: string to replace matches with`
+		returns `script-pipe with all regexp matches replaced`
+	}
+
+	{
+		equal { echo "hello123world" |replace\regexp regexp "[0-9]+" "-" |into-string |trim } "hello-world"
+	}
+
+	{
+	}
+
+	group "into-block" 
+	"Returns a block of strings with the contents of the pipe, one per line."
+	{
+		argsn 1
+		arg `pipe: script-pipe to convert`
+		returns `block of strings, one per line from the pipe`
+	}
+
+	{
+		equal { echo "a\nb\nc" |into-block } { "a" "b" "c" }
+		equal { echo "single" |into-block } { "single" }
+	}
+
+	{
+	}
+
+	group "error\\opt" 
+	"Returns the error from the pipe, if any."
+	{
+		argsn 1
+		arg `pipe: script-pipe to check for errors`
+		returns `error if pipe has an error, void otherwise`
+	}
+
+	{
+		equal { echo "hello" |error\opt |type? } 'void
+	}
+
+	{
+	}
+
+	group "sha256sum" 
+	"Returns the hex-encoded SHA-256 hash of the entire contents of the pipe."
+	{
+		argsn 1
+		arg `pipe: script-pipe to hash`
+		returns `string containing hex-encoded SHA-256 hash`
+	}
+
+	{
+		equal { echo "hello" |sha256sum |length? } 64
+	}
+
+	{
+	}
+
+	group "sha256sums" 
+	"Reads paths from the pipe, one per line, and produces the hex-encoded SHA-256 hash of each corresponding file, one per line."
+	{
+		argsn 1
+		arg `pipe: script-pipe containing file paths, one per line`
+		returns `script-pipe with SHA-256 hash of each file, one per line`
+	}
+
+	{
+		; sha256sums computes hash of files listed in pipe
+	}
+
+	{
+	}
+
+	group "decodeBase64" 
+	"decodeBase64 produces the string represented by the base64 encoded input."
+	{
+		argsn 1
+		arg `pipe: script-pipe containing base64-encoded data`
+		returns `script-pipe with decoded data`
+	}
+
+	{
+		equal { echo "aGVsbG8=" |decodeBase64 |into-string |trim } "hello"
+	}
+
+	{
+	}
+
+	group "encodeBase64" 
+	"encodeBase64 produces the base64 encoding of the input."
+	{
+		argsn 1
+		arg `pipe: script-pipe containing data to encode`
+		returns `script-pipe with base64-encoded data`
+	}
+
+	{
+		equal { echo "hello" |encodeBase64 |into-string |trim } "aGVsbG8K"
+	}
+
+	{
+	}
+
+	group "join" 
+	"joins all the lines in the pipe's contents into a single space-separated string, which will always end with a newline."
+	{
+		argsn 1
+		arg `pipe: script-pipe with multiple lines`
+		returns `script-pipe with all lines joined by spaces into a single line`
+	}
+
+	{
+		equal { echo "a\nb\nc" |join |into-string |trim } "a b c"
+	}
+
+	{
+	}
+
+	group "exit-status" 
+	"Returns the integer exit status of a previous command. This will be zero unless the pipe's error status is set and the error matches the pattern."
+	{
+		argsn 1
+		arg `pipe: script-pipe from a command execution`
+		returns `integer exit status of the command (0 for success)`
+	}
+
+	{
+		equal { exec "exit 0" |exit-status } 0
+	}
+
+	{
+	}
+
+	group "args" 
+	"Creates a pipe containing the program's command-line arguments from os.Args, excluding the program name, one per line."
+	{
+		arg `(none)`
+		returns `script-pipe with command-line arguments, one per line`
+	}
+
+	{
+		; args returns command-line arguments (depends on how program is invoked)
+	}
+
+	{
+	}
+
+	group "concat" 
+	"concat reads paths from the pipe, one per line, and produces the contents of all the corresponding files in sequence. If there are any errors (for example, non-existent files), these will be ignored, execution will continue, and the pipe's error status will not be set."
+	{
+		argsn 1
+		arg `pipe: script-pipe containing file paths, one per line`
+		returns `script-pipe with concatenated contents of all files`
+	}
+
+	{
+		; concat reads file paths and outputs their combined contents
+	}
+
+	{
+	}
+
+	group "close" 
+	"Closes the pipe's associated reader."
+	{
+		argsn 1
+		arg `pipe: script-pipe to close`
+		returns `0 on success, error otherwise`
+	}
+
+	{
+		equal { echo "hello" |close } 0
+	}
+
+	{
+	}
+
+	group "get" 
+	"Get makes an HTTP GET request to url, sending the contents of the pipe as the request body, and produces the server's response."
+	{
+		argsn 2
+		arg `pipe: script-pipe with request body content`
+		arg `url: URL string to send GET request to`
+		returns `script-pipe with server response`
+	}
+
+	{
+		; get makes HTTP GET request (requires network)
+	}
+
+	{
+	}
+
+	group "post" 
+	"Post makes an HTTP POST request to url, using the contents of the pipe as the request body, and produces the server's response."
+	{
+		argsn 2
+		arg `pipe: script-pipe with request body content`
+		arg `url: URL string to send POST request to`
+		returns `script-pipe with server response`
+	}
+
+	{
+		; post makes HTTP POST request (requires network)
+	}
+
+	{
+	}
+
+	group "new" 
+	"new creates a new pipe with an empty reader."
+	{
+		arg `(none)`
+		returns `script-pipe with empty content`
+	}
+
+	{
+		equal { new |into-string } ""
+	}
+
+	{
+	}
+
+	group "wait" 
+	"Wait reads the pipe to completion and returns any error present on the pipe, or 0 otherwise.."
+	{
+		argsn 1
+		arg `pipe: script-pipe to wait for completion`
+		returns `0 on success, error if pipe had an error`
+	}
+
+	{
+		equal { echo "hello" |wait } 0
+	}
+
+	{
+	}
+
+	group "append-to-file" 
+	"append-to-file appends the contents of the pipe to the file path, creating it if necessary, and returns the number of bytes successfully written, or an error."
+	{
+		argsn 2
+		arg `pipe: script-pipe to read from`
+		arg `path: file path string or URI to append to`
+		returns `integer number of bytes written`
+	}
+
+	{
+		; append-to-file appends to file (tested via side effect)
+	}
+
+	{
+	}
+
+	group "stdin" 
+	"Stdin creates a pipe that reads from os.Stdin."
+	{
+		arg `(none)`
+		returns `script-pipe reading from stdin`
+	}
+
+	{
+		; stdin reads from standard input (interactive)
+	}
+
+	{
+	}
+
+	group "error" 
+	"error - returns any error present on the pipe, or 0 otherwise."
+	{
+		argsn 1
+		arg `pipe: script-pipe to check for errors`
+		returns `error if pipe has an error, 0 otherwise`
+	}
+
+	{
+		equal { echo "hello" |error } 0
+	}
+
+	{
+	}
+
+	group "set-error" 
+	"set-error sets the error err on the pipe and return it."
+	{
+		argsn 2
+		arg `pipe: script-pipe to set error on`
+		arg `err: error message string`
+		returns `script-pipe with error set`
+	}
+
+	{
+		equal { echo "hello" |set-error "test error" |error |type? } 'error
+	}
+
+	{
+	}
+
+	group "extract\\regexp" 
+	"For each line in the pipe, extracts all regexp matches (capture group 1 if present, otherwise the whole match) and outputs each match on a separate line. Equivalent to grep -oP with a capture group."
+	{
+		argsn 2
+		arg `pipe: script-pipe to read from`
+		arg `regexp: compiled regexp native; if the pattern has a capture group, group 1 is extracted, otherwise the whole match`
+		returns `script-pipe with one extracted match per output line (like grep -oP)`
+	}
+
+	{
+	}
+
+	{
+`echo "id=123 x id=45" |extract\regexp re "id=([0-9]+)" |into-block
+`	}
+
+	group "sort" 
+	"Sorts the lines of the pipe alphabetically in ascending order."
+	{
+		argsn 1
+		arg `pipe: script-pipe whose lines should be sorted`
+		returns `script-pipe with lines sorted alphabetically (ascending)`
+	}
+
+	{
+		equal { echo "banana\napple\ncherry" |sort |into-block } { "apple" "banana" "cherry" }
+	}
+
+	{
+	}
+
+	group "sort\\reverse" 
+	"Sorts the lines of the pipe alphabetically in descending (reverse) order."
+	{
+		argsn 1
+		arg `pipe: script-pipe whose lines should be sorted`
+		returns `script-pipe with lines sorted alphabetically in reverse (descending) order`
+	}
+
+	{
+		equal { echo "banana\napple\ncherry" |sort\reverse |into-block } { "cherry" "banana" "apple" }
+	}
+
+	{
+	}
+
+	group "uniq" 
+	"Removes consecutive duplicate lines from the pipe, like the Unix uniq command. Combine with sort to remove all duplicates."
+	{
+		argsn 1
+		arg `pipe: script-pipe whose adjacent duplicate lines should be removed`
+		returns `script-pipe with consecutive duplicate lines removed (like the uniq command)`
+	}
+
+	{
+		equal { echo "apple\napple\nbanana\napple" |uniq |into-block } { "apple" "banana" "apple" }
+	}
+
+	{
+	}
+
+	group "trim-lines" 
+	"Trims leading and trailing whitespace from each line in the pipe."
+	{
+		argsn 1
+		arg `pipe: script-pipe to process`
+		returns `script-pipe with leading and trailing whitespace removed from each line`
+	}
+
+	{
+		equal { echo "  hello  \n  world  " |trim-lines |into-block } { "hello" "world" }
+	}
+
+	{
+	}
+
+	group "prefix-lines" 
+	"Prepends a string to the beginning of each line in the pipe."
+	{
+		argsn 2
+		arg `pipe: script-pipe to process`
+		arg `prefix: string to prepend to each line`
+		returns `script-pipe with prefix added to the beginning of each line`
+	}
+
+	{
+		equal { echo "line1\nline2" |prefix-lines ">> " |into-block } { ">> line1" ">> line2" }
+	}
+
+	{
+	}
+
+	group "skip" 
+	"Skips the first n lines from the pipe."
+	{
+		argsn 2
+		arg `pipe: script-pipe to process`
+		arg `n: number of lines to skip from the beginning`
+		returns `script-pipe with the first n lines removed`
+	}
+
+	{
+		equal { echo "a\nb\nc\nd\ne" |skip 2 |into-block } { "c" "d" "e" }
+		equal { echo "a\nb\nc" |skip 0 |into-block } { "a" "b" "c" }
+		equal { echo "a\nb" |skip 5 |into-block } { }
+	}
+
+	{
+	}
+
+	group "number-lines" 
+	"Prefixes each line with its line number (1-indexed)."
+	{
+		argsn 1
+		arg `pipe: script-pipe to process`
+		returns `script-pipe with each line prefixed by its line number (1-indexed) and ": "`
+	}
+
+	{
+		equal { echo "apple\nbanana\ncherry" |number-lines |into-block } { "1: apple" "2: banana" "3: cherry" }
+	}
+
+	{
+	}
+
+	group "count-matches" 
+	"Counts the number of lines containing the given string. This is a sink operation that consumes the pipe."
+	{
+		argsn 2
+		arg `pipe: script-pipe to process`
+		arg `str: string to search for`
+		returns `integer count of lines containing the string`
+	}
+
+	{
+		equal { echo "hello world\nhello there\ngoodbye" |count-matches "hello" } 2
+		equal { echo "one\ntwo\nthree" |count-matches "x" } 0
+	}
+
+	{
+	}
+
+	group "between" 
+	"Returns lines between start and end marker lines (exclusive). Can handle multiple ranges."
+	{
+		argsn 3
+		arg `pipe: script-pipe to process`
+		arg `start: string marking the start of the range (exclusive)`
+		arg `end: string marking the end of the range (exclusive)`
+		returns `script-pipe with only the lines between start and end markers (markers themselves are excluded)`
+	}
+
+	{
+		equal { echo "before\nSTART\nmiddle1\nmiddle2\nEND\nafter" |between "START" "END" |into-block } { "middle1" "middle2" }
+		equal { echo "a\nSTART\nb\nEND\nc\nSTART\nd\nEND\ne" |between "START" "END" |into-block } { "b" "d" }
+	}
+
+	{
+	}
+
+	group "tee\\file" 
+	"Writes the pipe contents to a file while also passing them through. Like the Unix tee command."
+	{
+		argsn 2
+		arg `pipe: script-pipe to process`
+		arg `path: URI path to the file to write to`
+		returns `script-pipe that passes through unchanged while also writing to the file`
+	}
+
+	{
+		; tee\file writes to a file while passing through (tested via side effect)
+	}
+
+	{
+	}
+
+	group "map-each" 
+	"Transforms each line by evaluating a Rye block with the line injected. The block should return a string."
+	{
+		argsn 2
+		arg `pipe: script-pipe to process`
+		arg `block: Rye block to evaluate for each line; receives the line as injected value, should return a string`
+		returns `script-pipe with each line transformed by the block`
+	}
+
+	{
+		equal { echo "hello\nworld" |map-each { .uppercase } |into-block } { "HELLO" "WORLD" }
+		equal { echo "1\n2\n3" |map-each { .to-integer + 10 |to-string } |into-block } { "11" "12" "13" }
+	}
+
+	{
+	}
+
+	group "filter-each" 
+	"Filters lines by evaluating a Rye block with each line injected. Only lines for which the block returns truthy are kept."
+	{
+		argsn 2
+		arg `pipe: script-pipe to process`
+		arg `block: Rye block to evaluate for each line; receives the line as injected value, should return a truthy/falsy value`
+		returns `script-pipe with only lines for which the block returns a truthy value`
+	}
+
+	{
+		equal { echo "apple\nbanana\napricot\ncherry" |filter-each { .has-prefix "a" } |into-block } { "apple" "apricot" }
+		equal { echo "1\n2\n3\n4\n5" |filter-each { .to-integer > 2 } |into-block } { "3" "4" "5" }
+	}
+
+	{
+	}
+
+}
+
