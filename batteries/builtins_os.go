@@ -2028,7 +2028,7 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * integer process ID
 	// Tags: #system #process
-	"pid": {
+	"pid?": {
 		Argsn: 0,
 		Doc:   "Gets the current process ID.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2042,7 +2042,7 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * integer parent process ID
 	// Tags: #system #process
-	"ppid": {
+	"ppid?": {
 		Argsn: 0,
 		Doc:   "Gets the parent process ID.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

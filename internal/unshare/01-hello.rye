@@ -2,4 +2,4 @@
 ; Run: rye -unshare 01-hello.rye
 
 print "Hello from the sandbox!"
-print join { "PID inside sandbox: " to-string os/getpid }
+print join { "PID inside sandbox: " string os/pid? }
