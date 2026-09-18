@@ -1,0 +1,13 @@
+; Base functions: fn, does, closure, fn1
+
+add: fn { a b } { a + b }
+print join { "add 2 3 = " string add 2 3 }
+
+greet: does { print "Hello!" }
+greet
+
+mk-counter: does { var 'c 0 , closure { } { inc! 'c } }
+ctr: mk-counter , print string ctr , print string ctr
+
+double: fn1 { * 2 }
+print join { "double 5 = " string double 5 }

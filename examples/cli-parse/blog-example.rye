@@ -1,0 +1,48 @@
+spec: {
+  program "gitish"
+  description "A tiny, git-like tool in Rye"
+
+  -v|verbose flag doc "Verbose mode"
+  -p|port    integer optional 8080 check { >= 1024 } "port must be >= 1024"
+
+  subcommand {
+    'commit {
+      -m|message string required doc "Commit message"
+      -a|amend  flag           doc "Amend last commit"
+    }
+    'remote {
+      doc "Manage remotes"
+      subcommand {
+        'add {
+          name: string required
+          url:  string required
+        } } } } }
+
+  
+
+; Simulate argv for the post
+r1: parse-args { commit -m "Init" } spec
+print r1."command-path"       ; [ "commit" ]
+print r1."message"            ; "Init"
+
+r2: parse-args { remote add origin "https://example.com" } spec
+print r2."command-path"       ; ["remote" "add"]
+print r2."name"               ; "origin"
+print r2."url"                ; "https://example.com"
+
+; Error path: invalid port
+parse-args { --port 80 } spec |fix {
+  term/red ,
+  .format-parse-errors |print ,
+  term/reset
+  print generate-help spec
+}
+
+; Error path: invalid port
+parse-args { remote add "abc" } spec |fix {
+  term/red ,
+  .format-parse-errors |print ,
+  term/reset
+  print generate-help spec
+}
+

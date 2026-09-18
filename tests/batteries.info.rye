@@ -1,0 +1,4860 @@
+section "Constructors " "Functions that construct a table." {
+	group "table" 
+	"Creates a table by accepting block of column names and flat block of values"
+	{
+		argsn 2
+		argtypes {
+			1 [ Block ]
+			2 [ Block ]
+		}
+		arg `columns`
+		arg `data`
+	}
+
+	{
+		equal { table { "a" } { 1 2 } |type? } 'table
+		equal { table { 'a  } { 1 2 } |type? } 'table
+		equal { table { 'a 'b } { 1 2 3 4 } |length? } 2
+	}
+
+	{
+	}
+
+	group "table\\columns" 
+	"Creats a table by accepting a block of columns"
+	{
+		argsn 2
+		arg `columns - names of the columns`
+		arg `data - block or list of columns (each column is a block or list)`
+	}
+
+	{
+		equal { table\columns { "a" } { { 1 2 3 } } |type? } 'table
+		equal { table\columns { "a" "b" } { { 1 2 3 } { 4 5 6 } } |length? } 3
+	}
+
+	{
+`table\columns { 'a 'b } { { 1 2 } { "x" "y" } }
+`	}
+
+	group "table\\rows" 
+	"Creates a table by accepting a block or list of rows"
+	{
+		argsn 2
+		argtypes {
+			2 [ Block List ]
+		}
+		arg `columns - names of the columns`
+		arg `data - block or list of rows (each row is a block or list)`
+	}
+
+	{
+		equal { table\rows { 'a 'b } { { 1 2 } { 3 4 } } } table { 'a 'b } { 1 2 3 4 }
+		equal { table\rows { 'a 'b } list [ list [ 1 2 ] list [ 3 4 ] ] |type? } 'table
+	}
+
+	{
+	}
+
+	group "to-table" 
+	"Creates a table by accepting block or list of dicts"
+	{
+		argsn 1
+		argtypes {
+			1 [ Block List ]
+		}
+		arg `data`
+	}
+
+	{
+		equal { to-table list [ dict { "a" 1 } dict { "a" 2 } ] |type? } 'table
+		equal { to-table list [ dict { "a" 1 "b" "Jim" } dict { "a" 2 "b" "Bob" } ] |header? |sort } list { "a" "b" }
+		equal { to-table list [ dict { "a" 1 "b" "Jim" } dict { "a" 2 "b" "Bob" } ] |column? "b" |first } "Jim"
+	}
+
+	{
+	}
+
+	group "to-dict" 
+	"Creates a dict from a two-column table, using the first column as keys and the second column as values."
+	{
+		argsn 1
+		argtypes {
+			1 [ Table ]
+		}
+		arg `table - a two-column table where the first column becomes keys and the second becomes values`
+		returns `a dict mapping each value in the first column (as string key) to the corresponding value in the second column`
+	}
+
+	{
+		equal { table { 'k 'v } { "a" 1 "b" 2 } |to-dict |-> "a" } 1
+		equal { table { 'k 'v } { "x" 100 "y" 200 } |to-dict |type? } 'dict
+		equal { table { 'k 'v } { "a" 1 "b" 2 } |to-dict |length? } 2
+		equal { table { 'name 'score } { "Alice" 95 "Bob" 87 } |to-dict |-> "Bob" } 87
+		error { table { 'a } { 1 2 3 } |to-dict }
+	}
+
+	{
+	}
+
+}
+
+section "Filtering " "Functions that construct a table." {
+	group "where-equal" 
+	"Returns table of rows where specific colum is equal to given value."
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Word String ]
+		}
+		arg `sheet`
+		arg `column`
+		arg `value`
+		arg `Tags: #filter #tables`
+	}
+
+	{
+		equal { table { 'a } { 1 2 3 2 } |where-equal "a" 2 |length? } 2
+	}
+
+	{
+	}
+
+	group "where-not-equal" 
+	"Returns table of rows where specific colum is not equal to given value."
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Word String ]
+		}
+		arg `sheet`
+		arg `column`
+		arg `value`
+		arg `Tags: #filter #tables`
+	}
+
+	{
+		equal { table { 'a } { 1 2 3 2 } |where-not-equal "a" 2 |length? } 2
+	}
+
+	{
+	}
+
+	group "where-void" 
+	"Returns table of rows where specific colum is void."
+	{
+		argsn 2
+		argtypes {
+			1 [ Table ]
+			2 [ Word String ]
+		}
+		arg `sheet`
+		arg `column`
+		arg `Tags: #filter #tables`
+	}
+
+	{
+		equal { table { 'a } { 1 _ 3 _ } |where-void "a" |length? } 2
+	}
+
+	{
+	}
+
+	group "where-match" 
+	"Returns table of rows where a specific colum matches a regex."
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Native Word String ]
+			3 [ Native ]
+		}
+		arg `sheet`
+		arg `column`
+		arg `regexp`
+		arg `Tags: #filter #tables`
+	}
+
+	{
+		equal { table { 'a } { "1" "2" "a3" "2b" } |where-match 'a regexp "^[0-9]$" |length? } 2
+	}
+
+	{
+	}
+
+	group "where-contains" 
+	"Returns table of rows where specific colum contains a given string value."
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Word String ]
+			3 [ String ]
+		}
+		arg `sheet`
+		arg `column`
+		arg `substring`
+		arg `Tags: #filter #tables`
+	}
+
+	{
+		equal { table { 'a } { "1" "2" "a3" "2b" } |where-contains 'a "2" |length? } 2
+	}
+
+	{
+`sheet: table { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" "Benn" }
+sheet .where-contains 'name "nn"
+`	}
+
+	group "where-not-contains" 
+	"Returns table of rows where specific colum does not contain a given string value."
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Word String ]
+			3 [ String ]
+		}
+		arg `sheet`
+		arg `column`
+		arg `substring`
+		arg `Tags: #filter #tables`
+	}
+
+	{
+		equal { table { 'a } { "1" "2" "a3" "2b" } |where-not-contains 'a "3" |length? } 3
+	}
+
+	{
+`sheet: table { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" "Benn" }
+sheet .where-not-contains 'name "nn"
+`	}
+
+	group "where-greater" 
+	"Returns table of rows where specific colum is greater than given value."
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Word String ]
+		}
+		arg `sheet`
+		arg `column`
+		arg `value`
+		arg `Tags: #filter #table`
+	}
+
+	{
+		equal { table { 'a } { 1 2 3 2 } |where-greater 'a 1 |length? } 3
+	}
+
+	{
+`sheet: table { "name" "age" } { "Enno" 30 "Enya" 25 "Enid" 40 "Bob" 19 "Bill" 45 "Benn" 29 }
+sheet .where-greater 'age 29
+`	}
+
+	group "where-lesser" 
+	"Returns table of rows where specific colum is lesser than given value."
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Word String ]
+		}
+		arg `sheet`
+		arg `column`
+		arg `value`
+		arg `Tags: #filter #table`
+	}
+
+	{
+		equal { table { 'a } { 1 2 3 2 } |where-lesser 'a 3 |length? } 3
+	}
+
+	{
+	}
+
+	group "where-between" 
+	"Returns table of rows where specific colum is between given values."
+	{
+		argsn 4
+		argtypes {
+			1 [ Table ]
+			2 [ Word String ]
+		}
+		arg `sheet`
+		arg `column`
+		arg `lower-limit`
+		arg `upper-limit`
+		arg `Tags: #filter #table`
+	}
+
+	{
+		equal { table { 'a } { 1 2 3 2 } |where-between 'a 1 3 |length? } 2
+	}
+
+	{
+	}
+
+	group "where-between\\inclusive" 
+	"Returns table of rows where specific colum is between given values (inclusive)."
+	{
+		argsn 4
+		argtypes {
+			1 [ Table ]
+			2 [ Word String ]
+		}
+		arg `sheet`
+		arg `column`
+		arg `lower-limit`
+		arg `upper-limit`
+		arg `Tags: #filter #table`
+	}
+
+	{
+		equal { table { 'a } { 1 2 3 2 5 } |where-between\inclusive 'a 2 3 |length? } 3
+	}
+
+	{
+	}
+
+	group "where-in" 
+	"Returns table of rows where specific colum value is found in block of values."
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Word String ]
+			3 [ Block ]
+		}
+		arg `sheet`
+		arg `column`
+		arg `values-filtered-for`
+		arg `Tags: #filter #table`
+	}
+
+	{
+		equal { table { "name" "age" } { "Enno" 30 "Enya" 25 "Bob" 19 }
+		|where-in 'name { "Enno" "Enya" "Roger" } |column? "age"
+		} { 30 25 }
+	}
+
+	{
+	}
+
+	group "where-not-in" 
+	"Returns table of rows where specific colum value is not found in block of values."
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Word String ]
+			3 [ Block ]
+		}
+		arg `sheet`
+		arg `column`
+		arg `values-filtered-for`
+		arg `Tags: #filter #table`
+	}
+
+	{
+		equal { table { "name" "age" } { "Enno" 30 "Enya" 25 "Bob" 19 }
+		|where-not-in 'name { "Enno" "Enya" "Roger" } |column? "age"
+		} { 19 }
+	}
+
+	{
+	}
+
+	group "where" 
+	"Returns table of rows where code block evaluates to true for the column value."
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Word String Block ]
+			3 [ Block Builtin Function ]
+		}
+		arg `table`
+		arg `column - column name (word or string) or block of column names`
+		arg `code - block that receives column value (or has columns as words) and returns truthy/falsy`
+		arg `Tags: #filter #tables`
+	}
+
+	{
+		equal { table { 'a } { 1 2 3 4 } |where 'a { > 2 } |length? } 2
+		equal { table { 'a } { 1 2 3 4 } |where 'a { .is-even } |length? } 2
+		equal { table { 'name 'age } { "Jim" 30 "Jane" 25 } |where 'age { > 26 } |column? 'name } { "Jim" }
+		equal { table { 'a 'b } { 1 10 2 20 3 30 } |where { 'a 'b } { ( a + b ) > 25 } |length? } 1
+		equal { table { 'a 'b } { 1 10 2 20 3 30 } |where { 'a 'b } { all { a > 1 b > 15 } } |length? } 2
+	}
+
+	{
+`table { "name" "age" } { "Jim" 30 "Jane" 25 "Bob" 35 } |where 'age { > 26 }
+table { "a" "b" } { 1 10 2 20 3 30 } |where { 'a 'b } { ( a + b ) > 25 }
+`	}
+
+	group "distinct" 
+	"Returns table with duplicate rows removed based on specified column(s)."
+	{
+		argsn 2
+		argtypes {
+			1 [ Table ]
+			2 [ Word String Block ]
+		}
+		arg `table`
+		arg `column - column name (word or string) or block of column names`
+		arg `Tags: #filter #tables`
+	}
+
+	{
+		equal { table { 'a } { 1 2 1 3 2 } |distinct 'a |length? } 3
+		equal { table { 'a 'b } { 1 10 1 10 1 20 } |distinct { 'a 'b } |length? } 2
+	}
+
+	{
+`table { "name" "age" } { "Jim" 30 "Jane" 25 "Jim" 30 } |distinct 'name
+table { "a" "b" } { 1 10 1 20 2 10 } |distinct { 'a 'b }
+`	}
+
+	group "fill-void" 
+	"Returns table with void values in specified column replaced with given value."
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Word String ]
+		}
+		arg `table`
+		arg `column - column name (word or string)`
+		arg `value - value to replace void with`
+		arg `Tags: #transform #tables`
+	}
+
+	{
+		equal { table { 'a } { 1 _ 3 _ } |fill-void 'a 0 |column? 'a } { 1 0 3 0 }
+		equal { table { 'a } { 1 _ 3 _ } |fill-void 'a 99 |column? 'a |sum } 202
+	}
+
+	{
+`table { "name" "age" } { "Jim" 30 "Jane" _ } |fill-void 'age 0
+`	}
+
+	group "count-where" 
+	"Returns count of rows where code block evaluates to true for the column value."
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Word String Block ]
+			3 [ Block Builtin Function ]
+		}
+		arg `table`
+		arg `column - column name (word or string) or block of column names`
+		arg `code - block that receives column value and returns truthy/falsy`
+		arg `Tags: #filter #tables`
+	}
+
+	{
+		equal { table { 'a } { 1 2 3 4 } |count-where 'a { > 2 } } 2
+		equal { table { 'a } { 1 2 3 4 } |count-where 'a { .is-even } } 2
+		equal { table { 'a 'b } { 1 10 2 20 3 30 } |count-where { 'a 'b } { ( a + b ) > 25 } } 1
+	}
+
+	{
+`table { "name" "age" } { "Jim" 30 "Jane" 25 "Bob" 35 } |count-where 'age { > 26 }
+`	}
+
+}
+
+section "Row level functions " "Functions that construct a table." {
+	group "add-row" 
+	"Returns a table with new-row added to it"
+	{
+		argsn 2
+		argtypes {
+			1 [ Table ]
+			2 [ Block List ]
+		}
+		arg `sheet`
+		arg `new-row`
+	}
+
+	{
+		equal {
+		table { "a" "b" } { 6 60 7 70 } |add-row { 8 80 } |-> 2 |-> "b"
+		} 80
+	}
+
+	{
+	}
+
+	group "get-rows" 
+	"Get rows as a native. This value can be used in `add-rows` and `add-rows!`"
+	{
+		argsn 1
+		argtypes {
+			1 [ Table ]
+		}
+		arg `sheet`
+	}
+
+	{
+		equal {
+		table { "a" "b" } { 6 60 7 70 } |get-rows |type?
+		} 'native
+	}
+
+	{
+	}
+
+	group "add-rows" 
+	"Add one or more rows to a table"
+	{
+		argsn 2
+		argtypes {
+			1 [ Table ]
+			2 [ Block Native ]
+		}
+		arg `sheet - the sheet that is getting rows added to it`
+		arg `rows - a block containing one or more rows worth of values, or a TableRow Native value`
+	}
+
+	{
+		equal {
+		ref table { "a" "b" } { 6 60 7 70 } :sheet
+		sheet .deref |add-rows [ 3 30 ] |length?
+		} 3
+		equal {
+		ref table { "a" "b" } { 1 80 2 90 } :sheet
+		sheet .deref |add-rows { 3 30 } |length?
+		} 3
+	}
+
+	{
+	}
+
+	group "add-rows!" 
+	"Add one or more rows to a table ref"
+	{
+		argsn 2
+		argtypes {
+			1 [ Table PersistentTable ]
+			2 [ Block Native ]
+		}
+		arg `sheet - the reference to the sheet that is getting rows added to it`
+		arg `rows - a block containing one or more rows worth of values, or a TableRow Native value`
+		arg `Tags: #spreasheet #mutation`
+	}
+
+	{
+		equal {
+		ref table { "a" "b"  } { 1 10 2 20 } :sheet
+		sheet .add-rows! [ 3 30 ] sheet .deref .length?
+		} 3
+	}
+
+	{
+	}
+
+	group "update-row!" 
+	"Update the row at the given index."
+	{
+		argsn 3
+		argtypes {
+			2 [ Integer ]
+			3 [ Function Dict TableRow ]
+		}
+		arg `sheet-ref - A ref to a table`
+		arg `idx - the index of the row to update, 1-based`
+		arg `updater - One of either a function, a dict, or a Table Row`
+		arg `Tags: #table #mutation`
+	}
+
+	{
+		equal {
+		spr1: ref table { "a" "b" } { 1 10 2 20 }
+		spr1 .update-row! 1 dict [ "a" 111 ]
+		spr1 .deref .A1
+		} 111
+		equal {
+		spr1: ref table { "a" "b" } { 1 10 2 20 }
+		incrA: fn { row } { row ++ [ "a" ( "a" <- row ) + 9 ] }
+		update-row! spr1 1 ?incrA
+		spr1 |deref |A1
+		} 10
+	}
+
+	{
+	}
+
+	group "remove-row!" 
+	"Remove a row from a table by index"
+	{
+		argsn 2
+		argtypes {
+			1 [ Table ]
+			2 [ Block Native ]
+		}
+		arg `sheet-ref`
+		arg `row-idx - Index of row to remove, 1-based`
+		arg `Tags: #table #mutation`
+	}
+
+	{
+		equal {
+		spr1: ref table { "a" "b" } { 1 10 2 20 }
+		spr1 .remove-row! 1
+		spr1 .deref .A1
+		} 2
+	}
+
+	{
+	}
+
+}
+
+section "Column level functions " "Functions that construct a table." {
+	group "columns?" 
+	"Returns table with just given columns. Use lsetwords (:newName) to rename the previous column."
+	{
+		argsn 2
+		argtypes {
+			1 [ Block Table ]
+		}
+	}
+
+	{
+		equal { table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 }
+		|columns? { 'name 'age } |header? } list { "name" "age" }
+	}
+
+	{
+	}
+
+	group "header?" 
+	"Gets the column names (header) as block."
+	{
+		argsn 1
+		argtypes {
+			1 [ Table ]
+		}
+	}
+
+	{
+		equal { table { "age" "name" } { 123 "Jim" 29 "Anne" }
+		|header? } list { "age" "name" }
+	}
+
+	{
+	}
+
+	group "column?" 
+	"Gets all values of a column as a block."
+	{
+		argsn 2
+		argtypes {
+			1 [ Table ]
+			2 [ Word String ]
+		}
+	}
+
+	{
+		equal { table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Teacher" }
+		|column? 'name }  { "Bob" "Alice" }
+	}
+
+	{
+	}
+
+	group "drop-column" 
+	"Remove a column from a table. Returns new table"
+	{
+		argsn 2
+		argtypes {
+			1 [ Table ]
+			2 [ Word String Block ]
+		}
+	}
+
+	{
+		equal { table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" }
+		|drop-column "name" |header? } list { "age" "job_title" }
+	}
+
+	{
+	}
+
+	group "rename-column!" 
+	"Remove a column from a table. Returns new table"
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Word Block ]
+		}
+	}
+
+	{
+		equal { tab: ref table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
+		tab .rename-column! "name" "first_name" , tab .header? } list { "first_name" "age" }
+	}
+
+	{
+	}
+
+	group "gen-column" 
+	"Adds a new column to table. Changes in-place and returns the new table."
+	{
+		argsn 4
+		argtypes {
+			1 [ Table ]
+			2 [ Word ]
+			3 [ Block ]
+			4 [ Block ]
+		}
+	}
+
+	{
+		equal { table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
+		|gen-column 'job { } { "Cook" } |column? "job" } { "Cook" "Cook" "Cook" }
+		equal { table { "email" } { "john@example.com" "jane@test.org" }
+		|gen-column 'domain 'email [ regexp ".*@(.+)$" "$1" ] |column? "domain" } { "example.com" "test.org" }
+	}
+
+	{
+	}
+
+	group "update-column!" 
+	"Updates all cells in a column by applying a function that receives the cell value and the row."
+	{
+		argsn 3
+		argtypes {
+			2 [ Word String ]
+			3 [ Function ]
+		}
+		arg `table-ref - a reference to the table to update`
+		arg `column-name - name of the column to update (word or string)`
+		arg `fn - function that accepts (cell, row) and returns the new cell value`
+		arg `Tags: #table #column #mutation`
+	}
+
+	{
+		equal { ref table { "a" "b" } { 1 10 2 20 } :tab , tab .update-column! "a" fn { c r } { c + 100 } , tab .deref .column? "a" } { 101 102 }
+		equal { ref table { "a" "b" } { 1 10 2 20 } :tab , tab .update-column! "a" fn { c r } { r -> "b" } , tab .deref .column? "a" } { 10 20 }
+	}
+
+	{
+	}
+
+	group "add-column" 
+	"Adds a new column to table with the given data. Returns the modified table."
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Word String ]
+			3 [ Block List ]
+		}
+		arg `table - the table to add a column to`
+		arg `column-name - name of the new column (word or string)`
+		arg `data - block or list containing values for the new column (must match number of rows)`
+		arg `Tags: #table #column`
+	}
+
+	{
+		equal { table { "a" "b" } { 1 10 2 20 3 30 } |add-column 'c { 100 200 300 } |column? "c" } { 100 200 300 }
+		equal { table { "a" } { 1 2 3 } |add-column 'b list [ "x" "y" "z" ] |column? "b" } { "x" "y" "z" }
+	}
+
+	{
+	}
+
+}
+
+section "Miscelaneous " "" {
+	group "order-by!" 
+	"Sorts row by given column, changes table in place."
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Word ]
+			3 [ Word ]
+		}
+	}
+
+	{
+		equal { tab: table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19  }
+		tab .order-by! 'age 'asc |column? "age" } { 19 25 29 }
+	}
+
+	{
+	}
+
+	group "order-by" 
+	"Sorts row by given column, changes table in place."
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Word ]
+			3 [ Word ]
+		}
+	}
+
+	{
+		equal { tab: table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19  }
+		|order-by 'age 'desc |column? "age" } { 29 25 19 }
+	}
+
+	{
+	}
+
+	group "add-indexes!" 
+	"Creates an index for all values in the provided columns. Changes in-place and returns the new table."
+	{
+		argsn 2
+		argtypes {
+			1 [ Table ]
+			2 [ Block ]
+		}
+	}
+
+	{
+		equal { table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
+		|add-indexes! { name } |indexes? } { "name" }
+	}
+
+	{
+	}
+
+	group "indexes?" 
+	"Returns the columns that are indexed in a table."
+	{
+		argsn 1
+		argtypes {
+			1 [ Table ]
+		}
+	}
+
+	{
+		equal { table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
+		|add-indexes! { name age } |indexes? |length? } 2
+	}
+
+	{
+	}
+
+	group "autotype" 
+	"Takes a table and tries to determine and change the types of columns."
+	{
+		argsn 2
+		argtypes {
+			1 [ Table ]
+			2 [ Decimal ]
+		}
+	}
+
+	{
+		equal { table { "age" } { 123 29 19 }
+		|autotype 1.0 |types? } { integer }
+	}
+
+	{
+	}
+
+	group "left-join" 
+	"Left joins two tables on the given columns."
+	{
+		argsn 4
+		argtypes {
+			1 [ Table ]
+			2 [ Table ]
+			3 [ Word String ]
+			4 [ Word String ]
+		}
+	}
+
+	{
+		equal {
+		names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+		houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+		
+		names .inner-join houses 'id 'id |header?
+		} list { "id" "name" "id_2" "house" }
+		equal {
+		names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+		houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+		
+		names .left-join houses 'id 'id |column? "name"
+		} { "Paul" "Chani" "Vladimir" }
+	}
+
+	{
+	}
+
+	group "inner-join" 
+	"Inner joins two tables on the given columns."
+	{
+		argsn 4
+		argtypes {
+			1 [ Table ]
+			2 [ Table ]
+			3 [ Word String ]
+			4 [ Word String ]
+		}
+	}
+
+	{
+		equal {
+		names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+		houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+		
+		names .inner-join houses 'id 'id |header?
+		} list { "id" "name" "id_2" "house" }
+		equal {
+		names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+		houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+		
+		names .inner-join houses 'id 'id |column? "name"
+		} {  "Paul" "Vladimir" }
+	}
+
+	{
+	}
+
+	group "group-by" 
+	"Groups a table by the given column(s) and (optional) aggregations."
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Word String Block ]
+			3 [ Block ]
+		}
+	}
+
+	{
+		equal {
+		table { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 7 }
+		|group-by 'name { 'name count 'val sum } |column? "val_sum" |sort
+		} { 13.0 16.0 }
+		equal {
+		table { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 7 }
+		|group-by 'name { 'name count 'val min } |column? "val_min" |sort
+		} { 1.0 6.0 }
+		equal {
+		table { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 12 }
+		|group-by 'name { 'name count 'val avg } |column? "val_avg" |sort
+		} { 6.0 8.0 }
+	}
+
+	{
+	}
+
+	group "A1" 
+	"Accepts a Table and returns the first row first column cell."
+	{
+		argsn 1
+	}
+
+	{
+		equal { table { 'a } { 123 234 345 } |A1 } 123
+	}
+
+	{
+	}
+
+	group "B1" 
+	"Accepts a Table and returns the first row second column cell."
+	{
+		argsn 1
+	}
+
+	{
+		equal { table { 'a 'b } { 123 234 345 456 } |B1 } 234
+	}
+
+	{
+	}
+
+	group "A2" 
+	"Accepts a Table and returns the second row first column cell."
+	{
+		argsn 1
+	}
+
+	{
+		equal { table { 'a 'b } { 123 234 345 456 } |A2 } 345
+	}
+
+	{
+	}
+
+	group "B2" 
+	"Accepts a Table and returns the second row second column cell."
+	{
+		argsn 1
+	}
+
+	{
+		equal { table { 'a 'b } { 123 234 345 456 } |B2 } 456
+	}
+
+	{
+	}
+
+}
+
+section "Loading and saving " "Functions that construct a table." {
+	group "file-uri//Load\\csv" 
+	"Loads a .csv file to a table datatype."
+	{
+		argsn 1
+		argtypes {
+			1 [ Uri ]
+		}
+		arg `file-uri - location of csv file to load`
+		arg `Tags: #table #loading #csv`
+	}
+
+	{
+	}
+
+	{
+`equal {
+cc os
+f:: mktmp ++ "/test.csv"
+spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+spr1 .Save\csv* f
+spr2:: Load\csv f |autotype 1.0
+spr1 = spr2
+} true
+`	}
+
+}
+
+section "Loading and saving " "Functions that construct a table." {
+	group "file-uri//Load\\csv\\" 
+	"Loads a .csv file to a table datatype."
+	{
+		argsn 2
+		argtypes {
+			1 [ Uri ]
+			2 [ String ]
+		}
+		arg `file-uri - location of csv file to load`
+		arg `Tags: #table #loading #csv`
+	}
+
+	{
+	}
+
+	{
+`equal {
+cc os
+f:: mktmp ++ "/test.csv"
+spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+spr1 .Save\csv* f
+spr2:: Load\csv f |autotype 1.0
+spr1 = spr2
+} true
+`	}
+
+	group "file-uri//Load\\tsv" 
+	"Loads a .csv file to a table datatype."
+	{
+		argsn 1
+		argtypes {
+			1 [ Uri ]
+		}
+		arg `file-uri - location of csv file to load`
+	}
+
+	{
+	}
+
+	{
+`equal {
+cc os
+f:: mktmp ++ "/test.tsv"
+spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+spr1 .Save\tsv* f
+spr2:: Load\tsv f |autotype 1.0
+spr1 = spr2
+} true
+`	}
+
+	group "file-uri//Save\\csv" 
+	"Saves a table to a .csv file."
+	{
+		argsn 2
+		argtypes {
+			1 [ Uri ]
+			2 [ Table ]
+		}
+		arg `file-uri - where to save the sheet as a .csv file`
+		arg `table    - the table to save`
+		arg `Tags: #table #saving #csv`
+	}
+
+	{
+	}
+
+	{
+`equal {
+cc os
+f:: mktmp ++ "/test.csv"
+spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+f .Save\csv spr1
+spr2:: Load\csv f |autotype 1.0
+spr1 = spr2
+} true
+`	}
+
+	group "file-uri//Save\\tsv" 
+	"Saves a table to a .tsv file."
+	{
+		argsn 2
+		argtypes {
+			1 [ Uri ]
+			2 [ Table ]
+		}
+		arg `file-uri - where to save the sheet as a .tsv file`
+		arg `table    - the table to save`
+		arg `Tags: #table #saving #tsv`
+	}
+
+	{
+	}
+
+	{
+`equal {
+cc os
+f:: mktmp ++ "/test.tsv"
+spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+f .Save\tsv spr1
+spr2:: Load\tsv f |autotype 1.0
+spr1 = spr2
+} true
+`	}
+
+	group "file-uri//Load\\xlsx" 
+	"Loads the first sheet in an .xlsx file to a Table."
+	{
+		argsn 1
+		argtypes {
+			1 [ Uri ]
+		}
+		arg `file-uri - location of xlsx file to load`
+		arg `Tags: #table #loading #xlsx`
+	}
+
+	{
+	}
+
+	{
+`equal {
+cc os
+f:: mktmp ++ "/test.xlsx"
+spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+spr1 .Save\xlsx* f
+spr2:: Load\xlsx f |autotype 1.0
+spr1 = spr2
+} true
+`	}
+
+	group "file-uri//Save\\xlsx" 
+	"Saves a Table to a .xlsx file."
+	{
+		argsn 2
+		argtypes {
+			1 [ Uri ]
+			2 [ Table ]
+		}
+		arg `file-uri - where to save the table as a .xlsx file`
+		arg `table    - the table to save`
+		arg `Tags: #table #saving #xlsx`
+	}
+
+	{
+	}
+
+	{
+`equal {
+cc os
+f:: mktmp ++ "/test.xlsx"
+spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+f .Save\xlsx spr1
+spr2:: Load\xlsx f |autotype 1.0
+spr1 = spr2
+} true
+`	}
+
+	group "persistent-table" 
+	"Creates a persistent table using BadgerDB for storage"
+	{
+		argsn 3
+		argtypes {
+			2 [ String ]
+			3 [ String ]
+		}
+		arg `columns - block of column names`
+		arg `db-path - path to BadgerDB database`
+		arg `table-name - name of the table`
+	}
+
+	{
+		; equal { persistent-table { "a" "b" } "/tmp/test_db" "test_table" |type? } 'persistent-table
+	}
+
+	{
+	}
+
+	group "close-persistent-table!" 
+	"Closes the BadgerDB connection for a persistent table"
+	{
+		argsn 1
+		argtypes {
+			1 [ PersistentTable ]
+		}
+		arg `persistent-table - the persistent table to close`
+	}
+
+	{
+		; equal { pt: persistent-table { "a" "b" } "/tmp/test_db" "test_table"
+		;        pt .close-persistent-table! |type? } 'persistent-table
+	}
+
+	{
+	}
+
+	group "parse\\csv" 
+	"Parses a CSV string to a table datatype."
+	{
+		argsn 1
+		argtypes {
+			1 [ String ]
+		}
+		arg `csv-string - string containing CSV data`
+		arg `Tags: #table #parsing #csv`
+	}
+
+	{
+		equal { `a,b\n1,2\n3,4` |parse\csv |length? } 2
+		equal { `a,b\n1,2\n3,4` |parse\csv |column? "a" } { "1" "3" }
+	}
+
+	{
+	}
+
+	group "parse\\csv\\separator" 
+	"Parses a CSV string to a table datatype with a custom separator character."
+	{
+		argsn 2
+		argtypes {
+			1 [ String ]
+			2 [ String ]
+		}
+		arg `csv-string - string containing CSV data`
+		arg `separator - single character separator`
+		arg `Tags: #table #parsing #csv`
+	}
+
+	{
+		equal { `a,b\n1,2\n3,4` |parse\csv\separator "," |length? } 2
+		equal { `a;b\n1;2\n3;4` |parse\csv\separator ";" |column? "a" } { "1" "3" }
+	}
+
+	{
+	}
+
+	group "parse\\tsv" 
+	"Parses a TSV (tab-separated values) string to a table datatype."
+	{
+		argsn 1
+		argtypes {
+			1 [ String ]
+		}
+		arg `tsv-string - string containing TSV (tab-separated values) data`
+		arg `Tags: #table #parsing #tsv`
+	}
+
+	{
+		equal { `a	b\n1	2\n3	4` |parse\tsv |length? } 2
+		equal { `a	b\n1	2\n3	4` |parse\tsv |column? "a" } { "1" "3" }
+	}
+
+	{
+	}
+
+	group "format\\csv" 
+	"Converts a table to a CSV string."
+	{
+		argsn 1
+		argtypes {
+			1 [ Table ]
+		}
+		arg `table - the table to convert to CSV string`
+		arg `Tags: #table #formatting #csv`
+	}
+
+	{
+		equal { table { "a" "b" } { 1 2 3 4 } |format\csv } "a,b\n1,3\n2,4\n"
+		equal { table { "name" "age" } { "Jim" 30 "Jane" 25 } |format\csv |split "\n" |length? } 4
+	}
+
+	{
+	}
+
+	group "format\\tsv" 
+	"Converts a table to a TSV string."
+	{
+		argsn 1
+		argtypes {
+			1 [ Table ]
+		}
+		arg `table - the table to convert to TSV string`
+		arg `Tags: #table #formatting #tsv`
+	}
+
+	{
+	}
+
+	{
+`equal { table { "a" "b" } { 1 2 3 4 } |format\tsv } "a\tb\n1\t3\n2\t4\n"
+equal { table { "name" "age" } { "Jim" 30 "Jane" 25 } |format\tsv |split "\n" |length? } 4
+`	}
+
+	group "parse\\xlsx" 
+	"Parses an xlsx binary string or bytes into a table (first sheet)."
+	{
+		argsn 1
+		argtypes {
+			1 [ String Bytes ]
+		}
+		arg `data - the string with xlsx binary data or bytes native value`
+		arg `Tags: #table #parsing #xlsx`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "format\\xlsx" 
+	"Converts a table to an XLSX as bytes native value."
+	{
+		argsn 1
+		argtypes {
+			1 [ Table ]
+		}
+		arg `table - the table to convert to XLSX bytes`
+		arg `Tags: #table #formatting #xlsx`
+	}
+
+	{
+	}
+
+	{
+`table { "a" "b" } { 1 2 3 4 } |format\xlsx |type? ; => 'native
+`	}
+
+}
+
+section "Regexp " "Go like Regular expressions" {
+	group "regexp" 
+	"Creates a compiled regular expression object from a pattern string."
+	{
+		argsn 1
+		arg `pattern: String containing a regular expression pattern`
+		returns `native regexp object or error if pattern is invalid`
+	}
+
+	{
+		equal { regexp "[0-9]" |type? } 'native
+		equal { regexp "[0-9]" |kind? } 'regexp
+	}
+
+	{
+	}
+
+	group "re" 
+	"Creates a compiled regular expression object from a pattern string."
+	{
+		argsn 1
+		arg `pattern: String containing a regular expression pattern`
+		returns `native regexp object or error if pattern is invalid`
+	}
+
+	{
+		equal { re "[0-9]" |type? } 'native
+		equal { re "[0-9]" |kind? } 'regexp
+	}
+
+	{
+	}
+
+	group "regexp//Is-match" 
+	"Tests if a string matches the regular expression pattern."
+	{
+		argsn 2
+		arg `regexp: Native regexp object`
+		arg `input: String to test against the pattern`
+		returns `boolean true if the string matches the pattern, false otherwise`
+	}
+
+	{
+		equal { regexp "[0-9]" |Is-match "5" } true
+		equal { regexp "[0-9]" |Is-match "a" } false
+	}
+
+	{
+	}
+
+	group "regexp//Submatch?" 
+	"Extracts the first captured group from a string using the regular expression."
+	{
+		argsn 2
+		arg `regexp: Regular expression with capturing groups`
+		arg `input: String to search in`
+		returns `string containing the first captured group or error if no submatch found`
+	}
+
+	{
+		equal { regexp "x([0-9]+)y" |Submatch? "x123y" } "123"
+	}
+
+	{
+	}
+
+	group "regexp//Submatches?" 
+	"Extracts all captured groups from the first match as a block of strings."
+	{
+		argsn 2
+		arg `regexp: Regular expression with capturing groups`
+		arg `input: String to search in`
+		returns `block containing all captured groups from the first match or error if no match found`
+	}
+
+	{
+		equal { regexp "x([0-9]+)y" |Submatches? "x123y x234y" } { "123" }
+	}
+
+	{
+	}
+
+	group "regexp//Submatches\\all?" 
+	"Extracts all captured groups from all matches as a nested block structure."
+	{
+		argsn 2
+		arg `regexp: Regular expression with capturing groups`
+		arg `input: String to search in`
+		returns `block of blocks, each inner block containing the captured groups from one match`
+	}
+
+	{
+		equal { regexp "x([0-9]+)(y+)?" |Submatches\all? "x11yy x22" } { { "11" "yy" } { "22" "" } }
+	}
+
+	{
+	}
+
+	group "regexp//Find-all" 
+	"Finds all substrings matching the regular expression and returns them as a block."
+	{
+		argsn 2
+		arg `regexp: Regular expression pattern`
+		arg `input: String to search in`
+		returns `block containing all matching substrings or error if no matches found`
+	}
+
+	{
+		equal { regexp "[0-9]+" |Find-all "x123y x234y" } { "123" "234" }
+	}
+
+	{
+	}
+
+	group "regexp//Match?" 
+	"Finds the first substring matching the regular expression."
+	{
+		argsn 2
+		arg `regexp: Regular expression pattern`
+		arg `input: String to search in`
+		returns `string containing the first match or empty string if no match found`
+	}
+
+	{
+		equal { regexp "[0-9]+c+" |Match? "aa33bb55cc" } "55cc"
+	}
+
+	{
+	}
+
+	group "regexp//Replace-all" 
+	"Replaces all occurrences of the regular expression pattern with the specified replacement string."
+	{
+		argsn 3
+		arg `regexp: Regular expression pattern`
+		arg `input: String to modify`
+		arg `replacement: String to replace matches with`
+		returns `string with all matches replaced by the replacement string`
+	}
+
+	{
+		equal { regexp "[0-9]+" |Replace-all "x123y x234y" "XXX" } "xXXXy xXXXy"
+	}
+
+	{
+	}
+
+}
+
+section "JSON " "Parsing and generating JSON" {
+	group "parse-json" 
+	"Parses JSON string into Rye values."
+	{
+		argsn 1
+		arg `json: string containing JSON data`
+		returns `parsed Rye value (list, dict, string, integer, etc.)`
+	}
+
+	{
+		equal { "[ 1, 2, 3 ]" |parse-json |length? } 3
+		equal { "[ 1, 2, 3 ]" |parse-json |type? } 'list
+		equal { `{"name": "John", "age": 30}` |parse-json -> "name" } "John"
+	}
+
+	{
+	}
+
+	group "parse-json\\lines" 
+	"Parses JSON string into Rye values."
+	{
+		argsn 1
+		arg `json: string containing consecutive JSON values`
+		returns `list of parsed Rye values`
+	}
+
+	{
+		equal { `{"a": 2, "b": "x"} \n{"a": 3, "b": "y"} \n` |parse-json\lines |to-table } table { "a" "b" } { 2 "x" 3 "y" }
+	}
+
+	{
+	}
+
+	group "to-json" 
+	"Converts a Rye value to a JSON string. Supports block (like list) and context (like dict)."
+	{
+		argsn 1
+		arg `value: any Rye value to encode (block, list, dict, context, string, integer, etc.)`
+		returns `string containing the JSON representation`
+	}
+
+	{
+		equal { list { 1 2 3 } |to-json } "[1, 2, 3] "
+		equal { dict { a: 1 b: 2 c: 3 } |to-json |parse-json |-> "b" } 2
+		equal { { 1 2 3 } |to-json } "[1, 2, 3] "
+		equal { context { a: 1 b: 2 } |to-json |parse-json |-> "a" } 1
+		equal { true |to-json } "true"
+		equal { false |to-json } "false"
+		equal { `[true, false]` |parse-json |to-json } "[true, false] "
+	}
+
+	{
+	}
+
+	group "to-json\\lines" 
+	"Converts a table to JSON with each row on a separate line."
+	{
+		argsn 1
+		arg `table: table value to encode`
+		returns `string containing the JSON representation with each row on a new line`
+	}
+
+	{
+		equal { table { "a" "b" } { 2 "x" 3 "y" } |to-json\lines } `{"a": 2, "b": "x"} \n{"a": 3, "b": "y"} \n`
+	}
+
+	{
+	}
+
+}
+
+section "BSON " "BSON encoding and decoding" {
+	group "from-bson" 
+	"Decodes BSON data into Rye values."
+	{
+		argsn 1
+		arg `bytes: native bytes object containing BSON data`
+		returns `decoded Rye value (string, integer, decimal, block, etc.)`
+	}
+
+	{
+		equal { "abc" |to-bson |from-bson } "abc"
+		equal { 123 |to-bson |from-bson } 123
+		equal { { 123 "asd" } |to-bson |from-bson } { 123 "asd" }
+	}
+
+	{
+	}
+
+	group "to-bson" 
+	"Encodes a Rye value into BSON format."
+	{
+		argsn 1
+		arg `value: any Rye value to encode (string, integer, decimal, block, etc.)`
+		returns `native bytes object containing the BSON-encoded data`
+	}
+
+	{
+		equal { "abc" |to-bson |type? } 'native
+		equal { "abc" |to-bson |kind? } 'bytes
+	}
+
+	{
+	}
+
+}
+
+section "SXML " "Streaming, SAX-like XML processing" {
+	group "reader//Do-sxml" 
+	"Processes XML using a streaming SAX-like approach with tag handlers."
+	{
+		argsn 2
+		arg `reader: XML reader object`
+		arg `block: SXML processing block with tag handlers`
+		returns `result of processing the XML`
+	}
+
+	{
+		stdout {
+		"<scene><bot>C3PO</bot><bot>R2D2</bot><jedi>Luke</jedi></scene>" |reader |probe
+		|probe |Do-sxml { _ [ .prns ] }
+		} "C3PO R2D2 Luke "
+		stdout {
+		"<scene><bot>C3PO</bot><bot>R2D2</bot><jedi>Luke</jedi></scene>" |reader
+		|Do-sxml { <bot> { _ [ .prns ] } }
+		} "C3PO R2D2 "
+		stdout {
+		"<scene><ship>XWing</ship><bot>R2D2</bot><jedi>Luke</jedi></scene>" |reader
+		|Do-sxml { <bot> <jedi> { _ [ .prns ] } }
+		} "R2D2 Luke "
+		stdout {
+		"<scene><xwing><bot>R2D2</bot><person>Luke</person></xwing><destroyer><person>Vader</person></destroyer></scene>" |reader
+		|Do-sxml { <xwing> { <person> { _ [ .prns ] } } }
+		} "Luke "
+	}
+
+	{
+	}
+
+	group "rye-sxml-start//Attr?" 
+	"Retrieves an attribute by index or name from an XML start element."
+	{
+		argsn 2
+		arg `element: XML start element`
+		arg `index: Integer index of the Attribute to retrieve`
+		returns `list [ namespace tag value ] of the attribute or void if not found`
+	}
+
+	{
+		; TODO: method resolution for rye-sxml-start//Attr? not working - needs investigation
+		; stdout {
+		;   `<scene><ship type="xwing"><person age="25">Luke</person></ship><ship type="destroyer"><person age="55">Vader</person></ship></scene>` |reader
+		;   .do-sxml { <ship> [ .Attr? 0 |last |prns ] }
+		; } "xwing destroyer "
+		; stdout {
+		;   `<scene><ship type="xwing"><person age="25">Luke</person></ship><ship type="destroyer"><person age="55">Vader</person></ship></scene>` |reader
+		;   .do-sxml { <person> [ .Attr? 0 |last |prns ] }
+		; } "25 55 "
+	}
+
+	{
+	}
+
+	group "rye-sxml-start//Attrs?" 
+	"Returns a dict of all attributes from an XML start element."
+	{
+		argsn 1
+		arg `element: XML start element`
+		returns `dict with all attributes where keys are "attrname" or "namespace:attrname"`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "rye-sxml-start//Name?" 
+	"Returns the name of an XML start element."
+	{
+		argsn 1
+		arg `element: XML start element`
+		returns `string name of the XML element`
+	}
+
+	{
+		; TODO: These SXML tests need investigation - actual output differs from expected
+		; stdout {
+		;   "<scene><xwing><bot>R2D2</bot><person><name>Luke</name></person></xwing><destroyer><person>Vader</person></destroyer></scene>" |reader
+		;   .do-sxml { <xwing> { 'start [ prns "YYY" ] <bot> [ print "***" ] 'any [ .Name? .probe ] 'end [ print "xx" ] } }
+		; } "bot R2D2 \nperson name Luke \n"
+		; stdout {
+		;   "<root><a>1</a><b>2</b></root>" |reader
+		;   .do-sxml { 'any [ .Name? .prn ":" ] 'end [ print "---" ] }
+		; } "root:\na:\n---\nb:\n---\n---\n"
+	}
+
+	{
+	}
+
+}
+
+section "HTML " "HTML processing functions" {
+	group "unescape\\html" 
+	"Converts HTML entities to their character equivalents."
+	{
+		argsn 1
+		arg `text: HTML-escaped string`
+		returns `string with HTML entities converted to their character equivalents`
+	}
+
+	{
+		equal { unescape\html "&gt;hello&lt;" } ">hello<"
+	}
+
+	{
+	}
+
+	group "escape\\html" 
+	"Converts special characters to HTML entities."
+	{
+		argsn 1
+		arg `text: String containing HTML special characters`
+		returns `string with special characters converted to HTML entities`
+	}
+
+	{
+		equal { escape\html "<hello>" } "&lt;hello&gt;"
+	}
+
+	{
+	}
+
+	group "html->markdown" 
+	"Converts HTML text to markdown format."
+	{
+		argsn 1
+		arg `html: HTML string to convert`
+		returns `string containing markdown equivalent of the HTML`
+	}
+
+	{
+		equal { html->markdown "<h1>title</h1><p>para</p>" } "# title\n\npara"
+	}
+
+	{
+	}
+
+	group "reader//Parse-html" 
+	"Parses HTML using a streaming approach with tag handlers."
+	{
+		argsn 2
+		arg `reader: HTML reader object`
+		arg `block: HTML processing block with tag handlers`
+		returns `result of processing the HTML`
+	}
+
+	{
+		; TODO: method resolution for rye-html-start//Attr? not working - needs investigation
+		; stdout { "<html><body><div class='menu'><a href='/'>home</a><a href='/about/'>about</a>" |reader
+		;   .Parse-html { <a> [ .Attr? 'href |prns ] }
+		; } "/ /about/ "
+	}
+
+	{
+	}
+
+	group "rye-html-start//Attr?" 
+	"Retrieves an attribute value by name or index from an HTML element."
+	{
+		argsn 2
+		arg `element: HTML token element`
+		arg `name-or-index: Attribute name (as word or string) or index (as integer)`
+		returns `string value of the attribute or void if not found`
+	}
+
+	{
+		; TODO: method resolution not working - needs investigation
+		; stdout { "<div class='menu' id='nav'></div>" |reader .Parse-html { <div> [ .Attr? 'class |prn ] } } "menu"
+		; stdout { "<div class='menu' id='nav'></div>" |reader .Parse-html { <div> [ .Attr? 'id |prn ] } } "nav"
+	}
+
+	{
+	}
+
+	group "rye-html-start//Attrs?" 
+	"Returns a dict of all attributes from an HTML element."
+	{
+		argsn 1
+		arg `element: HTML token element`
+		returns `dict with all attributes where keys are attribute names`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "rye-html-start//Name?" 
+	"Returns the name of an HTML element."
+	{
+		argsn 1
+		arg `element: HTML token element`
+		returns `string name of the HTML element`
+	}
+
+	{
+		; TODO: method resolution not working - needs investigation
+		; stdout { "<div></div>" |reader .Parse-html { <div> [ .Name? |print ] } } "div\n"
+	}
+
+	{
+	}
+
+}
+
+section "Markdown " "Functions for processing and converting Markdown documents" {
+	group "reader//do-markdown" 
+	"Processes Markdown using a streaming approach with section handlers."
+	{
+		argsn 2
+		arg `reader: File reader or similar object to read markdown from`
+		arg `handlers: Block containing section handlers (h1, h2, paragraph, code, etc.)`
+		returns `the result of processing the markdown document`
+	}
+
+	{
+		; Tested manually since it requires file input
+	}
+
+	{
+	}
+
+	group "markdown->html" 
+	"Converts Markdown text to HTML."
+	{
+		argsn 1
+		arg `text: Markdown source string`
+		returns `string containing HTML`
+	}
+
+	{
+		equal { markdown->html "# Title" |contains "<h" } true
+		error { markdown->html 123 }
+	}
+
+	{
+	}
+
+	group "markdown" 
+	"Creates a Markdown value from a string."
+	{
+		argsn 1
+		arg `text: String or Markdown value`
+		returns `Markdown value`
+	}
+
+	{
+		equal { markdown "Hello" |type? } 'markdown
+		; equal { markdown markdown "Hello" |type? } 'markdown
+	}
+
+	{
+	}
+
+	group "text" 
+	"Gets the raw markdown text from a Markdown value."
+	{
+		argsn 1
+		arg `md: Markdown value`
+		returns `raw markdown text as string`
+	}
+
+	{
+		equal { markdown "Hello" |text } "Hello"
+	}
+
+	{
+	}
+
+	group "to-html" 
+	"Converts a Markdown value to HTML."
+	{
+		argsn 1
+		arg `md: Markdown value`
+		returns `string containing HTML`
+	}
+
+	{
+		equal { markdown "# T" |to-html |contains "<h" } true
+	}
+
+	{
+	}
+
+	group "headings" 
+	"Extracts all headings from markdown text as a list of strings."
+	{
+		argsn 1
+		arg `md: Markdown value`
+		returns `list of strings with headings`
+	}
+
+	{
+		equal { markdown "# A\n## B" |headings |type? } 'list
+	}
+
+	{
+	}
+
+	group "paragraphs" 
+	"Extracts all paragraphs from markdown text as a list of strings."
+	{
+		argsn 1
+		arg `md: Markdown value`
+		returns `list of strings with paragraphs`
+	}
+
+	{
+		equal { markdown "Hello\n\nWorld" |paragraphs |type? } 'list
+	}
+
+	{
+	}
+
+	group "links" 
+	"Extracts all links from markdown text as a list of dictionaries with 'text' and 'url' keys."
+	{
+		argsn 1
+		arg `md: Markdown value`
+		returns `list of dicts with 'text and 'url keys`
+	}
+
+	{
+		equal { markdown "[rye](https://ryelang.org)" |links |type? } 'list
+	}
+
+	{
+	}
+
+}
+
+section "Conversion " "Functions for converting between different types and kinds" {
+	group "convert" 
+	"Converts value from one kind to another based on a conversion specification block."
+	{
+		argsn 2
+		arg `value: Dict or RyeCtx to convert`
+		arg `spec: Block specifying the conversion rules`
+		returns `converted value based on the specification`
+	}
+
+	{
+		; TODO: convert returns different type than expected - needs investigation
+		; equal { dict { "first-name" "John" } |convert { name: .first-name } |type? } 'ctx
+	}
+
+	{
+	}
+
+	group "converter" 
+	"Registers a converter between two kinds of objects."
+	{
+		argsn 3
+		arg `source-kind: Kind to convert from`
+		arg `target-kind: Kind to convert to`
+		arg `spec: Block specifying conversion rules`
+		returns `the target kind with the converter registered`
+	}
+
+	{
+		; TODO: converter test needs proper setup - needs investigation
+		; equal { converter 'source-kind 'target-kind { name: .full-name } |type? } 'kind
+	}
+
+	{
+	}
+
+}
+
+section "Default" "" {
+	group "decode\\hex-string" 
+	"Decodes a hexadecimal string to a UTF-8 string."
+	{
+		argsn 1
+		pure
+		arg `hex-string: hexadecimal string to decode`
+		returns `string containing the decoded bytes as a UTF-8 string`
+	}
+
+	{
+		equal { "48656c6c6f20576f726c64" |decode\hex-string } "Hello World"
+		equal { "48656c6c6f20576f726c64" |decode\hex-string |type? } 'string
+		equal { "invalid" |decode\hex-string |disarm |type? } 'error
+	}
+
+	{
+	}
+
+	group "encode\\hex-string" 
+	"Encodes a string to its hexadecimal representation."
+	{
+		argsn 1
+		pure
+		arg `string: string to encode`
+		returns `hexadecimal string representation`
+	}
+
+	{
+		equal { "Hello World" |encode\hex-string } "48656c6c6f20576f726c64"
+		equal { "Hello World" |encode\hex-string |type? } 'string
+		equal { "" |encode\hex-string } ""
+	}
+
+	{
+	}
+
+	group "clean\\hex-string" 
+	"Removes all whitespace from a hex string and ensures even length."
+	{
+		argsn 1
+		pure
+		arg `hex-string: raw hex string with possible whitespace`
+		returns `cleaned hex string with whitespace removed and even length`
+	}
+
+	{
+		equal { "  70 44 01 4b  \n  55 50 4e 51  " |clean\hex-string } "7044014b55504e51"
+		equal { "70 44 01 4b\t55 50 4e 51\r\n52 0a" |clean\hex-string } "7044014b55504e51520a"
+		equal { "7044014b55504e51520a" |clean\hex-string } "7044014b55504e51520a"
+	}
+
+	{
+	}
+
+	group "charmap\\windows-1250" 
+	"Returns the Windows-1250 (CP1250) character encoding for Central European languages."
+	{
+		pure
+		arg `none`
+		returns `Windows-1250 encoding as a native value`
+	}
+
+	{
+		equal { charmap\windows-1250 |type? } 'native
+		equal { charmap\windows-1250 |kind? } 'charmap-encoding
+	}
+
+	{
+	}
+
+	group "charmap\\iso-8859-1" 
+	"Returns the ISO-8859-1 (Latin-1) character encoding."
+	{
+		pure
+		arg `none`
+		returns `ISO-8859-1 encoding as a native value`
+	}
+
+	{
+		equal { charmap\iso-8859-1 |type? } 'native
+		equal { charmap\iso-8859-1 |kind? } 'charmap-encoding
+	}
+
+	{
+	}
+
+	group "charmap\\iso-8859-2" 
+	"Returns the ISO-8859-2 (Latin-2) character encoding for Central European languages."
+	{
+		pure
+		arg `none`
+		returns `ISO-8859-2 encoding as a native value`
+	}
+
+	{
+		equal { charmap\iso-8859-2 |type? } 'native
+		equal { charmap\iso-8859-2 |kind? } 'charmap-encoding
+	}
+
+	{
+	}
+
+	group "charmap\\windows-1252" 
+	"Returns the Windows-1252 character encoding for Western European languages."
+	{
+		pure
+		arg `none`
+		returns `Windows-1252 encoding as a native value`
+	}
+
+	{
+		equal { charmap\windows-1252 |type? } 'native
+		equal { charmap\windows-1252 |kind? } 'charmap-encoding
+	}
+
+	{
+	}
+
+	group "charmap\\code-page-437" 
+	"Returns the Code Page 437 (DOS/IBM PC) character encoding."
+	{
+		pure
+		arg `none`
+		returns `Code Page 437 encoding as a native value`
+	}
+
+	{
+		equal { charmap\code-page-437 |type? } 'native
+		equal { charmap\code-page-437 |kind? } 'charmap-encoding
+	}
+
+	{
+	}
+
+	group "charmap\\code-page-850" 
+	"Returns the Code Page 850 (DOS Latin-1) character encoding."
+	{
+		pure
+		arg `none`
+		returns `Code Page 850 encoding as a native value`
+	}
+
+	{
+		equal { charmap\code-page-850 |type? } 'native
+		equal { charmap\code-page-850 |kind? } 'charmap-encoding
+	}
+
+	{
+	}
+
+	group "charmap\\koi8r" 
+	"Returns the KOI8-R character encoding for Russian."
+	{
+		pure
+		arg `none`
+		returns `KOI8-R encoding as a native value`
+	}
+
+	{
+		equal { charmap\koi8r |type? } 'native
+		equal { charmap\koi8r |kind? } 'charmap-encoding
+	}
+
+	{
+	}
+
+	group "charmap-encoding//Decoder" 
+	"Creates a new text decoder for the given character encoding."
+	{
+		argsn 1
+		pure
+		arg `encoding: charmap encoding as a native value`
+		returns `text decoder as a native value`
+	}
+
+	{
+		equal { charmap\windows-1250 |Decoder |type? } 'native
+		equal { charmap\windows-1250 |Decoder |kind? } 'text-decoder
+	}
+
+	{
+	}
+
+	group "charmap-encoding//Encoder" 
+	"Creates a new text encoder for the given character encoding."
+	{
+		argsn 1
+		pure
+		arg `encoding: charmap encoding as a native value`
+		returns `text encoder as a native value`
+	}
+
+	{
+		equal { charmap\windows-1250 |Encoder |type? } 'native
+		equal { charmap\windows-1250 |Encoder |kind? } 'text-encoder
+	}
+
+	{
+	}
+
+	group "text-decoder//Decode" 
+	"Decodes a string using the given text decoder."
+	{
+		argsn 2
+		pure
+		arg `decoder: text decoder as a native value`
+		arg `input: string to decode`
+		returns `decoded string`
+	}
+
+	{
+		equal { charmap\windows-1250 |Decoder |Decode "Plačilo računa" |contains "č" } 1
+		equal { charmap\windows-1250 |Decoder |Decode "Hello" } "Hello"
+		equal { charmap\windows-1250 |Decoder |Decode "" } ""
+	}
+
+	{
+	}
+
+	group "text-encoder//Encode" 
+	"Encodes a string using the given text encoder."
+	{
+		argsn 2
+		pure
+		arg `encoder: text encoder as a native value`
+		arg `input: string to encode`
+		returns `encoded string`
+	}
+
+	{
+		equal { charmap\windows-1250 |Encoder |Encode "Hello" } "Hello"
+		equal { charmap\windows-1250 |Encoder |Encode "Plačilo" |encode\hex-string } "506c61e8696c6f"
+	}
+
+	{
+	}
+
+	group "is-space" 
+	"Checks if a single character string is a whitespace character."
+	{
+		argsn 1
+		pure
+		arg `input: string to check (should be single character)`
+		returns `boolean true if character is whitespace, false otherwise`
+	}
+
+	{
+		equal { " " |is-space } true
+		equal { "\t" |is-space } true
+		equal { "\n" |is-space } true
+		equal { "\r" |is-space } true
+		equal { "a" |is-space } false
+		equal { "A" |is-space } false
+		equal { "1" |is-space } false
+	}
+
+	{
+	}
+
+	group "remove-all-space" 
+	"Removes all whitespace characters from a string."
+	{
+		argsn 1
+		pure
+		arg `input: string to process`
+		returns `string with all whitespace characters removed`
+	}
+
+	{
+		equal { "Hello World" |remove-all-space } "HelloWorld"
+		equal { "  Hello  World  " |remove-all-space } "HelloWorld"
+		equal { "\t\n Hello \r\n World \t" |remove-all-space } "HelloWorld"
+		equal { "" |remove-all-space } ""
+	}
+
+	{
+	}
+
+}
+
+section "SQLite " "SQLite database functions" {
+	group "sqlite-uri//Open" 
+	"Opens a connection to a SQLite database file."
+	{
+		argsn 1
+		arg `uri: path to SQLite database file`
+		returns `native SQLite database connection`
+	}
+
+	{
+		equal { Open sqlite://test.db |type? } 'native
+	}
+
+	{
+`db: Open sqlite://mydata.db
+db .Exec "CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, age INTEGER)"
+db .Exec { INSERT INTO users ( name , age ) VALUES ( "Alice" , 30 ) }
+db .Query { SELECT * FROM users WHERE age > 25 } |print
+name: "Bob"
+db .Exec { INSERT INTO users ( name , age ) VALUES ( ?name , 42 ) }
+
+`	}
+
+	group "htmlize" 
+	"Converts a table to HTML format."
+	{
+		argsn 1
+		arg `table: table to convert to HTML`
+		returns `string containing HTML representation of the table`
+	}
+
+	{
+		equal { table { "name" "age" } { "Bob" 25 "Alice" 30 } |htmlize |type? } 'string
+	}
+
+	{
+	}
+
+	group "Rye-sqlite//Exec" 
+	"Executes a SQL statement that doesn't return rows."
+	{
+		argsn 2
+		arg `db: SQLite database connection`
+		arg `sql: SQL statement as string or block`
+		returns `database connection`
+	}
+
+	{
+		equal { Open sqlite://test.db |Exec "CREATE TABLE IF NOT EXISTS test (id INTEGER, name TEXT)" |type? } 'native
+	}
+
+	{
+	}
+
+	group "Rye-sqlite//Query" 
+	"Executes a SQL query and returns results as a table."
+	{
+		argsn 2
+		arg `db: SQLite database connection`
+		arg `sql: SQL query as string, SQL-DSL block, or a block where first value is SQL string and the rest are parameters`
+		returns `table containing query results`
+	}
+
+	{
+		equal { Open sqlite://test.db |Query "SELECT * FROM test" |type? } 'table
+		; Also supports: db .Query { "SELECT * FROM test WHERE id = ?" 123 }
+	}
+
+	{
+	}
+
+	group "Rye-sqlite//Show-SQL" 
+	"Generates and returns the SQL string without executing it."
+	{
+		argsn 2
+		arg `db: SQLite database connection`
+		arg `sql: SQL query as string or block`
+		returns `string containing the generated SQL with parameters`
+	}
+
+	{
+		equal { id: 123 Open sqlite://test.db |Show-SQL { SELECT * FROM test WHERE id = ?id } |type? } 'string
+	}
+
+	{
+	}
+
+	group "Rye-sqlite//Close" 
+	"Closes the SQLite database connection."
+	{
+		argsn 1
+		arg `db: SQLite database connection`
+		returns `integer 1 on successful close, error otherwise`
+	}
+
+	{
+		equal { db: Open sqlite://test.db db .Close |type? } 'integer
+	}
+
+	{
+	}
+
+}
+
+section "PostgreSQL " "" {
+	group "postgres-uri//Open" 
+	"Opens a connection to a PostgreSQL database."
+	{
+		argsn 1
+		arg `uri: PostgreSQL connection string URI (format: postgres://username:password@host:port/database)`
+		returns `native PostgreSQL database connection (type: "Rye-psql")error if connection fails`
+	}
+
+	{
+		example { Open postgres://user:pass@localhost:5432/dbname }
+	}
+
+	{
+	}
+
+	group "Rye-psql//Exec" 
+	"Executes a SQL statement that modifies data (INSERT, UPDATE, DELETE)."
+	{
+		argsn 2
+		arg `db: PostgreSQL database connection (type: "Rye-psql")`
+		arg `sql: SQL statement as string or block (for data modification: INSERT, UPDATE, DELETE)`
+		returns `integer number of rows affectederror if execution fails`
+	}
+
+	{
+	}
+
+	{
+`Open postgres://user:pass@localhost:5432/dbname
+|Exec { INSERT INTO test VALUES ( 1 , "test" ) }
+; mind the mandatory spacing in SQL dialect
+`	}
+
+	group "Rye-psql//Query" 
+	"Executes a SQL query and returns results as a table."
+	{
+		argsn 2
+		arg `db: PostgreSQL database connection (type: "Rye-psql")`
+		arg `sql: SQL query as string or block (SELECT statements)`
+		returns `table containing query results (SQL NULL values converted to Void{})error if query fails or returns no data`
+	}
+
+	{
+	}
+
+	{
+`db: Open postgres://user:pass@localhost:5432/dbname
+db .Query "SELECT * FROM test"
+`	}
+
+	group "Rye-psql//Show-SQL" 
+	"Generates and returns the SQL string without executing it."
+	{
+		argsn 2
+		arg `db: PostgreSQL database connection (type: "Rye-psql")`
+		arg `sql: SQL query as string or block (for debugging/inspection)`
+		returns `string containing the generated SQL with parameters (includes parameter comments if present)error if SQL is empty`
+	}
+
+	{
+	}
+
+	{
+`name: "Bob"
+Open postgres://user:pass@localhost:5432/dbname
+|Show-SQL {  SELECT * FROM users WHERE first_name = ?name}
+`	}
+
+	group "Rye-psql//Close" 
+	"Closes the PostgreSQL database connection."
+	{
+		argsn 1
+		arg `db: PostgreSQL database connection`
+		returns `integer 1 on successful close, error otherwise`
+	}
+
+	{
+	}
+
+	{
+	}
+
+}
+
+section "MySQL " "MySQL database functions" {
+	group "mysql-uri//Open" 
+	"Opens a connection to a MySQL database."
+	{
+		argsn 1
+		arg `uri: MySQL connection string URI`
+		returns `native MySQL database connection`
+	}
+
+	{
+	}
+
+	{
+`Open mysql://user:pass@tcp(localhost)/dbname
+`	}
+
+	group "mysql-uri//Open\\pwd" 
+	"Opens a connection to a MySQL database with separate password parameter."
+	{
+		argsn 2
+		arg `uri: MySQL connection string URI without password`
+		arg `password: Password for the database connection`
+		returns `native MySQL database connection`
+	}
+
+	{
+	}
+
+	{
+`equal { Open\pwd mysql://user@tcp(localhost:3306)/dbname" "password"
+`	}
+
+	group "Rye-mysql//Exec" 
+	"Executes a SQL statement that modifies data (INSERT, UPDATE, DELETE)."
+	{
+		argsn 2
+		arg `db: MySQL database connection`
+		arg `sql: SQL statement as string or block`
+		returns `integer 1 if rows were affected, error otherwise`
+	}
+
+	{
+	}
+
+	{
+`Open mysql://user:pass@tcp(localhost:3306)/dbname" ,
+|Exec { INSERT INTO test VALUES ( 1 , "test" ) }
+`	}
+
+	group "Rye-mysql//Query" 
+	"Executes a SQL query and returns results as a table."
+	{
+		argsn 2
+		arg `db: MySQL database connection`
+		arg `sql: SQL query as string or block`
+		returns `table containing query results`
+	}
+
+	{
+	}
+
+	{
+`id: 101
+db: Open mysql://user:pass@tcp(localhost:3306)/dbname
+db .Query { SELECT * FROM test where id = ?id }
+`	}
+
+	group "Rye-mysql//Close" 
+	"Closes the MySQL database connection."
+	{
+		argsn 1
+		arg `db: MySQL database connection`
+		returns `integer 1 on successful close, error otherwise`
+	}
+
+	{
+	}
+
+	{
+`equal { db: Open mysql://user:pass@tcp(localhost:3306)/dbname db .Close |type? } 'integer
+`	}
+
+}
+
+section "Basic Cryptographic Operations " "Hashing, encoding, and basic cryptographic functions" {
+	group "decode\\hex" 
+	"Decodes a hexadecimal string to a bytes native value."
+	{
+		argsn 1
+		arg `hex-string: hexadecimal encoded string to decode`
+		returns `native bytes object containing the decoded data`
+	}
+
+	{
+		equal { cc crypto "48656c6c6f20776f726c64" |decode\hex |type? } 'native
+		equal { cc crypto "48656c6c6f20776f726c64" |decode\hex |kind? } 'bytes
+		equal { cc crypto "invalid" |decode\hex |disarm |type? } 'error
+	}
+
+	{
+	}
+
+	group "encode-to\\hex" 
+	"Encodes a bytes native value to a hexadecimal string."
+	{
+		argsn 1
+		arg `bytes: native bytes object to encode`
+		returns `string containing the hexadecimal representation of the bytes`
+	}
+
+	{
+		equal { cc crypto "48656c6c6f20776f726c64" |decode\hex |encode-to\hex } "48656c6c6f20776f726c64"
+		equal { cc crypto "Hello world" |sha512 |decode\hex |encode-to\hex |type? } 'string
+	}
+
+	{
+	}
+
+	group "Ed25519-pub-key//To-string" 
+	"Converts an Ed25519 public key to its hexadecimal string representation."
+	{
+		argsn 1
+		arg `key: Ed25519 public key as a native value`
+		returns `string containing the hexadecimal representation of the public key`
+	}
+
+	{
+		equal { cc crypto ed25519-generate-keys |first |string |type? } 'string
+	}
+
+	{
+	}
+
+	group "Ed25519-priv-key//To-string" 
+	"Converts an Ed25519 private key to its hexadecimal string representation."
+	{
+		argsn 1
+		arg `key: Ed25519 private key as a native value`
+		returns `string containing the hexadecimal representation of the private key`
+	}
+
+	{
+		equal { cc crypto ed25519-generate-keys |second |string |type? } 'string
+	}
+
+	{
+	}
+
+	group "ed25519-generate-keys" 
+	"Generates a new Ed25519 key pair and returns them in a block with public key first, then private key."
+	{
+		arg `none`
+		returns `block containing [public-key, private-key] as native values`
+	}
+
+	{
+		equal { cc crypto ed25519-generate-keys |type? } 'block
+		equal { cc crypto ed25519-generate-keys |length? } 2
+		equal { cc crypto ed25519-generate-keys |first |type? } 'native
+		equal { cc crypto ed25519-generate-keys |first |kind? } 'Ed25519-pub-key
+		equal { cc crypto ed25519-generate-keys |second |type? } 'native
+		equal { cc crypto ed25519-generate-keys |second |kind? } 'Ed25519-priv-key
+	}
+
+	{
+	}
+
+	group "ed25519-private-key" 
+	"Creates an Ed25519 private key from a hexadecimal string or bytes value."
+	{
+		argsn 1
+		arg `key-data: string containing hexadecimal representation of the key or bytes native value`
+		returns `Ed25519 private key as a native value`
+	}
+
+	{
+		; equal { cc crypto ed25519-generate-keys |second |ed25519-private-key |type? } 'native
+		; equal { cc crypto ed25519-generate-keys |second |string |probe |ed25519-private-key |kind? } 'Ed25519-priv-key
+		equal { cc crypto "invalid" |ed25519-private-key |disarm |type? } 'error
+	}
+
+	{
+	}
+
+	group "ed25519-public-key" 
+	"Creates an Ed25519 public key from a hexadecimal string or bytes value."
+	{
+		argsn 1
+		arg `key-data: string containing hexadecimal representation of the key or bytes native value`
+		returns `Ed25519 public key as a native value`
+	}
+
+	{
+		; equal { cc crypto ed25519-generate-keys |first |string |ed25519-public-key |type? } 'native
+		; equal { cc crypto ed25519-generate-keys |first |string |ed25519-public-key |kind? } 'Ed25519-pub-key
+		equal { cc crypto "invalid" |ed25519-public-key |disarm |type? } 'error
+	}
+
+	{
+	}
+
+	group "Ed25519-priv-key//Sign" 
+	"Signs a string message with an Ed25519 private key and returns the signature as bytes."
+	{
+		argsn 2
+		arg `key: Ed25519 private key as a native value`
+		arg `message: string to sign`
+		returns `signature as a native bytes value`
+	}
+
+	{
+		; equal { cc crypto
+		;   ed25519-generate-keys |set { pub priv }
+		;   "Hello world" priv |sign |type?
+		; } 'native
+		; equal { cc crypto
+		;   ed25519-generate-keys |set { pub priv }
+		;  "Hello world" priv |sign |kind?
+		; } 'bytes
+	}
+
+	{
+	}
+
+	group "sha512" 
+	"Calculates the SHA-512 hash of a string and returns the result as a hexadecimal string."
+	{
+		argsn 1
+		arg `input: string to hash`
+		returns `string containing the hexadecimal representation of the SHA-512 hash`
+	}
+
+	{
+		equal { cc crypto "Hello world" |sha512 |type? } 'string
+		equal { cc crypto "Hello world" |sha512 |length? } 128
+		equal { cc crypto "" |sha512 } "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e"
+	}
+
+	{
+	}
+
+}
+
+section "Age " "Age encryption/decryption and key generation" {
+	group "age-generate-keys" 
+	"Generates a new age key pair (identity and recipient)."
+	{
+	}
+
+	{
+		equal { cc crypto age-generate-keys |first |type? } 'native
+		equal { cc crypto age-generate-keys |first |kind? } 'age-identity
+		equal { cc crypto age-generate-keys |second |type? } 'native
+		equal { cc crypto age-generate-keys |second |kind? } 'age-recipient
+	}
+
+	{
+	}
+
+	group "age-identity" 
+	"Creates an age identity from a string or bytes."
+	{
+		argsn 1
+	}
+
+	{
+		equal { cc crypto age-identity "AGE-SECRET-KEY-1UMNMNLE5ADV4V0X8LRMG4GVWM3WJ7GVH6JP3J2XSRDFENLJVVX4SDLWXML" |type? } 'native
+		equal { cc crypto age-identity "AGE-SECRET-KEY-1UMNMNLE5ADV4V0X8LRMG4GVWM3WJ7GVH6JP3J2XSRDFENLJVVX4SDLWXML" |kind? } 'age-identity
+		equal { cc crypto age-identity "invalid" |disarm |type? } 'error
+	}
+
+	{
+	}
+
+	group "age-recipient" 
+	"Creates an age recipient from a string or bytes."
+	{
+		argsn 1
+	}
+
+	{
+		equal { cc crypto age-recipient "age1zwya0qq8c824n5ncxppekrm4egk6gnvfhag6dmr87xjqaeuwlsgq68mqj4" |type? } 'native
+		equal { cc crypto age-recipient "age1zwya0qq8c824n5ncxppekrm4egk6gnvfhag6dmr87xjqaeuwlsgq68mqj4" |kind? } 'age-recipient
+		equal { cc crypto age-recipient "invalid" |disarm |type? } 'error
+	}
+
+	{
+	}
+
+	group "age-encrypt" 
+	"Encrypts a reader with age for the provided age recipient or string password and returns a reader."
+	{
+		argsn 2
+	}
+
+	{
+		equal { cc crypto
+		age-generate-keys |set { identity recipient }
+		"SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |Read\string
+		} "SUPER SECRET"
+		equal { cc crypto "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |Read\string } "SUPER SECRET"
+	}
+
+	{
+	}
+
+	group "age-decrypt" 
+	"Decrypts a reader with age using the provided age identity or string password and returns a reader with the decrypted content."
+	{
+		argsn 2
+		arg `reader: encrypted data as a reader native value`
+		arg `identity-or-password: age identity native value or password string`
+		returns `decrypted data as a reader native value`
+	}
+
+	{
+		equal { cc crypto
+		age-generate-keys |set { identity recipient }
+		"SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |Read\string
+		} "SUPER SECRET"
+		equal { cc crypto "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |Read\string } "SUPER SECRET"
+	}
+
+	{
+	}
+
+	group "pkcs12-to-pem" 
+	"Converts a PKCS#12 (.p12) file bytes to PEM blocks using the provided password. Returns a block of pem-block native values."
+	{
+		argsn 2
+		arg `p12-data: PKCS#12 file content as bytes native value`
+		arg `password: string password for the PKCS#12 file`
+		returns `block containing PEM blocks as native values`
+	}
+
+	{
+		; equal { cc crypto "cert.p12" read-file "password" pkcs12-to-pem |type? } 'block
+		; equal { cc crypto "cert.p12" read-file "password" pkcs12-to-pem |first |type? } 'native
+		; equal { cc crypto "cert.p12" read-file "password" pkcs12-to-pem |first |kind? } 'pem-block
+	}
+
+	{
+	}
+
+	group "pkcs12-decode" 
+	"Decodes a PKCS#12 (.p12) file bytes into private key and certificates using the provided password. Returns a block with [private-key, certificates, ca-certificates]."
+	{
+		argsn 2
+		arg `p12-data: PKCS#12 file content as bytes native value`
+		arg `password: string password for the PKCS#12 file`
+		returns `block containing [private-key, certificates-block, ca-certificates-block] as native values`
+	}
+
+	{
+		; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |type? } 'block
+		; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |length? } 3
+		; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |first |type? } 'native
+		; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |first |kind? } 'private-key
+		; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |second |type? } 'block
+		; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |third |type? } 'block
+	}
+
+	{
+	}
+
+}
+
+section "PEM Operations " "PEM format encoding and decoding operations" {
+	group "pem-block//Block-type?" 
+	"Returns the type of a PEM block as a string (e.g., 'CERTIFICATE', 'RSA PRIVATE KEY')."
+	{
+		argsn 1
+		arg `pem-block: PEM block as a native value`
+		returns `string containing the block type (e.g., "CERTIFICATE", "RSA PRIVATE KEY")`
+	}
+
+	{
+		; equal { cc crypto "cert.pem" read-file |pem-decode |block-type? } "CERTIFICATE"
+	}
+
+	{
+	}
+
+	group "pem-block//Headers?" 
+	"Returns the headers of a PEM block as a dictionary."
+	{
+		argsn 1
+		arg `pem-block: PEM block as a native value`
+		returns `dictionary containing the PEM block headers`
+	}
+
+	{
+		; equal { cc crypto "cert.pem" read-file |pem-decode |headers? |type? } 'dict
+	}
+
+	{
+	}
+
+	group "x509-parse-certificate" 
+	"Parses a PEM block into an X.509 certificate native value."
+	{
+		argsn 1
+		arg `pem-block: PEM block as a native value containing a certificate`
+		returns `X.509 certificate as a native value`
+	}
+
+	{
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |type? } 'native
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |kind? } 'x509-certificate
+	}
+
+	{
+	}
+
+	group "x509-certificate//Not-after?" 
+	"Returns the expiration date (NotAfter) of an X.509 certificate as a time value."
+	{
+		argsn 1
+		arg `certificate: X.509 certificate as a native value`
+		returns `time value representing the certificate's expiration date`
+	}
+
+	{
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |not-after? |type? } 'time
+	}
+
+	{
+	}
+
+	group "x509-certificate//Not-before?" 
+	"Returns the start date (NotBefore) of an X.509 certificate as a time value."
+	{
+		argsn 1
+		arg `certificate: X.509 certificate as a native value`
+		returns `time value representing the certificate's start date`
+	}
+
+	{
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |not-before? |type? } 'time
+	}
+
+	{
+	}
+
+	group "x509-certificate//Is-expired" 
+	"Checks if an X.509 certificate has expired. Returns 1 if expired, 0 otherwise."
+	{
+		argsn 1
+		arg `certificate: X.509 certificate as a native value`
+		returns `integer 1 if the certificate has expired, 0 otherwise`
+	}
+
+	{
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |is-expired |type? } 'integer
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |is-expired } 0 ; assuming cert is not expired
+	}
+
+	{
+	}
+
+	group "generate-self-signed-certificate" 
+	"Generates a self-signed X.509 certificate with a new RSA key pair."
+	{
+		argsn 2
+		arg `key-size: integer, must be at least 2048 bits`
+		arg `subject: dictionary with fields like "CommonName" and "Organization"`
+		returns `block containing [certificate, private-key] as native values`
+	}
+
+	{
+		; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |type? } 'block
+		; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |length? } 2
+		; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |at 0 |type? } 'native
+		; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |at 0 |kind? } 'x509-certificate
+		; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |at 1 |type? } 'native
+		; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |at 1 |kind? } 'rsa-private-key
+		; equal { cc crypto generate-self-signed-certificate 1024 { "CommonName" "test.com" } |disarm |type? } 'error
+	}
+
+	{
+	}
+
+	group "encode-to-pem" 
+	"Encodes a certificate and private key as PEM-formatted data."
+	{
+		argsn 2
+		arg `certificate: X.509 certificate as a native value`
+		arg `private-key: RSA private key as a native value`
+		returns `block with [cert-bytes, key-bytes] as Go-bytes native values`
+	}
+
+	{
+		; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set { cert key } cert key encode-to-pem |type? } 'block
+		; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set { cert key }   cert key encode-to-pem |length? } 2
+		; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set { cert key }   cert key encode-to-pem |at 0 |type? } 'native
+		; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set { cert key }   cert key encode-to-pem |at 0 |kind? } 'Go-bytes
+		; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set { cert key }   cert key encode-to-pem |at 1 |type? } 'native
+		; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set { cert key }   cert key encode-to-pem |at 1 |kind? } 'Go-bytes
+		; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set { cert key }   cert key encode-to-pem |at 0 "data/cert.pem" write-file "data/cert.pem" read-file |x509-parse-certificate |is-expired } 0
+	}
+
+	{
+	}
+
+	group "encode-to-p12" 
+	"Encodes a certificate and private key into a PKCS#12 (.p12) file with password protection."
+	{
+		argsn 3
+		arg `certificate: X.509 certificate as a native value`
+		arg `private-key: RSA private key as a native value`
+		arg `password: string password to protect the PKCS#12 file`
+		returns `PKCS#12 encoded data as Go-bytes native value`
+	}
+
+	{
+		; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set { cert key } cert key "password" encode-to-p12 |type? } 'native
+		; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set { cert key } cert key "password" encode-to-p12 |kind? } 'Go-bytes
+	}
+
+	{
+	}
+
+	group "x509-certificate//Subject?" 
+	"Returns the subject Distinguished Name (DN) of an X.509 certificate as a string."
+	{
+		argsn 1
+		arg `certificate: X.509 certificate as a native value`
+		returns `string containing the certificate's subject DN`
+	}
+
+	{
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |subject? |type? } 'string
+	}
+
+	{
+	}
+
+	group "x509-certificate//Issuer?" 
+	"Returns the issuer Distinguished Name (DN) of an X.509 certificate as a string."
+	{
+		argsn 1
+		arg `certificate: X.509 certificate as a native value`
+		returns `string containing the certificate's issuer DN`
+	}
+
+	{
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |issuer? |type? } 'string
+	}
+
+	{
+	}
+
+	group "x509-certificate//Serial-number?" 
+	"Returns the serial number of an X.509 certificate as a string."
+	{
+		argsn 1
+		arg `certificate: X.509 certificate as a native value`
+		returns `string containing the certificate's serial number`
+	}
+
+	{
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |serial-number? |type? } 'string
+	}
+
+	{
+	}
+
+	group "x509-certificate//Signature-algorithm?" 
+	"Returns the signature algorithm of an X.509 certificate as a string."
+	{
+		argsn 1
+		arg `certificate: X.509 certificate as a native value`
+		returns `string containing the certificate's signature algorithm`
+	}
+
+	{
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |signature-algorithm? |type? } 'string
+	}
+
+	{
+	}
+
+	group "x509-certificate//Public-key-algorithm?" 
+	"Returns the public key algorithm of an X.509 certificate as a string."
+	{
+		argsn 1
+		arg `certificate: X.509 certificate as a native value`
+		returns `string containing the certificate's public key algorithm`
+	}
+
+	{
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |public-key-algorithm? |type? } 'string
+	}
+
+	{
+	}
+
+	group "x509-certificate//Key-usage?" 
+	"Returns the key usage flags of an X.509 certificate as a block of strings."
+	{
+		argsn 1
+		arg `certificate: X.509 certificate as a native value`
+		returns `block containing strings of key usage flags`
+	}
+
+	{
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |key-usage? |type? } 'block
+	}
+
+	{
+	}
+
+	group "x509-certificate//Extended-key-usage?" 
+	"Returns the extended key usage flags of an X.509 certificate as a block of strings."
+	{
+		argsn 1
+		arg `certificate: X.509 certificate as a native value`
+		returns `block containing strings of extended key usage flags`
+	}
+
+	{
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |extended-key-usage? |type? } 'block
+	}
+
+	{
+	}
+
+	group "x509-certificate//Dns-names?" 
+	"Returns the DNS names from Subject Alternative Names of an X.509 certificate as a block of strings."
+	{
+		argsn 1
+		arg `certificate: X.509 certificate as a native value`
+		returns `block containing DNS names from Subject Alternative Names`
+	}
+
+	{
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |dns-names? |type? } 'block
+	}
+
+	{
+	}
+
+	group "x509-certificate//Ip-addresses?" 
+	"Returns the IP addresses from Subject Alternative Names of an X.509 certificate as a block of strings."
+	{
+		argsn 1
+		arg `certificate: X.509 certificate as a native value`
+		returns `block containing IP addresses from Subject Alternative Names`
+	}
+
+	{
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |ip-addresses? |type? } 'block
+	}
+
+	{
+	}
+
+	group "x509-certificate//Email-addresses?" 
+	"Returns the email addresses from Subject Alternative Names of an X.509 certificate as a block of strings."
+	{
+		argsn 1
+		arg `certificate: X.509 certificate as a native value`
+		returns `block containing email addresses from Subject Alternative Names`
+	}
+
+	{
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |email-addresses? |type? } 'block
+	}
+
+	{
+	}
+
+	group "x509-certificate//To-pem" 
+	"Converts an X.509 certificate to PEM-encoded string format."
+	{
+		argsn 1
+		arg `certificate: X.509 certificate as a native value`
+		returns `string containing the PEM-encoded certificate`
+	}
+
+	{
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |to-pem |type? } 'string
+	}
+
+	{
+	}
+
+	group "private-key//Type?" 
+	"Returns the type of a private key as a string."
+	{
+		argsn 1
+		arg `private-key: private key as a native value`
+		returns `string containing the type of the private key (e.g., "*rsa.PrivateKey", "*ecdsa.PrivateKey")`
+	}
+
+	{
+		; equal { cc crypto "key.pem" read-file |pem-decode |private-key-type? |type? } 'string
+	}
+
+	{
+	}
+
+	group "x509-certificate//To-dict" 
+	"Converts an X.509 certificate to a dictionary containing all certificate information for easy display and manipulation."
+	{
+		argsn 1
+		arg `certificate: X.509 certificate as a native value`
+		returns `dictionary containing all certificate information`
+	}
+
+	{
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |to-dict |type? } 'dict
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |to-dict |get "Subject" |type? } 'string
+	}
+
+	{
+	}
+
+}
+
+section "Bcrypt " "Functions for bcrypt password hashing and token generation" {
+	group "bcrypt-hash" 
+	"Generates a bcrypt hash from a password string."
+	{
+		argsn 1
+		arg `password: String to hash`
+		arg `password: String to hash`
+		returns `string containing the bcrypt hash of the passwordstring containing the bcrypt hash of the password`
+	}
+
+	{
+		equal { bcrypt-hash "secret" |type? } 'string
+	}
+
+	{
+	}
+
+	group "bcrypt-check" 
+	"Compares a bcrypt hash with a plain text password."
+	{
+		argsn 2
+		arg `hash: String containing the bcrypt hash`
+		arg `password: Plain text password to compare`
+		arg `hash: String containing the bcrypt hash`
+		arg `password: Plain text password to compare`
+		returns `integer 1 if the password matches the hash, 0 otherwiseinteger 1 if the password matches the hash, 0 otherwise`
+	}
+
+	{
+		equal { bcrypt-check "$2a$10$N9qo8uLOickgx2ZMRZo4e.PFTlCOKQOLawQy5AdYyZuG7JC2rA9e." "password" } 1
+		equal { bcrypt-check "$2a$10$N9qo8uLOickgx2ZMRZo4e.PFTlCOKQOLawQy5AdYyZuG7JC2rA9e." "wrong" } 0
+	}
+
+	{
+	}
+
+	group "generate-token" 
+	"Generates a cryptographically secure random token of the specified length in bytes."
+	{
+		argsn 1
+		arg `length: Integer number of random bytes to generate`
+		arg `length: Integer number of random bytes to generate`
+		returns `string containing the hex-encoded random tokenstring containing the hex-encoded random token`
+	}
+
+	{
+		equal { generate-token 4 |length? } 8
+		error { generate-token "x" }
+	}
+
+	{
+	}
+
+}
+
+section "Math context and dialect " "Mathematical context and dialect (calc)" {
+	group "mod" 
+	"Returns the remainder of dividing x by y."
+	{
+		argsn 2
+		arg `x: integer or decimal value`
+		arg `y: integer or decimal value`
+		returns `decimal remainder of x/y`
+	}
+
+	{
+		math .change! 'root-ctx   ; temporary way to change context ... will systemize it #TODO, rename root-ctx to curr-ctx and leave root-ctx for returning to it
+		equal { cc math |type? } 'context
+		equal { mod 10 3 } 1.0
+	}
+
+	{
+	}
+
+	group "pow" 
+	"Returns base raised to the power of exponent."
+	{
+		argsn 2
+		arg `base: integer, decimal, or complex value`
+		arg `exponent: integer, decimal, or complex value`
+		returns `decimal result of base raised to the power of exponent for integer/decimal inputs, complex result for complex inputs`
+	}
+
+	{
+		equal { cc math |type? } 'context
+		equal { pow 2 3 } 8.0
+		stdout { pow complex 2 0 complex 3 0 |prn } "8.000000+0.000000i"
+		stdout { pow complex 0 1 complex 2 0 |prn } "-1.000000+0.000000i"
+	}
+
+	{
+	}
+
+	group "log2" 
+	"Returns the binary logarithm (base-2) of x."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal binary logarithm of x`
+	}
+
+	{
+		equal { log2 8 } 3.0
+		equal { log2 1 } 0.0
+	}
+
+	{
+	}
+
+	group "log10" 
+	"Returns the decimal logarithm (base-10) of x."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal base-10 logarithm of x`
+	}
+
+	{
+		equal { log10 100 } 2.0
+	}
+
+	{
+	}
+
+	group "log" 
+	"Returns the natural logarithm of x."
+	{
+		argsn 1
+		arg `x: integer, decimal, complex, vector or matrix value`
+		returns `natural logarithm of x (element-wise for vector/matrix)`
+	}
+
+	{
+		equal { log 1 } 0.0
+		equal { log 2.718281828459045 } 1.0
+		stdout { log complex 1 0 |prn } "0.000000+0.000000i"
+		stdout { log complex 2.718281828459045 0 |prn } "1.000000+0.000000i"
+		; error { log 0 }
+		; error { log complex 0 0 }
+		equal { log vector { 1.0 2.718281828459045 } |vec-to-block |first } 0.0
+		equal { log matrix { 1 2 } { 1.0 2.718281828459045 } |mat-get 0 0 } 0.0
+	}
+
+	{
+	}
+
+	group "log1p" 
+	"Returns the natural logarithm of 1 plus its argument x."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal natural logarithm of (1 + x)`
+	}
+
+	{
+		equal { log1p 0 } 0.0
+	}
+
+	{
+	}
+
+	group "logb" 
+	"Returns the binary exponent of x."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal binary exponent of x`
+	}
+
+	{
+		equal { logb 8 } 3.0
+	}
+
+	{
+	}
+
+	group "sq" 
+	"Returns the square of x."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal square of x`
+	}
+
+	{
+		equal { sq 4 } 16.0
+		equal { sq -3 } 9.0
+	}
+
+	{
+	}
+
+	group "sin" 
+	"Returns the sine of the radian argument."
+	{
+		argsn 1
+		arg `x: integer, decimal, or complex value in radians`
+		returns `decimal sine of x for integer/decimal input, complex sine for complex input`
+	}
+
+	{
+		equal { sin 0 } 0.0
+		equal { round\to sin pi 10 } 0.0
+		stdout { sin complex 0 0 |prn } "0.000000+0.000000i"
+		stdout { sin complex 1.570796326794897 0 |prn } "1.000000+-0.000000i"
+	}
+
+	{
+	}
+
+	group "cos" 
+	"Returns the cosine of the radian argument."
+	{
+		argsn 1
+		arg `x: integer, decimal, or complex value in radians`
+		returns `decimal cosine of x for integer/decimal input, complex cosine for complex input`
+	}
+
+	{
+		equal { cos 0 } 1.0
+		stdout { cos complex 0 0 |prn } "1.000000+-0.000000i"
+		stdout { cos complex 3.141592653589793 0 |prn } "-1.000000+-0.000000i"
+	}
+
+	{
+	}
+
+	group "tan" 
+	"Returns the tangent of the radian argument."
+	{
+		argsn 1
+		arg `x: integer, decimal, or complex value in radians`
+		returns `decimal tangent of x for integer/decimal input, complex tangent for complex input`
+	}
+
+	{
+		equal { tan 0 } 0.0
+		stdout { tan complex 0 0 |prn } "0.000000+0.000000i"
+		stdout { tan complex 0.7853981633974483 0 |prn } "1.000000+0.000000i"
+	}
+
+	{
+	}
+
+	group "sqrt" 
+	"Returns the square root of x."
+	{
+		argsn 1
+		arg `x: integer, decimal, complex, vector or matrix value`
+		returns `square root of x (element-wise for vector/matrix)`
+	}
+
+	{
+		equal { sqrt 9 } 3.0
+		equal { sqrt 2.0 |round\to 4 } 1.4142
+		stdout { sqrt complex -1 0 |prn } "0.000000+1.000000i"
+		equal { sqrt vector { 4.0 9.0 16.0 } |vec-to-block |first } 2.0
+		equal { sqrt matrix { 2 2 } { 4.0 9.0 16.0 25.0 } |mat-get 1 1 } 5.0
+	}
+
+	{
+	}
+
+	group "abs" 
+	"Returns the absolute value of a number."
+	{
+		argsn 1
+		arg `x: integer, decimal, complex, vector or matrix value`
+		returns `absolute value of x (element-wise for vector/matrix)`
+	}
+
+	{
+		equal { abs -5 } 5
+		equal { abs 5 } 5
+		equal { abs complex 3 4 } 5.0
+		equal { abs vector { -1.0 2.0 -3.0 } |vec-to-block |first } 1.0
+		equal { abs matrix { 2 2 } { -1.0 2.0 -3.0 4.0 } |mat-get 1 0 } 3.0
+	}
+
+	{
+	}
+
+	group "acos" 
+	"Returns the arccosine (inverse cosine) in radians."
+	{
+		argsn 1
+		arg `x: integer or decimal value between -1 and 1`
+		returns `decimal arccosine of x in radians`
+	}
+
+	{
+		equal { acos 1 } 0.0
+	}
+
+	{
+	}
+
+	group "acosh" 
+	"Returns the inverse hyperbolic cosine."
+	{
+		argsn 1
+		arg `x: integer or decimal value >= 1`
+		returns `decimal inverse hyperbolic cosine of x`
+	}
+
+	{
+		equal { acosh 1 } 0.0
+	}
+
+	{
+	}
+
+	group "asin" 
+	"Returns the arcsine (inverse sine) in radians."
+	{
+		argsn 1
+		arg `x: integer or decimal value between -1 and 1`
+		returns `decimal arcsine of x in radians`
+	}
+
+	{
+		equal { asin 0 } 0.0
+	}
+
+	{
+	}
+
+	group "asinh" 
+	"Returns the inverse hyperbolic sine."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal inverse hyperbolic sine of x`
+	}
+
+	{
+		equal { asinh 0 } 0.0
+	}
+
+	{
+	}
+
+	group "atan" 
+	"Returns the arctangent (inverse tangent) in radians."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal arctangent of x in radians`
+	}
+
+	{
+		equal { atan 0 } 0.0
+	}
+
+	{
+	}
+
+	group "atan2" 
+	"Returns the arc tangent of y/x, using the signs of the two to determine the quadrant of the return value."
+	{
+		argsn 2
+		arg `y: integer or decimal value`
+		arg `x: integer or decimal value`
+		returns `decimal arctangent of y/x in radians, using signs to determine quadrant`
+	}
+
+	{
+		equal { atan2 0 1 } 0.0
+	}
+
+	{
+	}
+
+	group "atanh" 
+	"Returns the inverse hyperbolic tangent."
+	{
+		argsn 1
+		arg `x: integer or decimal value between -1 and 1`
+		returns `decimal inverse hyperbolic tangent of x`
+	}
+
+	{
+		equal { atanh 0 } 0.0
+	}
+
+	{
+	}
+
+	group "ceil" 
+	"Returns the least integer value greater than or equal to x."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal ceiling of x (smallest integer >= x)`
+	}
+
+	{
+		equal { ceil 3.1 } 4.0
+	}
+
+	{
+	}
+
+	group "cbrt" 
+	"Returns the cube root of x."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal cube root of x`
+	}
+
+	{
+		equal { cbrt 8 } 2.0
+	}
+
+	{
+	}
+
+	group "copysign" 
+	"Returns a value with the magnitude of x and the sign of y."
+	{
+		argsn 2
+		arg `x: integer or decimal value`
+		arg `y: integer or decimal value`
+		returns `decimal with magnitude of x and sign of y`
+	}
+
+	{
+		equal { copysign 1.0 -2.0 } -1.0
+	}
+
+	{
+	}
+
+	group "dim" 
+	"Returns the maximum of x-y or 0."
+	{
+		argsn 2
+		arg `x: integer or decimal value`
+		arg `y: integer or decimal value`
+		returns `decimal max(x-y, 0)`
+	}
+
+	{
+		equal { dim 5 3 } 2.0
+		equal { dim 3 5 } 0.0
+	}
+
+	{
+	}
+
+	group "round\\to" 
+	"Rounds a decimal to the specified number of decimal places."
+	{
+		argsn 2
+		arg `x: decimal value to round`
+		arg `digits: integer number of decimal places to round to`
+		returns `decimal rounded to specified number of decimal places`
+	}
+
+	{
+		equal { round\to 3.14159 2 } 3.14
+		equal { round\to 2.71828 3 } 2.718
+	}
+
+	{
+	}
+
+	group "round" 
+	"Rounds a decimal to the nearest integer."
+	{
+		argsn 1
+		arg `x: decimal value`
+		returns `decimal rounded to nearest integer`
+	}
+
+	{
+		equal { round 3.7 } 4.0
+		equal { round 3.2 } 3.0
+	}
+
+	{
+	}
+
+	group "roundtoeven" 
+	"Returns the nearest integer, rounding ties to even."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal rounded to nearest integer, with ties rounded to even`
+	}
+
+	{
+		equal { roundtoeven 3.5 } 4.0
+		equal { roundtoeven 2.5 } 2.0
+	}
+
+	{
+	}
+
+	group "erf" 
+	"Returns the error function of value."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal error function value of x`
+	}
+
+	{
+		equal { erf 0 } 0.0
+	}
+
+	{
+	}
+
+	group "erfc" 
+	"Returns the complementary error function of value."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal complementary error function value of x`
+	}
+
+	{
+		equal { erfc 0 } 1.0
+	}
+
+	{
+	}
+
+	group "erfcinv" 
+	"Returns the inverse of erfc(x) function."
+	{
+		argsn 1
+		arg `x: integer or decimal value between 0 and 2`
+		returns `decimal inverse complementary error function value of x`
+	}
+
+	{
+		equal { erfcinv 1.0 } 0.0
+	}
+
+	{
+	}
+
+	group "erfinv" 
+	"Returns the inverse error function of value."
+	{
+		argsn 1
+		arg `x: integer or decimal value between -1 and 1`
+		returns `decimal inverse error function value of x`
+	}
+
+	{
+		equal { erfinv 0 } 0.0
+	}
+
+	{
+	}
+
+	group "exp" 
+	"Returns e**x, the base-e exponential of x."
+	{
+		argsn 1
+		arg `x: integer, decimal, complex, vector or matrix value`
+		returns `e^x (element-wise for vector/matrix)`
+	}
+
+	{
+		equal { exp 0 } 1.0
+		equal { exp 1 } 2.718281828459045
+		stdout { exp complex 0 0 |prn } "1.000000+0.000000i" ; OQ: complex is not a literal value yet, should it be?
+		stdout { exp complex 0 3.141592653589793 |prn } "-1.000000+0.000000i"
+		equal { exp vector { 0.0 1.0 } |vec-to-block |first } 1.0
+		equal { exp matrix { 1 2 } { 0.0 1.0 } |mat-get 0 0 } 1.0
+	}
+
+	{
+	}
+
+	group "exp2" 
+	"Returns 2**x, the base-2 exponential of x."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal 2^x`
+	}
+
+	{
+		equal { exp2 3 } 8.0
+	}
+
+	{
+	}
+
+	group "expm1" 
+	"Returns e**x - 1, the base-e exponential of x minus 1. It is more accurate than exp(x) - 1 when x is near zero."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal e^x - 1`
+	}
+
+	{
+		equal { expm1 0 } 0.0
+	}
+
+	{
+	}
+
+	group "fma" 
+	"Returns x * y + z, computed with only one rounding. (That is, FMA returns the fused multiply-add of x, y, and z.)"
+	{
+		argsn 3
+		arg `x: integer or decimal value`
+		arg `y: integer or decimal value`
+		arg `z: integer or decimal value`
+		returns `decimal (x * y) + z computed with only one rounding`
+	}
+
+	{
+		equal { fma 2 3 4 } 10.0
+	}
+
+	{
+	}
+
+	group "j0" 
+	"Returns the order-zero Bessel function of the first kind."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal order-zero Bessel function of the first kind`
+	}
+
+	{
+		equal { j0 0 } 1.0
+	}
+
+	{
+	}
+
+	group "j1" 
+	"Returns the order-one Bessel function of the first kind."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal order-one Bessel function of the first kind`
+	}
+
+	{
+		equal { j1 0 } 0.0
+	}
+
+	{
+	}
+
+	group "y0" 
+	"Returns the order-zero Bessel function of the second kind."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal order-zero Bessel function of the second kind`
+	}
+
+	{
+		equal { y0 1 } 0.08825696421567698
+	}
+
+	{
+	}
+
+	group "y1" 
+	"Returns the order-one Bessel function of the second kind."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal order-one Bessel function of the second kind`
+	}
+
+	{
+		equal { y1 1 } -0.7812128213002887
+	}
+
+	{
+	}
+
+	group "yn" 
+	"Returns the order-n Bessel function of the second kind."
+	{
+		argsn 2
+		arg `n: integer order`
+		arg `x: integer or decimal value`
+		returns `decimal order-n Bessel function of the second kind`
+	}
+
+	{
+		equal { yn 2 1 } -1.6506826068162546
+	}
+
+	{
+	}
+
+	group "jn" 
+	"Returns the order-n Bessel function of the first kind."
+	{
+		argsn 2
+		arg `n: integer order`
+		arg `x: integer or decimal value`
+		returns `decimal order-n Bessel function of the first kind`
+	}
+
+	{
+		equal { jn 2 1 } 0.1149034849319005
+	}
+
+	{
+	}
+
+	group "trunc" 
+	"Returns the integer value of input."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `decimal integer value of x (truncated toward zero)`
+	}
+
+	{
+		equal { trunc 3.7 } 3.0
+	}
+
+	{
+	}
+
+	group "pi" 
+	"Returns the mathematical constant π (pi)."
+	{
+		arg `none`
+		returns `decimal value of π (pi)`
+	}
+
+	{
+		equal { round\to pi 5 } 3.14159
+	}
+
+	{
+	}
+
+	group "deg->rad" 
+	"Converts degrees to radians."
+	{
+		argsn 1
+		arg `degrees: integer or decimal value in degrees`
+		returns `decimal value in radians`
+	}
+
+	{
+		equal { deg->rad 180 } 3.141592653589793
+	}
+
+	{
+	}
+
+	group "is-near" 
+	"Returns true if two decimals are close."
+	{
+		argsn 2
+		arg `x: integer or decimal value`
+		arg `y: integer or decimal value`
+		returns `boolean true if values are very close, false otherwise`
+	}
+
+	{
+		equal { is-near 0.0000000000001 0 } true
+		equal { is-near 0.1 0 } false
+	}
+
+	{
+	}
+
+	group "near-zero" 
+	"Returns true if a decimal is close to zero."
+	{
+		argsn 1
+		arg `x: integer or decimal value`
+		returns `boolean true if value is very close to zero, false otherwise`
+	}
+
+	{
+		equal { near-zero 0.0000000000001 } true
+		equal { near-zero 0.1 } false
+	}
+
+	{
+	}
+
+	group "is-prime" 
+	"Returns true if the integer is a prime number."
+	{
+		argsn 1
+		arg `n: integer value to check`
+		returns `integer 1 if n is prime, 0 otherwise`
+	}
+
+	{
+		equal { is-prime 7 } true
+		equal { is-prime 10 } false
+	}
+
+	{
+	}
+
+	group "to-eyr" 
+	"Converts math dialect to Eyr dialect."
+	{
+		argsn 1
+		arg `block: block containing math expressions`
+		returns `block converted to Eyr dialect`
+	}
+
+	{
+		equal { to-eyr { 1 + 2 * 3 } |type? } 'block
+	}
+
+	{
+	}
+
+	group "calc" 
+	"Evaluates expressions in math dialect."
+	{
+		argsn 1
+		arg `block: block containing math expressions with proper operator precedence and parentheses support`
+		returns `result of evaluating the math expressions following standard mathematical order of operations`
+	}
+
+	{
+		equal { calc { 1 + 2 * 3 } } 7
+		equal { calc { 2 + 3 * 4 } } 14
+		equal { calc { 10 - 6 / 2 } } 7.0
+		equal { calc { 2 * 3 + 4 } } 10
+		equal { calc { 8 / 2 - 1 } } 3.0
+		equal { calc { ( 1 + 2 ) * 3 } } 9
+		equal { calc { 2 * ( 3 + 4 ) } } 14
+		equal { calc { ( 10 - 6 ) / 2 } } 2.0
+		equal { calc { ( 2 + 3 ) * ( 4 - 1 ) } } 15
+		equal { calc { 2 + ( 3 * ( 4 + 1 ) ) } } 17
+		equal { calc { ( ( 2 + 3 ) * 4 ) - 1 } } 19
+	}
+
+	{
+	}
+
+	group "gcd" 
+	"Returns the greatest common divisor of two integers using Euclidean algorithm."
+	{
+		argsn 2
+		arg `a: integer value`
+		arg `b: integer value`
+		returns `integer greatest common divisor of a and b`
+	}
+
+	{
+		equal { gcd 48 18 } 6
+		equal { gcd 17 13 } 1
+		equal { gcd 100 25 } 25
+		equal { gcd 0 5 } 5
+		equal { gcd 7 0 } 7
+	}
+
+	{
+	}
+
+	group "outer-product" 
+	"Computes the outer product of two vectors (blocks), returning a matrix (block of blocks) where each element [i,j] = a[i] * b[j]. Similar to numpy.outer()."
+	{
+		argsn 2
+		arg `a: block of integers or decimals (first vector)`
+		arg `b: block of integers or decimals (second vector)`
+		returns `block of blocks (matrix) where element [i,j] = a[i] * b[j], similar to numpy.outer()`
+	}
+
+	{
+		equal { outer-product { 1 2 3 } { 10 20 } } { { 10 20 } { 20 40 } { 30 60 } }
+		equal { outer-product { 1 2 } { 1 2 3 } } { { 1 2 3 } { 2 4 6 } }
+		equal { outer-product { 2.0 3.0 } { 4.0 5.0 } } { { 8.0 10.0 } { 12.0 15.0 } }
+		equal { outer-product { } { 1 2 } } { }
+	}
+
+	{
+	}
+
+}
+
+section "Validation dialect " "validation dialect for Rye values" {
+	group "validate" 
+	"Validates and transforms data according to specified rules, returning a dictionary with converted values or an error."
+	{
+		argsn 2
+		arg `data: Dictionary, Context, or List to validate`
+		arg `rules: Block containing validation rules`
+		returns `validated Dictionary/Context/List with converted values or error if validation fails`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "validate>ctx" 
+	"Validates and transforms data according to specified rules, returning a context object for easy field access."
+	{
+		argsn 2
+		arg `data: Dictionary to validate`
+		arg `rules: Block containing validation rules`
+		returns `validated Context with converted values or error if validation fails`
+	}
+
+	{
+		equal { validate>ctx dict { a: 1 } { a: required } |type? } 'context
+		equal { validate>ctx dict { a: 1 } { a: optional 0 } |-> 'a } 1
+	}
+
+	{
+	}
+
+}
+
+section "Match dialect " "pattern matching and deconstruction" {
+	group "match-block" 
+	"Tries to match and deconstruct a value into multiple values, with support for literal values, type checking, get-words, code evaluation, and nested blocks. First argument can be any value. If it doesn't match, returns failure."
+	{
+		argsn 2
+		arg `block: Block to match and deconstruct`
+		arg `pattern: Block containing:`
+		arg `- Words to bind values to`
+		arg `- Literal values to match`
+		arg `- Opwords to check value types (e.g., <integer>, <string>)`
+		arg `- Get-words to match against values in the current context (e.g., ?x)`
+		arg `- Square brackets [ ] to evaluate code with the value injected`
+		arg `- Nested blocks for recursive matching`
+		returns `Integer 1 if successful, or failure if the match fails`
+	}
+
+	{
+		; Basic matching with words:
+		equal { match-block { 1 2 3 } { a b c } a } 1
+		equal { match-block { 1 2 3 } { a b c } b } 2
+		equal { match-block { 1 2 3 } { a b c } c } 3
+		; error { match-block { 1 2 } { a b c } }
+		; error { match-block { 1 2 3 4 } { a b c } }
+		
+		; Matching with literal values:
+		equal { match-block { 1 "test" 3 } { a "test" b } a } 1
+		equal { match-block { 1 "test" 3 } { a "test" b } b } 3
+		; equal { try { match-block { 1 "hi" 3 } { a "bye" b } } |failed? } 1
+		
+		; Matching with nested blocks:
+		equal { match-block { 123 { "hi" 44 } 789 } { a { b c } d } a } 123
+		equal { match-block { 123 { "hi" 44 } 789 } { a { b c } d } b } "hi"
+		equal { match-block { 123 { "hi" 44 } 789 } { a { b c } d } c } 44
+		equal { match-block { 123 { "hi" 44 } 789 } { a { b c } d } d } 789
+		equal { match-block { 1 { 2 { 3 4 } 5 } 6 } { x { y { z w } v } u } z } 3
+		equal { match-block { 1 { 2 { 3 4 } 5 } 6 } { x { y { z w } v } u } w } 4
+		; equal { try { match-block { 1 { 2 3 } 4 } { a { b "wrong" } c } } |failed? } 1
+		
+		; Type checking with opwords:
+		equal { match-block { 123 } { <integer> } } true
+		equal { match-block { "hello" } { <string> } } true
+		equal { match-block { { 1 2 3 } } { <block> } } true
+		equal { match-block { 123.45 } { <decimal> } } true
+		; equal { try { match-block { "not an integer" } { <integer> } } |failed? } true
+		; equal { try { match-block { 123 } { <string> } } |failed? } true
+		
+		;Matching with get-words (match against values in the current context):
+		equal { x: 234 match-block { 123 234 } { 123 ?x } } true
+		; equal { x: 234 try { match-block { 123 456 } { 123 ?x } } |failed? } true
+		
+		; Evaluating blocks with the value injected:
+		; x: 0 , match-block { 1000 } { [ x:: . ] } , equal x 1000
+		; a: 0 , b: 0 , match-block { 100 200 300 } { [ a:: . ] [ b:: . ] c } , equal a 100 , equal b 200 , equal c 300
+	}
+
+	{
+	}
+
+	group "match" 
+	"Matches a value against a series of pattern/action pairs. Pattern can be a single element or block. Returns the result of the first matching action, or failure if none match."
+	{
+		argsn 2
+		arg `value: Any value to match against patterns (can be a block or any other value)`
+		arg `patterns: Block containing pairs:`
+		arg `- First element: pattern (can be a single element like <integer> or a block like { a b })`
+		arg `- Second element: code block to evaluate if pattern matches`
+		returns `The result of evaluating the code block of the first matching pattern, or failure if no pattern matches`
+	}
+
+	{
+		; Basic type matching with single values:
+		equal { match 5 { <integer> { "got integer" } <string> { "got string" } } } "got integer"
+		equal { match "hello" { <integer> { "got integer" } <string> { "got string" } } } "got string"
+		equal { match 3.14 { <integer> { "int" } <decimal> { "decimal" } <string> { "string" } } } "decimal"
+		
+		; Block deconstruction (simple):
+		equal { match { 1 2 } { { a b } { a + b } { x } { x * 2 } } } 3
+		equal { match { 101 202 } { { } { 0 } { a b } { a + b } } } 303
+		equal { match { 10 20 30 } { { x y z } { x + y + z } } } 60
+		
+		; Literal value matching:
+		equal { match 100 { 50 { "fifty" } 100 { "hundred" } 200 { "two hundred" } } } "hundred"
+		equal { match { 100 } { { 50 } { "fifty" } { 100 } { "hundred" } { 200 } { "two hundred" } } } "hundred"
+		
+		; Partial pattern matching:
+		equal { match { 10 20 } { { a 20 } { a * 2 } { 10 b } { b + 5 } } } 20
+		equal { match { 10 20 } { { 10 b } { b + 5 } { a 20 } { a * 2 } } } 25
+		
+		; Rule blocks with arity and type patterns:
+		equal { match { } { { } { 'no-data } { a b } { 'has-data } } } 'no-data
+		equal { match { "Jim" "30" } { { <string> <string> } { 'bad-format } { <string> <integer> } { 'good-format } } } 'bad-format
+		equal { match { "Jim" 30 } { { <string> <string> } { 'bad-format } { <string> <integer> } { 'good-format } } } 'good-format
+		
+		; Complex nested block patterns:
+		equal { match { 200 { "OK" 30 } } { { code { "OK" result } } { result } { code { "ERR" } } { 0 } } } 30
+		equal { match { 404 { "ERR" } } { { code { "OK" result } } { result } { code { "ERR" } } { code } } } 404
+		equal { match { "user" { "John" "Doe" 30 } } { { "user" { first last age } } { first } } } "John"
+		
+		; First :: rest pattern (head and tail matching):
+		equal { match { 11 22 33 } { { a :: bb } { a } } } 11
+		equal { match { 11 22 33 } { { a :: bb } { bb } } } { 22 33 }
+		equal { match { 11 22 33 } { { a b :: cc } { a + b } } } 33
+		equal { match { 11 22 33 44 } { { a b :: cc } { cc } } } { 33 44 }
+		equal { match { { 12 23 } { 23 34 } { 34 45 } } { { { a b } :: more } { a + b } } } 35
+		
+		; Mixed type patterns:
+		equal { match { 1 2 3 } { { <integer> <integer> <integer> } { 'three-ints } { <string> <string> } { 'two-strings } } } 'three-ints
+		equal { match { "hello" "world" } { { <integer> <integer> <integer> } { 'three-ints } { <string> <string> } { 'two-strings } } } 'two-strings
+		
+		; Error handling:
+		; equal { try { match 5.5 { <integer> { "got integer" } <string> { "got string" } } } |failed? } true
+		; equal { try { match { 1 2 3 } { { a b } { a + b } } } |failed? } true
+		
+	}
+
+	{
+	}
+
+}
+
+section "EYR Dialect " "Stack based evaluator / dialect" {
+	group "eyr" 
+	"Evaluates Rye block as Eyr (postfix) stack based code."
+	{
+		argsn 1
+		arg `block: Block of code to evaluate in EYR (postfix) mode`
+		returns `result of evaluating the block as postfix stack-based code`
+	}
+
+	{
+		equal { eyr { 1 2 + } } 3
+		equal { eyr { 5 3 - } } 2
+		equal { eyr { 4 2 * } } 8
+		equal { eyr { 6 2 / } } 3.0
+		equal { eyr { 10 3 mod } } 1.0
+		equal { eyr { 1 2 3 } } 3
+	}
+
+	{
+	}
+
+	group "rye0" 
+	"Evaluates Rye block as Rye0 dialect."
+	{
+		argsn 1
+		arg `block: Block of code to evaluate in RYE0 dialect`
+		returns `result of evaluating the block in RYE0 dialect`
+	}
+
+	{
+		; equal { rye0 { 1 + 2 } } 3
+		; equal { rye0 { 5 - 3 } } 2
+		; equal { rye0 { print "hello" } } "hello"
+	}
+
+	{
+	}
+
+	group "rye00" 
+	"Evaluates Rye block as Rye00 dialect (builtins and integers only)."
+	{
+		argsn 1
+		arg `block: Block of code to evaluate in RYE00 dialect (builtins and integers only)`
+		returns `result of evaluating the block in RYE00 dialect (minimal feature set)`
+	}
+
+	{
+		; equal { rye00 { 1 + 2 } } 3
+		; equal { rye00 { 5 * 3 } } 15
+		; equal { rye00 { inc 5 } } 6
+	}
+
+	{
+	}
+
+	group "eyr\\clear" 
+	"Clears the EYR stack."
+	{
+		arg `none`
+		returns `void`
+	}
+
+	{
+		equal { eyr { 1 2 3 eyr\clear } } false
+		equal { eyr { 1 2 eyr\clear 3 } } 3
+	}
+
+	{
+	}
+
+	group "eyr\\full" 
+	"Evaluates Rye block as Eyr (postfix) stack based code."
+	{
+		argsn 1
+		arg `block: Block of code to evaluate in EYR mode returning full stack as block`
+		returns `block containing all values from the EYR evaluation stack`
+	}
+
+	{
+		equal { eyr\clear eyr\full { 1 2 3 } |length? } 3
+		equal { eyr\clear eyr\full { 1 2 + 3 4 + } |length? } 2
+		equal { eyr\clear eyr\full { 10 5 - } |first } 5
+	}
+
+	{
+	}
+
+	group "eyr\\loop" 
+	"Evaluates Rye block in loop as Eyr code (postfix stack based) N times."
+	{
+		argsn 2
+		arg `count: Integer number of times to loop`
+		arg `block: Block of EYR code to execute in each iteration`
+		returns `result of the final EYR evaluation`
+	}
+
+	{
+		; equal { 3 .eyr\loop { 1 + } 0 } 3
+		; equal { 5 .eyr\loop { 2 * } 1 } 32
+		; equal { 2 .eyr\loop { dup + } 2 } 8
+	}
+
+	{
+	}
+
+	group "to-eyr" 
+	"Evaluates Rye block as Eyr (postfix) stack based code."
+	{
+		argsn 1
+		arg `block: Rye block to compile/convert to EYR format`
+		returns `block containing the EYR-compiled version of the input block`
+	}
+
+	{
+		equal { to-eyr { 1 + 2 } |type? } 'block
+		equal { to-eyr { 5 * 3 } |length? |> 0 } true
+	}
+
+	{
+	}
+
+}
+
+section "SSH " "SSH server functions" {
+	group "ssh-server" 
+	"Creates a new SSH server that listens on the specified address."
+	{
+		argsn 1
+		arg `address: String containing host:port address to listen on`
+		returns `native SSH server object`
+	}
+
+	{
+		; equal { ssh-server "localhost:2222" |type? } 'native
+	}
+
+	{
+`server: ssh-server "localhost:2222"
+server |Password-auth { pass = "secret123" }
+server |Handle fn { session } {
+session .Write "Welcome to Rye SSH server!\n"
+session .Write "Type 'exit' to quit.\n"
+}
+server |Serve
+
+`	}
+
+	group "ssh-server//Handle" 
+	"Sets a handler function for SSH sessions on the server."
+	{
+		argsn 2
+		arg `server: SSH server object`
+		arg `handler: Function that receives an SSH session object`
+		returns `the SSH server object`
+	}
+
+	{
+		; equal { server: ssh-server "localhost:2222" , server |Handle { session |Write "Hello" } |type? } 'native
+	}
+
+	{
+	}
+
+	group "ssh-server//Password-auth" 
+	"Sets a password authentication handler for the SSH server."
+	{
+		argsn 2
+		arg `server: SSH server object`
+		arg `handler: Function that receives a password string and returns true/false`
+		returns `the SSH server object`
+	}
+
+	{
+		; equal { server: ssh-server "localhost:2222" , server |Password-auth { pass = "secret" } |type? } 'native
+	}
+
+	{
+	}
+
+	group "ssh-server//Serve" 
+	"Starts the SSH server, listening for connections."
+	{
+		argsn 1
+		arg `server: SSH server object`
+		returns `the SSH server object, or error if unable to serve`
+	}
+
+	{
+		; equal { server: ssh-server "localhost:2222" , server |Serve |type? } 'native
+	}
+
+	{
+	}
+
+	group "ssh-session//Write" 
+	"Writes a string to an SSH session."
+	{
+		argsn 2
+		arg `session: SSH session object`
+		arg `text: String to write to the session`
+		returns `the SSH session object`
+	}
+
+	{
+		; equal { session: ssh-session-mock , session |Write "Hello" |type? } 'native
+	}
+
+	{
+	}
+
+}
+
+section "Default" "" {
+	group "go-with" 
+	"Executes a function in a separate goroutine, passing the specified value as an argument."
+	{
+		argsn 2
+		arg `value: Object to pass to the goroutine function`
+		arg `function: Function to execute in a separate goroutine, receives the value as argument`
+		returns `the original value that was passed to the goroutine`
+	}
+
+	{
+		equal { x:: 0 , go-with 5 fn { v } { change! v 'x } , sleep 100 , x } 5
+		equal { y:: 0 , go-with "test" fn { v } { change! length? v 'y } , sleep 100 , y } 4
+	}
+
+	{
+`; Simple goroutine with channel communication
+ch: channel 1
+go fn { } { ch .Send "Hello from goroutine" }
+print ch .Read
+
+; Using waitgroup to coordinate multiple goroutines
+wg: waitgroup
+results: channel 10
+loop 5 { i |
+wg .Add 1
+go-with i fn { n } { results .Send n * 2 , wg .Done }
+}
+wg .Wait
+results .Close
+
+; Mutex for safe shared state
+counter:: 0
+mtx: mutex
+go fn { } { mtx .Lock , change! counter + 1 'counter , mtx .Unlock }
+
+`	}
+
+	group "go" 
+	"Executes a function in a separate goroutine without passing any arguments."
+	{
+		argsn 1
+		arg `function: Function to execute in a separate goroutine (takes no arguments)`
+		returns `the function that was executed`
+	}
+
+	{
+		equal { x:: 0 , go fn { } { change! 42 'x } , sleep 100 , x } 42
+		equal { y:: "unchanged" , go fn { } { change! "changed" 'y } , sleep 100 , y } "changed"
+	}
+
+	{
+	}
+
+	group "channel" 
+	"Creates a new channel with the specified buffer size for goroutine communication."
+	{
+		argsn 1
+		arg `buffer-size: Integer specifying the channel buffer size (0 for unbuffered)`
+		returns `a new channel native object with the specified buffer size`
+	}
+
+	{
+		equal { ch: channel 1 ,  ch .probe .lg .Send 42 , ch .Read } 42
+		equal { ch: channel 2 , ch .Send 1 , ch .Send 2 , ch .Read } 1
+		equal { channel 5 |type? } 'native
+	}
+
+	{
+	}
+
+	group "Rye-channel//Read" 
+	"Reads the next value from a channel, blocking until a value is available or the channel is closed."
+	{
+		argsn 1
+		arg `channel: Channel to read from`
+		returns `the next value from the channel, or an error if the channel is closed`
+	}
+
+	{
+		equal { ch: channel 1 , ch .Send 123 , ch .Read } 123
+		equal { ch: channel 1 , ch .Send "test" , ch .Read } "test"
+		equal { ch: channel 1 , ch .Close , try { ch .Read } |type? } 'error
+	}
+
+	{
+	}
+
+	group "Rye-channel//Send" 
+	"Sends a value through a channel, blocking if the channel is unbuffered or full."
+	{
+		argsn 2
+		arg `channel: Channel to send the value to`
+		arg `value: Value to send through the channel`
+		returns `the channel object`
+	}
+
+	{
+		equal { ch: channel 1 , ch .Send 42 , ch .Read } 42
+		equal { ch: channel 3 , ch .Send "A" , ch .Send "B" , ch .Read } "A"
+		; equal { ch: channel 1 , ch .Send 100 , ch } ch
+	}
+
+	{
+	}
+
+	group "Rye-channel//Close" 
+	"Closes a channel, preventing further sends and causing pending/future reads to return an error."
+	{
+		argsn 1
+		arg `channel: Channel to close`
+		returns `the closed channel object`
+	}
+
+	{
+		equal { ch: channel 1 , ch .Send 42 , ch .Close , ch |type? } 'native
+		equal { ch: channel 1 , ch .Close , ch .Send 123 |disarm |type? } 'error
+		equal { ch: channel 2 , ch .Close , ch .Read |disarm |type? } 'error
+	}
+
+	{
+	}
+
+	group "mutex" 
+	"Creates a new mutex for synchronizing access to shared resources between goroutines."
+	{
+		arg `(none)`
+		returns `a new mutex native object for synchronization`
+	}
+
+	{
+		equal { mutex |type? } 'native
+		equal { mtx: mutex , mtx .Lock , mtx .Unlock , mtx |type? } 'native
+	}
+
+	{
+	}
+
+	group "waitgroup" 
+	"Creates a new waitgroup for coordinating multiple goroutines to wait for completion."
+	{
+		arg `(none)`
+		returns `a new waitgroup native object for coordinating goroutines`
+	}
+
+	{
+		equal { waitgroup |type? } 'native
+		equal { wg: waitgroup , wg .Add 1 , wg .Done , wg .Wait , wg |type? } 'native
+	}
+
+	{
+	}
+
+	group "Rye-mutex//Lock" 
+	"Acquires the lock on a mutex, blocking until the lock becomes available."
+	{
+		argsn 1
+		arg `mutex: Mutex to acquire the lock on`
+		returns `the mutex object`
+	}
+
+	{
+		equal { mtx: mutex , mtx .Lock , mtx |type? } 'native
+		equal { mtx: mutex , mtx .Lock , mtx .Unlock , mtx .Lock , mtx |type? } 'native
+	}
+
+	{
+	}
+
+	group "Rye-mutex//Unlock" 
+	"Releases the lock on a mutex, allowing other goroutines to acquire it."
+	{
+		argsn 1
+		arg `mutex: Mutex to release the lock from`
+		returns `the mutex object, or error if unlocking an unlocked mutex`
+	}
+
+	{
+		equal { mtx: mutex , mtx .Lock , mtx .Unlock , mtx |type? } 'native
+		equal { mtx: mutex , mtx .Unlock |disarm |type? } 'error
+	}
+
+	{
+	}
+
+	group "Rye-waitgroup//Add" 
+	"Adds the specified count to the waitgroup counter, indicating how many goroutines to wait for."
+	{
+		argsn 2
+		arg `waitgroup: Waitgroup to add goroutines to`
+		arg `count: Number of goroutines to add to the wait counter`
+		returns `the waitgroup object`
+	}
+
+	{
+		equal { wg: waitgroup , wg .Add 3 , wg |type? } 'native
+		equal { wg: waitgroup , wg .Add 1 , wg .Add 2 , wg |type? } 'native
+	}
+
+	{
+	}
+
+	group "Rye-waitgroup//Done" 
+	"Decrements the waitgroup counter by one, indicating that a goroutine has completed."
+	{
+		argsn 1
+		arg `waitgroup: Waitgroup to decrement the counter for`
+		returns `the waitgroup object`
+	}
+
+	{
+		equal { wg: waitgroup , wg .Add 1 , wg .Done , wg |type? } 'native
+		equal { wg: waitgroup , wg .Add 2 , wg .Done , wg .Done , wg |type? } 'native
+	}
+
+	{
+	}
+
+	group "Rye-waitgroup//Wait" 
+	"Blocks until the waitgroup counter reaches zero, meaning all goroutines have completed."
+	{
+		argsn 1
+		arg `waitgroup: Waitgroup to wait on`
+		returns `the waitgroup object after all goroutines have completed`
+	}
+
+	{
+		equal { wg: waitgroup , wg .Add 1 , wg .Done , wg .Wait , wg |type? } 'native
+		equal { wg: waitgroup , wg .Wait , wg |type? } 'native
+	}
+
+	{
+	}
+
+	group "select\\fn" 
+	"Performs a select operation on multiple channels, executing functions when channels are ready or a default function."
+	{
+		argsn 1
+		arg `block: Block containing channel-function pairs and optional default function`
+		returns `the original block argument`
+	}
+
+	{
+		equal { ch1: channel 1 , ch2: channel 1 , ch1 .Send 42 , select\fn { ch1 fn { v } { v } ch2 fn { v } { v + 1 } } } 42
+		equal { ch: channel 1 , select\fn { ch fn { v } { v * 2 } fn { } { 999 } } } 999
+	}
+
+	{
+	}
+
+}
+
+section "Complex numbers " "Functions for working with complex numbers" {
+	group "complex" 
+	"Creates a complex number from real and imaginary parts."
+	{
+		argsn 2
+		pure
+		arg `real: Real part of the complex number (integer or decimal)`
+		arg `imag: Imaginary part of the complex number (integer or decimal)`
+		returns `a new complex number with the given real and imaginary parts`
+	}
+
+	{
+		equal { complex 3 4 |type? } 'complex
+		equal { complex 3 4 |string } "3.000000+4.000000i"
+		equal { complex 0 0 |string } "0.000000+0.000000i"
+		equal { complex -1 -2 |string } "-1.000000-2.000000i"
+	}
+
+	{
+	}
+
+	group "complex?" 
+	"Checks if a value is a complex number."
+	{
+		argsn 1
+		pure
+		arg `value: Value to check`
+		returns `boolean true if the value is a complex number, false otherwise`
+	}
+
+	{
+		equal { complex? complex 3 4 } true
+		equal { complex? 5 } false
+		equal { complex? "hello" } false
+	}
+
+	{
+	}
+
+	group "real" 
+	"Returns the real part of a complex number."
+	{
+		argsn 1
+		pure
+		arg `value: Complex number`
+		returns `decimal value representing the real part of the complex number`
+	}
+
+	{
+		equal { real complex 3 4 } 3.0
+		equal { real complex -1.5 2.5 } -1.5
+		error { real 5 }
+	}
+
+	{
+	}
+
+	group "imag" 
+	"Returns the imaginary part of a complex number."
+	{
+		argsn 1
+		pure
+		arg `value: Complex number`
+		returns `decimal value representing the imaginary part of the complex number`
+	}
+
+	{
+		equal { imag complex 3 4 } 4.0
+		equal { imag complex -1.5 2.5 } 2.5
+		error { imag 5 }
+	}
+
+	{
+	}
+
+	group "complex-conj" 
+	"Returns the complex conjugate of a complex number."
+	{
+		argsn 1
+		pure
+		arg `z: Complex number`
+		returns `complex number representing the complex conjugate of z`
+	}
+
+	{
+		equal { complex-conj complex 3 4 |string } "3.000000-4.000000i"
+		equal { complex-conj complex 3 -4 |string } "3.000000+4.000000i"
+		error { complex-conj 5 }
+	}
+
+	{
+	}
+
+	group "complex-phase" 
+	"Returns the phase (argument) of a complex number."
+	{
+		argsn 1
+		pure
+		arg `z: Complex number`
+		returns `decimal value representing the phase (argument) of the complex number`
+	}
+
+	{
+		equal { complex-phase complex 1 1 } 0.7853981633974483
+		equal { complex-phase complex -1 0 } 3.141592653589793
+		error { complex-phase 5 }
+	}
+
+	{
+	}
+
+}
+
+section "Structures " "Functions for converting between Rye and Go data structures" {
+	group "dict->struct" 
+	"Converts a Rye Dict to a Go struct using reflection. Takes a Dict and a Native containing a pointer to a struct."
+	{
+		argsn 2
+		arg `dict: Rye Dict containing field names and values`
+		arg `struct-ptr: Native containing a pointer to a Go struct`
+		returns `native containing the populated struct`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "dict->new-struct" 
+	"Creates a new Go struct type at runtime based on a Rye Dict and populates it with values. Takes a Dict and a string for the struct name."
+	{
+		argsn 2
+		arg `dict: Rye Dict containing field names and values`
+		arg `name: String name for the new struct type`
+		returns `native containing the dynamically created struct`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "struct->dict" 
+	"Converts a Go struct to a Rye Dict using reflection. Takes a Native containing a struct or pointer to a struct."
+	{
+		argsn 1
+		arg `struct: Native containing a Go struct or pointer to struct`
+		returns `dict with struct field names as keys and field values as values`
+	}
+
+	{
+	}
+
+	{
+	}
+
+}
+

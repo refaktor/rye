@@ -1,0 +1,6 @@
+; Config with fallback via extends
+
+base: context { theme: "light" retries: 2 }
+over: extends base { retries: 5 }
+print join { "theme: " over/theme }
+print join { "retries: " string over/retries }

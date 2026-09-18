@@ -195,7 +195,18 @@ func SetupUnshareFilesystem() error {
 	// Best-effort removal of the mount-point directory.
 	_ = os.Remove("/.old_root")
 
-	// --- 7. Move into the project directory ---
+	// --- 7. Mount procfs if we are in a new PID namespace ---
+	// NOTE: We detect PID namespace by checking the env propagated by parent.
+	if os.Getenv(envUnsharePid) == "1" {
+		if err := os.MkdirAll("/proc", 0o555); err != nil {
+			return fmt.Errorf("unshare: mkdir /proc: %w", err)
+		}
+		if err := syscall.Mount("proc", "/proc", "proc", 0, ""); err != nil {
+			return fmt.Errorf("unshare: mount procfs: %w", err)
+		}
+	}
+
+	// --- 8. Move into the project directory ---
 	if err := os.Chdir("/app"); err != nil {
 		return fmt.Errorf("unshare: chdir /app: %w", err)
 	}

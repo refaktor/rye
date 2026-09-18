@@ -301,8 +301,12 @@ var builtins_baseio = map[string]*env.Builtin{
 	// Rye-itself - args / history (requires os.Args / process context)
 	// -------------------------------------------------------------------------
 
-	// Example:
 	// Rye-itself//Args?
+	// Summary: Returns command line arguments as a block of parsed values.
+	// Args: none
+	// Returns: block of values (each arg parsed as integer, float, or string)
+	// Example:
+	//   Rye-itself//Args?
 	"Rye-itself//Args?": {
 		Argsn: 0,
 		Doc:   "Returns command line arguments as a block of parsed values. Each argument is converted to appropriate type (integer, float, or string).",
@@ -311,8 +315,12 @@ var builtins_baseio = map[string]*env.Builtin{
 		},
 	},
 
-	// Example:
 	// Rye-itself//Args\\raw?
+	// Summary: Returns raw command line arguments joined as a single string.
+	// Args: separator (ignored currently; kept for future parity) – pass _
+	// Returns: string
+	// Example:
+	//   Rye-itself//Args\\raw? _
 	"Rye-itself//Args\\raw?": {
 		Argsn: 1,
 		Doc:   "Returns raw command line arguments joined as a single string.",
@@ -325,8 +333,13 @@ var builtins_baseio = map[string]*env.Builtin{
 		},
 	},
 
+	// Rye-itself//History?
+	// Summary: Returns last N lines from REPL history.
+	// Args: rye-itself native (dot-dispatch), n: integer number of lines
+	// Returns: block of strings
+	// Notes: Requires REPL; otherwise returns an error
 	// Example:
-	// Rye-itself//History? 10 ; last 10 lines (when running under REPL)
+	//   Rye-itself//History? _ 10
 	"Rye-itself//History?": {
 		Argsn: 2,
 		Doc:   "Returns a block of the last N lines from REPL history.",
@@ -348,6 +361,13 @@ var builtins_baseio = map[string]*env.Builtin{
 		},
 	},
 
+	// Rye-itself//Landlock
+	// Summary: Create a Landlock builder object (Linux only) to configure and then enforce restrictions.
+	// Args: none
+	// Returns: native 'landlock' builder
+	// Example:
+	//   ll: Rye-itself//Landlock
+	//   ll | landlock//Limit-to-cwd | landlock//Enforce
 	"Rye-itself//Landlock": {
 		Argsn: 0,
 		Doc:   "Create a landlock builder object that can be configured and then enforced.",
@@ -355,6 +375,11 @@ var builtins_baseio = map[string]*env.Builtin{
 			return *env.NewNative(ps.Idx, security.NewLandlockBuilder(), "landlock")
 		},
 	},
+	// landlock//Limit-to-cwd
+	// Summary: Configure the builder to limit filesystem to current working directory.
+	// Args: landlock native
+	// Returns: same native (builder)
+	// Notes: Configure only; use landlock//Enforce to apply.
 	"landlock//Limit-to-cwd": {
 		Argsn: 1,
 		Doc:   "Limit landlock to current working directory (configure; does not enforce yet).",
@@ -368,6 +393,10 @@ var builtins_baseio = map[string]*env.Builtin{
 			return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "Limit-to-cwd")
 		},
 	},
+	// landlock//Allow
+	// Summary: Allow access to a specific path (file or directory).
+	// Args: landlock native, path (uri|string)
+	// Returns: same native (builder)
 	"landlock//Allow": {
 		Argsn: 2,
 		Doc:   "Allow access to a specific path (file or directory).",
@@ -390,6 +419,10 @@ var builtins_baseio = map[string]*env.Builtin{
 			return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "Allow")
 		},
 	},
+	// landlock//Allow-exec
+	// Summary: Allow execute on a file, or RX under a directory.
+	// Args: landlock native, path (uri|string)
+	// Returns: same native (builder)
 	"landlock//Allow-exec": {
 		Argsn: 2,
 		Doc:   "Allow execute access to a specific file (or RX for all files under a directory).",
@@ -412,6 +445,10 @@ var builtins_baseio = map[string]*env.Builtin{
 			return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "Allow-exec")
 		},
 	},
+	// landlock//Enforce
+	// Summary: Enforce the configured landlock ruleset (one-shot).
+	// Args: landlock native
+	// Returns: same native (builder)
 	"landlock//Enforce": {
 		Argsn: 1,
 		Doc:   "Enforce the configured landlock ruleset exactly once.",
@@ -429,6 +466,11 @@ var builtins_baseio = map[string]*env.Builtin{
 		},
 	},
 
+	// Rye-itself//Landlock-to-cwd
+	// Summary: Immediately restrict filesystem access to current working directory using Landlock (Linux only).
+	// Args: none
+	// Returns: 'ok tagword on success; error on failure
+	// Notes: Call early in the script; applies process-wide and is irreversible for current process.
 	"Rye-itself//Landlock-to-cwd": {
 		Argsn: 0,
 		Doc:   "Restrict filesystem access to the current working directory and its subdirectories using Landlock (Linux only). Call early in the script.",
@@ -461,6 +503,123 @@ var builtins_baseio = map[string]*env.Builtin{
 			// Expose state for inspection
 			os.Setenv("RYE_LANDLOCK_PROFILE", "cwd-rw")
 			return env.Tagword{Index: ps.Idx.IndexWord("ok")}
+		},
+	},
+
+	// Rye-itself//Is-unshare
+	// Summary: Returns true if running inside Rye --unshare sandbox (Linux only).
+	// Args: none
+	// Returns: boolean
+	// Notes: Checks env var RYE_UNSHARE_CHILD set by the runner in the unshare child.
+	// Rye-itself//Is-unshare-fs
+	// Summary: Returns true if filesystem namespace isolation is enabled under --unshare.
+	// Args: none
+	// Returns: boolean
+	// Notes: Checks env var RYE_UNSHARE_FS set by the runner.
+	"Rye-itself//Is-unshare-fs": {
+		Argsn: 0,
+		Doc:   "Returns true if filesystem namespace isolation is enabled under --unshare.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, _ env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
+			return *env.NewBoolean(os.Getenv("RYE_UNSHARE_FS") == "1")
+		},
+	},
+
+	// Rye-itself//Is-unshare-net
+	// Summary: Returns true if network namespace isolation is enabled under --unshare.
+	// Args: none
+	// Returns: boolean
+	// Notes: Checks env var RYE_UNSHARE_NET set by the runner.
+	"Rye-itself//Is-unshare-net": {
+		Argsn: 0,
+		Doc:   "Returns true if network namespace isolation is enabled under --unshare.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, _ env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
+			return *env.NewBoolean(os.Getenv("RYE_UNSHARE_NET") == "1")
+		},
+	},
+
+	// Rye-itself//Is-unshare-pid
+	// Summary: Returns true if PID namespace isolation is enabled under --unshare.
+	// Args: none
+	// Returns: boolean
+	// Notes: Checks env var RYE_UNSHARE_PID set by the runner.
+	"Rye-itself//Is-unshare-pid": {
+		Argsn: 0,
+		Doc:   "Returns true if PID namespace isolation is enabled under --unshare.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, _ env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
+			return *env.NewBoolean(os.Getenv("RYE_UNSHARE_PID") == "1")
+		},
+	},
+
+	// Rye-itself//Is-unshare-uts
+	// Summary: Returns true if UTS namespace isolation is enabled under --unshare.
+	// Args: none
+	// Returns: boolean
+	// Notes: Checks env var RYE_UNSHARE_UTS set by the runner.
+	"Rye-itself//Is-unshare-uts": {
+		Argsn: 0,
+		Doc:   "Returns true if UTS namespace isolation is enabled under --unshare.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, _ env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
+			return *env.NewBoolean(os.Getenv("RYE_UNSHARE_UTS") == "1")
+		},
+	},
+
+	// Rye-itself//Unshare-config?
+	// Summary: Returns a dictionary describing the active unshare isolation config.
+	// Args: none
+	// Returns: dict with keys: active, fs, net, pid, uts (booleans)
+	// Notes: Reads environment variables set by the runner: RYE_UNSHARE_CHILD, RYE_UNSHARE_FS, RYE_UNSHARE_NET, RYE_UNSHARE_PID, RYE_UNSHARE_UTS.
+	// Example:
+	//   cc Rye-itself Unshare-config? |print
+	"Rye-itself//Unshare-config?": {
+		Argsn: 0,
+		Doc:   "Returns a dictionary with unshare isolation flags: active, fs, net, pid, uts (booleans).",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, _ env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
+			d := make(map[string]any, 5)
+			d["active"] = *env.NewBoolean(os.Getenv("RYE_UNSHARE_CHILD") == "1")
+			d["fs"] = *env.NewBoolean(os.Getenv("RYE_UNSHARE_FS") == "1")
+			d["net"] = *env.NewBoolean(os.Getenv("RYE_UNSHARE_NET") == "1")
+			d["pid"] = *env.NewBoolean(os.Getenv("RYE_UNSHARE_PID") == "1")
+			d["uts"] = *env.NewBoolean(os.Getenv("RYE_UNSHARE_UTS") == "1")
+			return *env.NewDict(d)
+		},
+	},
+
+	"Rye-itself//Is-unshare": {
+		Argsn: 0,
+		Doc:   "Returns true if current process runs inside Rye --unshare sandbox (Linux only).",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, _ env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
+			return *env.NewBoolean(os.Getenv("RYE_UNSHARE_CHILD") == "1")
+		},
+	},
+
+	// Rye-itself//Is-dry-run
+	// Summary: Returns true if Rye is in dry-run/scenario mode.
+	// Args: none
+	// Returns: boolean
+	// Notes: True when --dry-run is used or scenario is active.
+	// Rye-itself//Require-unshared
+	// Summary: Fails and exits the program if unshare is not active.
+	// Args: none
+	// Returns: never on failure (process exits); 'ok tagword when already unshared
+	// Notes: Intended for CI or scripts that must run sandboxed. Linux-only behavior; on non-Linux it will not detect unshare and will fail unless adapted.
+	"Rye-itself//Require-unshared": {
+		Argsn: 0,
+		Doc:   "Fails and exits if unshare is not active (use in CI/safety-critical runs).",
+		Pure:  false,
+		Fn: func(ps *env.ProgramState, _ env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
+			if os.Getenv("RYE_UNSHARE_CHILD") == "1" {
+				return env.Tagword{Index: ps.Idx.IndexWord("ok")}
+			}
+			fmt.Fprintln(os.Stderr, "Error: Rye requires --unshare for this script. Re-run with: rye --unshare ...")
+			util.BeforeExit()
+			os.Exit(1)
+			return nil
 		},
 	},
 

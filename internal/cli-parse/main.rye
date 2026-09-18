@@ -13,6 +13,13 @@ private Load %test_args_check.rye
 private Load %test_validation.rye
 private Load %test_help.rye
 private Load %test_cli_integration.rye
+private Load %test_advanced_patterns.rye
+private Load %test_type_coercion.rye
+private Load %test_edge_cases.rye
+private Load %test_integration.rye
+private Load %test_help_generation.rye
+private Load %test_performance.rye
+private Load %test_cookbook_parity.rye
 
 print ""
 print "========================================"

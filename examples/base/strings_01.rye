@@ -1,0 +1,8 @@
+; Base strings: case, contains, split/join
+
+s: "Hello, Rye!"
+print s .lower
+print join { "contains Rye: " string ( s .contains "Rye" ) }
+parts: s .split ", "
+print join { "parts: " string parts }
+print join { "rejoin: " join { parts -> 0 " -- " parts -> 1 } }

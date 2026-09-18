@@ -5,7 +5,7 @@ print "Connecting to public MQTT broker"
 client: Open mqtt://test.mosquitto.org:1883/rye-test-p
 |^check "couldn't connect to MQTT"
 
-^ensure is-positive client .Is-connected "Not really connected"
+^ensure client .Is-connected "Not really connected"
 
 client .Publish-simple topic: "rye/test" "Hello from Rye!"
 |^check "failed to sent the message"

@@ -21,6 +21,7 @@ Load "test_edge_cases.rye"
 Load "test_integration.rye"
 Load "test_help_generation.rye"
 Load "test_performance.rye"
+Load "test_cookbook_parity.rye"
 
 print "========================================"
 print "All CLI parsing tests completed!"

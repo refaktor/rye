@@ -1,0 +1,42 @@
+;
+; Gets a private IP on Tailscale, connects a http server to it, so it only listens on that IP 
+; This means no port is exposed on public network.
+; 
+; Don't use in production - just a demonstration!
+
+rye .Capture { .disarm .display , exit 1 }
+
+setup: context {
+    pwd: os/env? "RWPWD" |^check "Define RWPWD environment variable."
+    port: 9080
+}
+
+get-tailscale-ip: does {
+    iface: os/net-interface? "tailscale0"
+    |^check "no tailscale interface"
+
+    addrs: iface .Addrs?
+    |^check "problem getting addresses"
+
+    seek addrs {
+        .IPNet? .whether { .Loopback? .not } { .IPv4? } { false } } 
+    |^check "no active IPv4 address found on tailscale0"
+    |IPNet? .IP-string? }
+
+ts-ip: probe get-tailscale-ip
+
+srv: http-server ts-ip ++ ":" ++ setup/port
+
+srv .Handle "/load-avg" fn { w req } {
+    w .Write mold os/load-avg? }
+    
+srv .Handle "/restart-workers" fn { w req } {
+    req .Query? "pwd" |^fix { w .Write "no pwd" } :pwd   ; don't use query string in practice
+         
+    w .Write either pwd = setup/pwd
+    { scmd\capture "/opt/myserv/restart-workers" }
+    { "wrong pwd" } }
+
+print "Server listening on Tailscale: http://" ++ ts-ip ++ ":" ++ setup/port
+srv .Serve
+

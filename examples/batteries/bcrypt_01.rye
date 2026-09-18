@@ -1,0 +1,16 @@
+; Bcrypt example: hash and (if available) verify
+
+pass: "hunter2"
+hash: bcrypt-hash pass       ; default cost
+print join { "hash: " hash }
+
+; Try to verify if function exists in this build
+private { bcrypt-verify } |type? |= 'word
+|either {
+  ok1: bcrypt-verify pass hash
+  ok2: bcrypt-verify "wrong" hash
+  print join { "verify correct: " string ok1 }
+  print join { "verify wrong:   " string ok2 }
+} {
+  print "bcrypt-verify not available in this build."
+}

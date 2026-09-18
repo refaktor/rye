@@ -3,7 +3,7 @@
 client: Open mqtt://test.mosquitto.org:1883/rye-test
 |^check "couldn't connect to MQTT"
 
-^ensure is-positive client .Is-connected "Not really connected"
+^ensure client .Is-connected "Not really connected"
 
 handler: fn { txt msg } {
     print "\n-NEW-MESSAGE----" ,
