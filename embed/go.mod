@@ -1,4 +1,4 @@
-module github.com/refaktor/rye/embed2
+module github.com/refaktor/rye/embed
 
 go 1.26.1
 

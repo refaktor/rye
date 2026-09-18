@@ -25,7 +25,7 @@
 //
 //	result, err := engine.Eval(`double 21`)
 //	fmt.Println(result) // 42
-package embed2
+package embed
 
 import (
 	"errors"
