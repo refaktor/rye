@@ -22,7 +22,7 @@ Key characteristics:
 - **Multiple dialects**: Specialized interpreters for different tasks
 - **Safety-focused**: Explicit state changes, pure/impure function separation, validation dialect
 
-**Status**: Alpha - Core language design is stable, focus is on improving runtime, documentation, and usability.
+**Status**: Beta - Core language design is stable, focus is on improving runtime, documentation, and usability.
 
 ## Quick Examples
 
