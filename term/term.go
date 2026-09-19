@@ -293,6 +293,9 @@ func DisplayBlock(bloc env.Block, idx *env.Idxs) (env.Object, bool) {
 		totalPages = 1
 	}
 
+	// Track multi-selection
+	selected := map[int]bool{}
+
 	// If totalPages <= 1, use inline interactive mode
 	if totalPages <= 1 {
 		HideCur()
@@ -310,13 +313,18 @@ func DisplayBlock(bloc env.Block, idx *env.Idxs) (env.Object, bool) {
 		SaveCurPos()
 
 		totalLines := 0
-		// Print all items with cursor highlighting
+		// Print all items with cursor/selection highlighting
 		for i, v := range bloc.Series.S {
 			ClearLine()
-			if i == curr {
+			if i == curr && selected[i] {
+				ColorBrRed()
+				termPrint("» ")
+			} else if selected[i] {
+				ColorBrYellow()
+				termPrint("  ")
+			} else if i == curr {
 				ColorBrGreen()
-				Bold()
-				termPrint("\u00bb ")
+				termPrint("» ")
 			} else {
 				termPrint(" ")
 			}
@@ -337,6 +345,9 @@ func DisplayBlock(bloc env.Block, idx *env.Idxs) (env.Object, bool) {
 			CloseProps()
 		}
 
+		// footer
+		termPrintln("space=toggle, enter=done, m=mode, esc=cancel")
+		totalLines += 1
 		moveUp = totalLines
 
 		for {
@@ -346,7 +357,23 @@ func DisplayBlock(bloc env.Block, idx *env.Idxs) (env.Object, bool) {
 				return bloc, true // Return full block on Ctrl+C or Esc
 			}
 
+			if ascii == 32 { // space
+				selected[curr] = !selected[curr]
+				goto INLINE_DODO
+			}
+
 			if ascii == 13 {
+				if len(selected) > 0 {
+					out := make([]env.Object, 0, len(selected))
+					for i, ob := range bloc.Series.S {
+						if selected[i] {
+							if v, ok := ob.(env.Object); ok {
+								out = append(out, v)
+							}
+						}
+					}
+					return *env.NewBlock(*env.NewTSeries(out)), false
+				}
 				if curr < totalItems {
 					return bloc.Series.Get(curr), false // Return selected item on Enter
 				}
@@ -397,10 +424,16 @@ DODO:
 		ClearLine()
 		if i < displayLen {
 			v := displayedItems[i]
-			if i == localCurr {
+			globalIdx := start + i
+			if i == localCurr && selected[globalIdx] {
+				ColorBrRed()
+				termPrint("» ")
+			} else if selected[globalIdx] {
+				ColorBrYellow()
+				termPrint("  ")
+			} else if i == localCurr {
 				ColorBrGreen()
-				Bold()
-				termPrint("\u00bb ")
+				termPrint("» ")
 			} else {
 				termPrint(" ")
 			}
@@ -424,7 +457,7 @@ DODO:
 			totalLines += 1
 		}
 	}
-	termPrintln(fmt.Sprintf("Page %d/%d (n=next, p=prev, m=mode)", currentPage+1, totalPages))
+	termPrintln(fmt.Sprintf("Page %d/%d (space=toggle, n=next, p=prev, m=mode)", currentPage+1, totalPages))
 	totalLines += 1 // +1 for footer
 	moveUp = totalLines
 
@@ -441,7 +474,25 @@ DODO:
 			return nil, true
 		}
 
+		if ascii == 32 { // space
+			globalIndex := start + localCurr
+			selected[globalIndex] = !selected[globalIndex]
+			goto DODO
+		}
+
 		if ascii == 13 {
+			if len(selected) > 0 {
+				out := make([]env.Object, 0, len(selected))
+				for i, ob := range bloc.Series.S {
+					if selected[i] {
+						if v, ok := ob.(env.Object); ok {
+							out = append(out, v)
+						}
+					}
+				}
+				ShowCur()
+				return *env.NewBlock(*env.NewTSeries(out)), false
+			}
 			globalIndex := start + localCurr
 			if globalIndex < totalItems {
 				return bloc.Series.Get(globalIndex), false
@@ -929,6 +980,8 @@ func DisplayDict(bloc env.Dict, idx *env.Idxs) (env.Object, bool) {
 		i++
 	}
 	sort.Strings(keys)
+// selection map by index in keys slice
+selected := map[int]bool{}
 DODO:
 	if moveUp > 0 {
 		CurUp(moveUp)
@@ -936,13 +989,17 @@ DODO:
 	SaveCurPos()
 	totalLines := 0
 	for ii, k := range keys {
-		// for k, v := range bloc.Data {
 		v := bloc.Data[k]
 		ClearLine()
-		if ii == curr {
+		if ii == curr && selected[ii] {
+			ColorBrRed()
+			termPrint("» ")
+		} else if selected[ii] {
+			ColorBrYellow()
+			termPrint("  ")
+		} else if ii == curr {
 			ColorBrGreen()
-			Bold()
-			termPrint("\u00bb ")
+			termPrint("» ")
 		} else {
 			termPrint(" ")
 		}
@@ -964,9 +1021,11 @@ DODO:
 		// Count the actual number of lines this entry takes (including newlines in the value)
 		totalLines += strings.Count(valueStr, "\n") + 1
 		CloseProps()
-		// term.CurUp(1)
 	}
 
+	// footer hint
+	termPrintln("space=toggle, enter=done, m=mode, esc=cancel")
+	totalLines += 1
 	moveUp = totalLines
 
 	defer func() {
@@ -974,37 +1033,34 @@ DODO:
 		termPrint("\033[?25h")
 	}()
 
-	// RestoreCurPos()
-
 	for {
 		ascii, keyCode, err := GetChar()
 
 		if (ascii == 3 || ascii == 27) || err != nil {
-			//termPrintln()
 			ShowCur()
 			return nil, true
 		}
 
-		if ascii == 13 {
-			//termPrintln()
-			ret := ""
-			for ii, k := range keys {
-				if ii == curr {
-					ret = k
-				}
-			}
-			return *env.NewString(ret), false // bloc.Series.Get(curr), false
+		if ascii == 32 { // space
+			selected[curr] = !selected[curr]
+			goto DODO
 		}
 
-		if ascii == 120 {
-			//termPrintln()
-			var ret env.Object
-			for ii, k := range keys {
-				if ii == curr {
-					ret = bloc.Data[k].(env.Object)
+		if ascii == 13 { // enter
+			// if any selected: build filtered dict
+			if len(selected) > 0 {
+				newData := map[string]interface{}{}
+				for ii, k := range keys {
+					if selected[ii] {
+						newData[k] = bloc.Data[k]
+					}
 				}
+				return *env.NewDict(newData), false
 			}
-			return ret, false // bloc.Series.Get(curr), false
+			// single: return [key value]
+			key := keys[curr]
+			val := bloc.Data[key].(env.Object)
+			return *env.NewBlock(*env.NewTSeries([]env.Object{*env.NewString(key), val})), false
 		}
 
 		if ascii == 77 || ascii == 109 {
@@ -1197,6 +1253,9 @@ func DisplayTable(bloc env.Table, idx *env.Idxs) (env.Object, bool) {
 		fulwidth += w + 2
 	}
 
+	// Track multi-selection across modes/pages
+	selected := map[int]bool{}
+
 	// If totalPages <= 1, use inline interactive mode
 	if totalPages <= 1 {
 		HideCur()
@@ -1213,7 +1272,7 @@ func DisplayTable(bloc env.Table, idx *env.Idxs) (env.Object, bool) {
 		}
 		SaveCurPos()
 
-		// Print header
+		// Print header (layout unchanged)
 		for ic, cn := range bloc.Cols {
 			Bold()
 			termPrintf("| %-"+strconv.Itoa(widths[ic])+"s", cn)
@@ -1222,14 +1281,19 @@ func DisplayTable(bloc env.Table, idx *env.Idxs) (env.Object, bool) {
 		termPrintln("|")
 		termPrintln("+" + strings.Repeat("-", fulwidth-1) + "+")
 
-		// Print all rows with cursor highlighting
+		// Print all rows with cursor highlighting and selection state (color only)
 		for i, r := range bloc.Rows {
 			ClearLine()
-			if i == curr {
+			// Coloring priority: current+selected (orange/red), else selected (yellow), else current (green)
+			if i == curr && selected[i] {
+				// No true orange in ANSI basic; use bright red as a strong combined cue
+				ColorBrRed()
+			} else if selected[i] {
+				// Selected rows: bright yellow
+				ColorBrYellow()
+			} else if i == curr {
+				// Current row: bright green (as before)
 				ColorBrGreen()
-				termPrint("")
-			} else {
-				termPrint("")
 			}
 			for ic, v := range r.Values {
 				if ic < len(widths) {
@@ -1249,7 +1313,10 @@ func DisplayTable(bloc env.Table, idx *env.Idxs) (env.Object, bool) {
 			termPrintln("|")
 		}
 
-		moveUp = totalItems + 2 // rows + header + separator line
+		// Footer with legend
+		termPrintln("space=toggle, enter=done, m=mode, esc=cancel")
+
+		moveUp = totalItems + 3 // rows + header + separator line + footer
 
 		for {
 			ascii, keyCode, err := GetChar()
@@ -1258,7 +1325,24 @@ func DisplayTable(bloc env.Table, idx *env.Idxs) (env.Object, bool) {
 				return bloc, true // Return full table on Ctrl+C or Esc
 			}
 
-			if ascii == 13 {
+			if ascii == 32 { // space
+				selected[curr] = !selected[curr]
+				goto INLINE_DODO
+			}
+
+			if ascii == 13 { // enter
+				if len(selected) > 0 {
+					// Build filtered table
+					rows := make([]env.TableRow, 0, len(selected))
+					for i, r := range bloc.Rows {
+						if selected[i] {
+							rows = append(rows, r)
+						}
+					}
+					t := bloc
+					t.Rows = rows
+					return t, false
+				}
 				if curr < totalItems {
 					return bloc.GetRowNew(curr), false // Return selected row on Enter
 				}
@@ -1317,12 +1401,15 @@ DODO:
 	for i := 0; i < pageSize; i++ {
 		ClearLine()
 		if i < displayedItems {
-			r := bloc.Rows[start+i]
-			if i == localCurr {
+			globalIdx := start + i
+			r := bloc.Rows[globalIdx]
+			// Coloring priority: current+selected (bright red), selected (bright yellow), current (bright green)
+			if i == localCurr && selected[globalIdx] {
+				ColorBrRed()
+			} else if selected[globalIdx] {
+				ColorBrYellow()
+			} else if i == localCurr {
 				ColorBrGreen()
-				termPrint("")
-			} else {
-				termPrint("")
 			}
 			for ic, v := range r.Values {
 				if ic < len(widths) {
@@ -1346,7 +1433,7 @@ DODO:
 	}
 
 	// Print footer
-	termPrintln(fmt.Sprintf("Page %d/%d (n=next, p=prev, m=mode)", currentPage+1, totalPages))
+	termPrintln(fmt.Sprintf("Page %d/%d (space=toggle, n=next, p=prev, m=mode)", currentPage+1, totalPages))
 
 	moveUp = pageSize + 3 // rows + header + sep + footer
 
@@ -1363,7 +1450,27 @@ DODO:
 			return nil, true
 		}
 
-		if ascii == 13 {
+		if ascii == 32 { // space toggle selection
+			globalIndex := start + localCurr
+			if globalIndex < totalItems {
+				selected[globalIndex] = !selected[globalIndex]
+			}
+			goto DODO
+		}
+
+		if ascii == 13 { // enter
+			if len(selected) > 0 {
+				rows := make([]env.TableRow, 0, len(selected))
+				for i, r := range bloc.Rows {
+					if selected[i] {
+						rows = append(rows, r)
+					}
+				}
+				t := bloc
+				t.Rows = rows
+				ShowCur()
+				return t, false
+			}
 			globalIndex := start + localCurr
 			if globalIndex < totalItems {
 				return bloc.GetRowNew(globalIndex), false
