@@ -15,6 +15,7 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"strconv"
 
 	"github.com/GianlucaP106/gotmux/gotmux"
 	"github.com/atotto/clipboard"
@@ -1095,7 +1096,7 @@ var Builtins_os = map[string]*env.Builtin{
 
 	"process?": {
 		Argsn: 1,
-		Doc:   "Gets detailed information about a specific process by PID (alias of process).",
+		Doc:   "Gets a native process object by PID (gopsutil process).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch pid := arg0.(type) {
 			case env.Integer:
@@ -1103,9 +1104,7 @@ var Builtins_os = map[string]*env.Builtin{
 				if err != nil {
 					return evaldo.MakeBuiltinError(ps, err.Error(), "process?")
 				}
-				s := proccesTableBase()
-				processTableAdd(s, proc)
-				return s.Rows[0].ToDict()
+				return *env.NewNative(ps.Idx, proc, "process")
 			default:
 				return *evaldo.MakeArgError(ps, 1, []env.Type{env.IntegerType}, "process?")
 			}
@@ -1216,6 +1215,75 @@ var Builtins_os = map[string]*env.Builtin{
 			return *s
 		},
 	},
+	// System users and groups (from /etc/passwd and /etc/group on Unix-like systems)
+	"system-users?": {
+		Argsn: 0,
+		Doc:   "Returns a table of system users (name, uid, gid, home, shell) using os/user (Unix-like only; limited on Windows).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// os/user has Lookup and LookupGroup, but no list-all portable API.
+			// On Unix, we can read /etc/passwd to enumerate.
+			data, err := os.ReadFile("/etc/passwd")
+			if err != nil {
+				return evaldo.MakeBuiltinError(ps, err.Error(), "system-users?")
+			}
+			s := env.NewTable([]string{"User", "UID", "GID", "Home", "Shell"})
+			lines := strings.Split(string(data), "\n")
+			for _, line := range lines {
+				if line == "" || strings.HasPrefix(line, "#") {
+					continue
+				}
+				parts := strings.Split(line, ":")
+				if len(parts) < 7 {
+					continue
+				}
+				name := parts[0]
+				uid := parts[2]
+				gid := parts[3]
+				home := parts[5]
+				shell := parts[6]
+				vals := []any{
+					*env.NewString(name),
+					*env.NewInteger(func() int64 { v, _ := strconv.ParseInt(uid, 10, 64); return v }()),
+					*env.NewInteger(func() int64 { v, _ := strconv.ParseInt(gid, 10, 64); return v }()),
+					*env.NewString(home),
+					*env.NewString(strings.TrimSpace(shell)),
+				}
+				s.AddRow(*env.NewTableRow(vals, s))
+			}
+			return *s
+		},
+	},
+	"system-groups?": {
+		Argsn: 0,
+		Doc:   "Returns a table of system groups (name, gid, members) from /etc/group (Unix-like only).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			data, err := os.ReadFile("/etc/group")
+			if err != nil {
+				return evaldo.MakeBuiltinError(ps, err.Error(), "system-groups?")
+			}
+			s := env.NewTable([]string{"Group", "GID", "Members"})
+			lines := strings.Split(string(data), "\n")
+			for _, line := range lines {
+				if line == "" || strings.HasPrefix(line, "#") {
+					continue
+				}
+				parts := strings.Split(line, ":")
+				if len(parts) < 4 {
+					continue
+				}
+				name := parts[0]
+				gid := parts[2]
+				members := parts[3]
+				vals := []any{
+					*env.NewString(name),
+					*env.NewInteger(func() int64 { v, _ := strconv.ParseInt(gid, 10, 64); return v }()),
+					*env.NewString(strings.TrimSpace(members)),
+				}
+				s.AddRow(*env.NewTableRow(vals, s))
+			}
+			return *s
+		},
+	},
 	// Args:
 	// * none
 	// Returns:
@@ -1312,7 +1380,7 @@ var Builtins_os = map[string]*env.Builtin{
 	// * none
 	// Returns:
 	// * table containing detailed information about all running processes
-	"processes?": {
+	"processes\\table?": {
 		Argsn: 0,
 		Doc:   "Gets detailed information about all running processes.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1327,15 +1395,40 @@ var Builtins_os = map[string]*env.Builtin{
 			return *s
 		},
 	},
+	// Returns block of native process objects for method access (.Exe?, .Name?, etc.)
+	"processes?": {
+		Argsn: 0,
+		Doc:   "Gets a block of native process objects (gopsutil process) for method access.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			procs, err := process.Processes()
+			if err != nil {
+				return evaldo.MakeBuiltinError(ps, err.Error(), "processes")
+			}
+			items := make([]env.Object, len(procs))
+			for i, p := range procs {
+				items[i] = *env.NewNative(ps.Idx, p, "process")
+			}
+			return *env.NewBlock(*env.NewTSeries(items))
+		},
+	},
 	// Args:
 	// * pid: integer process ID
 	// Returns:
 	// * dictionary containing detailed information about the specified process
 	"process": {
 		Argsn: 1,
-		Doc:   "Removed: use process? instead.",
+		Doc:   "Gets a native process object by PID (same as process?).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return evaldo.MakeBuiltinError(ps, "This function was removed. Use process?.", "process")
+			switch pid := arg0.(type) {
+			case env.Integer:
+				proc, err := process.NewProcess(int32(pid.Value))
+				if err != nil {
+					return evaldo.MakeBuiltinError(ps, err.Error(), "process")
+				}
+				return *env.NewNative(ps.Idx, proc, "process")
+			default:
+				return *evaldo.MakeArgError(ps, 1, []env.Type{env.IntegerType}, "process")
+			}
 		},
 	},
 
@@ -1386,6 +1479,269 @@ var Builtins_os = map[string]*env.Builtin{
 			default:
 				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType}, "lookup-ip")
 			}
+		},
+	},
+
+	// Native process getters
+	"process//Pid?": {
+		Argsn: 1,
+		Doc:   "Returns the PID of the native process.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			n, ok := arg0.(env.Native)
+			if !ok || ps.Idx.GetWord(n.Kind.Index) != "process" {
+				return evaldo.MakeBuiltinError(ps, "Expected native process", "process//Pid?")
+			}
+			p := n.Value.(*process.Process)
+			return *env.NewInteger(int64(p.Pid))
+		},
+	},
+	"process//Name?": {
+		Argsn: 1,
+		Doc:   "Returns the process name (p.Name()).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			n, ok := arg0.(env.Native)
+			if !ok || ps.Idx.GetWord(n.Kind.Index) != "process" {
+				return evaldo.MakeBuiltinError(ps, "Expected native process", "process//Name?")
+			}
+			p := n.Value.(*process.Process)
+			name, err := p.Name()
+			if err != nil {
+				return *env.NewString("<unknown>")
+			}
+			return *env.NewString(name)
+		},
+	},
+	"process//Username?": {
+		Argsn: 1,
+		Doc:   "Returns the username of the process owner (p.Username()).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			n, ok := arg0.(env.Native)
+			if !ok || ps.Idx.GetWord(n.Kind.Index) != "process" {
+				return evaldo.MakeBuiltinError(ps, "Expected native process", "process//Username?")
+			}
+			p := n.Value.(*process.Process)
+			u, err := p.Username()
+			if err != nil {
+				return *env.NewString("???")
+			}
+			return *env.NewString(u)
+		},
+	},
+	"process//Uids?": {
+		Argsn: 1,
+		Doc:   "Returns a block of numeric UIDs for the process (p.Uids()).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			n, ok := arg0.(env.Native)
+			if !ok || ps.Idx.GetWord(n.Kind.Index) != "process" {
+				return evaldo.MakeBuiltinError(ps, "Expected native process", "process//Uids?")
+			}
+			p := n.Value.(*process.Process)
+			uids, err := p.Uids()
+			if err != nil || uids == nil {
+				return *env.NewBlock(*env.NewTSeries([]env.Object{}))
+			}
+			items := make([]env.Object, len(uids))
+			for i, id := range uids {
+				items[i] = *env.NewInteger(int64(id))
+			}
+			return *env.NewBlock(*env.NewTSeries(items))
+		},
+	},
+	"process//Gids?": {
+		Argsn: 1,
+		Doc:   "Returns a block of numeric GIDs for the process (p.Gids()).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			n, ok := arg0.(env.Native)
+			if !ok || ps.Idx.GetWord(n.Kind.Index) != "process" {
+				return evaldo.MakeBuiltinError(ps, "Expected native process", "process//Gids?")
+			}
+			p := n.Value.(*process.Process)
+			gids, err := p.Gids()
+			if err != nil || gids == nil {
+				return *env.NewBlock(*env.NewTSeries([]env.Object{}))
+			}
+			items := make([]env.Object, len(gids))
+			for i, id := range gids {
+				items[i] = *env.NewInteger(int64(id))
+			}
+			return *env.NewBlock(*env.NewTSeries(items))
+		},
+	},
+	"process//Exe?": {
+		Argsn: 1,
+		Doc:   "Returns the executable path (p.Exe()).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			n, ok := arg0.(env.Native)
+			if !ok || ps.Idx.GetWord(n.Kind.Index) != "process" {
+				return evaldo.MakeBuiltinError(ps, "Expected native process", "process//Exe?")
+			}
+			p := n.Value.(*process.Process)
+			exe, err := p.Exe()
+			if err != nil {
+				return *env.NewString("<permission denied / unavailable>")
+			}
+			return *env.NewString(exe)
+		},
+	},
+	"process//Cmdline?": {
+		Argsn: 1,
+		Doc:   "Returns the full command line (p.Cmdline()).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			n, ok := arg0.(env.Native)
+			if !ok || ps.Idx.GetWord(n.Kind.Index) != "process" {
+				return evaldo.MakeBuiltinError(ps, "Expected native process", "process//Cmdline?")
+			}
+			p := n.Value.(*process.Process)
+			cl, err := p.Cmdline()
+			if err != nil {
+				return *env.NewString("")
+			}
+			return *env.NewString(cl)
+		},
+	},
+	"process//CPU-percent?": {
+		Argsn: 1,
+		Doc:   "Returns CPU usage percentage (p.CPUPercent()).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			n, ok := arg0.(env.Native)
+			if !ok || ps.Idx.GetWord(n.Kind.Index) != "process" {
+				return evaldo.MakeBuiltinError(ps, "Expected native process", "process//CPU-percent?")
+			}
+			p := n.Value.(*process.Process)
+			v, err := p.CPUPercent()
+			if err != nil {
+				return *env.NewString("???")
+			}
+			return *env.NewDecimal(v)
+		},
+	},
+	"process//CPU-times?": {
+		Argsn: 1,
+		Doc:   "Returns a dict of CPU times (user, system, iowait).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			n, ok := arg0.(env.Native)
+			if !ok || ps.Idx.GetWord(n.Kind.Index) != "process" {
+				return evaldo.MakeBuiltinError(ps, "Expected native process", "process//CPU-times?")
+			}
+			p := n.Value.(*process.Process)
+			t, err := p.Times()
+			if err != nil {
+				return *env.NewDict(map[string]any{"error": *env.NewString(err.Error())})
+			}
+			d := env.NewDict(make(map[string]any, 3))
+			d.Data["user"] = *env.NewDecimal(t.User)
+			d.Data["system"] = *env.NewDecimal(t.System)
+			d.Data["iowait"] = *env.NewDecimal(t.Iowait)
+			return *d
+		},
+	},
+	"process//Memory-percent?": {
+		Argsn: 1,
+		Doc:   "Returns memory usage percent (p.MemoryPercent()).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			n, ok := arg0.(env.Native)
+			if !ok || ps.Idx.GetWord(n.Kind.Index) != "process" {
+				return evaldo.MakeBuiltinError(ps, "Expected native process", "process//Memory-percent?")
+			}
+			p := n.Value.(*process.Process)
+			v, err := p.MemoryPercent()
+			if err != nil {
+				return *env.NewString("???")
+			}
+			return *env.NewDecimal(float64(v))
+		},
+	},
+	"process//Memory-info?": {
+		Argsn: 1,
+		Doc:   "Returns a dict of memory info (rss, vms, and OS-specific fields when available).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			n, ok := arg0.(env.Native)
+			if !ok || ps.Idx.GetWord(n.Kind.Index) != "process" {
+				return evaldo.MakeBuiltinError(ps, "Expected native process", "process//Memory-info?")
+			}
+			p := n.Value.(*process.Process)
+			mi, err := p.MemoryInfo()
+			if err != nil {
+				return *env.NewDict(map[string]any{"error": *env.NewString(err.Error())})
+			}
+			d := env.NewDict(make(map[string]any, 8))
+			d.Data["rss"] = *env.NewInteger(int64(mi.RSS))
+			d.Data["vms"] = *env.NewInteger(int64(mi.VMS))
+			// Additional fields provided by gopsutil on this platform
+			if mi.HWM != 0 {
+				d.Data["hwm"] = *env.NewInteger(int64(mi.HWM))
+			}
+			if mi.Data != 0 {
+				d.Data["data"] = *env.NewInteger(int64(mi.Data))
+			}
+			if mi.Stack != 0 {
+				d.Data["stack"] = *env.NewInteger(int64(mi.Stack))
+			}
+			if mi.Locked != 0 {
+				d.Data["locked"] = *env.NewInteger(int64(mi.Locked))
+			}
+			if mi.Swap != 0 {
+				d.Data["swap"] = *env.NewInteger(int64(mi.Swap))
+			}
+			return *d
+		},
+	},
+	"process//IO-counters?": {
+		Argsn: 1,
+		Doc:   "Returns IO counters (read-count, write-count, read-bytes, write-bytes).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			n, ok := arg0.(env.Native)
+			if !ok || ps.Idx.GetWord(n.Kind.Index) != "process" {
+				return evaldo.MakeBuiltinError(ps, "Expected native process", "process//IO-counters?")
+			}
+			p := n.Value.(*process.Process)
+			io, err := p.IOCounters()
+			if err != nil || io == nil {
+				return *env.NewDict(map[string]any{"error": *env.NewString(func() string {
+					if err != nil {
+						return err.Error()
+					}
+					return "unavailable"
+				}())})
+			}
+			d := env.NewDict(make(map[string]any, 4))
+			d.Data["read-count"] = *env.NewInteger(int64(io.ReadCount))
+			d.Data["write-count"] = *env.NewInteger(int64(io.WriteCount))
+			d.Data["read-bytes"] = *env.NewInteger(int64(io.ReadBytes))
+			d.Data["write-bytes"] = *env.NewInteger(int64(io.WriteBytes))
+			return *d
+		},
+	},
+	"process//Num-FDs?": {
+		Argsn: 1,
+		Doc:   "Returns number of open file descriptors (p.NumFDs()).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			n, ok := arg0.(env.Native)
+			if !ok || ps.Idx.GetWord(n.Kind.Index) != "process" {
+				return evaldo.MakeBuiltinError(ps, "Expected native process", "process//Num-FDs?")
+			}
+			p := n.Value.(*process.Process)
+			v, err := p.NumFDs()
+			if err != nil {
+				return *env.NewString("???")
+			}
+			return *env.NewInteger(int64(v))
+		},
+	},
+	"process//Num-connections?": {
+		Argsn: 1,
+		Doc:   "Returns the number of network connections (len(p.Connections())).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			n, ok := arg0.(env.Native)
+			if !ok || ps.Idx.GetWord(n.Kind.Index) != "process" {
+				return evaldo.MakeBuiltinError(ps, "Expected native process", "process//Num-connections?")
+			}
+			p := n.Value.(*process.Process)
+			conns, err := p.Connections()
+			if err != nil {
+				return *env.NewString("???")
+			}
+			return *env.NewInteger(int64(len(conns)))
 		},
 	},
 
@@ -1577,6 +1933,7 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
+
 	// Extracts a .zip archive to a directory.
 	// Args:
 	// * source: uri representing the .zip file
@@ -1631,7 +1988,7 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
-	"new-finder": {
+	"finder": {
 		Argsn: 1,
 		Doc:   "Creates a new file finder starting from the given path(s) (alias of find).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1667,7 +2024,7 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * native finder object (for chaining)
 	// Tags: #find #filter
-	"finder//min-depth!": {
+	"finder//Min-depth!": {
 		Argsn: 2,
 		Doc:   "Sets the minimum depth for file traversal.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1679,12 +2036,12 @@ var Builtins_os = map[string]*env.Builtin{
 						finder.MinDepth(int(depth.Value))
 						return arg0
 					default:
-						return evaldo.MakeArgError(ps, 2, []env.Type{env.IntegerType}, "finder//min-depth!")
+						return evaldo.MakeArgError(ps, 2, []env.Type{env.IntegerType}, "finder//Min-depth!")
 					}
 				}
-				return evaldo.MakeBuiltinError(ps, "Expected finder object", "finder//min-depth!")
+				return evaldo.MakeBuiltinError(ps, "Expected finder object", "finder//Min-depth!")
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//min-depth!")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//Min-depth!")
 			}
 		},
 	},
@@ -1696,7 +2053,7 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * native finder object (for chaining)
 	// Tags: #find #filter
-	"finder//max-depth!": {
+	"finder//Max-depth!": {
 		Argsn: 2,
 		Doc:   "Sets the maximum depth for file traversal.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1708,12 +2065,12 @@ var Builtins_os = map[string]*env.Builtin{
 						finder.MaxDepth(int(depth.Value))
 						return arg0
 					default:
-						return evaldo.MakeArgError(ps, 2, []env.Type{env.IntegerType}, "finder//max-depth!")
+						return evaldo.MakeArgError(ps, 2, []env.Type{env.IntegerType}, "finder//Max-depth!")
 					}
 				}
-				return evaldo.MakeBuiltinError(ps, "Expected finder object", "finder//max-depth!")
+				return evaldo.MakeBuiltinError(ps, "Expected finder object", "finder//Max-depth!")
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//max-depth!")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//Max-depth!")
 			}
 		},
 	},
@@ -1725,7 +2082,7 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * native finder object (for chaining)
 	// Tags: #find #filter
-	"finder//type": {
+	"finder//Type": {
 		Argsn: 2,
 		Doc:   "Filters results by type: 'file (or \"f\") for files, 'dir (or \"d\") for directories.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1742,22 +2099,22 @@ var Builtins_os = map[string]*env.Builtin{
 						case "dir":
 							typeStr = "d"
 						default:
-							return evaldo.MakeBuiltinError(ps, "Type must be 'file or 'dir", "finder//type")
+							return evaldo.MakeBuiltinError(ps, "Type must be 'file or 'dir", "finder//Type")
 						}
 					case env.String:
 						if t.Value != "f" && t.Value != "d" {
-							return evaldo.MakeBuiltinError(ps, "Type must be \"f\" or \"d\"", "finder//type")
+							return evaldo.MakeBuiltinError(ps, "Type must be \"f\" or \"d\"", "finder//Type")
 						}
 						typeStr = t.Value
 					default:
-						return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "finder//type")
+						return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "finder//Type")
 					}
 					finder.Type(typeStr)
 					return arg0
 				}
-				return evaldo.MakeBuiltinError(ps, "Expected finder object", "finder//type")
+				return evaldo.MakeBuiltinError(ps, "Expected finder object", "finder//Type")
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//type")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//Type")
 			}
 		},
 	},
@@ -1769,7 +2126,7 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * native finder object (for chaining)
 	// Tags: #find #filter
-	"finder//name": {
+	"finder//Name": {
 		Argsn: 2,
 		Doc:   "Filters results by file name using a glob pattern.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1781,12 +2138,12 @@ var Builtins_os = map[string]*env.Builtin{
 						finder.Name(pattern.Value)
 						return arg0
 					default:
-						return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "finder//name")
+						return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "finder//Name")
 					}
 				}
-				return evaldo.MakeBuiltinError(ps, "Expected finder object", "finder//name")
+				return evaldo.MakeBuiltinError(ps, "Expected finder object", "finder//Name")
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//name")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//Name")
 			}
 		},
 	},
@@ -1798,7 +2155,7 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * native finder object (for chaining)
 	// Tags: #find #filter
-	"finder//whole-name": {
+	"finder//Whole-name": {
 		Argsn: 2,
 		Doc:   "Filters results by full path using a glob pattern.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1810,12 +2167,12 @@ var Builtins_os = map[string]*env.Builtin{
 						finder.WholeName(pattern.Value)
 						return arg0
 					default:
-						return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "finder//whole-name")
+						return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "finder//Whole-name")
 					}
 				}
-				return evaldo.MakeBuiltinError(ps, "Expected finder object", "finder//whole-name")
+				return evaldo.MakeBuiltinError(ps, "Expected finder object", "finder//Whole-name")
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//whole-name")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//Whole-name")
 			}
 		},
 	},
@@ -1827,7 +2184,7 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * native finder object (for chaining)
 	// Tags: #find #filter
-	"finder//regex": {
+	"finder//Regex": {
 		Argsn: 2,
 		Doc:   "Filters results by regular expression on the full path.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1840,17 +2197,18 @@ var Builtins_os = map[string]*env.Builtin{
 							finder.Regex(regex)
 							return arg0
 						}
-						return evaldo.MakeBuiltinError(ps, "Expected regexp object", "finder//regex")
+						return evaldo.MakeBuiltinError(ps, "Expected regexp object", "finder//Regex")
 					default:
-						return evaldo.MakeArgError(ps, 2, []env.Type{env.NativeType}, "finder//regex")
+						return evaldo.MakeArgError(ps, 2, []env.Type{env.NativeType}, "finder//Regex")
 					}
 				}
-				return evaldo.MakeBuiltinError(ps, "Expected finder object", "finder//regex")
+				return evaldo.MakeBuiltinError(ps, "Expected finder object", "finder//Regex")
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//regex")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//Regex")
 			}
 		},
 	},
+
 
 	// Filters for empty files or directories.
 	// Args:
@@ -1858,7 +2216,7 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * native finder object (for chaining)
 	// Tags: #find #filter
-	"finder//empty": {
+	"finder//Empty": {
 		Argsn: 1,
 		Doc:   "Filters for empty files or directories.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1868,9 +2226,9 @@ var Builtins_os = map[string]*env.Builtin{
 					finder.Empty()
 					return arg0
 				}
-				return evaldo.MakeBuiltinError(ps, "Expected finder object", "finder//empty")
+				return evaldo.MakeBuiltinError(ps, "Expected finder object", "finder//Empty")
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//empty")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//Empty")
 			}
 		},
 	},
@@ -1881,7 +2239,7 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * block of uris representing found files/directories
 	// Tags: #find #execute
-	"finder//eval": {
+	"finder//Eval": {
 		Argsn: 1,
 		Doc:   "Executes the find operation and returns matching paths as uris.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1890,7 +2248,7 @@ var Builtins_os = map[string]*env.Builtin{
 				if finder, ok := f.Value.(*find.Find); ok {
 					results, err := finder.Evaluate()
 					if err != nil {
-						return evaldo.MakeBuiltinError(ps, "Error evaluating find: "+err.Error(), "finder//eval")
+						return evaldo.MakeBuiltinError(ps, "Error evaluating find: "+err.Error(), "finder//Eval")
 					}
 					items := make([]env.Object, len(results))
 					for i, path := range results {
@@ -1898,9 +2256,9 @@ var Builtins_os = map[string]*env.Builtin{
 					}
 					return *env.NewBlock(*env.NewTSeries(items))
 				}
-				return evaldo.MakeBuiltinError(ps, "Expected finder object", "finder//eval")
+				return evaldo.MakeBuiltinError(ps, "Expected finder object", "finder//Eval")
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//eval")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//Eval")
 			}
 		},
 	},
