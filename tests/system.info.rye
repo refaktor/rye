@@ -760,7 +760,7 @@ cc os cwd?
 	{
 	}
 
-	group "finder//min-depth!" 
+	group "finder//Min-depth!" 
 	"Sets the minimum depth for file traversal."
 	{
 		argsn 2
@@ -775,7 +775,7 @@ cc os cwd?
 	{
 	}
 
-	group "finder//max-depth!" 
+	group "finder//Max-depth!" 
 	"Sets the maximum depth for file traversal."
 	{
 		argsn 2
@@ -790,7 +790,7 @@ cc os cwd?
 	{
 	}
 
-	group "finder//type" 
+	group "finder//Type" 
 	"Filters results by type: 'file (or \"f\") for files, 'dir (or \"d\") for directories."
 	{
 		argsn 2
@@ -805,7 +805,7 @@ cc os cwd?
 	{
 	}
 
-	group "finder//name" 
+	group "finder//Name" 
 	"Filters results by file name using a glob pattern."
 	{
 		argsn 2
@@ -820,7 +820,7 @@ cc os cwd?
 	{
 	}
 
-	group "finder//whole-name" 
+	group "finder//Whole-name" 
 	"Filters results by full path using a glob pattern."
 	{
 		argsn 2
@@ -835,7 +835,7 @@ cc os cwd?
 	{
 	}
 
-	group "finder//regex" 
+	group "finder//Regex" 
 	"Filters results by regular expression on the full path."
 	{
 		argsn 2
@@ -850,7 +850,7 @@ cc os cwd?
 	{
 	}
 
-	group "finder//empty" 
+	group "finder//Empty" 
 	"Filters for empty files or directories."
 	{
 		argsn 1
@@ -864,7 +864,7 @@ cc os cwd?
 	{
 	}
 
-	group "finder//eval" 
+	group "finder//Eval" 
 	"Executes the find operation and returns matching paths as uris."
 	{
 		argsn 1
@@ -935,7 +935,7 @@ cc os cwd?
 	{
 	}
 
-	group "pid" 
+	group "pid?" 
 	"Gets the current process ID."
 	{
 		arg `none`
@@ -948,7 +948,7 @@ cc os cwd?
 	{
 	}
 
-	group "ppid" 
+	group "ppid?" 
 	"Gets the parent process ID."
 	{
 		arg `none`

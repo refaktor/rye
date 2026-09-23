@@ -992,7 +992,7 @@ section "Default" "" {
 	}
 
 	{
-`Rye-itself//Args\\raw?
+`Rye-itself//Args\\raw? _
 `	}
 
 	group "Rye-itself//History?" 
@@ -1005,7 +1005,33 @@ section "Default" "" {
 	}
 
 	{
-`Rye-itself//History? 10 ; last 10 lines (when running under REPL)
+`Rye-itself//History? _ 10
+`	}
+
+	group "Rye-itself//Landlock" 
+	"Create a landlock builder object that can be configured and then enforced."
+	{
+	}
+
+	{
+	}
+
+	{
+`ll: Rye-itself//Landlock
+ll | landlock//Limit-to-cwd | landlock//Enforce
+`	}
+
+	group "Rye-itself//Unshare-config?" 
+	"Returns a dictionary with unshare isolation flags: active, fs, net, pid, uts (booleans)."
+	{
+		pure
+	}
+
+	{
+	}
+
+	{
+`cc Rye-itself Unshare-config? |print
 `	}
 
 	group "capture-stdout" 
