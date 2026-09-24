@@ -179,7 +179,7 @@ Thanks to @kseistrup for Arch package and @stefanb for Homebrew.
 - **VS Code**: Search for "ryelang" in the Extension marketplace [repository](https://github.com/refaktor/rye-vscode)
 - **Emacs**: [syntax highlighting](https://github.com/refaktor/rye/tree/main/editors/emacs)
 - **NeoVIM**: [syntax highlighting](https://github.com/refaktor/rye/tree/main/editors/nvim)
-- **Helix**: soon
+- **Helix**: [Tres sitter](https://github.com/refaktor/tree-sitter-rye)
 
 ## Community and Contact
 
