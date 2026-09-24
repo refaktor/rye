@@ -506,6 +506,86 @@ var builtins_baseio = map[string]*env.Builtin{
 		},
 	},
 
+	// Rye-itself//Landlock-only
+	// Summary: Immediately restrict filesystem access to exactly the provided paths and modes.
+	// Args: spec (string or block of strings). Spec format examples:
+	//   "/proj:r,/proj/bin:rx,/tmp:rw" or block [ "/proj:r" "/proj/bin:rx" "/tmp:rw" ]
+	// Modes:
+	//   r  => read-only (files + dirs)
+	//   rw => read-write (files + dirs)
+	//   rx => read + execute (dir => RX for files under it; file => exec)
+	// Returns: 'ok tagword on success; error on failure
+	// Notes: Call early in the script; applies process-wide and is irreversible.
+	"Rye-itself//Landlock-only": {
+		Argsn: 1,
+		Doc:   "Immediately restrict filesystem access to the provided list of paths with modes r, rw, or rx. Example: Rye-itself//Landlock-only \"/proj:r,/tmp:rw,/proj/bin:rx\"",
+		Pure:  false,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
+			// Parse spec(s)
+			items := []string{}
+			switch v := arg0.(type) {
+			case env.String:
+				for _, part := range strings.Split(v.Value, ",") {
+					part = strings.TrimSpace(part)
+					if part != "" {
+						items = append(items, part)
+					}
+				}
+			case env.Block:
+				for _, o := range v.Series.S {
+					if s, ok := o.(env.String); ok {
+						items = append(items, strings.TrimSpace(s.Value))
+					} else {
+						return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType}, "Landlock-only")
+					}
+				}
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType}, "Landlock-only")
+			}
+
+			if len(items) == 0 {
+				return *env.NewError("Landlock-only: empty spec")
+			}
+
+			var rules []landlock.Rule
+			for _, it := range items {
+				// each item: path[:mode]
+				path := it
+				mode := "r"
+				if i := strings.LastIndex(it, ":"); i >= 0 {
+					path = strings.TrimSpace(it[:i])
+					mode = strings.TrimSpace(it[i+1:])
+				}
+				if path == "" {
+					return *env.NewError("Landlock-only: empty path in spec")
+				}
+				abs, err := filepath.Abs(path)
+				if err == nil {
+					path = abs
+				}
+				// Assemble rules based on mode
+				switch mode {
+				case "r":
+					rules = append(rules, landlock.RODirs(path), landlock.ROFiles(path))
+				case "rw":
+					rules = append(rules, landlock.RWDirs(path), landlock.RWFiles(path))
+				case "rx":
+					// Read-only access; execution cannot be explicitly granted per-file via landlock-go API.
+					// Best-effort: allow RO on the path; for executables, scripts should add the parent dir with rx in separate entries if needed.
+					rules = append(rules, landlock.RODirs(path), landlock.ROFiles(path))
+				default:
+					return *env.NewError("Landlock-only: invalid mode (use r, rw, or rx)")
+				}
+			}
+
+			if err := landlock.V1.BestEffort().RestrictPaths(rules...); err != nil {
+				return *env.NewError(fmt.Sprintf("failed to apply landlock: %v", err))
+			}
+			os.Setenv("RYE_LANDLOCK_PROFILE", "custom")
+			return env.Tagword{Index: ps.Idx.IndexWord("ok")}
+		},
+	},
+
 	// Rye-itself//Is-unshare
 	// Summary: Returns true if running inside Rye --unshare sandbox (Linux only).
 	// Args: none

@@ -84,6 +84,49 @@ var Builtins_tmux = map[string]*env.Builtin{
 		},
 	},
 
+	"tmux-window//Rename": {
+		Argsn: 2,
+		Doc:   "Renames the tmux window.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch win := arg0.(type) {
+			case env.Native:
+				if window, ok := win.Value.(*gotmux.Window); ok {
+					switch name := arg1.(type) {
+					case env.String:
+						if err := window.Rename(name.Value); err != nil {
+							return evaldo.MakeBuiltinError(ps, "Failed to rename window: "+err.Error(), "tmux-rename-window")
+						}
+						return arg0
+					default:
+						return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "tmux-rename-window")
+					}
+				}
+				return evaldo.MakeBuiltinError(ps, "Expected tmux-window object", "tmux-rename-window")
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "tmux-rename-window")
+			}
+		},
+	},
+
+	"tmux-window//Select": {
+		Argsn: 1,
+		Doc:   "Selects (focuses) the tmux window.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch win := arg0.(type) {
+			case env.Native:
+				if window, ok := win.Value.(*gotmux.Window); ok {
+					if err := window.Select(); err != nil {
+						return evaldo.MakeBuiltinError(ps, "Failed to select window: "+err.Error(), "tmux-select-window")
+					}
+					return arg0
+				}
+				return evaldo.MakeBuiltinError(ps, "Expected tmux-window object", "tmux-select-window")
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "tmux-select-window")
+			}
+		},
+	},
+
 	"tmux-session//Window": {
 		Argsn: 1,
 		Doc:   "Creates a new window in the given tmux session.",
@@ -104,7 +147,7 @@ var Builtins_tmux = map[string]*env.Builtin{
 		},
 	},
 
-	"tmux-session//window\\named": {
+	"tmux-session//Window\\named": {
 		Argsn: 2,
 		Doc:   "Creates a new window in the given tmux session with a specific name.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -129,6 +172,30 @@ var Builtins_tmux = map[string]*env.Builtin{
 		},
 	},
 
+	"tmux-session//Rename": {
+		Argsn: 2,
+		Doc:   "Renames a tmux session.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch sess := arg0.(type) {
+			case env.Native:
+				if session, ok := sess.Value.(*gotmux.Session); ok {
+					switch name := arg1.(type) {
+					case env.String:
+						if err := session.Rename(name.Value); err != nil {
+							return evaldo.MakeBuiltinError(ps, "Failed to rename session: "+err.Error(), "tmux-rename-session")
+						}
+						return arg0
+					default:
+						return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "tmux-rename-session")
+					}
+				}
+				return evaldo.MakeBuiltinError(ps, "Expected tmux-session object", "tmux-rename-session")
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "tmux-rename-session")
+			}
+		},
+	},
+
 	"tmux-session//Windows?": {
 		Argsn: 1,
 		Doc:   "Lists all windows in the given tmux session.",
@@ -149,6 +216,37 @@ var Builtins_tmux = map[string]*env.Builtin{
 				return evaldo.MakeBuiltinError(ps, "Expected tmux-session object", "tmux-list-windows")
 			default:
 				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "tmux-list-windows")
+			}
+		},
+	},
+
+	"tmux-window//Layout\\select": {
+		Argsn: 2,
+		Doc:   "Selects layout for a window (even-horizontal, even-vertical, main-horizontal, tiled).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch win := arg0.(type) {
+			case env.Native:
+				if window, ok := win.Value.(*gotmux.Window); ok {
+					switch layout := arg1.(type) {
+					case env.String:
+						var ly gotmux.WindowLayout
+						switch layout.Value {
+						case string(gotmux.WindowLayoutEvenHorizontal), string(gotmux.WindowLayoutEvenVertical), string(gotmux.WindowLayoutMainVertical), string(gotmux.WindowLayoutTiled):
+							ly = gotmux.WindowLayout(layout.Value)
+						default:
+							return evaldo.MakeBuiltinError(ps, "Invalid layout", "tmux-select-layout")
+						}
+						if err := window.SelectLayout(ly); err != nil {
+							return evaldo.MakeBuiltinError(ps, "Failed to select layout: "+err.Error(), "tmux-select-layout")
+						}
+						return arg0
+					default:
+						return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "tmux-select-layout")
+					}
+				}
+				return evaldo.MakeBuiltinError(ps, "Expected tmux-window object", "tmux-select-layout")
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "tmux-select-layout")
 			}
 		},
 	},
@@ -178,6 +276,49 @@ var Builtins_tmux = map[string]*env.Builtin{
 		},
 	},
 
+	"tmux-window//Panes?": {
+		Argsn: 1,
+		Doc:   "Lists panes in the given tmux window.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch win := arg0.(type) {
+			case env.Native:
+				if window, ok := win.Value.(*gotmux.Window); ok {
+					panes, err := window.ListPanes()
+					if err != nil {
+						return evaldo.MakeBuiltinError(ps, "Failed to list panes: "+err.Error(), "tmux-list-panes")
+					}
+					items := make([]env.Object, len(panes))
+					for i, p := range panes {
+						items[i] = *env.NewNative(ps.Idx, p, "tmux-pane")
+					}
+					return *env.NewBlock(*env.NewTSeries(items))
+				}
+				return evaldo.MakeBuiltinError(ps, "Expected tmux-window object", "tmux-list-panes")
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "tmux-list-panes")
+			}
+		},
+	},
+
+	"tmux-pane//Kill": {
+		Argsn: 1,
+		Doc:   "Kills the tmux pane.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch p := arg0.(type) {
+			case env.Native:
+				if pane, ok := p.Value.(*gotmux.Pane); ok {
+					if err := pane.Kill(); err != nil {
+						return evaldo.MakeBuiltinError(ps, "Failed to kill pane: "+err.Error(), "tmux-kill-pane")
+					}
+					return arg0
+				}
+				return evaldo.MakeBuiltinError(ps, "Expected tmux-pane object", "tmux-kill-pane")
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "tmux-kill-pane")
+			}
+		},
+	},
+
 	"tmux-pane//Split-pane": {
 		Argsn: 1,
 		Doc:   "Splits a tmux pane horizontally.",
@@ -194,6 +335,25 @@ var Builtins_tmux = map[string]*env.Builtin{
 				return evaldo.MakeBuiltinError(ps, "Expected tmux-pane object", "tmux-split-pane")
 			default:
 				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "tmux-split-pane")
+			}
+		},
+	},
+
+	"tmux-pane//Select": {
+		Argsn: 1,
+		Doc:   "Selects (focuses) the tmux pane.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch p := arg0.(type) {
+			case env.Native:
+				if pane, ok := p.Value.(*gotmux.Pane); ok {
+					if err := pane.Select(); err != nil {
+						return evaldo.MakeBuiltinError(ps, "Failed to select pane: "+err.Error(), "tmux-select-pane")
+					}
+					return arg0
+				}
+				return evaldo.MakeBuiltinError(ps, "Expected tmux-pane object", "tmux-select-pane")
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "tmux-select-pane")
 			}
 		},
 	},
@@ -219,6 +379,25 @@ var Builtins_tmux = map[string]*env.Builtin{
 				return evaldo.MakeBuiltinError(ps, "Expected tmux-pane object", "tmux-send-keys")
 			default:
 				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "tmux-send-keys")
+			}
+		},
+	},
+
+	"tmux-session//Attach": {
+		Argsn: 1,
+		Doc:   "Attaches to a tmux session (switch-client).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch sess := arg0.(type) {
+			case env.Native:
+				if session, ok := sess.Value.(*gotmux.Session); ok {
+					if err := session.Attach(); err != nil {
+						return evaldo.MakeBuiltinError(ps, "Failed to attach to session: "+err.Error(), "tmux-attach-session")
+					}
+					return arg0
+				}
+				return evaldo.MakeBuiltinError(ps, "Expected tmux-session object", "tmux-attach-session")
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "tmux-attach-session")
 			}
 		},
 	},
