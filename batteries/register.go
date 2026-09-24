@@ -69,6 +69,7 @@ func RegisterBatteries(ps *env.ProgramState) {
 	evaldo.RegisterBuiltins2(Builtins_encoding, ps, "encoding")
 	evaldo.RegisterBuiltinsInContext(Builtins_math, ps, "math")
 	evaldo.RegisterBuiltinsInContext(Builtins_os, ps, "os")
+	evaldo.RegisterBuiltinsInContext(Builtins_tmux, ps, "tmux")
 	evaldo.RegisterBuiltinsInContext(Builtins_pipes, ps, "pipes")
 	evaldo.RegisterBuiltinsInContext(Builtins_term, ps, "term")
 	evaldo.RegisterBuiltinsInContext(Builtins_termstr, ps, "termstr")
