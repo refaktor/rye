@@ -186,7 +186,7 @@ Thanks to @kseistrup for Arch package and @stefanb for Homebrew.
 - **[GitHub Discussions](https://github.com/refaktor/rye/discussions)**
 - **[Reddit](https://reddit.com/r/ryelang/)**
 - **[Issues](https://github.com/refaktor/rye/issues)**
-- **[Discord](https://discord.gg/8SFmNM2U)** - #Homoiconic - a discord for languages like Lisp, Rebol, Red, Rye (very new, few users, welcome!)
+- **[Discord](https://discord.gg/J8FBrCSqve)** - #Homoiconic - a discord for languages like Lisp, Rebol, Red, Rye (very new, few users, welcome!)
 - **[Rosetta Code](https://rosettacode.org/wiki/Category:Rye)**
 - **Email**: janko.itm+rye[at]gmail.com
 
