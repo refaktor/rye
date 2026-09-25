@@ -518,7 +518,7 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 	object := ps.Ser.Pop()
 	if object == nil {
 		ps.ErrorFlag = true
-		ps.Res = env.NewError("Expected Rye value but reached end of block.")
+		ps.Res = env.NewError("Missing value: reached end of block while reading an argument")
 		return
 	}
 
@@ -1477,6 +1477,17 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 	for i := ii; i < fn.Argsn; i += 1 {
 		evalExprFn(ps, true, opword)
 		if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
+			if ps.ErrorFlag {
+				// Use function word from spec if available
+				fnName := "function"
+				if fn.Spec.Series.Len() > 0 {
+					if w, ok := fn.Spec.Series.Get(0).(env.Word); ok {
+						fnName = ps.Idx.GetWord(w.Index)
+					}
+				}
+				ps.Res = env.NewError("function '" + fnName + "' is missing argument " + strconv.Itoa(i+1))
+				ps.ErrorFlag = true
+			}
 			return
 		}
 		// The createcurriedcaller is now created explicitly with partial builtin function
@@ -1936,15 +1947,7 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 	evalExprFn := func(ps *env.ProgramState, limited bool, opword bool) {
 		EvalExpression(ps, nil, false, limited, opword, dotword)
 	}
-	getParentErr := func() *env.Error {
-		if err, ok := ps.Res.(*env.Error); ok {
-			return err
-		}
-		if err, ok := ps.Res.(env.Error); ok {
-			return &err
-		}
-		return nil
-	}
+	
 
 	//fmt.Println("*** BUILTIN ***")
 
@@ -1960,15 +1963,14 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 	} else if bi.Argsn > 0 {
 		//fmt.Println(" ARG 1 ")
 		//fmt.Println(ps.Ser.GetPos())
+	
 		evalExprFn(ps, true, opword)
 		if checkForFailureWithBuiltin(bi, ps, 0) {
 			return
 		}
-		if ps.ErrorFlag {
-			// ps.Res = env.NewError4(0, "argument 1 of "+strconv.Itoa(bi.Argsn)+" missing of builtin: '"+bi.Doc+"'", ps.Res.(*env.Error), nil)
-			return
-		}
-		if ps.ReturnFlag {
+		if ps.ErrorFlag || ps.ReturnFlag {
+			ps.Res = env.NewError("missing argument 1")
+			ps.ErrorFlag = true
 			return
 		}
 		// The CallCurriedCaller is now created explicitly with partial builtin function
@@ -1978,13 +1980,15 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 	if arg0_ != nil && pipeSecond {
 		arg1 = arg0_
 	} else if bi.Argsn > 1 {
+	
 		evalExprFn(ps, true, opword) // <---- THESE DETERMINE IF IT CONSUMES WHOLE EXPRESSION OR NOT IN CASE OF PIPEWORDS .. HM*... MAYBE WOULD COULD HAVE A WORD MODIFIER?? a: 2 |add 5 a:: 2 |add 5 print* --TODO
 
 		if checkForFailureWithBuiltin(bi, ps, 1) {
 			return
 		}
-		if ps.ReturnFlag || ps.ErrorFlag { // W0607
-			ps.Res = env.NewError4(0, "Argument 2 of "+strconv.Itoa(bi.Argsn)+" missing for builtin "+FormatBuiltinReference(bi.Doc)+". Check that all required arguments are provided.", getParentErr(), nil)
+		if ps.ReturnFlag || ps.ErrorFlag {
+			ps.Res = env.NewError("missing argument 2")
+			ps.ErrorFlag = true
 			return
 		}
 		//fmt.Println(ps.Res)
@@ -1992,39 +1996,45 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 		arg1 = ps.Res
 	}
 	if bi.Argsn > 2 {
+	
 		evalExprFn(ps, true, opword)
 
 		if checkForFailureWithBuiltin(bi, ps, 2) {
 			return
 		}
-		if ps.ReturnFlag || ps.ErrorFlag { // W0607
-			ps.Res = env.NewError4(0, "Argument 3 missing. Check that all required arguments are provided for the builtin function.", getParentErr(), nil)
+		if ps.ReturnFlag || ps.ErrorFlag {
+			ps.Res = env.NewError("missing argument 3")
+			ps.ErrorFlag = true
 			return
 		}
 		// The CallCurriedCaller is now created explicitly with partial builtin function
 		arg2 = ps.Res
 	}
 	if bi.Argsn > 3 {
+	
 		evalExprFn(ps, true, opword)
 
 		if checkForFailureWithBuiltin(bi, ps, 3) {
 			return
 		}
-		if ps.ReturnFlag || ps.ErrorFlag { // W0607
-			ps.Res = env.NewError4(0, "Argument 4 missing. Check that all required arguments are provided for the builtin function.", getParentErr(), nil)
+		if ps.ReturnFlag || ps.ErrorFlag {
+			ps.Res = env.NewError("missing argument 4")
+			ps.ErrorFlag = true
 			return
 		}
 		// The CallCurriedCaller is now created explicitly with partial builtin function
 		arg3 = ps.Res
 	}
 	if bi.Argsn > 4 {
+	
 		evalExprFn(ps, true, opword)
 
 		if checkForFailureWithBuiltin(bi, ps, 4) {
 			return
 		}
-		if ps.ReturnFlag || ps.ErrorFlag { // W0607
-			ps.Res = env.NewError4(0, "Argument 5 missing. Check that all required arguments are provided for the builtin function.", getParentErr(), nil)
+		if ps.ReturnFlag || ps.ErrorFlag {
+			ps.Res = env.NewError("missing argument 5")
+			ps.ErrorFlag = true
 			return
 		}
 		// The CallCurriedCaller is now created explicitly with partial builtin function
