@@ -85,19 +85,23 @@ func ordinal(n int) string {
 }
 
 func MakeArgErrorMessage(N int, allowedTypes []env.Type, fn string) string {
-	types := ""
+	// Build expected types list using env.NativeTypes names
+	var b strings.Builder
 	for i, tt := range allowedTypes {
 		if i > 0 {
-			types += ", "
+			b.WriteString(", ")
 		}
-		// Check if in bounds before accessing env.NativeTypes
-		if tt > 0 && int(tt-1) < len(env.NativeTypes) {
-			types += env.NativeTypes[tt-1]
-		} else {
-			types += "UNKNOWN_TYPE"
+		name := "UNKNOWN_TYPE"
+		if tt >= 0 && int(tt) < len(env.NativeTypes) {
+			name = env.NativeTypes[tt]
 		}
+		b.WriteString(name)
 	}
-	return "`" + fn + "`: " + ordinal(N) + " argument must be: " + types + "."
+	expected := b.String()
+	if expected == "" {
+		expected = "<value>"
+	}
+	return "`" + fn + "` expected " + expected + " for argument " + strconv.Itoa(N)
 }
 
 func MakeArgError(env1 *env.ProgramState, N int, typ []env.Type, fn string) *env.Error {
@@ -111,12 +115,22 @@ func MakeArgError(env1 *env.ProgramState, N int, typ []env.Type, fn string) *env
 func MakeArgError2(env1 *env.ProgramState, N int, typ []env.Type, fn string, got env.Object) *env.Error {
 	env1.FailureFlag = true
 	msg := MakeArgErrorMessage(N, typ, fn)
-	// Append actual type information
-	actual := fmt.Sprintf("%T", got)
-	if i := strings.LastIndex(actual, "."); i >= 0 {
-		actual = actual[i+1:]
+	// Append actual type information using Rye type names when possible
+	actual := "unknown"
+	if got != nil {
+		actualType := got.Type()
+		if int(actualType) >= 0 && int(actualType) < len(env.NativeTypes) {
+			actual = env.NativeTypes[actualType]
+		} else {
+			// Fallback to Go type name without package prefix
+			g := fmt.Sprintf("%T", got)
+			if i := strings.LastIndex(g, "."); i >= 0 {
+				g = g[i+1:]
+			}
+			actual = g
+		}
 	}
-	err := env.NewError(msg + " Got: " + actual + ".")
+	err := env.NewError(msg + ", got " + actual)
 	err.CodeBlock = env1.Ser
 	return err
 }
