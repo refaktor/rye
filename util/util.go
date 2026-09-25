@@ -452,15 +452,7 @@ func ContainsVal(ps *env.ProgramState, b []env.Object, val env.Object) bool {
 }
 
 func RemoveDuplicate(ps *env.ProgramState, slice []env.Object) []env.Object {
-	allKeys := make(map[env.Object]bool)
-	list := []env.Object{}
-	for _, item := range slice {
-		if _, value := allKeys[item]; !value {
-			allKeys[item] = true
-			list = append(list, item)
-		}
-	}
-	return list
+	return RemoveDuplicateValues(slice)
 }
 
 func RemoveDuplicatesString(input string) string {

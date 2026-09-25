@@ -14,6 +14,9 @@ print "╚═══════════════════════�
 print ""
 
 ; Test folders using the consistent assert\display pattern
+; evaluator/main.rye includes comma_guards.rye, expression_loops.rye,
+; builtin_boundaries.rye, and collection_safety.rye
+; (guards, error propagation, Unicode, collection boundaries, and handleable failures).
 test-folders: { 
 	"basics"
 	"parsing" 

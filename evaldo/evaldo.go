@@ -542,6 +542,7 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 			// mode 1 is evals mode block, do the same as evals function does []
 		} else if block.Mode == 1 {
 			ser := ps.Ser
+			defer func() { ps.Ser = ser }()
 			ps.Ser = block.Series
 			res := make([]env.Object, 0)
 			for ps.Ser.Pos() < ps.Ser.Len() {
@@ -550,6 +551,7 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 					return
 				}
 				res = append(res, ps.Res)
+				MaybeAcceptComma(ps, nil, false)
 			}
 			ps.Ser = ser
 			ps.Res = *env.NewBlock(*env.NewTSeries(res))
@@ -569,6 +571,7 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 			// OPBBLOCK - behaves like vals\with with a block argument
 			// For now, inject nil - this might need to be the previous result or context value
 			ser := ps.Ser
+			defer func() { ps.Ser = ser }()
 			ps.Ser = block.Series
 			res := make([]env.Object, 0)
 			injnow := true
@@ -624,6 +627,7 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 					return
 				}
 				res = append(res, ps.Res)
+				MaybeAcceptComma(ps, nil, false)
 			}
 			ps.Ser = ser
 			ps.Res = *env.NewList(res)
@@ -640,6 +644,7 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 					return
 				}
 				res = append(res, ps.Res)
+				MaybeAcceptComma(ps, nil, false)
 			}
 			ps.Ser = ser
 			dict, err := env.NewDictFromSeriesChecked(*env.NewTSeries(res), ps.Idx)

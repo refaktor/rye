@@ -2,12 +2,29 @@ package evaldo
 
 import (
 	"crypto/rand"
+	"math"
 	"math/big"
 	"time"
 
 	"github.com/refaktor/rye/env"
 	// JM 20230825	"github.com/refaktor/rye/term"
 )
+
+// Divide before truncating decimal operands, and validate before converting to int64.
+func truncatedDivision(ps *env.ProgramState, dividend, divisor float64) env.Object {
+	if divisor == 0 {
+		return MakeBuiltinError(ps, "Can't divide by Zero.", "_//")
+	}
+	if math.IsNaN(dividend) || math.IsInf(dividend, 0) || math.IsNaN(divisor) || math.IsInf(divisor, 0) {
+		return MakeBuiltinError(ps, "Integer division requires finite operands.", "_//")
+	}
+	quotient := math.Trunc(dividend / divisor)
+	// The upper limit is exclusive: float64(MaxInt64) rounds to 2^63.
+	if math.IsNaN(quotient) || quotient < -0x1p63 || quotient >= 0x1p63 {
+		return MakeBuiltinError(ps, "Integer division result is out of range.", "_//")
+	}
+	return *env.NewInteger(int64(quotient))
+}
 
 var builtins_numbers = map[string]*env.Builtin{
 
@@ -454,6 +471,9 @@ var builtins_numbers = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
+				if arg.Value <= 0 {
+					return MakeBuiltinError(ps, "Upper bound must be positive.", "random\\integer")
+				}
 				val, err := rand.Int(rand.Reader, big.NewInt(arg.Value))
 				if err != nil {
 					return MakeBuiltinError(ps, err.Error(), "random-integer")
@@ -480,6 +500,9 @@ var builtins_numbers = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Decimal:
+				if arg.Value <= 0 || math.IsNaN(arg.Value) || math.IsInf(arg.Value, 0) {
+					return MakeBuiltinError(ps, "Upper bound must be positive and finite.", "random\\decimal")
+				}
 				// Generate a random integer in a large range to get good precision
 				maxInt := int64(1000000000000) // 10^12 for good precision
 				val, err := rand.Int(rand.Reader, big.NewInt(maxInt))
@@ -488,8 +511,16 @@ var builtins_numbers = map[string]*env.Builtin{
 				}
 				// Convert to float64 in range [0, 1) and scale by max
 				randomFloat := float64(val.Int64()) / float64(maxInt)
-				return *env.NewDecimal(randomFloat * arg.Value)
+				value := randomFloat * arg.Value
+				// Rounding at subnormal bounds can otherwise produce the exclusive upper bound.
+				if value >= arg.Value {
+					value = math.Nextafter(arg.Value, 0)
+				}
+				return *env.NewDecimal(value)
 			case env.Integer:
+				if arg.Value <= 0 {
+					return MakeBuiltinError(ps, "Upper bound must be positive.", "random\\decimal")
+				}
 				// Allow integer input, convert to decimal
 				maxInt := int64(1000000000000) // 10^12 for good precision
 				val, err := rand.Int(rand.Reader, big.NewInt(maxInt))
@@ -1053,13 +1084,16 @@ var builtins_numbers = map[string]*env.Builtin{
 						ps.FailureFlag = true
 						return MakeBuiltinError(ps, "Can't divide by Zero.", "_//")
 					}
+					if a.Value == math.MinInt64 && b.Value == -1 {
+						return MakeBuiltinError(ps, "Integer division result is out of range.", "_//")
+					}
 					return *env.NewInteger(a.Value / b.Value)
 				case env.Decimal:
 					if b.Value == 0.0 {
 						ps.FailureFlag = true
 						return MakeBuiltinError(ps, "Can't divide by Zero.", "_//")
 					}
-					return *env.NewInteger(a.Value / int64(b.Value))
+					return truncatedDivision(ps, float64(a.Value), b.Value)
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "_//")
 				}
@@ -1070,13 +1104,13 @@ var builtins_numbers = map[string]*env.Builtin{
 						ps.FailureFlag = true
 						return MakeBuiltinError(ps, "Can't divide by Zero.", "_//")
 					}
-					return *env.NewInteger(int64(a.Value) / b.Value)
+					return truncatedDivision(ps, a.Value, float64(b.Value))
 				case env.Decimal:
 					if b.Value == 0.0 {
 						ps.FailureFlag = true
 						return MakeBuiltinError(ps, "Can't divide by Zero.", "_//")
 					}
-					return *env.NewInteger(int64(a.Value) / int64(b.Value))
+					return truncatedDivision(ps, a.Value, b.Value)
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "_//")
 				}
