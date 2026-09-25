@@ -272,7 +272,7 @@ func TestEvaldo_load_builtin_1_2_arg_setwords(t *testing.T) {
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
-		t.Error("Expected result type integer")
+		t.Fatalf("Expected integer, got %T: %v", es.Res, es.Res)
 	}
 	if es.Res.(env.Integer).Value != 11780 {
 		t.Error("Expected result value 11780")
@@ -288,10 +288,11 @@ func TestEvaldo_load_builtin_loop(t *testing.T) {
 	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
-	if es.Res.Type() != env.IntegerType {
-		t.Error("Expected result type integer")
+	value, ok := es.Res.(env.Integer)
+	if !ok {
+		t.Fatalf("Expected integer, got %T: %v", es.Res, es.Res)
 	}
-	if es.Res.(env.Integer).Value != 1001 {
+	if value.Value != 1001 {
 		t.Error("Expected result value 1001")
 	}
 }
@@ -323,7 +324,7 @@ func TestEvaldo_curry_2(t *testing.T) {
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
-		t.Error("Expected result type Integer")
+		t.Fatalf("Expected integer, got %T: %v", es.Res, es.Res)
 	}
 	if es.Res.(env.Integer).Value != 22 {
 		t.Error("Expected result value 22")
@@ -348,7 +349,7 @@ func TestEvaldo_load_lsetword1(t *testing.T) {
 		Eval(es)
 
 		if es.Res.Type() != env.IntegerType {
-			t.Error("Expected result type integer")
+			t.Fatalf("Expected integer, got %T: %v", es.Res, es.Res)
 		}
 
 		if es.Res.(env.Integer).Value != 30303 {

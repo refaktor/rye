@@ -8,7 +8,7 @@
 ; that does not include 1.
 
 sum-of-digit-squares: fn { n } {
-	string n |map { .to-integer } |map { ::d , d * d } |sum
+	string n |map { .integer } |map { ::d , d * d } |sum
 }
 
 is-happy: fn { n } {

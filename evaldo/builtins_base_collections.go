@@ -3175,7 +3175,7 @@ var builtins_collection = map[string]*env.Builtin{
 						oldval.Series = *s.RmLast()
 						if ok := ctx.Mod(wrd.Index, oldval); !ok {
 							ps.FailureFlag = true
-							return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(wrd.Index) + "', use 'var' to declare it as a variable")
+							return env.NewError("cannot modify constant '" + ps.Idx.GetWord(wrd.Index) + "'', use 'var' or mod-word for a variable'")
 						}
 						return oldval
 					default:
@@ -3218,7 +3218,7 @@ var builtins_collection = map[string]*env.Builtin{
 						}
 						if ok := ctx.Mod(val1.Index, newval); !ok {
 							ps.FailureFlag = true
-							return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(val1.Index) + "', use 'var' to declare it as a variable")
+							return env.NewError("cannot modify constant '" + ps.Idx.GetWord(val1.Index) + "'', use 'var' or mod-word for a variable'")
 						}
 						return newval
 					case env.Block: // TODO
@@ -3229,7 +3229,7 @@ var builtins_collection = map[string]*env.Builtin{
 						oldval.Series = *s.Append(arg0)
 						if ok := ctx.Mod(val1.Index, oldval); !ok {
 							ps.FailureFlag = true
-							return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(val1.Index) + "', use 'var' to declare it as a variable")
+							return env.NewError("cannot modify constant '" + ps.Idx.GetWord(val1.Index) + "'', use 'var' or mod-word for a variable'")
 						}
 						return oldval
 					case env.List: // TODO
@@ -3254,7 +3254,7 @@ var builtins_collection = map[string]*env.Builtin{
 						finalList := *env.NewList(combineList)
 						if ok := ctx.Mod(val1.Index, finalList); !ok {
 							ps.FailureFlag = true
-							return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(val1.Index) + "', use 'var' to declare it as a variable")
+							return env.NewError("cannot modify constant '" + ps.Idx.GetWord(val1.Index) + "'', use 'var' or mod-word for a variable'")
 						}
 						return finalList
 					default:
@@ -3546,7 +3546,7 @@ var builtins_collection = map[string]*env.Builtin{
 						newval = *env.NewString(result.String())
 						if ok := ctx.Mod(wrd.Index, newval); !ok {
 							ps.FailureFlag = true
-							return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(wrd.Index) + "', use 'var' to declare it as a variable")
+							return env.NewError("cannot modify constant '" + ps.Idx.GetWord(wrd.Index) + "'', use 'var' or mod-word for a variable'")
 						}
 						return newval
 					case env.Block: // TODO
@@ -3556,7 +3556,7 @@ var builtins_collection = map[string]*env.Builtin{
 						oldval.Series = *s.AppendMul(valuesBlock.Series.GetAll())
 						if ok := ctx.Mod(wrd.Index, oldval); !ok {
 							ps.FailureFlag = true
-							return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(wrd.Index) + "', use 'var' to declare it as a variable")
+							return env.NewError("cannot modify constant '" + ps.Idx.GetWord(wrd.Index) + "'', use 'var' or mod-word for a variable'")
 						}
 						return oldval
 					case env.List: // TODO
@@ -3579,7 +3579,7 @@ var builtins_collection = map[string]*env.Builtin{
 						finalList := *env.NewList(combineList)
 						if ok := ctx.Mod(wrd.Index, finalList); !ok {
 							ps.FailureFlag = true
-							return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(wrd.Index) + "', use 'var' to declare it as a variable")
+							return env.NewError("cannot modify constant '" + ps.Idx.GetWord(wrd.Index) + "'', use 'var' or mod-word for a variable'")
 						}
 						return finalList
 					default:

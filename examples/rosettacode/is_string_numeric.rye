@@ -4,10 +4,10 @@
 is-numeric: fn { s } {
 	if s = "" { return false }
 	; Try parsing as integer
-	result: try { to-integer s }
+	result: try { integer s }
 	if not result .is-error { return true }
 	; Try parsing as decimal
-	result2: try { to-decimal s }
+	result2: try { decimal s }
 	not result2 .is-error
 }
 

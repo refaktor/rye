@@ -1337,7 +1337,7 @@ func EvalModword(ps *env.ProgramState, word env.Modword) {
 func CallFunctionWithArgs(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, args ...env.Object) {
 	switch len(args) {
 	case 0:
-		CallFunction_CollectArgs(fn, ps, nil, false, ctx)
+		CallFunctionArgsN(fn, ps, ctx)
 		return
 	case 1:
 		CallFunctionArgs1(fn, ps, args[0], ctx)
@@ -1361,11 +1361,31 @@ var envPool = sync.Pool{
 	},
 }
 
+// validateFunctionSpec protects argument binding from malformed embedded functions.
+func validateFunctionSpec(fn env.Function, ps *env.ProgramState) bool {
+	if fn.Argsn < 0 || fn.Argsn > fn.Spec.Series.Len() {
+		ps.Res = MakeBuiltinError(ps, "Invalid function parameter count.", "function")
+		return false
+	}
+	for i := 0; i < fn.Argsn; i++ {
+		if _, ok := fn.Spec.Series.Get(i).(env.Word); !ok {
+			ps.Res = MakeBuiltinError(ps, "Function parameters must be words.", "function")
+			return false
+		}
+	}
+	return true
+}
+
 // CallFunction_CollectArgs calls a function by collecting arguments from the code stream.
-// Called from: EvalObject, CallFunctionWithArgs (0 arg case)
+// Called from: EvalObject
 // Purpose: Main function caller in evaluator - collects args from code, sets up context, executes function body
 func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.Object, toLeft bool, ctx *env.RyeCtx, pipeSecond ...interface{}) {
-	// fmt.Println(1)
+	if !validateFunctionSpec(fn, ps) {
+		return
+	}
+	if fn.Argsn > len(ps.Args) {
+		ps.Args = append(ps.Args, make([]int, fn.Argsn-len(ps.Args))...)
+	}
 	opword := false
 	// Track call depth for top-level vs function detection
 	ps.CallDepth++
@@ -1416,88 +1436,10 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 		arg0 = ps.Res
 	}
 
-	env0 := ps.Ctx // store reference to current env in local
-	var fnCtx *env.RyeCtx
-	fnCtxFromPool := false // Track if fnCtx was obtained from pool
-	if ctx != nil {        // called via contextpath and this is the context
-		//		fmt.Println("if 111")
-		if fn.Pure {
-			//			fmt.Println("calling pure function")
-			//		fmt.Println(es.PCtx)
-			fnCtx = envPool.Get().(*env.RyeCtx)
-			fnCtx.Clear()
-			fnCtx.Parent = ps.PCtx
-			fnCtxFromPool = true
-			// fnCtx = env.NewEnv(ps.PCtx)
-		} else {
-			if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
-				if fn.InCtx {
-					fnCtx = fn.Ctx
-					// fnCtxFromPool stays false - don't return to pool
-				} else {
-					// Only set parent if fn.Ctx is NOT the same as ctx
-					// (prevents circular reference when closure is stored in same context it captures)
-					if fn.Ctx != ctx {
-						fn.Ctx.Parent = ctx
-					}
-					fnCtx = envPool.Get().(*env.RyeCtx)
-					fnCtx.Clear()
-					oldParentCF1 := fnCtx.Parent // save before overwriting (pool-reuse cycle detection)
-					fnCtx.Parent = fn.Ctx
-					// Bug fix: if fn.Ctx.Parent == fnCtx, that's a stale pool-reuse cycle; break it.
-					if fn.Ctx.Parent == fnCtx {
-						fn.Ctx.Parent = oldParentCF1
-					}
-					fnCtxFromPool = true
-					// fnCtx = env.NewEnv(fn.Ctx)
-				}
-			} else {
-				fnCtx = envPool.Get().(*env.RyeCtx)
-				fnCtx.Clear()
-				fnCtx.Parent = ctx
-				fnCtxFromPool = true
-				// fnCtx = env.NewEnv(ctx)
-			}
-		}
-	} else {
-		//fmt.Println("else1")
-		if fn.Pure {
-			//		fmt.Println("calling pure function")
-			//	fmt.Println(es.PCtx)
-			fnCtx = envPool.Get().(*env.RyeCtx)
-			fnCtx.Clear()
-			fnCtx.Parent = ps.Ctx
-			fnCtxFromPool = true
-			// fnCtx = env.NewEnv(ps.PCtx)
-		} else {
-			if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
-				if fn.InCtx {
-					// fn\inside: use fn.Ctx directly, don't create child context
-					fnCtx = fn.Ctx
-					// fnCtxFromPool stays false - don't return to pool
-				} else {
-					fnCtx = envPool.Get().(*env.RyeCtx)
-					fnCtx.Clear()
-					oldParentCF2 := fnCtx.Parent // save before overwriting (pool-reuse cycle detection)
-					fnCtx.Parent = fn.Ctx
-					// Bug fix: if fn.Ctx.Parent == fnCtx, that's a stale pool-reuse cycle; break it.
-					if fn.Ctx.Parent == fnCtx {
-						fn.Ctx.Parent = oldParentCF2
-					}
-					fnCtxFromPool = true
-					// fnCtx = env.NewEnv(fn.Ctx)
-				}
-			} else {
-				fnCtx = envPool.Get().(*env.RyeCtx)
-				fnCtx.Clear()
-				fnCtx.Parent = env0
-				fnCtxFromPool = true
-				// fnCtx = env.NewEnv(env0)
-			}
-		}
-	}
-
-	// fmt.Println(fnCtx)
+	env0 := ps.Ctx
+	fnCtx, fnCtxFromPool := DetermineContext(fn, ps, ctx)
+	// Release on argument errors as well as normal exits, after body cleanup.
+	defer returnContextToPool(fnCtx, fnCtxFromPool)
 
 	ii := 0
 	// For user functions, arg collection does NOT restrict further operators (opword=false, dotword=false).
@@ -1508,7 +1450,7 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 		EvalExpression(ps, nil, false, limited, false, false)
 	}
 	if arg0 != nil {
-		if fn.Spec.Series.Len() > 0 {
+		if fn.Argsn > 0 {
 			index := fn.Spec.Series.Get(ii).(env.Word).Index
 			fnCtx.SetVar(index, arg0)
 			ps.Args[ii] = index
@@ -1530,21 +1472,11 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 		}
 	}
 
-	defer func() {
-		if len(ps.DeferBlocks) > 0 {
-			ExecuteDeferredBlocks(ps)
-		}
-	}()
-
+	// Arguments execute in the caller's scope, including its deferred-block list.
 	// collect arguments
 	for i := ii; i < fn.Argsn; i += 1 {
 		evalExprFn(ps, true, opword)
 		if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
-			return
-		}
-		// Refuse a live failure in the argument, just like a non-AcceptFailure builtin would.
-		if ps.FailureFlag {
-			ps.ErrorFlag = true
 			return
 		}
 		// The createcurriedcaller is now created explicitly with partial builtin function
@@ -1555,8 +1487,13 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 		}
 		ps.Args[i] = index
 	}
+	// Only the function body owns this cleanup scope. Nested calls get their own.
+	callerDefers := ps.DeferBlocks
+	ps.DeferBlocks = nil
+	defer func() { ps.DeferBlocks = callerDefers }()
 	ser0 := ps.Ser // only after we process the arguments and get new position
 	ps.Ser = fn.Body.Series
+	ps.Ser.SetPos(0)
 	blockFile := ps.BlockFile
 	blockLine := ps.BlockLine
 
@@ -1589,6 +1526,8 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 			ps.ErrorFlag = true
 		}
 	}
+	// Run cleanup with locals still active and before releasing the context.
+	ExecuteDeferredBlocks(ps)
 	MaybeDisplayFailureOrError(ps, ps.Idx, "func. call arg collection")
 	if ps.ErrorFlag || ps.FailureFlag {
 		ps.Ctx = env0
@@ -1611,14 +1550,6 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 	ps.BlockLine = blockLine
 	ps.ReturnFlag = false
 
-	// Only return to pool if:
-	// 1. fnCtx was obtained from pool (not a direct reference like fn\inside)
-	// 2. fnCtx is not a closure context (closures need their context preserved)
-	if fnCtxFromPool && !fnCtx.IsClosure {
-		// Observers are now automatically cleaned up with the context
-		envPool.Put(fnCtx)
-	}
-
 	/*         for (var i=0;i<h.length;i+=1) {
 	    var e = this.evalExpr(block,pos,state,depth+1);
 	    pos = e[1];
@@ -1635,19 +1566,30 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 // setupFunctionCall creates a child ProgramState for function execution, determines
 // the appropriate context (via DetermineContext), performs the depth-guard check, and
 // returns a cleanup function that the caller MUST defer.  The cleanup returns the
-// context to the pool, executes deferred blocks, and propagates OpsCount back to the
+// context to the pool and propagates OpsCount back to the
 // parent ProgramState.
 // Returns (psX, cleanup, true) on success; (nil, nil, false) when a guard check fails.
-func setupFunctionCall(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx) (*env.ProgramState, func(), bool) {
-	fnCtx, fromPool := DetermineContext(fn, ps, ctx)
+func setupFunctionCall(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, argCount int) (*env.ProgramState, func(), bool) {
 	if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 		return nil, nil, false
 	}
+	// Explicit-argument calls require exact arity and never consume caller tokens.
+	if !validateFunctionSpec(fn, ps) {
+		return nil, nil, false
+	}
+	if argCount != fn.Argsn {
+		ps.Res = MakeBuiltinError(ps, fmt.Sprintf("Expected %d arguments, got %d.", fn.Argsn, argCount), "function")
+		return nil, nil, false
+	}
+	fnCtx, fromPool := DetermineContext(fn, ps, ctx)
 
 	psX := env.NewProgramStateOLD(fn.Body.Series, ps.Idx)
 	psX.Ctx = fnCtx
 	psX.PCtx = ps.PCtx
 	psX.Gen = ps.Gen
+	psX.Dialect = ps.Dialect
+	psX.BlockFile = fn.Body.FileName
+	psX.BlockLine = fn.Body.Line
 	psX.CallDepth = ps.CallDepth + 1
 	psX.MaxCallDepth = ps.MaxCallDepth
 	psX.MaxOps = ps.MaxOps
@@ -1663,9 +1605,6 @@ func setupFunctionCall(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx) (
 	}
 
 	cleanup := func() {
-		if len(psX.DeferBlocks) > 0 {
-			ExecuteDeferredBlocks(psX)
-		}
 		returnContextToPool(fnCtx, fromPool)
 		// Propagate ops count back so the parent sees work done in sub-calls
 		ps.OpsCount = psX.OpsCount
@@ -1679,6 +1618,9 @@ func setupFunctionCall(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx) (
 // ForcedResult, and resets ReturnFlag.  The cleanup function (from setupFunctionCall)
 // runs automatically via the caller's defer after this returns.
 func finalizeFunctionCall(ps *env.ProgramState, psX *env.ProgramState, tag string) {
+	// Cleanup may fail; run it before copying the result and flags to the caller.
+	ExecuteDeferredBlocks(psX)
+	ps.ReturnFlag = false
 	if psX.ErrorFlag || psX.FailureFlag {
 		ps.Res = psX.Res
 		ps.ErrorFlag = psX.ErrorFlag
@@ -1699,7 +1641,7 @@ func finalizeFunctionCall(ps *env.ProgramState, psX *env.ProgramState, tag strin
 // Called from: CallFunctionWithArgs, builtins needing to call 1-arg functions
 // Purpose: Optimized path for 1-argument function calls from builtins
 func CallFunctionArgs1(fn env.Function, ps *env.ProgramState, arg0 env.Object, ctx *env.RyeCtx) {
-	psX, cleanup, ok := setupFunctionCall(fn, ps, ctx)
+	psX, cleanup, ok := setupFunctionCall(fn, ps, ctx, 1)
 	if !ok {
 		return
 	}
@@ -1715,7 +1657,7 @@ func CallFunctionArgs1(fn env.Function, ps *env.ProgramState, arg0 env.Object, c
 // Called from: CallFunctionWithArgs, builtins needing to call 2-arg functions
 // Purpose: Optimized path for 2-argument function calls from builtins
 func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, arg1 env.Object, ctx *env.RyeCtx) {
-	psX, cleanup, ok := setupFunctionCall(fn, ps, ctx)
+	psX, cleanup, ok := setupFunctionCall(fn, ps, ctx, 2)
 	if !ok {
 		return
 	}
@@ -1733,7 +1675,7 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 // Called from: CallFunctionWithArgs, builtins needing to call 4-arg functions
 // Purpose: Optimized path for 4-argument function calls from builtins
 func CallFunctionArgs4(fn env.Function, ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, ctx *env.RyeCtx) {
-	psX, cleanup, ok := setupFunctionCall(fn, ps, ctx)
+	psX, cleanup, ok := setupFunctionCall(fn, ps, ctx, 4)
 	if !ok {
 		return
 	}
@@ -1755,14 +1697,14 @@ func CallFunctionArgs4(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 // Called from: CallFunctionWithArgs, CallCurriedCaller, builtins with variable args
 // Purpose: Generic function caller for any number of arguments provided as a slice
 func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, args ...env.Object) {
-	psX, cleanup, ok := setupFunctionCall(fn, ps, ctx)
+	psX, cleanup, ok := setupFunctionCall(fn, ps, ctx, len(args))
 	if !ok {
 		return
 	}
 	defer cleanup()
 
-	for i, argWord := range fn.Spec.Series.S {
-		index := argWord.(env.Word).Index
+	for i := 0; i < fn.Argsn; i++ {
+		index := fn.Spec.Series.Get(i).(env.Word).Index
 		psX.Ctx.SetVar(index, args[i])
 	}
 	if len(args) > 0 {
@@ -2646,47 +2588,47 @@ func TriggerObservers(ps *env.ProgramState, ctx *env.RyeCtx, wordIndex int, oldV
 }
 
 // ExecuteDeferredBlocks executes all deferred blocks in LIFO order (last in, first out).
-// Called from: CallFunction_CollectArgs, CallFunctionArgs1, CallFunctionArgs2, CallFunctionArgs4, CallFunctionArgsN (via defer)
-// Purpose: Executes cleanup blocks registered with defer, similar to Go's defer statement
+// Called before restoring/releasing a function's context and before finalizing its result.
+// Successful cleanup preserves the result. An existing body error/failure wins;
+// otherwise the first cleanup error/failure wins. Remaining cleanup still runs.
+// Returns from cleanup are local to that block and do not replace the body return.
 func ExecuteDeferredBlocks(ps *env.ProgramState) {
 	if len(ps.DeferBlocks) == 0 {
 		return
 	}
 
-	// Save current state
-	originalSer := ps.Ser
-	originalFailureFlag := ps.FailureFlag
-	originalErrorFlag := ps.ErrorFlag
+	originalSer, originalCtx := ps.Ser, ps.Ctx
+	originalFile, originalLine := ps.BlockFile, ps.BlockLine
+	originalInj, originalInjnow := ps.Inj, ps.Injnow
+	result, forcedResult := ps.Res, ps.ForcedResult
+	failure, hardError, returning := ps.FailureFlag, ps.ErrorFlag, ps.ReturnFlag
 
-	// Execute blocks in LIFO order (last in, first out)
-	for i := len(ps.DeferBlocks) - 1; i >= 0; i-- {
-		block := ps.DeferBlocks[i]
-
-		// Reset failure/error flags for each deferred block
-		ps.FailureFlag = false
-		ps.ErrorFlag = false
-
-		// Execute the deferred block
+	// Pop before evaluating: a nested call must not re-enter this block, and a
+	// defer registered by cleanup itself should run before older pending blocks.
+	for len(ps.DeferBlocks) > 0 {
+		last := len(ps.DeferBlocks) - 1
+		block := ps.DeferBlocks[last]
+		ps.DeferBlocks = ps.DeferBlocks[:last]
+		ps.Ctx = originalCtx
+		ps.Res, ps.ForcedResult = nil, nil
+		ps.FailureFlag, ps.ErrorFlag, ps.ReturnFlag = false, false, false
+		ps.Inj, ps.Injnow = nil, false
 		ps.Ser = block.Series
+		ps.Ser.SetPos(0)
+		ps.BlockFile, ps.BlockLine = block.FileName, block.Line
 		Eval(ps)
-
-		// If there was an error in a deferred block, we should still continue
-		// executing other deferred blocks but preserve the error state
-		if ps.ErrorFlag || ps.FailureFlag {
-			// fmt.Println("Error or failure in deferrer block")
-			// fmt.Println(ps.Res.Inspect(*ps.Idx))
-			// Log or handle deferred block errors if needed
-			// For now, continue with other deferred blocks
+		if !failure && !hardError && (ps.FailureFlag || ps.ErrorFlag) {
+			result = ps.Res
+			forcedResult = nil
+			failure, hardError = ps.FailureFlag, ps.ErrorFlag
 		}
 	}
 
-	// Clear the deferred blocks list
-	ps.DeferBlocks = ps.DeferBlocks[:0]
-
-	// Restore original state
-	ps.Ser = originalSer
-	ps.FailureFlag = originalFailureFlag
-	ps.ErrorFlag = originalErrorFlag
+	ps.Ser, ps.Ctx = originalSer, originalCtx
+	ps.BlockFile, ps.BlockLine = originalFile, originalLine
+	ps.Inj, ps.Injnow = originalInj, originalInjnow
+	ps.Res, ps.ForcedResult = result, forcedResult
+	ps.FailureFlag, ps.ErrorFlag, ps.ReturnFlag = failure, hardError, returning
 }
 
 // checkContextErrorHandler checks for and executes an error-handler word in the context.

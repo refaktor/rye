@@ -1070,7 +1070,7 @@ var builtins = map[string]*env.Builtin{
 					// Attempt to modify the word
 					if ok := ctx.Mod(arg.Index, arg0); !ok {
 						ps.FailureFlag = true
-						return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(arg.Index) + "', use 'var' to declare it as a variable")
+						return env.NewError("cannot modify constant '" + ps.Idx.GetWord(arg.Index) + "'', use 'var' or mod-word for a variable'")
 					}
 
 					if arg0.GetKind() == val.GetKind() && arg0.Inspect(*ps.Idx) == val.Inspect(*ps.Idx) {
@@ -1115,7 +1115,7 @@ var builtins = map[string]*env.Builtin{
 					// Attempt to modify the word
 					if ok := ctx.Mod(arg.Index, arg0); !ok {
 						ps.FailureFlag = true
-						return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(arg.Index) + "', use 'var' to declare it as a variable")
+						return env.NewError("cannot modify constant '" + ps.Idx.GetWord(arg.Index) + "'', use 'var' or mod-word for a variable'")
 					}
 
 					if arg0.GetKind() == val.GetKind() && arg0.Inspect(*ps.Idx) == val.Inspect(*ps.Idx) {
@@ -1169,7 +1169,7 @@ var builtins = map[string]*env.Builtin{
 							// if it exists then we set it to word from words
 							if ok := ps.Ctx.Mod(word.Index, val); !ok {
 								ps.FailureFlag = true
-								return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(word.Index) + "', use 'var' to declare it as a variable")
+								return env.NewError("cannot modify constant '" + ps.Idx.GetWord(word.Index) + "'', use 'var' or mod-word for a variable'")
 							} else {
 								// Trigger observers if the variable was successfully modified
 								if exists && ps.Ctx.IsVariable(word.Index) {
@@ -1194,7 +1194,7 @@ var builtins = map[string]*env.Builtin{
 
 				if ok := ctx.Mod(words.Index, arg0); !ok {
 					ps.FailureFlag = true
-					return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(words.Index) + "', use 'var' to declare it as a variable")
+					return env.NewError("cannot modify constant '" + ps.Idx.GetWord(words.Index) + "'', use 'var' or mod-word for a variable'")
 				} else {
 					// Trigger observers if the variable was successfully modified
 					// Use the correct context (ctx) where the variable was actually found and modified
@@ -2210,7 +2210,6 @@ var builtins = map[string]*env.Builtin{
 		},
 	}, */
 
-
 	// Tests:
 	// equal { rye .type? } 'native
 	"rye": {
@@ -2729,39 +2728,18 @@ func executeInitializationCode(ps *env.ProgramState) {
 		" use: fn { c b } { .clone\\deep .do\\inx b }\n" +
 		" cmdo: fn { b } { cmd b |Output } "
 
-	// Save current state
-	/* origSer := ps.Ser
-	origRes := ps.Res
-	origErrorFlag := ps.ErrorFlag
-	origFailureFlag := ps.FailureFlag
-	origReturnFlag := ps.ReturnFlag*/
-
-	// Load and parse the initialization code
-	block := loader.LoadString(initCode, false, ps)
-
-	// Check if loading was successful
-	switch loadedBlock := block.(type) {
-	case env.Block:
-		// Set the series to the loaded initialization code
-		ps.Ser = loadedBlock.Series
-
-		// Execute the initialization code
-		Eval(ps)
-
-		// If there were errors, we silently ignore them for initialization
-		// This prevents initialization issues from breaking the main program
-
-	case env.Error:
-		// Silently ignore loading errors for initialization code
-		// This prevents malformed init code from breaking the interpreter
+	// Initialization adds bindings, but must not consume the caller's series,
+	// overwrite its result/flags, drain its defers, or spend its evaluation budget.
+	initState := env.NewProgramStateOLD(env.TSeries{}, ps.Idx)
+	initState.Ctx = ps.Ctx
+	initState.PCtx = ps.PCtx
+	initState.Gen = ps.Gen
+	block := loader.LoadString(initCode, false, initState)
+	if loadedBlock, ok := block.(env.Block); ok {
+		initState.Ser = loadedBlock.Series
+		Eval(initState)
 	}
-
-	// Restore original state (except for any side effects the init code may have had)
-	/* ps.Ser = origSer
-	ps.Res = origRes
-	ps.ErrorFlag = origErrorFlag
-	ps.FailureFlag = origFailureFlag
-	ps.ReturnFlag = origReturnFlag*/
+	// Keep the existing policy of not surfacing initialization failures.
 }
 
 func RegisterVarBuiltins(ps *env.ProgramState) {

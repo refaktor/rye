@@ -561,7 +561,7 @@ var builtins_numbers = map[string]*env.Builtin{
 
 						if ok := ctx.Mod(arg.Index, ret); !ok {
 							ps.FailureFlag = true
-							return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(arg.Index) + "', use 'var' to declare it as a variable")
+							return env.NewError("cannot modify constant '" + ps.Idx.GetWord(arg.Index) + "'', use 'var' or mod-word for a variable'")
 						}
 
 						return ret
@@ -602,7 +602,7 @@ var builtins_numbers = map[string]*env.Builtin{
 
 						if ok := ctx.Mod(arg.Index, ret); !ok {
 							ps.FailureFlag = true
-							return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(arg.Index) + "', use 'var' to declare it as a variable")
+							return env.NewError("cannot modify constant '" + ps.Idx.GetWord(arg.Index) + "'', use 'var' or mod-word for a variable'")
 						}
 
 						return ret
