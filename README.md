@@ -22,7 +22,7 @@ Key characteristics:
 - **Multiple dialects**: Specialized interpreters for different tasks
 - **Safety-focused**: Explicit state changes, pure/impure function separation, validation dialect
 
-**Status**: Alpha - Core language design is stable, focus is on improving runtime, documentation, and usability.
+**Status**: Beta - Core language design is stable, focus is on improving runtime, documentation, and usability.
 
 ## Quick Examples
 
@@ -179,14 +179,14 @@ Thanks to @kseistrup for Arch package and @stefanb for Homebrew.
 - **VS Code**: Search for "ryelang" in the Extension marketplace [repository](https://github.com/refaktor/rye-vscode)
 - **Emacs**: [syntax highlighting](https://github.com/refaktor/rye/tree/main/editors/emacs)
 - **NeoVIM**: [syntax highlighting](https://github.com/refaktor/rye/tree/main/editors/nvim)
-- **Helix**: soon
+- **Helix**: [Tres sitter](https://github.com/refaktor/tree-sitter-rye)
 
 ## Community and Contact
 
 - **[GitHub Discussions](https://github.com/refaktor/rye/discussions)**
 - **[Reddit](https://reddit.com/r/ryelang/)**
 - **[Issues](https://github.com/refaktor/rye/issues)**
-- **[Discord](https://discord.gg/8SFmNM2U)** - #Homoiconic - a discord for languages like Lisp, Rebol, Red, Rye (very new, few users, welcome!)
+- **[Discord](https://discord.gg/J8FBrCSqve)** - #Homoiconic - a discord for languages like Lisp, Rebol, Red, Rye (very new, few users, welcome!)
 - **[Rosetta Code](https://rosettacode.org/wiki/Category:Rye)**
 - **Email**: janko.itm+rye[at]gmail.com
 
