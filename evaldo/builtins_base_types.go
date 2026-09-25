@@ -40,7 +40,7 @@ var builtins_types = map[string]*env.Builtin{
 			case env.Decimal:
 				return *env.NewInteger(int64(addr.Value))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "integer")
+				return MakeArgError2(ps, 1, []env.Type{env.StringType}, "integer", arg0)
 			}
 		},
 	},
@@ -66,7 +66,7 @@ var builtins_types = map[string]*env.Builtin{
 				}
 				return *env.NewDecimal(floatVal)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "decimal")
+				return MakeArgError2(ps, 1, []env.Type{env.StringType}, "decimal", arg0)
 			}
 		},
 	},
@@ -103,7 +103,7 @@ var builtins_types = map[string]*env.Builtin{
 			case env.String:
 				return *env.NewUri1(ps.Idx, val.Value) // TODO turn to switch
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "uri")
+				return MakeArgError2(ps, 1, []env.Type{env.StringType}, "uri", arg0)
 			}
 
 		},
@@ -123,7 +123,7 @@ var builtins_types = map[string]*env.Builtin{
 			case env.String:
 				return *env.NewFileUri(ps.Idx, val.Value) // TODO turn to switch
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "file")
+				return MakeArgError2(ps, 1, []env.Type{env.StringType}, "file", arg0)
 			}
 		},
 	},
@@ -144,7 +144,7 @@ var builtins_types = map[string]*env.Builtin{
 			case env.Integer:
 				return *env.NewString(string(rune(value.Value)))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "char")
+				return MakeArgError2(ps, 1, []env.Type{env.IntegerType}, "char", arg0)
 			}
 		},
 	},
@@ -171,7 +171,7 @@ var builtins_types = map[string]*env.Builtin{
 					return MakeBuiltinError(ps, "String must contain exactly one character", "ascii")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "ascii")
+				return MakeArgError2(ps, 1, []env.Type{env.StringType}, "ascii", arg0)
 			}
 		},
 	},
@@ -206,7 +206,7 @@ var builtins_types = map[string]*env.Builtin{
 				}
 				return *env.NewBlock(*env.NewTSeries(items))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.ListType, env.VectorType, env.TableRowType}, "block")
+				return MakeArgError2(ps, 1, []env.Type{env.ListType, env.VectorType, env.TableRowType}, "block", arg0)
 			}
 		},
 	},
@@ -246,7 +246,7 @@ var builtins_types = map[string]*env.Builtin{
 			case env.Getword:
 				return *env.NewWord(str.Index)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType, env.WordType, env.OpwordType, env.PipewordType, env.XwordType, env.EXwordType}, "word")
+				return MakeArgError2(ps, 1, []env.Type{env.StringType, env.WordType, env.OpwordType, env.PipewordType, env.XwordType, env.EXwordType}, "word", arg0)
 			}
 		},
 	},
@@ -572,7 +572,7 @@ var builtins_types = map[string]*env.Builtin{
 			case env.String:
 				return *env.NewSecret(str.Value)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "secret")
+				return MakeArgError2(ps, 1, []env.Type{env.StringType}, "secret", arg0)
 			}
 		},
 	},
@@ -594,7 +594,7 @@ var builtins_types = map[string]*env.Builtin{
 			case env.Secret:
 				return *env.NewString(s.Value)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SecretType}, "reveal")
+				return MakeArgError2(ps, 1, []env.Type{env.SecretType}, "reveal", arg0)
 			}
 		},
 	},
@@ -614,7 +614,7 @@ var builtins_types = map[string]*env.Builtin{
 			case env.Block:
 				return env.NewLazyValue(block, ps.Ctx)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "lazy")
+				return MakeArgError2(ps, 1, []env.Type{env.BlockType}, "lazy", arg0)
 			}
 		},
 	},
@@ -648,7 +648,7 @@ var builtins_types = map[string]*env.Builtin{
 					return MakeBuiltinError(ps, "Unknown lazy value state.", "_!")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.LazyValueType}, "_!")
+				return MakeArgError2(ps, 1, []env.Type{env.LazyValueType}, "_!", arg0)
 			}
 		},
 	},
@@ -683,10 +683,10 @@ var builtins_types = map[string]*env.Builtin{
 					}
 					return MakeBuiltinError(ps, "Conversion value isn't Dict.", "_>>")
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.DictType, env.KindType}, "_>>")
+					return MakeArgError2(ps, 1, []env.Type{env.DictType, env.KindType}, "_>>", arg0)
 				}
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.KindType}, "_>>")
+				return MakeArgError2(ps, 2, []env.Type{env.KindType}, "_>>", arg1)
 			}
 		},
 	},

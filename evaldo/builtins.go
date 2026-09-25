@@ -85,19 +85,23 @@ func ordinal(n int) string {
 }
 
 func MakeArgErrorMessage(N int, allowedTypes []env.Type, fn string) string {
-	types := ""
+	// Build expected types list using env.NativeTypes names
+	var b strings.Builder
 	for i, tt := range allowedTypes {
 		if i > 0 {
-			types += ", "
+			b.WriteString(", ")
 		}
-		// Check if in bounds before accessing env.NativeTypes
-		if tt > 0 && int(tt-1) < len(env.NativeTypes) {
-			types += env.NativeTypes[tt-1]
-		} else {
-			types += "UNKNOWN_TYPE"
+		name := "UNKNOWN_TYPE"
+		if tt >= 0 && int(tt) < len(env.NativeTypes) {
+			name = env.NativeTypes[tt]
 		}
+		b.WriteString(name)
 	}
-	return "`" + fn + "`: " + ordinal(N) + " argument must be: " + types + "."
+	expected := b.String()
+	if expected == "" {
+		expected = "<value>"
+	}
+	return "`" + fn + "` expected " + expected + " for argument " + strconv.Itoa(N)
 }
 
 func MakeArgError(env1 *env.ProgramState, N int, typ []env.Type, fn string) *env.Error {
@@ -111,12 +115,22 @@ func MakeArgError(env1 *env.ProgramState, N int, typ []env.Type, fn string) *env
 func MakeArgError2(env1 *env.ProgramState, N int, typ []env.Type, fn string, got env.Object) *env.Error {
 	env1.FailureFlag = true
 	msg := MakeArgErrorMessage(N, typ, fn)
-	// Append actual type information
-	actual := fmt.Sprintf("%T", got)
-	if i := strings.LastIndex(actual, "."); i >= 0 {
-		actual = actual[i+1:]
+	// Append actual type information using Rye type names when possible
+	actual := "unknown"
+	if got != nil {
+		actualType := got.Type()
+		if int(actualType) >= 0 && int(actualType) < len(env.NativeTypes) {
+			actual = env.NativeTypes[actualType]
+		} else {
+			// Fallback to Go type name without package prefix
+			g := fmt.Sprintf("%T", got)
+			if i := strings.LastIndex(g, "."); i >= 0 {
+				g = g[i+1:]
+			}
+			actual = g
+		}
 	}
-	err := env.NewError(msg + " Got: " + actual + ".")
+	err := env.NewError(msg + ", got " + actual)
 	err.CodeBlock = env1.Ser
 	return err
 }
@@ -1070,7 +1084,7 @@ var builtins = map[string]*env.Builtin{
 					// Attempt to modify the word
 					if ok := ctx.Mod(arg.Index, arg0); !ok {
 						ps.FailureFlag = true
-						return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(arg.Index) + "', use 'var' to declare it as a variable")
+						return env.NewError("cannot modify constant '" + ps.Idx.GetWord(arg.Index) + "'', use 'var' or mod-word for a variable'")
 					}
 
 					if arg0.GetKind() == val.GetKind() && arg0.Inspect(*ps.Idx) == val.Inspect(*ps.Idx) {
@@ -1115,7 +1129,7 @@ var builtins = map[string]*env.Builtin{
 					// Attempt to modify the word
 					if ok := ctx.Mod(arg.Index, arg0); !ok {
 						ps.FailureFlag = true
-						return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(arg.Index) + "', use 'var' to declare it as a variable")
+						return env.NewError("cannot modify constant '" + ps.Idx.GetWord(arg.Index) + "'', use 'var' or mod-word for a variable'")
 					}
 
 					if arg0.GetKind() == val.GetKind() && arg0.Inspect(*ps.Idx) == val.Inspect(*ps.Idx) {
@@ -1169,7 +1183,7 @@ var builtins = map[string]*env.Builtin{
 							// if it exists then we set it to word from words
 							if ok := ps.Ctx.Mod(word.Index, val); !ok {
 								ps.FailureFlag = true
-								return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(word.Index) + "', use 'var' to declare it as a variable")
+								return env.NewError("cannot modify constant '" + ps.Idx.GetWord(word.Index) + "'', use 'var' or mod-word for a variable'")
 							} else {
 								// Trigger observers if the variable was successfully modified
 								if exists && ps.Ctx.IsVariable(word.Index) {
@@ -1194,7 +1208,7 @@ var builtins = map[string]*env.Builtin{
 
 				if ok := ctx.Mod(words.Index, arg0); !ok {
 					ps.FailureFlag = true
-					return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(words.Index) + "', use 'var' to declare it as a variable")
+					return env.NewError("cannot modify constant '" + ps.Idx.GetWord(words.Index) + "'', use 'var' or mod-word for a variable'")
 				} else {
 					// Trigger observers if the variable was successfully modified
 					// Use the correct context (ctx) where the variable was actually found and modified
@@ -2210,7 +2224,6 @@ var builtins = map[string]*env.Builtin{
 		},
 	}, */
 
-
 	// Tests:
 	// equal { rye .type? } 'native
 	"rye": {
@@ -2729,39 +2742,18 @@ func executeInitializationCode(ps *env.ProgramState) {
 		" use: fn { c b } { .clone\\deep .do\\inx b }\n" +
 		" cmdo: fn { b } { cmd b |Output } "
 
-	// Save current state
-	/* origSer := ps.Ser
-	origRes := ps.Res
-	origErrorFlag := ps.ErrorFlag
-	origFailureFlag := ps.FailureFlag
-	origReturnFlag := ps.ReturnFlag*/
-
-	// Load and parse the initialization code
-	block := loader.LoadString(initCode, false, ps)
-
-	// Check if loading was successful
-	switch loadedBlock := block.(type) {
-	case env.Block:
-		// Set the series to the loaded initialization code
-		ps.Ser = loadedBlock.Series
-
-		// Execute the initialization code
-		Eval(ps)
-
-		// If there were errors, we silently ignore them for initialization
-		// This prevents initialization issues from breaking the main program
-
-	case env.Error:
-		// Silently ignore loading errors for initialization code
-		// This prevents malformed init code from breaking the interpreter
+	// Initialization adds bindings, but must not consume the caller's series,
+	// overwrite its result/flags, drain its defers, or spend its evaluation budget.
+	initState := env.NewProgramStateOLD(env.TSeries{}, ps.Idx)
+	initState.Ctx = ps.Ctx
+	initState.PCtx = ps.PCtx
+	initState.Gen = ps.Gen
+	block := loader.LoadString(initCode, false, initState)
+	if loadedBlock, ok := block.(env.Block); ok {
+		initState.Ser = loadedBlock.Series
+		Eval(initState)
 	}
-
-	// Restore original state (except for any side effects the init code may have had)
-	/* ps.Ser = origSer
-	ps.Res = origRes
-	ps.ErrorFlag = origErrorFlag
-	ps.FailureFlag = origFailureFlag
-	ps.ReturnFlag = origReturnFlag*/
+	// Keep the existing policy of not surfacing initialization failures.
 }
 
 func RegisterVarBuiltins(ps *env.ProgramState) {

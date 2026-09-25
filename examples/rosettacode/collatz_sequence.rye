@@ -7,7 +7,7 @@ hailstone: fn { n } {
 	var 'current n
 	while { current > 1 } {
 		current:: either current .is-even
-			{ current / 2 |to-integer }
+			{ current / 2 |integer }
 			{ current * 3 + 1 }
 		append! current 'seq
 	}

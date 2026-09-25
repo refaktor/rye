@@ -2,7 +2,7 @@
 ;   https://rosettacode.org/wiki/Reverse_a_string
 
 reverse-number: fn { n } {
-	string n |reverse |to-integer
+	string n |reverse |integer
 }
 
 x: 123

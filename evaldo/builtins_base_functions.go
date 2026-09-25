@@ -54,7 +54,7 @@ var builtins_functions = map[string]*env.Builtin{
 				// Return the word instead of the value for use with on-change
 				return word
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.TagwordType, env.WordType}, "var")
+				return MakeArgError2(ps, 1, []env.Type{env.TagwordType, env.WordType}, "var", arg0)
 			}
 		},
 	},
@@ -77,7 +77,7 @@ var builtins_functions = map[string]*env.Builtin{
 				//body := []env.Object{*env.NewWord(printidx), *env.NewWord(aaaidx), *env.NewWord(recuridx), *env.NewWord(greateridx), *env.NewInteger(99), *env.NewWord(aaaidx), *env.NewWord(incidx), *env.NewWord(aaaidx)}
 				return *env.NewFunction(*env.NewBlock(*env.NewTSeries(make([]env.Object, 0))), body, false)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "does")
+				return MakeArgError2(ps, 1, []env.Type{env.BlockType}, "does", arg0)
 			}
 		},
 	},
@@ -102,7 +102,7 @@ var builtins_functions = map[string]*env.Builtin{
 				//body := []env.Object{*env.NewWord(printidx), *env.NewWord(aaaidx), *env.NewWord(recuridx), *env.NewWord(greateridx), *env.NewInteger(99), *env.NewWord(aaaidx), *env.NewWord(incidx), *env.NewWord(aaaidx)}
 				return *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), body, false)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "fn1")
+				return MakeArgError2(ps, 1, []env.Type{env.BlockType}, "fn1", arg0)
 			}
 		},
 	},
@@ -136,10 +136,10 @@ var builtins_functions = map[string]*env.Builtin{
 					// fmt.Println(doc)
 					return *env.NewFunctionDoc(args, body, false, doc)
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "fn")
+					return MakeArgError2(ps, 2, []env.Type{env.BlockType}, "fn", arg1)
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "fn")
+				return MakeArgError2(ps, 1, []env.Type{env.BlockType}, "fn", arg0)
 			}
 		},
 	},
@@ -160,7 +160,7 @@ var builtins_functions = map[string]*env.Builtin{
 			case env.Function:
 				return fn.Spec
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.FunctionType}, "fn\\spec?")
+				return MakeArgError2(ps, 1, []env.Type{env.FunctionType}, "fn\\spec?", arg0)
 			}
 		},
 	},
@@ -181,7 +181,7 @@ var builtins_functions = map[string]*env.Builtin{
 			case env.Function:
 				return fn.Body
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.FunctionType}, "fn\\body?")
+				return MakeArgError2(ps, 1, []env.Type{env.FunctionType}, "fn\\body?", arg0)
 			}
 		},
 	},
@@ -211,10 +211,10 @@ var builtins_functions = map[string]*env.Builtin{
 				case env.Block:
 					return *env.NewFunctionDoc(args, body, true, doc)
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "pfn")
+					return MakeArgError2(ps, 2, []env.Type{env.BlockType}, "pfn", arg1)
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "pfn")
+				return MakeArgError2(ps, 1, []env.Type{env.BlockType}, "pfn", arg0)
 			}
 		},
 	},

@@ -30,7 +30,7 @@ func TestEvaldo_function1_just_return_integer(t *testing.T) {
 
 		fmt.Print(es.Res.Inspect(*es.Idx))
 		if es.Res.Type() != env.IntegerType {
-			t.Error("Expected result type integer")
+			t.Fatal("Expected result type integer")
 		}
 		if es.Res.(env.Integer).Value != 234 {
 			t.Error("Expected result value 1001")

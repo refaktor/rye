@@ -8,7 +8,7 @@ pow: fn { base exp } {
 }
 
 digits-of: fn { n } {
-	string n |map { .to-integer }
+	string n |map { .integer }
 }
 
 is-armstrong: fn { n } {

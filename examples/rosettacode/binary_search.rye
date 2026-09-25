@@ -5,7 +5,7 @@ binary-search: fn { nums target } {
 	low:: 1
 	high:: length? nums
 	while { low <= high } {
-		mid:: ( low + high ) / 2 |to-integer
+		mid:: ( low + high ) / 2 |integer
 		value:: nth nums mid
 		value |= target
 		|either {
