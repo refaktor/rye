@@ -3734,6 +3734,7 @@ var builtins_collection = map[string]*env.Builtin{
 			switch bloc := arg0.(type) {
 			case env.Block:
 				ser := ps.Ser
+				defer func() { ps.Ser = ser }()
 				ps.Ser = bloc.Series
 				res := make([]env.Object, 0)
 				for ps.Ser.Pos() < ps.Ser.Len() {
@@ -3748,7 +3749,7 @@ var builtins_collection = map[string]*env.Builtin{
 					//	return ps
 					//}
 					// if return flag was raised return ( errorflag I think would return in previous if anyway)
-					// ps, injnow = MaybeAcceptComma(ps, inj, injnow)
+					MaybeAcceptComma(ps, nil, false)
 				}
 				ps.Ser = ser
 				return *env.NewBlock(*env.NewTSeries(res))
@@ -3779,22 +3780,16 @@ var builtins_collection = map[string]*env.Builtin{
 			switch bloc := arg1.(type) {
 			case env.Block:
 				ser := ps.Ser
+				defer func() { ps.Ser = ser }()
 				ps.Ser = bloc.Series
 				res := make([]env.Object, 0)
 				injnow := true
 				for ps.Ser.Pos() < ps.Ser.Len() {
-					// ps, injnow = EvalExpressionInj(ps, inj, injnow)
-					//20231203 EvalExpressionInjectedVALS(ps, arg0, true)
 					injnow = EvalExpressionInj(ps, arg0, injnow)
+					if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
+						return ps.Res
+					}
 					res = append(res, ps.Res)
-					// check and raise the flags if needed if true (error) return
-					//if checkFlagsAfterBlock(ps, 101) {
-					//	return ps
-					//}
-					// if return flag was raised return ( errorflag I think would return in previous if anyway)
-					//if checkErrorReturnFlag(ps) {
-					//	return ps
-					//}
 					injnow = MaybeAcceptComma(ps, arg0, injnow)
 				}
 				ps.Ser = ser

@@ -11,6 +11,8 @@ private Load %word_type_combos.rye
 private Load %setword_modword.rye
 private Load %dotword_chaining.rye
 private Load %injection.rye
+private Load %comma_guards.rye
+private Load %expression_loops.rye
 private Load %force_modifier.rye
 private Load %context_constructors.rye
 private Load %context_paths.rye

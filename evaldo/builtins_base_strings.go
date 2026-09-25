@@ -761,28 +761,16 @@ var builtins_string = map[string]*env.Builtin{
 			case env.Block:
 
 				ser := ps.Ser
+				defer func() { ps.Ser = ser }()
 				ps.Ser = s1.Series
 				res := make([]env.Object, 0)
 				for ps.Ser.Pos() < ps.Ser.Len() {
-					// ps, injnow = EvalExpressionInj(ps, inj, injnow)
 					EvalExpression_CollectArg(ps, false, false)
+					if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
+						return ps.Res
+					}
 					res = append(res, ps.Res)
-					if ps.ErrorFlag {
-						return ps.Res
-					}
-					//ps.Ser = ser
-					if ps.ReturnFlag {
-						return ps.Res
-					}
-					// check and raise the flags if needed if true (error) return
-					//if checkFlagsAfterBlock(ps, 101) {
-					//	return ps
-					//}
-					// if return flag was raised return ( errorflag I think would return in previous if anyway)
-					//if checkErrorReturnFlag(ps) {
-					//	return ps
-					//}
-					// ps, injnow = MaybeAcceptComma(ps, inj, injnow)
+					MaybeAcceptComma(ps, nil, false)
 				}
 				ps.Ser = ser
 				bloc := *env.NewBlock(*env.NewTSeries(res))

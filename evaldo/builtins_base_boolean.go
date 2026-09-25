@@ -181,9 +181,10 @@ var builtins_boolean = map[string]*env.Builtin{
 				ps.Ser = bloc.Series
 				for ps.Ser.Pos() < ps.Ser.Len() {
 					EvalExpression_CollectArg(ps, false, false)
-					if !util.IsTruthy(ps.Res) {
+					if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag || !util.IsTruthy(ps.Res) {
 						break
 					}
+					MaybeAcceptComma(ps, nil, false)
 				}
 				ps.Ser = ser
 				return ps.Res
@@ -214,9 +215,10 @@ var builtins_boolean = map[string]*env.Builtin{
 				ps.Ser = bloc.Series
 				for ps.Ser.Pos() < ps.Ser.Len() {
 					EvalExpression_CollectArg(ps, false, false)
-					if util.IsTruthy(ps.Res) {
+					if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag || util.IsTruthy(ps.Res) {
 						break
 					}
+					MaybeAcceptComma(ps, nil, false)
 				}
 				ps.Ser = ser
 				return ps.Res
