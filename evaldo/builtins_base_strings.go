@@ -246,7 +246,7 @@ var builtins_string = map[string]*env.Builtin{
 	// * a new string containing the specified substring
 	"substring": {
 		Argsn: 3,
-		Doc:   "Extracts a portion of a string between the specified start and end positions.",
+		Doc:   "Extracts a portion of a string or secret between zero-based character positions (start inclusive, end exclusive).",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
@@ -255,7 +255,11 @@ var builtins_string = map[string]*env.Builtin{
 				case env.Integer:
 					switch s3 := arg2.(type) {
 					case env.Integer:
-						return *env.NewString(s1.Value[s2.Value:s3.Value])
+						runes := []rune(s1.Value)
+						if s2.Value < 0 || s3.Value < s2.Value || s3.Value > int64(len(runes)) {
+							return MakeBuiltinError(ps, "Invalid substring range.", "substring")
+						}
+						return *env.NewString(string(runes[s2.Value:s3.Value]))
 					default:
 						return MakeArgError(ps, 3, []env.Type{env.IntegerType}, "substring")
 					}
@@ -267,7 +271,11 @@ var builtins_string = map[string]*env.Builtin{
 				case env.Integer:
 					switch s3 := arg2.(type) {
 					case env.Integer:
-						return *env.NewSecret(s1.Value[s2.Value:s3.Value])
+						runes := []rune(s1.Value)
+						if s2.Value < 0 || s3.Value < s2.Value || s3.Value > int64(len(runes)) {
+							return MakeBuiltinError(ps, "Invalid substring range.", "substring")
+						}
+						return *env.NewSecret(string(runes[s2.Value:s3.Value]))
 					default:
 						return MakeArgError(ps, 3, []env.Type{env.IntegerType}, "substring")
 					}

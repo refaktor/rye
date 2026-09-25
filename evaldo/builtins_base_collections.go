@@ -16,6 +16,9 @@ import (
 	"github.com/refaktor/rye/util"
 )
 
+// range eagerly allocates objects; reject unreasonable requests before allocation.
+const maxRangeElements = 1 << 24
+
 var builtins_collection = map[string]*env.Builtin{
 
 	//
@@ -1152,6 +1155,9 @@ var builtins_collection = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch num := arg1.(type) {
 			case env.Integer:
+				if num.Value < 0 || uint64(num.Value) > uint64(^uint(0)>>1) {
+					return MakeBuiltinError(ps, "Position is out of bounds.", "rest\\from")
+				}
 				switch s1 := arg0.(type) {
 				case env.Block:
 					if len(s1.Series.S) == 0 {
@@ -1168,7 +1174,7 @@ var builtins_collection = map[string]*env.Builtin{
 					if len(s1.Data) <= int(num.Value) {
 						return MakeBuiltinError(ps, fmt.Sprintf("List has less than %d elements.", num.Value+1), "rest\\from")
 					}
-					return env.NewList(s1.Data[int(num.Value):])
+					return *env.NewList(s1.Data[int(num.Value):])
 				case env.String:
 					str := []rune(s1.Value)
 					if len(str) == 0 {
@@ -1520,7 +1526,8 @@ var builtins_collection = map[string]*env.Builtin{
 				if len(s1.Value) == 0 {
 					return MakeBuiltinError(ps, "String is empty.", "last")
 				}
-				return *env.NewString(s1.Value[len(s1.Value)-1:])
+				runes := []rune(s1.Value)
+				return *env.NewString(string(runes[len(runes)-1]))
 			case env.Vector:
 				if len(s1.Value) == 0 {
 					return MakeBuiltinError(ps, "Vector is empty.", "last")
@@ -2119,26 +2126,7 @@ var builtins_collection = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
 			case env.List:
-				ss := block.Data
-
-				// Create a map to store the unique values.
-				// uniqueValues := make(map[string]bool)
-				uniqueValues := make(map[any]bool)
-
-				// Iterate over the slice and add the elements to the map.
-				for _, element := range ss {
-					// uniqueValues[env.ToRyeValue(element).Print(*ps.Idx)] = true
-					uniqueValues[element] = true
-				}
-
-				// Create a new slice to store the unique values.
-				uniqueSlice := make([]any, 0, len(uniqueValues))
-
-				// Iterate over the map and add the keys to the new slice.
-				for key := range uniqueValues {
-					uniqueSlice = append(uniqueSlice, key)
-				}
-				return *env.NewList(uniqueSlice)
+				return *env.NewList(util.RemoveDuplicateValues(block.Data))
 			case env.Block:
 				uniqueList := util.RemoveDuplicate(ps, block.Series.S)
 				return *env.NewBlock(*env.NewTSeries(uniqueList))
@@ -2571,17 +2559,23 @@ var builtins_collection = map[string]*env.Builtin{
 	// * a block containing all integers from start to end, inclusive
 	"range": { // **
 		Argsn: 2,
-		Doc:   "Creates a block containing all integers from the start value to the end value, inclusive.",
+		Doc:   "Creates a block containing all integers from start to end, inclusive. Requires start <= end and at most 16777216 elements.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch i1 := arg0.(type) {
 			case env.Integer:
 				switch i2 := arg1.(type) {
 				case env.Integer:
-					objs := make([]env.Object, i2.Value-i1.Value+1)
-					idx := 0
-					for i := i1.Value; i <= i2.Value; i++ {
-						objs[idx] = *env.NewInteger(i)
-						idx += 1
+					if i2.Value < i1.Value {
+						return MakeBuiltinError(ps, "End must not be less than start.", "range")
+					}
+					// Unsigned subtraction represents the full signed span without overflow.
+					span := uint64(i2.Value) - uint64(i1.Value)
+					if span >= maxRangeElements {
+						return MakeBuiltinError(ps, "Range exceeds the limit of 16777216 elements.", "range")
+					}
+					objs := make([]env.Object, int(span)+1)
+					for idx := range objs {
+						objs[idx] = *env.NewInteger(i1.Value + int64(idx))
 					}
 					return *env.NewBlock(*env.NewTSeries(objs))
 				default:
@@ -3028,6 +3022,9 @@ var builtins_collection = map[string]*env.Builtin{
 
 				// Get the number of subblocks
 				rows := len(blk.Series.S)
+				if rows == 0 {
+					return *env.NewBlock(*env.NewTSeries([]env.Object{}))
+				}
 
 				// get the size of first block
 				frstBlk, ok := blk.Series.S[0].(env.Block)
@@ -3035,6 +3032,16 @@ var builtins_collection = map[string]*env.Builtin{
 					return MakeBuiltinError(ps, "First element is not block", "transpose")
 				}
 				cols := len(frstBlk.Series.S)
+				// Validate the entire shape before allocating or indexing any row.
+				for i, row := range blk.Series.S {
+					subBlk, ok := row.(env.Block)
+					if !ok {
+						return MakeBuiltinError(ps, fmt.Sprintf("Element %d is not block", i), "transpose")
+					}
+					if len(subBlk.Series.S) != cols {
+						return MakeBuiltinError(ps, "All rows must have the same length.", "transpose")
+					}
+				}
 
 				// Create the matrix from which new blocks will be created
 				transposed := make([][]env.Object, cols)
