@@ -17,7 +17,7 @@ import (
 	"time"
 
 	"github.com/atotto/clipboard"
-	"github.com/refaktor/go-find"
+	find "github.com/refaktor/rye/util/finder"
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
 
@@ -1206,7 +1206,7 @@ var Builtins_os = map[string]*env.Builtin{
 				if err := os.Unsetenv(name.Value); err != nil {
 					return evaldo.MakeBuiltinError(ps, err.Error(), "unsetenv!")
 				}
-				return *env.GetNull()
+				return *env.NewVoid()
 			default:
 				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType}, "unsetenv!")
 			}

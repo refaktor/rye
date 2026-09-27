@@ -1,0 +1,117 @@
+; Argument collection diagnostics and control-flow regression tests
+; Run with: cd internal/evaluator && rye argument_errors.rye
+; Variadic builtins and synthetic 5-argument builtins are covered by
+; evaldo/argument_errors_test.go (not registered in the default Rye runtime).
+
+print "## Argument Errors and Control Flow"
+
+assert\display "builtin missing first argument" {
+	try { first } |message?
+} "missing argument 1"
+
+assert\display "builtin missing second argument" {
+	try { nth { 10 } } |message?
+} "missing argument 2"
+
+assert\display "builtin missing third argument" {
+	try { either true { 1 } } |message?
+} "missing argument 3"
+
+assert\display "builtin missing fourth argument" {
+	try { fold\do { 1 } 'acc 0 } |message?
+} "missing argument 4"
+
+assert\display "function missing argument names parameter not function" {
+	argument-pair: fn { a b } { a + b }
+	try { argument-pair 10 } |message?
+} "function is missing argument 2 ('b')"
+
+assert\display "function missing first argument" {
+	argument-first: fn { value } { value }
+	try { argument-first } |message?
+} "function is missing argument 1 ('value')"
+
+assert\display "function missing seventh argument" {
+	argument-seven: fn { a b c d e f g } { g }
+	try { argument-seven 1 2 3 4 5 6 } |message?
+} "function is missing argument 7 ('g')"
+
+assert\display "builtin preserves undefined word in first argument" {
+	try { first argument-undefined-value } |message?
+} "Word not found: `argument-undefined-value`."
+
+assert\display "builtin preserves undefined word in second argument" {
+	try { nth { 10 } argument-undefined-value } |message?
+} "Word not found: `argument-undefined-value`."
+
+assert\display "function preserves undefined word in argument" {
+	argument-error-pair: fn { a b } { a + b }
+	try { argument-error-pair 10 argument-undefined-value } |message?
+} "Word not found: `argument-undefined-value`."
+
+assert\display "outer function preserves inner missing argument" {
+	argument-outer: fn { a b } { b }
+	try { argument-outer 10 first } |message?
+} "missing argument 1"
+
+assert\display "outer builtin preserves inner function missing argument" {
+	argument-inner: fn { value } { value }
+	try { first argument-inner } |message?
+} "function is missing argument 1 ('value')"
+
+assert\display "builtin argument return exits enclosing function" {
+	argument-builtin-return: does { nth { 10 } return 42 99 }
+	argument-builtin-return
+} 42
+
+assert\display "function argument return exits enclosing function" {
+	argument-return-target: fn { a b } { 99 }
+	argument-function-return: does { argument-return-target 10 return 42 99 }
+	argument-function-return
+} 42
+
+assert\display "builtin preserves original argument failure" {
+	try { first fail "original builtin argument failure" } |message?
+} "original builtin argument failure"
+
+assert\display "function preserves original argument failure" {
+	argument-failure-target: fn { value } { 99 }
+	try { argument-failure-target fail "original function argument failure" } |message?
+} "original function argument failure"
+
+assert\display "failure handler still accepts argument failure" {
+	fail "recoverable argument failure" |fix { 42 }
+} 42
+
+assert\display "partial builtin reports underlying slot" {
+	argument-partial-builtin: partial ?nth [ { 10 } _ ]
+	try { argument-partial-builtin } |message?
+} "missing argument 2"
+
+assert\display "partial function reports underlying slot and parameter" {
+	argument-partial-target: fn { a b c } { c }
+	argument-partial-function: partial ?argument-partial-target [ _ 20 _ ]
+	try { argument-partial-function 10 } |message?
+} "function is missing argument 3 ('c')"
+
+assert\display "partial preserves original argument error" {
+	argument-partial-error: partial ?nth [ { 10 } _ ]
+	try { argument-partial-error argument-undefined-value } |message?
+} "Word not found: `argument-undefined-value`."
+
+assert\display "pipe injected value counts as first argument" {
+	try { { 10 } |nth } |message?
+} "missing argument 2"
+
+assert\display "function pipe injected value counts as first argument" {
+	argument-pipe-target: fn { a b } { b }
+	try { 10 |argument-pipe-target } |message?
+} "function is missing argument 2 ('b')"
+
+assert\display "valid calls still work" {
+	argument-valid-target: fn { a b } { a + b }
+	argument-valid-target 10 nth { 20 } 1
+} 30
+
+print ""
+print "Argument error tests completed."

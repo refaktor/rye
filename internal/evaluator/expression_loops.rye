@@ -1,0 +1,85 @@
+; Related expression-loop regressions: guards, short-circuiting, and errors.
+print "## Expression Loop Guards and Error Handling"
+
+assert\display "join accepts expression guards" {
+	join { "a" , "b" , }
+} "ab"
+
+assert\display "all accepts expression guards" {
+	all { true , 123 , }
+} 123
+
+assert\display "any accepts expression guards" {
+	any { false , false , 123 }
+} 123
+
+assert\display "evaluated list accepts expression guards" {
+	l[ 1 + 2 , 3 + 4 , ]
+} l{ 3 7 }
+
+assert\display "evaluated dict accepts expression guards" {
+	d[ "a" 1 + 2 , "b" 3 + 4 , ]
+} d{ "a" 3 "b" 7 }
+
+assert\display "all still short circuits" {
+	all { false , missing-expression-loop-word }
+} false
+
+assert\display "any still short circuits" {
+	any { true , missing-expression-loop-word }
+} true
+
+assert\display "join rejects guard inside expression" {
+	try { join { 1 + , 2 } } |type?
+} 'error
+
+assert\display "all rejects guard inside expression" {
+	try { all { 1 + , 2 } } |type?
+} 'error
+
+assert\display "any rejects guard inside expression" {
+	try { any { 1 + , 2 } } |type?
+} 'error
+
+assert\display "evaluated list rejects guard inside expression" {
+	try { l[ 1 + , 2 ] } |type?
+} 'error
+
+assert\display "evaluated dict rejects guard inside expression" {
+	try { d[ "a" 1 + , 2 ] } |type?
+} 'error
+
+assert\display "all preserves original error" {
+	try { all { missing-expression-loop-word 42 } } |type?
+} 'error
+
+assert\display "any preserves original error" {
+	try { any { missing-expression-loop-word 42 } } |type?
+} 'error
+
+assert\display "join preserves original failure" {
+	try { join { fail "original join failure" 42 } } |message?
+} "original join failure"
+
+assert\display "all preserves original failure" {
+	try { all { fail "original all failure" 42 } } |message?
+} "original all failure"
+
+assert\display "evals with preserves original error" {
+	try { evals\with 10 { + 1 , missing-expression-loop-word 42 } } |type?
+} 'error
+
+assert\display "evals with preserves original failure" {
+	try { evals\with 10 { + 1 , fail "original injected failure" 42 } } |message?
+} "original injected failure"
+
+assert\display "join resumes caller after guard block" {
+	join { "a" , "b" } , 987
+} 987
+
+assert\display "evals with re-injects after comma" {
+	evals\with 10 { + 1 , + 2 }
+} { 11 12 }
+
+print ""
+print "Expression loop tests completed."

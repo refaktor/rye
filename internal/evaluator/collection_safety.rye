@@ -1,0 +1,92 @@
+print "## Collection and Random Boundary Safety"
+
+assert\display "random integer zero is handleable failure" {
+	random\integer 0 |fix { 123 }
+} 123
+
+assert\display "random integer negative is handleable failure" {
+	random\integer -1 |fix { 123 }
+} 123
+
+assert\display "random integer exclusive bound" {
+	random\integer 1
+} 0
+
+assert\display "random decimal zero is handleable failure" {
+	random\decimal 0.0 |fix { 123 }
+} 123
+
+assert\display "random decimal negative is handleable failure" {
+	random\decimal -1.0 |fix { 123 }
+} 123
+
+assert\display "random decimal integer bound zero fails" {
+	random\decimal 0 |fix { 123 }
+} 123
+
+assert\display "range reversed is handleable failure" {
+	range 5 1 |fix { 123 }
+} 123
+
+assert\display "range adjacent reversed is handleable failure" {
+	range 2 1 |fix { 123 }
+} 123
+
+assert\display "range maximum integer singleton" {
+	range 9223372036854775807 9223372036854775807
+} { 9223372036854775807 }
+
+assert\display "range maximum integer pair" {
+	range 9223372036854775806 9223372036854775807
+} { 9223372036854775806 9223372036854775807 }
+
+assert\display "range crossing zero" {
+	range -1 1
+} { -1 0 1 }
+
+assert\display "range rejects oversized allocation" {
+	range 0 16777216 |fix { 123 }
+} 123
+
+assert\display "rest from block negative fails" {
+	rest\from { 1 2 } -1 |fix { 123 }
+} 123
+
+assert\display "rest from list negative fails" {
+	rest\from l{ 1 2 } -1 |fix { 123 }
+} 123
+
+assert\display "rest from string negative fails" {
+	rest\from "abc" -1 |fix { 123 }
+} 123
+
+assert\display "rest from vector negative fails" {
+	rest\from vector { 1.0 2.0 } -1 |fix { 123 }
+} 123
+
+assert\display "rest from list composes with length" {
+	rest\from l{ 1 2 3 } 1 |length?
+} 2
+
+assert\display "rest from list returns list value" {
+	rest\from l{ 1 2 3 } 1
+} l{ 2 3 }
+
+assert\display "unique preserves first occurrence order" {
+	unique l{ 3 1 2 3 1 }
+} l{ 3 1 2 }
+
+assert\display "unique supports nested blocks" {
+	unique { { 1 } { 1 } { 2 } }
+} { { 1 } { 2 } }
+
+assert\display "unique supports nested lists" {
+	unique l{ l{ 1 } l{ 1 } l{ 2 } }
+} l{ l{ 1 } l{ 2 } }
+
+assert\display "unique supports nested dictionaries" {
+	unique l{ d{ "a" 1 } d{ "a" 1 } d{ "b" 2 } } |length?
+} 2
+
+print ""
+print "Collection and random boundary safety tests completed."

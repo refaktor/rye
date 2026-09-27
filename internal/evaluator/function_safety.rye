@@ -1,0 +1,147 @@
+print "## Function Calls, Deferred Cleanup, and Pure Contexts"
+
+assert\display "documented callback binds only parameters" {
+	map { 1 2 } fn { x "callback documentation" } { x + 1 }
+} { 2 3 }
+
+assert\display "callback missing argument is handleable failure" {
+	map { 1 } fn { x y } { x } |fix { "handled" }
+} "handled"
+
+assert\display "callback excess argument is handleable failure" {
+	map { 1 } fn { } { 42 } |fix { "handled" }
+} "handled"
+
+assert\display "documented zero argument function" {
+	review-doc-zero: fn { "documentation" } { 42 }
+	review-doc-zero
+} 42
+
+assert\display "defer preserves ordinary result" {
+	review-result: does { defer { 99 } 42 }
+	review-result
+} 42
+
+assert\display "defer can read function parameter" {
+	review-local: fn { x } { defer { x } 42 }
+	review-local 7
+} 42
+
+assert\display "defer preserves explicit return" {
+	review-return: does { defer { 99 } return 42 100 }
+	review-return
+} 42
+
+assert\display "return inside cleanup does not replace body result" {
+	review-cleanup-return: does { defer { return 99 } 42 }
+	review-cleanup-return
+} 42
+
+assert\display "callback cleanup preserves result and locals" {
+	map { 7 8 } fn { x "documentation" } { defer { x } 42 }
+} { 42 42 }
+
+assert\display "cleanup failure is handleable" {
+	review-cleanup-fail: does { defer { fail "cleanup failed" } 42 }
+	review-cleanup-fail |fix { "handled" }
+} "handled"
+
+assert\display "callback cleanup failure reaches caller" {
+	map { 1 } fn { x } { defer { fail "callback cleanup" } 42 } |fix { "handled" }
+} "handled"
+
+assert\display "body failure survives cleanup failure" {
+	review-body-fail: does { defer { fail "cleanup failed" } fail "body failed" }
+	try { review-body-fail } |message?
+} "body failed"
+
+assert\display "first cleanup failure wins" {
+	review-first-fail: does { defer { fail "older cleanup" } defer { fail "newer cleanup" } 42 }
+	try { review-first-fail } |message?
+} "newer cleanup"
+
+assert\display "defers execute in LIFO order with local access" {
+	var 'review-log-lifo ref { }
+	review-lifo: fn { x } {
+		defer { append! x 'review-log-lifo }
+		defer { append! 2 'review-log-lifo }
+		42
+	}
+	review-lifo 1
+	deref review-log-lifo
+} { 2 1 }
+
+assert\display "nested calls own their cleanup lists" {
+	var 'review-log-nested ref { }
+	review-inner: does { defer { append! 2 'review-log-nested } append! 1 'review-log-nested }
+	review-outer: does {
+		defer { append! 4 'review-log-nested }
+		review-inner
+		append! 3 'review-log-nested
+	}
+	review-outer
+	deref review-log-nested
+} { 1 2 3 4 }
+
+assert\display "function calls during cleanup do not reenter pending defers" {
+	var 'review-log-cleanup ref { }
+	review-cleanup-inner: does { defer { append! 3 'review-log-cleanup } append! 2 'review-log-cleanup }
+	review-cleanup-outer: does {
+		defer { append! 4 'review-log-cleanup }
+		defer { append! 1 'review-log-cleanup review-cleanup-inner }
+		42
+	}
+	review-cleanup-outer
+	deref review-log-cleanup
+} { 1 2 3 4 }
+
+assert\display "new defers registered during cleanup run once" {
+	var 'review-log-new ref { }
+	review-new-defers: does {
+		defer { append! 3 'review-log-new }
+		defer { append! 1 'review-log-new defer { append! 2 'review-log-new } }
+		42
+	}
+	review-new-defers
+	deref review-log-new
+} { 1 2 3 }
+
+assert\display "cleanup continues after another cleanup fails" {
+	var 'review-log-failed ref { }
+	review-failed-cleanup: does {
+		defer { append! 1 'review-log-failed }
+		defer { fail "cleanup failed" }
+		42
+	}
+	review-failed-cleanup |fix { 0 }
+	deref review-log-failed
+} { 1 }
+
+assert\display "pure direct call cannot see caller binding" {
+	review-private-direct: 123
+	review-pure-direct: pfn { } { review-private-direct }
+	try { review-pure-direct } |type?
+} 'error
+
+assert\display "pure callback cannot see caller binding" {
+	review-private-callback: 123
+	try { map { 1 } pfn { x } { review-private-callback } } |type?
+} 'error
+
+assert\display "pure context path cannot see caller binding" {
+	review-private-path: 123
+	review-pure-context: context { f: pfn { } { review-private-path } }
+	try { review-pure-context/f } |type?
+} 'error
+
+assert\display "pure direct function retains pure builtins" {
+	review-pure-add: pfn { x } { x + 1 }
+	review-pure-add 41
+} 42
+
+assert\display "pure callback retains pure builtins" {
+	map { 1 2 } pfn { x } { x + 1 }
+} { 2 3 }
+
+print ""
+print "Function safety tests completed."

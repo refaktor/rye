@@ -1,0 +1,97 @@
+; Boundary failures must remain handleable with fix, not crash the runtime.
+print "## Base Builtin Boundaries"
+
+assert\display "integer division by fractional divisor" {
+	5 // 0.5
+} 10
+
+assert\display "integer division truncates quotient not divisor" {
+	5 // 1.9
+} 2
+
+assert\display "integer division with two decimals" {
+	7.9 // 1.9
+} 4
+
+assert\display "integer division truncates toward zero" {
+	-5 // 1.9
+} -2
+
+assert\display "integer division by negative fraction" {
+	5 // -0.5
+} -10
+
+assert\display "integer division zero is handleable failure" {
+	5 // 0.0 |fix { 123 }
+} 123
+
+assert\display "integer division overflow is handleable failure" {
+	9223372036854775808.0 // 1 |fix { 123 }
+} 123
+
+assert\display "substring unicode character positions" {
+	substring "café" 3 4
+} "é"
+
+assert\display "substring emoji" {
+	substring "a🙂b" 1 2
+} "🙂"
+
+assert\display "substring empty input" {
+	substring "" 0 0
+} ""
+
+assert\display "substring empty at end" {
+	substring "abc" 3 3
+} ""
+
+assert\display "substring negative range is handleable failure" {
+	substring "abc" -1 2 |fix { "recovered" }
+} "recovered"
+
+assert\display "substring oversized range is handleable failure" {
+	substring "abc" 0 4 |fix { "recovered" }
+} "recovered"
+
+assert\display "substring reversed range is handleable failure" {
+	substring "abc" 2 1 |fix { "recovered" }
+} "recovered"
+
+assert\display "last unicode character" {
+	last "café"
+} "é"
+
+assert\display "last emoji" {
+	last "🙂"
+} "🙂"
+
+assert\display "last empty string is handleable failure" {
+	last "" |fix { "recovered" }
+} "recovered"
+
+assert\display "transpose empty matrix" {
+	transpose { }
+} { }
+
+assert\display "transpose empty rows" {
+	transpose { { } { } }
+} { }
+
+assert\display "transpose rectangular matrix" {
+	transpose { { 1 2 } { 3 4 } }
+} { { 1 3 } { 2 4 } }
+
+assert\display "transpose shorter row is handleable failure" {
+	transpose { { 1 2 } { 3 } } |fix { "recovered" }
+} "recovered"
+
+assert\display "transpose longer row is handleable failure" {
+	transpose { { 1 } { 2 3 } } |fix { "recovered" }
+} "recovered"
+
+assert\display "transpose non-block row is handleable failure" {
+	transpose { { 1 } 2 } |fix { "recovered" }
+} "recovered"
+
+print ""
+print "Base builtin boundary tests completed."

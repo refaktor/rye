@@ -1,0 +1,88 @@
+; Optional expression guards belong between completed expressions, including
+; expressions collected by evals and its [ ... ] syntax form.
+; Run with: cd internal/evaluator && rye comma_guards.rye
+
+print "## Evaluated Block Comma Guards"
+
+assert\display "evals without comma" {
+	evals { 123 123 }
+} { 123 123 }
+
+assert\display "syntax without comma" {
+	[ 123 123 ]
+} { 123 123 }
+
+assert\display "evals comma between values" {
+	evals { 123 , 123 }
+} { 123 123 }
+
+assert\display "syntax comma between values" {
+	[ 123 , 123 ]
+} { 123 123 }
+
+assert\display "evals comma after completed operators" {
+	evals { 1 + 2 , 3 + 4 }
+} { 3 7 }
+
+assert\display "syntax comma after completed operators" {
+	[ 1 + 2 , 3 + 4 ]
+} { 3 7 }
+
+assert\display "evals trailing comma" {
+	evals { 123 , }
+} { 123 }
+
+assert\display "syntax trailing comma" {
+	[ 123 , ]
+} { 123 }
+
+assert\display "evals empty block" {
+	evals { }
+} { }
+
+assert\display "syntax empty block" {
+	[ ]
+} { }
+
+assert\display "evals rejects leading comma" {
+	try { evals { , 123 } } |type?
+} 'error
+
+assert\display "syntax rejects leading comma" {
+	try { [ , 123 ] } |type?
+} 'error
+
+assert\display "evals rejects repeated comma" {
+	try { evals { 123 , , 123 } } |type?
+} 'error
+
+assert\display "syntax rejects repeated comma" {
+	try { [ 123 , , 123 ] } |type?
+} 'error
+
+assert\display "evals rejects comma inside unfinished operator" {
+	try { evals { 1 + , 2 } } |type?
+} 'error
+
+assert\display "syntax rejects comma inside unfinished operator" {
+	try { [ 1 + , 2 ] } |type?
+} 'error
+
+assert\display "evals resumes caller after collected expressions" {
+	evals { 123 , 456 } , 987
+} 987
+
+assert\display "syntax resumes caller after collected expressions" {
+	[ 123 , 456 ] , 987
+} 987
+
+assert\display "evals nested comma guards" {
+	evals { evals { 1 , 2 } , 3 }
+} { { 1 2 } 3 }
+
+assert\display "syntax nested comma guards" {
+	[ [ 1 , 2 ] , 3 ]
+} { { 1 2 } 3 }
+
+print ""
+print "Evaluated block comma guard tests completed."

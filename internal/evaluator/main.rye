@@ -16,6 +16,7 @@ private Load %expression_loops.rye
 private Load %builtin_boundaries.rye
 private Load %collection_safety.rye
 private Load %function_safety.rye
+private Load %argument_errors.rye
 private Load %force_modifier.rye
 private Load %context_constructors.rye
 private Load %context_paths.rye

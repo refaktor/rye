@@ -1,0 +1,14 @@
+; Batteries Test Suite
+; Run with: cd internal/batteries && rye main.rye
+
+print "========================================"
+print "        BATTERIES TEST SUITE"
+print "========================================"
+print ""
+
+private Load %os_paths.rye
+
+print ""
+print "========================================"
+print "\x1b[32mALL BATTERIES TESTS COMPLETED\x1b[0m"
+print "========================================"
