@@ -12,12 +12,12 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
-	"strconv"
 
 	"github.com/atotto/clipboard"
-	"github.com/refaktor/go-find"
+	find "github.com/refaktor/rye/util/finder"
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
 
@@ -223,6 +223,27 @@ var Builtins_os = map[string]*env.Builtin{
 				return arg0
 			default:
 				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType}, "rm")
+			}
+		},
+	},
+
+	// Dangerous: recursively remove files and directories like rm -rf
+	"rm-rf": {
+		Argsn: 1,
+		Doc:   "Recursively removes a file or directory and its contents (use with care).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch path := arg0.(type) {
+			case env.Uri:
+				target := resolvePath(ps.WorkingPath, path.GetPath())
+				if target == "/" || target == "" {
+					return evaldo.MakeBuiltinError(ps, "Refusing to remove root or empty path", "rm-rf")
+				}
+				if err := os.RemoveAll(target); err != nil {
+					return evaldo.MakeBuiltinError(ps, "Error removing recursively: "+err.Error(), "rm-rf")
+				}
+				return arg0
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType}, "rm-rf")
 			}
 		},
 	},
@@ -875,6 +896,70 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
+	"chmod-r": {
+		Argsn: 2,
+		Doc:   "Recursively changes file or directory permissions.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch path := arg0.(type) {
+			case env.Uri:
+				switch mode := arg1.(type) {
+				case env.Integer:
+					root := resolvePath(ps.WorkingPath, path.GetPath())
+					err := filepath.Walk(root, func(p string, info os.FileInfo, err error) error {
+						if err != nil {
+							return err
+						}
+						return os.Chmod(p, os.FileMode(mode.Value))
+					})
+					if err != nil {
+						return evaldo.MakeBuiltinError(ps, "Error changing permissions recursively: "+err.Error(), "chmod-r")
+					}
+					return arg0
+				default:
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.IntegerType}, "chmod-r")
+				}
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType}, "chmod-r")
+			}
+		},
+	},
+
+	"chown-r": {
+		Argsn: 3,
+		Doc:   "Recursively changes owner and group (numeric uid, gid).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch path := arg0.(type) {
+			case env.Uri:
+				var uid, gid int
+				switch u := arg1.(type) {
+				case env.Integer:
+					uid = int(u.Value)
+				default:
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.IntegerType}, "chown-r")
+				}
+				switch g := arg2.(type) {
+				case env.Integer:
+					gid = int(g.Value)
+				default:
+					return evaldo.MakeArgError(ps, 3, []env.Type{env.IntegerType}, "chown-r")
+				}
+				root := resolvePath(ps.WorkingPath, path.GetPath())
+				err := filepath.Walk(root, func(p string, info os.FileInfo, err error) error {
+					if err != nil {
+						return err
+					}
+					return os.Chown(p, uid, gid)
+				})
+				if err != nil {
+					return evaldo.MakeBuiltinError(ps, "Error changing owner recursively: "+err.Error(), "chown-r")
+				}
+				return arg0
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType}, "chown-r")
+			}
+		},
+	},
+
 	// Args:
 	// * path: uri representing file or directory
 	// Returns:
@@ -1089,6 +1174,42 @@ var Builtins_os = map[string]*env.Builtin{
 				}
 			}
 			return *env.NewDict(d)
+		},
+	},
+
+	"setenv!": {
+		Argsn: 2,
+		Doc:   "Sets an environment variable (name, value).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch name := arg0.(type) {
+			case env.String:
+				switch val := arg1.(type) {
+				case env.String:
+					if err := os.Setenv(name.Value, val.Value); err != nil {
+						return evaldo.MakeBuiltinError(ps, err.Error(), "setenv!")
+					}
+					return arg1
+				default:
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "setenv!")
+				}
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType}, "setenv!")
+			}
+		},
+	},
+	"unsetenv!": {
+		Argsn: 1,
+		Doc:   "Unsets an environment variable by name.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch name := arg0.(type) {
+			case env.String:
+				if err := os.Unsetenv(name.Value); err != nil {
+					return evaldo.MakeBuiltinError(ps, err.Error(), "unsetenv!")
+				}
+				return *env.NewVoid()
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType}, "unsetenv!")
+			}
 		},
 	},
 
@@ -1931,7 +2052,6 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
-
 	// Extracts a .zip archive to a directory.
 	// Args:
 	// * source: uri representing the .zip file
@@ -2207,7 +2327,6 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
-
 	// Filters for empty files or directories.
 	// Args:
 	// * finder: native finder object
@@ -2237,6 +2356,91 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * block of uris representing found files/directories
 	// Tags: #find #execute
+	"finder//Mtime-since!": {
+		Argsn: 2,
+		Doc:   "Filters for files modified within the last N seconds (i.e., since now-N).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch f := arg0.(type) {
+			case env.Native:
+				finder, ok := f.Value.(*find.Find)
+				if !ok {
+					return evaldo.MakeBuiltinError(ps, "Expected finder object", "finder//Mtime-since!")
+				}
+				switch secs := arg1.(type) {
+				case env.Integer:
+					cut := time.Now().Add(-time.Duration(secs.Value) * time.Second)
+					finder.FilterFunc(func(p string, info os.FileInfo) bool {
+						return info.ModTime().After(cut)
+					})
+					return arg0
+				default:
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.IntegerType}, "finder//Mtime-since!")
+				}
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//Mtime-since!")
+			}
+		},
+	},
+
+	"finder//Exclude-path": {
+		Argsn: 2,
+		Doc:   "Excludes paths that match a string substring or glob pattern.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch f := arg0.(type) {
+			case env.Native:
+				finder, ok := f.Value.(*find.Find)
+				if !ok {
+					return evaldo.MakeBuiltinError(ps, "Expected finder object", "finder//Exclude-path")
+				}
+				switch pat := arg1.(type) {
+				case env.String:
+					pattern := pat.Value
+					finder.FilterFunc(func(p string, info os.FileInfo) bool {
+						if strings.Contains(p, pattern) {
+							return false
+						}
+						match, _ := filepath.Match(pattern, filepath.Base(p))
+						return !match
+					})
+					return arg0
+				default:
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "finder//Exclude-path")
+				}
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//Exclude-path")
+			}
+		},
+	},
+
+	"finder//Size>": {
+		Argsn: 2,
+		Doc:   "Filters for entries with size greater than N bytes.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch f := arg0.(type) {
+			case env.Native:
+				finder, ok := f.Value.(*find.Find)
+				if !ok {
+					return evaldo.MakeBuiltinError(ps, "Expected finder object", "finder//Size>")
+				}
+				switch n := arg1.(type) {
+				case env.Integer:
+					min := n.Value
+					finder.FilterFunc(func(p string, info os.FileInfo) bool {
+						if info.IsDir() {
+							return false
+						}
+						return info.Size() > min
+					})
+					return arg0
+				default:
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.IntegerType}, "finder//Size>")
+				}
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//Size>")
+			}
+		},
+	},
+
 	"finder//Eval": {
 		Argsn: 1,
 		Doc:   "Executes the find operation and returns matching paths as uris.",

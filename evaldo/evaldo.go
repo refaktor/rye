@@ -951,7 +951,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 			return
 		} else {
 			ps.ErrorFlag = true
-			err := env.NewError2(5, "Word not found: `"+failureInfo+"`.")
+			err := env.NewError2(5, fmt.Sprintf("lookup failed for context path %s: %s", cpath.Dump(*ps.Idx), failureInfo))
 			err.CodeBlock = ps.Ser
 			ps.Res = err
 			return
@@ -990,7 +990,11 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 			ps.ErrorFlag = true
 			if !ps.FailureFlag {
 				ps.Ser.SetPos(pos)
-				err := env.NewError2(5, "Word not found: `"+failureInfo+"`.")
+				message := "Word not found: `" + failureInfo + "`."
+				if path, ok := word.(env.CPath); ok {
+					message = fmt.Sprintf("lookup failed for context path %s: %s", path.Dump(*ps.Idx), failureInfo)
+				}
+				err := env.NewError2(5, message)
 				err.CodeBlock = ps.Ser
 				ps.Res = err
 			}
@@ -1176,29 +1180,44 @@ func EvalDataPath(ps *env.ProgramState, dp env.DataPath) {
 	object, found := ps.Ctx.Get(subject.Index)
 	if !found {
 		ps.ErrorFlag = true
-		ps.Res = env.NewError2(5, "Word not found: `"+ps.Idx.GetWord(subject.Index)+"`.")
+		ps.Res = annotateDataPathError(ps, env.NewError2(5, "Word not found: `"+ps.Idx.GetWord(subject.Index)+"`."), dp, 1)
 		return
 	}
 
 	// Walk the remaining literal accessors, retrieving nested values.
 	current := object
-	for _, accessor := range dp.Path[1:] {
+	for i, accessor := range dp.Path[1:] {
 		current = getFrom(ps, current, accessor, false)
 		if ps.FailureFlag {
 			// Convert the failure into a hard error, like cpath traversal failures.
 			ps.FailureFlag = false
 			ps.ErrorFlag = true
-			if err, isErr := current.(env.Error); isErr {
-				err.CodeBlock = ps.Ser
-				ps.Res = err
-			} else {
-				ps.Res = current
-			}
+			ps.Res = annotateDataPathError(ps, current, dp, i+2)
 			return
 		}
 	}
 
 	ps.Res = current
+}
+
+// annotateDataPathError copies an error so shared errors are not modified. Segment
+// numbers are 1-based and include the subject. Keep status, cause and values intact.
+func annotateDataPathError(ps *env.ProgramState, result env.Object, path env.DataPath, segment int) env.Object {
+	var err env.Error
+	switch value := result.(type) {
+	case env.Error:
+		err = value
+	case *env.Error:
+		err = *value
+	default:
+		return result
+	}
+	err.Message = fmt.Sprintf("data path %s, segment %d (%s): %s", path.Print(*ps.Idx), segment, path.Path[segment-1].Print(*ps.Idx), err.Message)
+	err.CodeBlock = ps.Ser
+	if _, pointer := result.(*env.Error); pointer {
+		return &err
+	}
+	return err
 }
 
 // EvalObject evaluates a Rye object, particularly handling callable types (builtins, functions).
@@ -1429,6 +1448,9 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 	} else if pipeSecondFlag && fn.Argsn > 0 {
 		// When pipeSecond is true but firstVal is nil (non-generic word),
 		// evaluate the next expression to get arg0
+		if missingCallArgument(ps, 1, &fn) {
+			return
+		}
 		EvalExpression_CollectArg(ps, true, opword)
 		if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 			return
@@ -1475,19 +1497,11 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 	// Arguments execute in the caller's scope, including its deferred-block list.
 	// collect arguments
 	for i := ii; i < fn.Argsn; i += 1 {
+		if missingCallArgument(ps, i+1, &fn) {
+			return
+		}
 		evalExprFn(ps, true, opword)
 		if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
-			if ps.ErrorFlag {
-				// Use function word from spec if available
-				fnName := "function"
-				if fn.Spec.Series.Len() > 0 {
-					if w, ok := fn.Spec.Series.Get(0).(env.Word); ok {
-						fnName = ps.Idx.GetWord(w.Index)
-					}
-				}
-				ps.Res = env.NewError("function '" + fnName + "' is missing argument " + strconv.Itoa(i+1))
-				ps.ErrorFlag = true
-			}
 			return
 		}
 		// The createcurriedcaller is now created explicitly with partial builtin function
@@ -1902,6 +1916,14 @@ func CallCurriedCaller(cc env.CurriedCaller, ps *env.ProgramState, arg0_ env.Obj
 
 	// Collect remaining unfilled arguments from code stream
 	for collected < argsToCollect {
+		if ps.Ser.AtLast() {
+			for i, arg := range [5]env.Object{arg0, arg1, arg2, arg3, arg4} {
+				if arg == nil {
+					missingCallArgument(ps, i+1, cc.Function)
+					return
+				}
+			}
+		}
 		evalExprFn(ps, true, opword)
 		if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 			return
@@ -1917,6 +1939,28 @@ func CallCurriedCaller(cc env.CurriedCaller, ps *env.ProgramState, arg0_ env.Obj
 		fn := *cc.Function
 		CallFunctionArgsN(fn, ps, nil, arg0, arg1, arg2, arg3, arg4)
 	}
+}
+
+// missingCallArgument reports only an exhausted argument stream. Errors raised
+// while evaluating an available expression must retain their original cause.
+func missingCallArgument(ps *env.ProgramState, position int, fn *env.Function) bool {
+	if !ps.Ser.AtLast() {
+		return false
+	}
+	message := "missing argument " + strconv.Itoa(position)
+	if fn != nil {
+		message = "function is " + message
+		if position > 0 && position <= fn.Spec.Series.Len() {
+			if parameter, ok := fn.Spec.Series.Get(position - 1).(env.Word); ok {
+				message += " ('" + ps.Idx.GetWord(parameter.Index) + "')"
+			}
+		}
+	}
+	err := env.NewError(message)
+	err.CodeBlock = ps.Ser
+	ps.Res = err
+	ps.ErrorFlag = true
+	return true
 }
 
 // CALLING BUILTINS
@@ -1947,7 +1991,6 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 	evalExprFn := func(ps *env.ProgramState, limited bool, opword bool) {
 		EvalExpression(ps, nil, false, limited, opword, dotword)
 	}
-	
 
 	//fmt.Println("*** BUILTIN ***")
 
@@ -1963,14 +2006,14 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 	} else if bi.Argsn > 0 {
 		//fmt.Println(" ARG 1 ")
 		//fmt.Println(ps.Ser.GetPos())
-	
+		if missingCallArgument(ps, 1, nil) {
+			return
+		}
 		evalExprFn(ps, true, opword)
 		if checkForFailureWithBuiltin(bi, ps, 0) {
 			return
 		}
 		if ps.ErrorFlag || ps.ReturnFlag {
-			ps.Res = env.NewError("missing argument 1")
-			ps.ErrorFlag = true
 			return
 		}
 		// The CallCurriedCaller is now created explicitly with partial builtin function
@@ -1980,15 +2023,15 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 	if arg0_ != nil && pipeSecond {
 		arg1 = arg0_
 	} else if bi.Argsn > 1 {
-	
+		if missingCallArgument(ps, 2, nil) {
+			return
+		}
 		evalExprFn(ps, true, opword) // <---- THESE DETERMINE IF IT CONSUMES WHOLE EXPRESSION OR NOT IN CASE OF PIPEWORDS .. HM*... MAYBE WOULD COULD HAVE A WORD MODIFIER?? a: 2 |add 5 a:: 2 |add 5 print* --TODO
 
 		if checkForFailureWithBuiltin(bi, ps, 1) {
 			return
 		}
 		if ps.ReturnFlag || ps.ErrorFlag {
-			ps.Res = env.NewError("missing argument 2")
-			ps.ErrorFlag = true
 			return
 		}
 		//fmt.Println(ps.Res)
@@ -1996,45 +2039,45 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 		arg1 = ps.Res
 	}
 	if bi.Argsn > 2 {
-	
+		if missingCallArgument(ps, 3, nil) {
+			return
+		}
 		evalExprFn(ps, true, opword)
 
 		if checkForFailureWithBuiltin(bi, ps, 2) {
 			return
 		}
 		if ps.ReturnFlag || ps.ErrorFlag {
-			ps.Res = env.NewError("missing argument 3")
-			ps.ErrorFlag = true
 			return
 		}
 		// The CallCurriedCaller is now created explicitly with partial builtin function
 		arg2 = ps.Res
 	}
 	if bi.Argsn > 3 {
-	
+		if missingCallArgument(ps, 4, nil) {
+			return
+		}
 		evalExprFn(ps, true, opword)
 
 		if checkForFailureWithBuiltin(bi, ps, 3) {
 			return
 		}
 		if ps.ReturnFlag || ps.ErrorFlag {
-			ps.Res = env.NewError("missing argument 4")
-			ps.ErrorFlag = true
 			return
 		}
 		// The CallCurriedCaller is now created explicitly with partial builtin function
 		arg3 = ps.Res
 	}
 	if bi.Argsn > 4 {
-	
+		if missingCallArgument(ps, 5, nil) {
+			return
+		}
 		evalExprFn(ps, true, opword)
 
 		if checkForFailureWithBuiltin(bi, ps, 4) {
 			return
 		}
 		if ps.ReturnFlag || ps.ErrorFlag {
-			ps.Res = env.NewError("missing argument 5")
-			ps.ErrorFlag = true
 			return
 		}
 		// The CallCurriedCaller is now created explicitly with partial builtin function
@@ -2071,6 +2114,9 @@ func CallVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, arg0_ env.Object, t
 			args[ii] = firstVal
 			ii++
 		} else if bi.Argsn > 0 {
+			if missingCallArgument(ps, 1, nil) {
+				return
+			}
 			EvalExpression(ps, nil, false, true, opword, dotword)
 			if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 				return
@@ -2084,6 +2130,9 @@ func CallVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, arg0_ env.Object, t
 			args[ii] = arg0_
 			ii++
 		} else if bi.Argsn > 1 {
+			if missingCallArgument(ps, 2, nil) {
+				return
+			}
 			EvalExpression(ps, nil, false, true, opword, dotword)
 			if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 				return
@@ -2094,6 +2143,9 @@ func CallVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, arg0_ env.Object, t
 		}
 		//variadic version
 		for i := 2; i < bi.Argsn; i += 1 {
+			if missingCallArgument(ps, i+1, nil) {
+				return
+			}
 			EvalExpression(ps, nil, false, true, opword, dotword)
 			if ps.ReturnFlag || ps.ErrorFlag || ps.FailureFlag {
 				return

@@ -1,0 +1,101 @@
+; OS path builtins test suite
+; Verifies that os path builtins handle both relative and absolute paths
+; correctly. Absolute paths used to be mangled by joining them with the
+; working directory (filepath.Join), which made e.g. `os/is-dir %/tmp`
+; return false. The fix routes these through the resolvePath helper.
+;
+; Also verifies the is-* naming convention: is-dir / is-file return booleans
+; for existing paths and fail (return a failure) when the path does not exist.
+
+print "## OS Path Builtins (absolute path handling)"
+
+; ─── absolute directory detection ────────────────────────────────────────────
+
+assert\display "is-dir on absolute path %/tmp" {
+	os/is-dir %/tmp
+} true
+
+assert\display "does-exist on absolute path %/tmp" {
+	os/does-exist %/tmp
+} true
+
+assert\display "is-file on absolute directory is false" {
+	os/is-file %/tmp
+} false
+
+; ─── non-existent paths: is-* fail, does-exist returns false ─────────────────
+
+assert\display "is-dir on non-existent absolute path fails" {
+	try { os/is-dir %/definitely/not/a/real/rye/dir } |type?
+} 'error
+
+assert\display "is-file on non-existent absolute path fails" {
+	try { os/is-file %/definitely/not/a/real/rye/file.txt } |type?
+} 'error
+
+assert\display "does-exist on non-existent absolute path is false" {
+	os/does-exist %/definitely/not/a/real/rye/dir
+} false
+
+; ─── mkdir / rmdir with absolute paths ───────────────────────────────────────
+
+assert\display "mkdir creates dir at absolute path" {
+	os/mkdir %/tmp/rye-os-test-dir
+	os/is-dir %/tmp/rye-os-test-dir
+} true
+
+assert\display "rmdir removes dir at absolute path" {
+	os/rmdir %/tmp/rye-os-test-dir
+	os/does-exist %/tmp/rye-os-test-dir
+} false
+
+; ─── file operations with absolute paths ─────────────────────────────────────
+
+assert\display "cp relative source -> absolute destination" {
+	os/cp %main.rye %/tmp/rye-os-test-file.txt
+	os/is-file %/tmp/rye-os-test-file.txt
+} true
+
+assert\display "is-dir on absolute file path is false" {
+	os/is-dir %/tmp/rye-os-test-file.txt
+} false
+
+assert\display "file-info? works on absolute path" {
+	os/file-info? %/tmp/rye-os-test-file.txt |type?
+} 'dict
+
+assert\display "mv absolute -> absolute" {
+	os/mv %/tmp/rye-os-test-file.txt %/tmp/rye-os-test-file2.txt
+	os/does-exist %/tmp/rye-os-test-file2.txt
+} true
+
+assert\display "original gone after mv" {
+	os/does-exist %/tmp/rye-os-test-file.txt
+} false
+
+assert\display "rm removes file at absolute path" {
+	os/rm %/tmp/rye-os-test-file2.txt
+	os/does-exist %/tmp/rye-os-test-file2.txt
+} false
+
+; ─── glob with absolute pattern ──────────────────────────────────────────────
+
+assert\display "glob with absolute pattern returns block" {
+	os/glob "/tmp/rye*" |type?
+} 'block
+
+; ─── relative paths still work (regression) ─────────────────────────────────
+
+assert\display "does-exist on relative path" {
+	os/does-exist %main.rye
+} true
+
+assert\display "is-file on relative path" {
+	os/is-file %main.rye
+} true
+
+assert\display "is-dir on relative path (current dir)" {
+	os/is-dir %.
+} true
+
+print ""

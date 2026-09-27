@@ -15,8 +15,9 @@ print ""
 
 ; Test folders using the consistent assert\display pattern
 ; evaluator/main.rye includes comma_guards.rye, expression_loops.rye,
-; builtin_boundaries.rye, collection_safety.rye, and function_safety.rye
-; (guards, boundaries, handleable failures, callback arity, defers, and pure contexts).
+; builtin_boundaries.rye, collection_safety.rye, function_safety.rye,
+; and argument_errors.rye (guards, boundaries, handleable failures, callback arity,
+; defers, pure contexts, and argument error/control-flow preservation).
 test-folders: { 
 	"basics"
 	"parsing" 

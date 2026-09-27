@@ -3456,7 +3456,7 @@ func SortByColumnDesc(ps *env.ProgramState, s *env.Table, name string) {
 func WhereEquals(ps *env.ProgramState, s *env.Table, name string, val env.Object) env.Object {
 	idx := slices.Index(s.Cols, name)
 	if idx < 0 {
-		return MakeBuiltinError(ps, "Column not found.", "where-equal")
+		return MakeBuiltinError(ps, fmt.Sprintf("column '%s' not found", name), "where-equal")
 	}
 	nspr := env.NewTable(s.Cols)
 	if index, ok := s.Indexes[name]; ok {
@@ -3479,7 +3479,7 @@ func WhereEquals(ps *env.ProgramState, s *env.Table, name string, val env.Object
 func WhereNotEquals(ps *env.ProgramState, s *env.Table, name string, val env.Object) env.Object {
 	idx := slices.Index(s.Cols, name)
 	if idx < 0 {
-		return MakeBuiltinError(ps, "Column not found.", "where-not-equal")
+		return MakeBuiltinError(ps, fmt.Sprintf("column '%s' not found", name), "where-not-equal")
 	}
 	nspr := env.NewTable(s.Cols)
 	for _, row := range s.Rows {
@@ -3495,7 +3495,7 @@ func WhereNotEquals(ps *env.ProgramState, s *env.Table, name string, val env.Obj
 func WhereMatch(ps *env.ProgramState, s *env.Table, name string, r *regexp.Regexp) env.Object {
 	idx := slices.Index(s.Cols, name)
 	if idx < 0 {
-		return MakeBuiltinError(ps, "Column not found.", "where-match")
+		return MakeBuiltinError(ps, fmt.Sprintf("column '%s' not found", name), "where-match")
 	}
 	nspr := env.NewTable(s.Cols)
 	for _, row := range s.Rows {
@@ -3513,7 +3513,7 @@ func WhereMatch(ps *env.ProgramState, s *env.Table, name string, r *regexp.Regex
 func WhereContains(ps *env.ProgramState, s *env.Table, name string, val string, not bool) env.Object {
 	idx := slices.Index(s.Cols, name)
 	if idx < 0 {
-		return MakeBuiltinError(ps, "Column not found.", "where-contains")
+		return MakeBuiltinError(ps, fmt.Sprintf("column '%s' not found", name), "where-contains")
 	}
 	nspr := env.NewTable(s.Cols)
 	for _, row := range s.Rows {
@@ -3532,7 +3532,7 @@ func WhereContains(ps *env.ProgramState, s *env.Table, name string, val string, 
 func WhereIn(ps *env.ProgramState, s *env.Table, name string, b []env.Object) env.Object {
 	idx := slices.Index(s.Cols, name)
 	if idx < 0 {
-		return MakeBuiltinError(ps, "Column not found.", "where-in")
+		return MakeBuiltinError(ps, fmt.Sprintf("column '%s' not found", name), "where-in")
 	}
 	nspr := env.NewTable(s.Cols)
 	for _, row := range s.Rows {
@@ -3549,7 +3549,7 @@ func WhereIn(ps *env.ProgramState, s *env.Table, name string, b []env.Object) en
 func WhereNotIn(ps *env.ProgramState, s *env.Table, name string, b []env.Object) env.Object {
 	idx := slices.Index(s.Cols, name)
 	if idx < 0 {
-		return MakeBuiltinError(ps, "Column not found.", "where-not-in")
+		return MakeBuiltinError(ps, fmt.Sprintf("column '%s' not found", name), "where-not-in")
 	}
 	nspr := env.NewTable(s.Cols)
 	for _, row := range s.Rows {
@@ -3566,7 +3566,7 @@ func WhereNotIn(ps *env.ProgramState, s *env.Table, name string, b []env.Object)
 func WhereBlock(ps *env.ProgramState, s *env.Table, name string, block env.Block) env.Object {
 	idx := slices.Index(s.Cols, name)
 	if idx < 0 {
-		return MakeBuiltinError(ps, "Column not found.", "where")
+		return MakeBuiltinError(ps, fmt.Sprintf("column '%s' not found", name), "where")
 	}
 	nspr := env.NewTable(s.Cols)
 	ser := ps.Ser
@@ -3592,7 +3592,7 @@ func WhereBlock(ps *env.ProgramState, s *env.Table, name string, block env.Block
 func WhereBuiltin(ps *env.ProgramState, s *env.Table, name string, builtin env.Builtin) env.Object {
 	idx := slices.Index(s.Cols, name)
 	if idx < 0 {
-		return MakeBuiltinError(ps, "Column not found.", "where")
+		return MakeBuiltinError(ps, fmt.Sprintf("column '%s' not found", name), "where")
 	}
 	nspr := env.NewTable(s.Cols)
 	for _, row := range s.Rows {
@@ -3613,7 +3613,7 @@ func WhereBuiltin(ps *env.ProgramState, s *env.Table, name string, builtin env.B
 func WhereFunction(ps *env.ProgramState, s *env.Table, name string, fn env.Function) env.Object {
 	idx := slices.Index(s.Cols, name)
 	if idx < 0 {
-		return MakeBuiltinError(ps, "Column not found.", "where")
+		return MakeBuiltinError(ps, fmt.Sprintf("column '%s' not found", name), "where")
 	}
 	nspr := env.NewTable(s.Cols)
 	for _, row := range s.Rows {
@@ -3686,7 +3686,7 @@ func Distinct(ps *env.ProgramState, s *env.Table, colNames []string) env.Object 
 	for i, name := range colNames {
 		idx := slices.Index(s.Cols, name)
 		if idx < 0 {
-			return MakeBuiltinError(ps, "Column not found: "+name, "distinct")
+			return MakeBuiltinError(ps, fmt.Sprintf("column '%s' not found", name), "distinct")
 		}
 		colIdxs[i] = idx
 	}
@@ -3721,7 +3721,7 @@ func Distinct(ps *env.ProgramState, s *env.Table, colNames []string) env.Object 
 func FillVoid(ps *env.ProgramState, s *env.Table, colName string, fillValue env.Object) env.Object {
 	idx := slices.Index(s.Cols, colName)
 	if idx < 0 {
-		return MakeBuiltinError(ps, "Column not found.", "fill-void")
+		return MakeBuiltinError(ps, fmt.Sprintf("column '%s' not found", colName), "fill-void")
 	}
 
 	nspr := env.NewTable(s.Cols)
@@ -3744,7 +3744,7 @@ func FillVoid(ps *env.ProgramState, s *env.Table, colName string, fillValue env.
 func CountWhereBlock(ps *env.ProgramState, s *env.Table, name string, block env.Block) env.Object {
 	idx := slices.Index(s.Cols, name)
 	if idx < 0 {
-		return MakeBuiltinError(ps, "Column not found.", "count-where")
+		return MakeBuiltinError(ps, fmt.Sprintf("column '%s' not found", name), "count-where")
 	}
 	count := 0
 	ser := ps.Ser
@@ -3770,7 +3770,7 @@ func CountWhereBlock(ps *env.ProgramState, s *env.Table, name string, block env.
 func CountWhereBuiltin(ps *env.ProgramState, s *env.Table, name string, builtin env.Builtin) env.Object {
 	idx := slices.Index(s.Cols, name)
 	if idx < 0 {
-		return MakeBuiltinError(ps, "Column not found.", "count-where")
+		return MakeBuiltinError(ps, fmt.Sprintf("column '%s' not found", name), "count-where")
 	}
 	count := 0
 	for _, row := range s.Rows {
@@ -3791,7 +3791,7 @@ func CountWhereBuiltin(ps *env.ProgramState, s *env.Table, name string, builtin 
 func CountWhereFunction(ps *env.ProgramState, s *env.Table, name string, fn env.Function) env.Object {
 	idx := slices.Index(s.Cols, name)
 	if idx < 0 {
-		return MakeBuiltinError(ps, "Column not found.", "count-where")
+		return MakeBuiltinError(ps, fmt.Sprintf("column '%s' not found", name), "count-where")
 	}
 	count := 0
 	for _, row := range s.Rows {
@@ -3861,7 +3861,7 @@ func CountWhereBlockMultiCol(ps *env.ProgramState, s *env.Table, cols env.Block,
 func WhereGreater(ps *env.ProgramState, s *env.Table, name string, val env.Object) env.Object {
 	idx := slices.Index(s.Cols, name)
 	if idx < 0 {
-		return MakeBuiltinError(ps, "Column not found.", "where-greater")
+		return MakeBuiltinError(ps, fmt.Sprintf("column '%s' not found", name), "where-greater")
 	}
 	nspr := env.NewTable(s.Cols)
 	for _, row := range s.Rows {
@@ -3878,7 +3878,7 @@ func WhereGreater(ps *env.ProgramState, s *env.Table, name string, val env.Objec
 func WhereLesser(ps *env.ProgramState, s *env.Table, name string, val env.Object) env.Object {
 	idx := slices.Index(s.Cols, name)
 	if idx < 0 {
-		return MakeBuiltinError(ps, "Column not found.", "where-lesser")
+		return MakeBuiltinError(ps, fmt.Sprintf("column '%s' not found", name), "where-lesser")
 	}
 	nspr := env.NewTable(s.Cols)
 	for _, row := range s.Rows {
@@ -3895,7 +3895,7 @@ func WhereLesser(ps *env.ProgramState, s *env.Table, name string, val env.Object
 func WhereBetween(ps *env.ProgramState, s *env.Table, name string, val1 env.Object, val2 env.Object, inclusiveMode bool) env.Object {
 	idx := slices.Index(s.Cols, name)
 	if idx < 0 {
-		return MakeBuiltinError(ps, "Column not found.", "where-between")
+		return MakeBuiltinError(ps, fmt.Sprintf("column '%s' not found", name), "where-between")
 	}
 	nspr := env.NewTable(s.Cols)
 	for _, row := range s.Rows {
@@ -3997,11 +3997,15 @@ func AutoType(ps *env.ProgramState, s *env.Table, percent float64) env.Object {
 }
 
 func LeftJoin(ps *env.ProgramState, s1 env.Table, s2 env.Table, col1 string, col2 string, innerJoin bool) env.Object {
+	fn := "left-join"
+	if innerJoin {
+		fn = "inner-join"
+	}
 	if !slices.Contains(s1.Cols, col1) {
-		return MakeBuiltinError(ps, "Column not found in first table.", "left-join")
+		return MakeBuiltinError(ps, fmt.Sprintf("column '%s' not found in first table", col1), fn)
 	}
 	if !slices.Contains(s2.Cols, col2) {
-		return MakeBuiltinError(ps, "Column not found in second table.", "left-join")
+		return MakeBuiltinError(ps, fmt.Sprintf("column '%s' not found in second table", col2), fn)
 	}
 
 	combinedCols := make([]string, len(s1.Cols)+len(s2.Cols))
