@@ -951,7 +951,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 			return
 		} else {
 			ps.ErrorFlag = true
-			err := env.NewError2(5, "Word not found: `"+failureInfo+"`.")
+			err := env.NewError2(5, fmt.Sprintf("lookup failed for context path %s: %s", cpath.Dump(*ps.Idx), failureInfo))
 			err.CodeBlock = ps.Ser
 			ps.Res = err
 			return
@@ -990,7 +990,11 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 			ps.ErrorFlag = true
 			if !ps.FailureFlag {
 				ps.Ser.SetPos(pos)
-				err := env.NewError2(5, "Word not found: `"+failureInfo+"`.")
+				message := "Word not found: `" + failureInfo + "`."
+				if path, ok := word.(env.CPath); ok {
+					message = fmt.Sprintf("lookup failed for context path %s: %s", path.Dump(*ps.Idx), failureInfo)
+				}
+				err := env.NewError2(5, message)
 				err.CodeBlock = ps.Ser
 				ps.Res = err
 			}
@@ -1176,29 +1180,44 @@ func EvalDataPath(ps *env.ProgramState, dp env.DataPath) {
 	object, found := ps.Ctx.Get(subject.Index)
 	if !found {
 		ps.ErrorFlag = true
-		ps.Res = env.NewError2(5, "Word not found: `"+ps.Idx.GetWord(subject.Index)+"`.")
+		ps.Res = annotateDataPathError(ps, env.NewError2(5, "Word not found: `"+ps.Idx.GetWord(subject.Index)+"`."), dp, 1)
 		return
 	}
 
 	// Walk the remaining literal accessors, retrieving nested values.
 	current := object
-	for _, accessor := range dp.Path[1:] {
+	for i, accessor := range dp.Path[1:] {
 		current = getFrom(ps, current, accessor, false)
 		if ps.FailureFlag {
 			// Convert the failure into a hard error, like cpath traversal failures.
 			ps.FailureFlag = false
 			ps.ErrorFlag = true
-			if err, isErr := current.(env.Error); isErr {
-				err.CodeBlock = ps.Ser
-				ps.Res = err
-			} else {
-				ps.Res = current
-			}
+			ps.Res = annotateDataPathError(ps, current, dp, i+2)
 			return
 		}
 	}
 
 	ps.Res = current
+}
+
+// annotateDataPathError copies an error so shared errors are not modified. Segment
+// numbers are 1-based and include the subject. Keep status, cause and values intact.
+func annotateDataPathError(ps *env.ProgramState, result env.Object, path env.DataPath, segment int) env.Object {
+	var err env.Error
+	switch value := result.(type) {
+	case env.Error:
+		err = value
+	case *env.Error:
+		err = *value
+	default:
+		return result
+	}
+	err.Message = fmt.Sprintf("data path %s, segment %d (%s): %s", path.Print(*ps.Idx), segment, path.Path[segment-1].Print(*ps.Idx), err.Message)
+	err.CodeBlock = ps.Ser
+	if _, pointer := result.(*env.Error); pointer {
+		return &err
+	}
+	return err
 }
 
 // EvalObject evaluates a Rye object, particularly handling callable types (builtins, functions).
