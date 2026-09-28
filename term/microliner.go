@@ -944,6 +944,15 @@ func (s *MLState) determineAutoMode(line []rune) int {
 	// Check if typing ".word" or "|word" - potential method call
 	hasOpPrefix := strings.HasPrefix(wordpart, ".") || strings.HasPrefix(wordpart, "|")
 
+	// Also check for line starting with '|' to enter generic methods mode quickly
+	if strings.HasPrefix(strings.TrimLeft(lineStr, " \t"), "|") && s.programState != nil && s.programState.Res != nil {
+		kindIdx := s.programState.Res.GetKind()
+		methods := s.programState.Gen.GetMethods(kindIdx)
+		if len(methods) > 0 {
+			return 2
+		}
+	}
+
 	// If op-prefix and we have a result with methods, use mode 2 (generic methods)
 	if hasOpPrefix && s.programState != nil && s.programState.Res != nil {
 		kindIdx := s.programState.Res.GetKind()
@@ -2170,13 +2179,27 @@ startOfHere:
 					s.ctrlSMode = tabMode // Sync so Ctrl+S cycles from here
 					line, pos, next, _ = s.tabComplete(p, line, pos, tabMode)
 					goto haveNext
-				case 46: // Del
-					if pos >= len(line) {
-						s.doBeep()
+				case 46: // '.' key
+					// If '.' is the first non-space on the line, trigger generic methods completion; otherwise treat as regular '.' insert
+					ls := strings.TrimLeft(string(line), " \t")
+					if len(ls) == 0 { // fresh line
+						// Insert '.' then open completion (prefer methods mode)
+						line = append(line[:pos], append([]rune{'.'}, line[pos:]...)...)
+						pos++
+						mode := 0
+						if s.programState != nil && s.programState.Res != nil {
+							kindIdx := s.programState.Res.GetKind()
+							if len(s.programState.Gen.GetMethods(kindIdx)) > 0 {
+								mode = 2
+							}
+						}
+						s.ctrlSMode = mode
+						line, pos, next, _ = s.tabComplete(p, line, pos, mode)
+						goto haveNext
 					} else {
-						s.resetYankTracking() // Line content changed
-						n := len(getPrefixGlyphs(line[pos:], 1))
-						line = append(line[:pos], line[pos+n:]...)
+						// Regular '.' insertion in the middle of text
+						line = append(line[:pos], append([]rune{'.'}, line[pos:]...)...)
+						pos++
 						s.needRefresh = true
 					}
 				case 39: // Right

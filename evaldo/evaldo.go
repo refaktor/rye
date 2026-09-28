@@ -608,9 +608,9 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 			// injVal := ps.Res // Use current result as argument
 			// CallFunctionWithArgs(fn, ps, nil, injVal)
 			// return ps.Res
-			// l{} list constructor
+			// L{} list constructor
 		} else if block.Mode == 7 {
-			// LIST_BBLOCK l[ ] - evaluates expressions and creates a List
+			// LIST_BBLOCK L[ ] - evaluates expressions and creates a List
 			ser := ps.Ser
 			ps.Ser = block.Series
 			res := make([]any, 0)
@@ -622,7 +622,7 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 				}
 				if !env.IsCollectionLiteral(ps.Res) {
 					ps.ErrorFlag = true
-					ps.Res = env.NewError(fmt.Sprintf("non-literal value %s in evaluated list l[ ]; only literal values (strings, numbers, nested lists and dicts) are allowed", ps.Res.Inspect(*ps.Idx)))
+					ps.Res = env.NewError(fmt.Sprintf("non-literal value %s in evaluated list L[ ]; only literal values (strings, numbers, nested lists and dicts) are allowed", ps.Res.Inspect(*ps.Idx)))
 					ps.Ser = ser
 					return
 				}
@@ -631,9 +631,9 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 			}
 			ps.Ser = ser
 			ps.Res = *env.NewList(res)
-			// d{} dict constructor
+			// D{} dict constructor
 		} else if block.Mode == 9 {
-			// DICT_BBLOCK d[ ] - evaluates expressions and creates a Dict
+			// DICT_BBLOCK D[ ] - evaluates expressions and creates a Dict
 			ser := ps.Ser
 			ps.Ser = block.Series
 			res := make([]env.Object, 0)

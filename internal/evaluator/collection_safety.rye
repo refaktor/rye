@@ -53,7 +53,7 @@ assert\display "rest from block negative fails" {
 } 123
 
 assert\display "rest from list negative fails" {
-	rest\from l{ 1 2 } -1 |fix { 123 }
+	rest\from L{ 1 2 } -1 |fix { 123 }
 } 123
 
 assert\display "rest from string negative fails" {
@@ -65,27 +65,27 @@ assert\display "rest from vector negative fails" {
 } 123
 
 assert\display "rest from list composes with length" {
-	rest\from l{ 1 2 3 } 1 |length?
+	rest\from L{ 1 2 3 } 1 |length?
 } 2
 
 assert\display "rest from list returns list value" {
-	rest\from l{ 1 2 3 } 1
-} l{ 2 3 }
+	rest\from L{ 1 2 3 } 1
+} L{ 2 3 }
 
 assert\display "unique preserves first occurrence order" {
-	unique l{ 3 1 2 3 1 }
-} l{ 3 1 2 }
+	unique L{ 3 1 2 3 1 }
+} L{ 3 1 2 }
 
 assert\display "unique supports nested blocks" {
 	unique { { 1 } { 1 } { 2 } }
 } { { 1 } { 2 } }
 
 assert\display "unique supports nested lists" {
-	unique l{ l{ 1 } l{ 1 } l{ 2 } }
-} l{ l{ 1 } l{ 2 } }
+	unique L{ L{ 1 } L{ 1 } L{ 2 } }
+} L{ L{ 1 } L{ 2 } }
 
 assert\display "unique supports nested dictionaries" {
-	unique l{ d{ "a" 1 } d{ "a" 1 } d{ "b" 2 } } |length?
+	unique L{ D{ "a" 1 } D{ "a" 1 } D{ "b" 2 } } |length?
 } 2
 
 print ""

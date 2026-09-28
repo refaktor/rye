@@ -1630,6 +1630,22 @@ var Builtins_os = map[string]*env.Builtin{
 			return *env.NewString(name)
 		},
 	},
+	"process//Ppid?": {
+		Argsn: 1,
+		Doc:   "Returns the parent PID of the native process (p.Ppid()).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			n, ok := arg0.(env.Native)
+			if !ok || ps.Idx.GetWord(n.Kind.Index) != "process" {
+				return evaldo.MakeBuiltinError(ps, "Expected native process", "process//Ppid?")
+			}
+			p := n.Value.(*process.Process)
+			ppid, err := p.Ppid()
+			if err != nil {
+				return *env.NewString("???")
+			}
+			return *env.NewInteger(int64(ppid))
+		},
+	},
 	"process//Username?": {
 		Argsn: 1,
 		Doc:   "Returns the username of the process owner (p.Username()).",

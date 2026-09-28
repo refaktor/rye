@@ -15,7 +15,7 @@ assert\display "10-level nested block parses" {
 
 assert\display "15-level nested block parses" {
 	first first first first first first first first first 
-	first first first first first {
+	first first first first first first {
 		{ { { { { { { { { { { { { { 99 } } } } } } } } } } } } } }
 	}
 } 99
@@ -33,7 +33,7 @@ assert\display "10 consecutive empty blocks" {
 ; ============================================
 
 assert\display "mixed empty blocks braces brackets groups" {
-	length? { { } [ ] ( ) l{ } d{ } { } }
+	length? { { } [ ] ( ) L{ } D{ } { } }
 } 6
 
 ; ============================================

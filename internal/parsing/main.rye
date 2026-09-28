@@ -24,6 +24,7 @@ private Load %bad_tokens.rye
 private Load %fixes1050.rye
 private Load %14-loader-edges.rye
 private Load %15-passive-collections.rye
+private Load %16-delimiter-collection-prefixes.rye
 
 print ""
 print "========================================"

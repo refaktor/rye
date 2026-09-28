@@ -92,16 +92,12 @@ assert\display "unclosed kindword error message mentions parenthesis" {
 } true
 
 ; ============================================
-; Error recovery: delimiter spacing error should not skip chars
-; (was: readOneCharToken had extra l.readChar() on error)
-; Verify that after a spacing error, subsequent valid tokens parse correctly.
-; "1}2}" - first close fails (no space before }), second close } should also
-; be an error, not consumed.
+; Delimiters no longer need spaces; adjacent tokens should still be retained.
 ; ============================================
 
-assert\display "delimiter spacing error still catches adjacent errors" {
-	try { do { load "1}2}" } } |type?
-} 'error
+assert\display "number and comma remain separate without spaces" {
+	length? load "1,2"
+} 3
 
 ; ============================================
 ; peekCharOffs bounds check: -- at end of input should not panic

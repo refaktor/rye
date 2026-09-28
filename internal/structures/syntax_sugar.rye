@@ -1,123 +1,123 @@
 ; Syntax Sugar Test Suite
-; Tests for l{ } l[ ] d{ } d[ ] list and dict shorthand syntax
+; Tests for L{ } L[ ] D{ } D[ ] list and dict shorthand syntax
 print "## Syntax Sugar Tests"
 
 ; ============================================================================
-; l{ } - Literal list (no evaluation)
+; L{ } - Literal list (no evaluation)
 ; ============================================================================
 
-assert\display "l{} basic list length" { length? l{ 1 2 3 } } 3
-assert\display "l{} first element" { first l{ 1 2 3 } } 1
-assert\display "l{} second element" { second l{ 1 2 3 } } 2
-assert\display "l{} type is list" { type? l{ 1 2 3 } } 'list
-assert\display "l{} empty list" { length? l{ } } 0
-assert\display "l{} strings preserved" { first l{ "a" "b" "c" } } "a"
+assert\display "L{} basic list length" { length? L{ 1 2 3 } } 3
+assert\display "L{} first element" { first L{ 1 2 3 } } 1
+assert\display "L{} second element" { second L{ 1 2 3 } } 2
+assert\display "L{} type is list" { type? L{ 1 2 3 } } 'list
+assert\display "L{} empty list" { length? L{ } } 0
+assert\display "L{} strings preserved" { first L{ "a" "b" "c" } } "a"
 
 ; ============================================================================
-; l[ ] - Evaluated list
+; L[ ] - Evaluated list
 ; ============================================================================
 
-assert\display "l[] evaluates variables" { 
+assert\display "L[] evaluates variables" {
 	x1: 10 , y1: 20 , z1: 30
-	first l[ x1 y1 z1 ] 
+	first L[ x1 y1 z1 ]
 } 10
 
-assert\display "l[] expressions" { first l[ 10 + 20 ] } 30
+assert\display "L[] expressions" { first L[ 10 + 20 ] } 30
 
-assert\display "l[] function calls" { first l[ length? "hello" ] } 5
+assert\display "L[] function calls" { first L[ length? "hello" ] } 5
 
-assert\display "l[] type is list" { type? l[ 1 2 3 ] } 'list
+assert\display "L[] type is list" { type? L[ 1 2 3 ] } 'list
 
-assert\display "l[] nested list" { 
-	nested2: l[ l[ 1 2 ] l[ 3 4 ] ]
+assert\display "L[] nested list" {
+	nested2: L[ L[ 1 2 ] L[ 3 4 ] ]
 	length? nested2
 } 2
 
-assert\display "l[] accepts boolean and decimal literals" {
-	length? l[ true 2.5 ]
+assert\display "L[] accepts boolean and decimal literals" {
+	length? L[ true 2.5 ]
 } 2
 
-assert\display "l[] rejects word value" {
+assert\display "L[] rejects word value" {
 	w9: 'cascas
-	try { l[ w9 ] } |type?
+	try { L[ w9 ] } |type?
 } 'error
 
-assert\display "l[] rejects context value" {
+assert\display "L[] rejects context value" {
 	c9: context { x: 1 }
-	try { l[ c9 ] } |type?
+	try { L[ c9 ] } |type?
 } 'error
 
-assert\display "l[] rejects function value" {
-	try { l[ fn { 1 } ] } |type?
+assert\display "L[] rejects function value" {
+	try { L[ fn { 1 } ] } |type?
 } 'error
 
 ; ============================================================================
-; d{ } - Literal dict (no evaluation)
+; D{ } - Literal dict (no evaluation)
 ; ============================================================================
 
-assert\display "d{} type is dict" { type? d{ name "Alice" age 30 } } 'dict
+assert\display "D{} type is dict" { type? D{ name "Alice" age 30 } } 'dict
 
-assert\display "d{} value by arrow" { 
-	d{ name "Alice" age 30 } -> "name"
+assert\display "D{} value by arrow" {
+	D{ name "Alice" age 30 } -> "name"
 } "Alice"
 
-assert\display "d{} numeric value" { 
-	d{ name "Alice" age 30 } -> "age"
+assert\display "D{} numeric value" {
+	D{ name "Alice" age 30 } -> "age"
 } 30
 
-assert\display "d{} string key works" { 
-	d{ "string-key" "value" } -> "string-key"
+assert\display "D{} string key works" {
+	D{ "string-key" "value" } -> "string-key"
 } "value"
 
-assert\display "d{} empty dict type" { type? d{ } } 'dict
+assert\display "D{} empty dict type" { type? D{ } } 'dict
 
 ; ============================================================================
-; d[ ] - Evaluated dict
+; D[ ] - Evaluated dict
 ; ============================================================================
 
-assert\display "d[] evaluated number" {
+assert\display "D[] evaluated number" {
 	num3: 42
-	( d[ 'number num3 ] ) -> "number"
+	( D[ 'number num3 ] ) -> "number"
 } 42
 
-assert\display "d[] evaluated string" {
+assert\display "D[] evaluated string" {
 	str4: "hello"
-	( d[ 'text str4 ] ) -> "text"
+	( D[ 'text str4 ] ) -> "text"
 } "hello"
 
-assert\display "d[] expression sum" {
-	( d[ 'sum 10 + 20 ] ) -> "sum"
+assert\display "D[] expression sum" {
+	( D[ 'sum 10 + 20 ] ) -> "sum"
 } 30
 
-assert\display "d[] expression product" {
-	( d[ 'product 3 * 4 ] ) -> "product"
+assert\display "D[] expression product" {
+	( D[ 'product 3 * 4 ] ) -> "product"
 } 12
 
-assert\display "d[] dynamic key" {
+assert\display "D[] dynamic key" {
 	keyname5: "dynamic-key"
-	( d[ keyname5 123 ] ) -> "dynamic-key"
+	( D[ keyname5 123 ] ) -> "dynamic-key"
 } 123
 
 ; ============================================================================
 ; Comparison with builtins
 ; ============================================================================
 
-assert\display "list {} same as l{}" {
-	( first list { 1 2 3 } ) = ( first l{ 1 2 3 } )
+assert\display "list {} same as L{}" {
+	( first list { 1 2 3 } ) = ( first L{ 1 2 3 } )
 } true
 
-assert\display "list [] same as l[]" {
+assert\display "list [] same as L[]" {
 	v6: 100
-	( first list [ v6 ] ) = ( first l[ v6 ] )
+	( first list [ v6 ] ) = ( first L[ v6 ] )
 } true
 
-assert\display "dict {} same as d{}" {
-	( ( dict { name "Bob" } ) -> "name" ) = ( d{ name "Bob" } -> "name" )
+assert\display "dict {} same as D{}" {
+	( ( dict { name "Bob" } ) -> "name" ) = ( D{ name "Bob" } -> "name" )
 } true
 
-assert\display "dict [] same as d[]" {
+assert\display "dict [] same as D[]" {
 	w7: 200
-	( ( dict [ 'value w7 ] ) -> "value" ) = ( ( d[ 'value w7 ] ) -> "value" )
+	( ( dict [ 'value w7 ] ) -> "value" ) = ( ( D[ 'value w7 ] ) -> "value" )
 } true
 
 ; ============================================================================
@@ -125,15 +125,15 @@ assert\display "dict [] same as d[]" {
 ; ============================================================================
 
 assert\display "list of dicts" {
-	length? l[ d[ 'name "Alice" 'age 30 ] d[ 'name "Bob" 'age 25 ] ]
+	length? L[ D[ 'name "Alice" 'age 30 ] D[ 'name "Bob" 'age 25 ] ]
 } 2
 
 assert\display "first person name" {
-	( first l[ d[ 'name "Alice" ] d[ 'name "Bob" ] ] ) -> "name"
+	( first L[ D[ 'name "Alice" ] D[ 'name "Bob" ] ] ) -> "name"
 } "Alice"
 
 assert\display "dict with list value" {
-	length? ( d[ 'items l[ 1 2 3 ] ] ) -> "items"
+	length? ( D[ 'items L[ 1 2 3 ] ] ) -> "items"
 } 3
 
 ; ============================================================================
@@ -141,23 +141,23 @@ assert\display "dict with list value" {
 ; ============================================================================
 
 assert\display "cpath string value" {
-	dd1: d{ name "Test" value 123 }
+	dd1: D{ name "Test" value 123 }
 	dd1/name
 } "Test"
 
 assert\display "cpath number value" {
-	dd2: d{ name "Test" value 123 }
+	dd2: D{ name "Test" value 123 }
 	dd2/value
 } 123
 
 assert\display "nested cpath level 2" {
-	dd3: d{ outer d{ inner 42 } }
+	dd3: D{ outer D{ inner 42 } }
 	dd3/outer/inner
 } 42
 
 assert\display "context then dict cpath" {
 	ctx8: context {
-		info: d{ x 10 y 20 }
+		info: D{ x 10 y 20 }
 	}
 	ctx8/info/x
 } 10
@@ -165,7 +165,7 @@ assert\display "context then dict cpath" {
 ; ============================================================================
 ; Error cases - non-literal values in passive/evaluated collections
 ; ============================================================================
-; Passive list l{ } and passive dict d{ } reject non-literal values at parse
+; Passive list L{ } and passive dict D{ } reject non-literal values at parse
 ; time (see internal/parsing/15-passive-collections.rye). The runtime
 ; equivalents below must also report an error instead of silently dropping.
 
@@ -189,22 +189,22 @@ assert\display "dict { } rejects block key" {
 	try { dict { ( 1 ) a } } |type?
 } 'error
 
-assert\display "d[ ] rejects non-literal key" {
-	try { d[ 42 "a" ] } |type?
+assert\display "D[ ] rejects non-literal key" {
+	try { D[ 42 "a" ] } |type?
 } 'error
 
-assert\display "d[ ] rejects evaluated-list key" {
-	try { d[ l[ 1 2 ] "a" ] } |type?
+assert\display "D[ ] rejects evaluated-list key" {
+	try { D[ L[ 1 2 ] "a" ] } |type?
 } 'error
 
-assert\display "d[ ] rejects word value" {
+assert\display "D[ ] rejects word value" {
 	w10: 'cascas
-	try { d[ 'a w10 ] } |type?
+	try { D[ 'a w10 ] } |type?
 } 'error
 
-assert\display "d[ ] rejects context value" {
+assert\display "D[ ] rejects context value" {
 	c10: context { x: 1 }
-	try { d[ 'a c10 ] } |type?
+	try { D[ 'a c10 ] } |type?
 } 'error
 
 assert\display "dict { } rejects word value" {
@@ -220,8 +220,8 @@ assert\display "list { } of literals still works" {
 	first list { 1 2 3 }
 } 1
 
-assert\display "d[ ] with word key still works" {
-	( d[ 'items l[ 1 2 3 ] ] ) -> "items" |length?
+assert\display "D[ ] with word key still works" {
+	( D[ 'items L[ 1 2 3 ] ] ) -> "items" |length?
 } 3
 
 print ""

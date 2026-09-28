@@ -186,12 +186,12 @@ assert\display "empty group" {
 	length? first { ( ) }
 } 0
 
-assert\display "empty list l{ }" {
-	length? first { l{ } }
+assert\display "empty list L{ }" {
+	length? first { L{ } }
 } 0
 
-assert\display "empty dict d{ }" {
-	length? first { d{ } }
+assert\display "empty dict D{ }" {
+	length? first { D{ } }
 } 0
 
 ; ============================================

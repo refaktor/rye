@@ -1,7 +1,8 @@
 ; Run All Internal Tests
 ; Usage: cd internal && rye run_all_tests.rye
 ;
-; Runs all test suites that use the assert\display + private Load pattern
+; Runs all test suites that use the assert\display + private Load pattern.
+; Use a freshly built rye on PATH; the checked-in bin/rye may predate syntax changes.
 
 
 ; Load: get-generic? 'Load 'file-uri
@@ -14,6 +15,10 @@ print "╚═══════════════════════�
 print ""
 
 ; Test folders using the consistent assert\display pattern
+; parsing/main.rye includes 16-delimiter-collection-prefixes.rye: compact
+; nesting, all seven space-independent delimiters, prefix spacing/case,
+; string contents and required spacing around other tokens.
+; structures/main.rye exercises the uppercase collection constructors.
 ; evaluator/main.rye includes comma_guards.rye, expression_loops.rye,
 ; builtin_boundaries.rye, collection_safety.rye, function_safety.rye,
 ; and argument_errors.rye (guards, boundaries, handleable failures, callback arity,
