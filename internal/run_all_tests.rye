@@ -15,8 +15,9 @@ print "╚═══════════════════════�
 print ""
 
 ; Test folders using the consistent assert\display pattern
-; parsing/main.rye includes 16-delimiter-collection-prefixes.rye (seven
-; space-independent delimiters and uppercase-only L{ L[ D{ D[ prefixes).
+; parsing/main.rye includes 16-delimiter-collection-prefixes.rye: compact
+; nesting, all seven space-independent delimiters, prefix spacing/case,
+; string contents and required spacing around other tokens.
 ; structures/main.rye exercises the uppercase collection constructors.
 ; evaluator/main.rye includes comma_guards.rye, expression_loops.rye,
 ; builtin_boundaries.rye, collection_safety.rye, function_safety.rye,
