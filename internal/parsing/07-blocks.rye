@@ -43,14 +43,14 @@ assert\display "op-group .( )" {
 	type? first { .( inner ) }
 } 'block
 
-; List block l{ }
-assert\display "list block l{ }" {
-	type? first { l{ 1 2 3 } }
+; List block L{ }
+assert\display "list block L{ }" {
+	type? first { L{ 1 2 3 } }
 } 'list
 
-; Dict block d{ }
-assert\display "dict block d{ }" {
-	type? first { d{ "a" 1 "b" 2 } }
+; Dict block D{ }
+assert\display "dict block D{ }" {
+	type? first { D{ "a" 1 "b" 2 } }
 } 'dict
 
 ; Nested blocks

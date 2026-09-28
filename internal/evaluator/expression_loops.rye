@@ -14,12 +14,12 @@ assert\display "any accepts expression guards" {
 } 123
 
 assert\display "evaluated list accepts expression guards" {
-	l[ 1 + 2 , 3 + 4 , ]
-} l{ 3 7 }
+	L[ 1 + 2 , 3 + 4 , ]
+} L{ 3 7 }
 
 assert\display "evaluated dict accepts expression guards" {
-	d[ "a" 1 + 2 , "b" 3 + 4 , ]
-} d{ "a" 3 "b" 7 }
+	D[ "a" 1 + 2 , "b" 3 + 4 , ]
+} D{ "a" 3 "b" 7 }
 
 assert\display "all still short circuits" {
 	all { false , missing-expression-loop-word }
@@ -42,11 +42,11 @@ assert\display "any rejects guard inside expression" {
 } 'error
 
 assert\display "evaluated list rejects guard inside expression" {
-	try { l[ 1 + , 2 ] } |type?
+	try { L[ 1 + , 2 ] } |type?
 } 'error
 
 assert\display "evaluated dict rejects guard inside expression" {
-	try { d[ "a" 1 + , 2 ] } |type?
+	try { D[ "a" 1 + , 2 ] } |type?
 } 'error
 
 assert\display "all preserves original error" {

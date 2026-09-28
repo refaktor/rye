@@ -266,24 +266,24 @@ assert\display "group ( ) evaluates last" {
 	( 1 , 2 , 3 )
 } 3
 
-assert\display "list literal l{ }" {
-	type? l{ 1 2 3 }
+assert\display "list literal L{ }" {
+	type? L{ 1 2 3 }
 } 'list
 
-assert\display "dict literal d{ }" {
-	type? d{ a 1 b 2 }
+assert\display "dict literal D{ }" {
+	type? D{ a 1 b 2 }
 } 'dict
 
-assert\display "evaluated list l[ ]" {
-	type? l[ 1 + 0 2 + 0 3 + 0 ]
+assert\display "evaluated list L[ ]" {
+	type? L[ 1 + 0 2 + 0 3 + 0 ]
 } 'list
 
-assert\display "evaluated dict d[ ]" {
-	type? d[ 'key 1 + 0 ]
+assert\display "evaluated dict D[ ]" {
+	type? D[ 'key 1 + 0 ]
 } 'dict
 
-assert\display "nested mixed: { [ ( l{ } ) ] }" {
-	length? first { [ ( l{ 1 2 } ) ] }
+assert\display "nested mixed: { [ ( L{ } ) ] }" {
+	length? first { [ ( L{ 1 2 } ) ] }
 } 1
 
 ; =============================================================================

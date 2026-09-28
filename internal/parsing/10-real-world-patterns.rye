@@ -239,12 +239,12 @@ assert\display "opgroup .( )" {
 	type? first { .( 1 + 2 ) }
 } 'block
 
-assert\display "list literal l{ }" {
-	type? first { l{ 1 2 3 } }
+assert\display "list literal L{ }" {
+	type? first { L{ 1 2 3 } }
 } 'list
 
-assert\display "dict literal d{ }" {
-	type? first { d{ name "Jim" } }
+assert\display "dict literal D{ }" {
+	type? first { D{ name "Jim" } }
 } 'dict
 
 print ""

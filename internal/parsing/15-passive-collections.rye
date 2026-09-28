@@ -1,14 +1,14 @@
-; Passive collection tests - l{ } and d{ } only accept literal values.
+; Passive collection tests - L{ } and D{ } only accept literal values.
 ;
-; These verify that a non-literal value inside a passive list (l{ }) or an
-; invalid key inside a passive dict (d{ }) produces a parse error, instead of
+; These verify that a non-literal value inside a passive list (L{ }) or an
+; invalid key inside a passive dict (D{ }) produces a parse error, instead of
 ; being silently dropped (which used to produce a hard-to-spot nil/empty value).
 ;
 ; Helpers:
 ;   must-fail "label" "input"           - asserts Load fails with an error
 ;   must-parse "label" "input" 'type    - asserts Load succeeds and first token is that type
 
-print "## Passive Collections (l{ } d{ })"
+print "## Passive Collections (L{ } D{ })"
 
 ; ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -28,66 +28,66 @@ must-parse: fn { label input expected } {
 
 print ""
 print "-- Control: valid passive collections --"
-must-parse "l{ } of integers"            "l{ 1 2 3 }"           'list
-must-parse "l{ } of mixed scalars"       `l{ "a" 1 2.5 }`       'list
-must-parse "l{ } of nested l{ } d{ }"    "l{ l{ 1 } d{ a 2 } }" 'list
-must-parse "l{ } of negative decimal"    "l{ -5 3.14 }"         'list
-must-parse "d{ } with word key"          "d{ name 1 }"          'dict
-must-parse "d{ } with string key"        `d{ "name" 1 }`        'dict
-must-parse "d{ } with tagword key"       "d{ 'name 1 }"         'dict
-must-parse "d{ } with setword key"       "d{ name: 1 }"         'dict
-must-parse "d{ } with nested list value" "d{ a l{ 1 2 } }"      'dict
-must-parse "d{ } with nested dict value" "d{ a d{ b 1 } }"      'dict
+must-parse "L{ } of integers"            "L{ 1 2 3 }"           'list
+must-parse "L{ } of mixed scalars"       `L{ "a" 1 2.5 }`       'list
+must-parse "L{ } of nested L{ } D{ }"    "L{ L{ 1 } D{ a 2 } }" 'list
+must-parse "L{ } of negative decimal"    "L{ -5 3.14 }"         'list
+must-parse "D{ } with word key"          "D{ name 1 }"          'dict
+must-parse "D{ } with string key"        `D{ "name" 1 }`        'dict
+must-parse "D{ } with tagword key"       "D{ 'name 1 }"         'dict
+must-parse "D{ } with setword key"       "D{ name: 1 }"         'dict
+must-parse "D{ } with nested list value" "D{ a L{ 1 2 } }"      'dict
+must-parse "D{ } with nested dict value" "D{ a D{ b 1 } }"      'dict
 
-; ─── l{ } rejects non-literal values ─────────────────────────────────────────
-
-print ""
-print "-- l{ } rejects non-literal values --"
-must-fail "l{ } with word"               "l{ some-word }"
-must-fail "l{ } with evaluated list"     "l{ l[ 1 2 ] }"
-must-fail "l{ } with evaluated dict"     "l{ d[ 'a 1 ] }"
-must-fail "l{ } with bblock"             "l{ [ 1 ] }"
-must-fail "l{ } with group"              "l{ ( 1 ) }"
-must-fail "l{ } with passive block"      "l{ { 1 } }"
-must-fail "l{ } with opword"             "l{ 1 + 2 }"
-must-fail "l{ } with getword"            "l{ ?word }"
-must-fail "l{ } with setword"            "l{ word: }"
-must-fail "l{ } with pipeword"           "l{ |word }"
-must-fail "l{ } with dotword"            "l{ .word }"
-must-fail "l{ } with tagword"            "l{ 'word }"
-must-fail "l{ } with URI"                "l{ http://x.com }"
-must-fail "l{ } with email"              "l{ x@y.com }"
-must-fail "l{ } with file path"          "l{ %file.rye }"
-must-fail "l{ } with cpath"              "l{ a/b }"
-
-; ─── d{ } rejects non-literal keys ───────────────────────────────────────────
+; ─── L{ } rejects non-literal values ─────────────────────────────────────────
 
 print ""
-print "-- d{ } rejects invalid keys --"
-must-fail "d{ } with integer key"        "d{ 123 a }"
-must-fail "d{ } with decimal key"        "d{ 1.5 a }"
-must-fail "d{ } with group key"          "d{ ( 1 ) a }"
-must-fail "d{ } with bblock key"         "d{ [ a ] 1 }"
-must-fail "d{ } with evaluated-list key" "d{ l[ a ] 1 }"
-must-fail "d{ } with getword key"        "d{ ?key 1 }"
-must-fail "d{ } with lsetword key"       "d{ :key 1 }"
-must-fail "d{ } with modword key"        "d{ key:: 1 }"
-must-fail "d{ } with opword key"         "d{ + 1 }"
-must-fail "d{ } with URI key"            "d{ http://x 1 }"
-must-fail "d{ } with cpath key"          "d{ a/b 1 }"
-must-fail "d{ } with file path key"      "d{ %file 1 }"
+print "-- L{ } rejects non-literal values --"
+must-fail "L{ } with word"               "L{ some-word }"
+must-fail "L{ } with evaluated list"     "L{ L[ 1 2 ] }"
+must-fail "L{ } with evaluated dict"     "L{ D[ 'a 1 ] }"
+must-fail "L{ } with bblock"             "L{ [ 1 ] }"
+must-fail "L{ } with group"              "L{ ( 1 ) }"
+must-fail "L{ } with passive block"      "L{ { 1 } }"
+must-fail "L{ } with opword"             "L{ 1 + 2 }"
+must-fail "L{ } with getword"            "L{ ?word }"
+must-fail "L{ } with setword"            "L{ word: }"
+must-fail "L{ } with pipeword"           "L{ |word }"
+must-fail "L{ } with dotword"            "L{ .word }"
+must-fail "L{ } with tagword"            "L{ 'word }"
+must-fail "L{ } with URI"                "L{ http://x.com }"
+must-fail "L{ } with email"              "L{ x@y.com }"
+must-fail "L{ } with file path"          "L{ %file.rye }"
+must-fail "L{ } with cpath"              "L{ a/b }"
 
-; ─── d{ } rejects non-literal values ─────────────────────────────────────────
+; ─── D{ } rejects non-literal keys ───────────────────────────────────────────
 
 print ""
-print "-- d{ } rejects non-literal values --"
-must-fail "d{ } with word value"            "d{ a some-word }"
-must-fail "d{ } with bblock value"          "d{ a [ 1 ] }"
-must-fail "d{ } with group value"           "d{ a ( 1 ) }"
-must-fail "d{ } with evaluated-list value"  "d{ a l[ 1 2 ] }"
-must-fail "d{ } with evaluated-dict value"  "d{ a d[ 'b 1 ] }"
-must-fail "d{ } with getword value"         "d{ a ?word }"
-must-fail "d{ } with pipeword value"        "d{ a |word }"
-must-fail "d{ } with opword value"          "d{ a + }"
+print "-- D{ } rejects invalid keys --"
+must-fail "D{ } with integer key"        "D{ 123 a }"
+must-fail "D{ } with decimal key"        "D{ 1.5 a }"
+must-fail "D{ } with group key"          "D{ ( 1 ) a }"
+must-fail "D{ } with bblock key"         "D{ [ a ] 1 }"
+must-fail "D{ } with evaluated-list key" "D{ L[ a ] 1 }"
+must-fail "D{ } with getword key"        "D{ ?key 1 }"
+must-fail "D{ } with lsetword key"       "D{ :key 1 }"
+must-fail "D{ } with modword key"        "D{ key:: 1 }"
+must-fail "D{ } with opword key"         "D{ + 1 }"
+must-fail "D{ } with URI key"            "D{ http://x 1 }"
+must-fail "D{ } with cpath key"          "D{ a/b 1 }"
+must-fail "D{ } with file path key"      "D{ %file 1 }"
+
+; ─── D{ } rejects non-literal values ─────────────────────────────────────────
+
+print ""
+print "-- D{ } rejects non-literal values --"
+must-fail "D{ } with word value"            "D{ a some-word }"
+must-fail "D{ } with bblock value"          "D{ a [ 1 ] }"
+must-fail "D{ } with group value"           "D{ a ( 1 ) }"
+must-fail "D{ } with evaluated-list value"  "D{ a L[ 1 2 ] }"
+must-fail "D{ } with evaluated-dict value"  "D{ a D[ 'b 1 ] }"
+must-fail "D{ } with getword value"         "D{ a ?word }"
+must-fail "D{ } with pipeword value"        "D{ a |word }"
+must-fail "D{ } with opword value"          "D{ a + }"
 
 print ""

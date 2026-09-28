@@ -4,8 +4,8 @@
 ;   must-fail "label" "input"           - asserts Load fails with an error
 ;   must-parse "label" "input" 'type   - asserts Load succeeds and first token is that type
 ;
-; All tokens in Rye MUST be separated by whitespace from adjacent tokens.
-; These tests verify the parser enforces that rule strictly.
+; Tokens need whitespace except next to { } [ ] ( ) and ,.
+; These tests cover the remaining whitespace requirements and invalid forms.
 
 print "## Bad Token / Near-Valid Error Tests"
 
@@ -47,11 +47,7 @@ print "-- Numbers: missing space after --"
 must-fail "1+2   (num directly followed by op)"          "1+2"
 must-fail "1-2   (num directly followed by -)"           "1-2"
 must-fail "1*2   (num directly followed by *)"           "1*2"
-must-fail "1{    (num directly followed by {)"           "1{"
-must-fail "1}    (num directly followed by })"           "1}"
-must-fail "1[    (num directly followed by [)"           "1["
 must-fail "42word (num directly followed by letters)"   "42word"
-must-fail "1,2   (num directly followed by ,)"           "1,2"
 must-fail "1.word (num . non-digit - not a decimal)"    "1.word"
 must-fail "99++  (num directly followed by ++)"          "99++"
 must-fail "3.14word (decimal directly followed by word)" "3.14word"
@@ -61,30 +57,15 @@ must-fail "3.14word (decimal directly followed by word)" "3.14word"
 print ""
 print "-- Strings: missing space after closing quote --"
 must-fail `"hello"world  (str+word)`     `"hello"world`
-must-fail `"hello"{}     (str+{)`        `"hello"{}`
 must-fail `"a""b"        (str+str)`      `"a""b"`
 must-fail `"x"42         (str+num)`      `"x"42`
 must-fail `"x"'tag       (str+tagword)`  `"x"'tag`
 must-fail `"x"+          (str+op)`       `"x"+`
 
-; ─── block delimiters without spacing (opening) ───────────────────────────────
+; ─── words still need spacing before non-delimiters ───────────────────────────
 
 print ""
-print "-- Block openers: no space after {"
-must-fail "{word  ({ directly followed by word)"  "{word"
-must-fail "{1     ({ directly followed by digit)" "{1"
-must-fail `{"str  ({ directly followed by ")`     `{"hello"`
-must-fail "[word  ([ directly followed by word)"  "[word"
-must-fail "[1     ([ directly followed by digit)" "[1"
-
-; ─── words without required spacing (closing delimiters) ──────────────────────
-
-print ""
-print "-- Words: no space before block delimiter --"
-must-fail "word{  (word directly followed by {)"  "word{"
-must-fail "word}  (word directly followed by })"  "word}"
-must-fail "word[  (word directly followed by [)"  "word["
-must-fail "word]  (word directly followed by ])"  "word]"
+print "-- Words: no space before non-delimiter --"
 must-fail "word|  (word directly followed by |)"  "word|"
 
 ; ─── invalid multi-character operator combinations ───────────────────────────
@@ -120,20 +101,10 @@ must-parse "==word parses as opword (letters make it word-like)"  "==word"  'opw
 print ""
 print "-- Tag-words: no space after --"
 must-fail "'tag1'tag2  (tagword+tagword)" "'tag1'tag2"
-must-fail "'tag{ (tagword+{)"           "'tag{"
 
-; ─── get-words without spacing ────────────────────────────────────────────────
+; ─── setwords and modwords ───────────────────────────────────────────────────
 
-print ""
-print "-- Get-words: no space after --"
-must-fail "?word{ (getword+{)" "?word{"
-
-; ─── setwords and modwords without spacing ────────────────────────────────────
-
-print ""
-print "-- Setword/modword delimiters --"
-; Note: x:y is NOT an error - it parses as word 'x' + lsetword ':y'
-; But x:: immediately followed by non-space IS an lmodword check
-must-fail ":word{  (lsetword+{)" ":word{"
+; Note: x:y is NOT an error - it parses as word 'x' + lsetword ':y'.
+; x:: immediately followed by non-delimiter characters is checked by lmodword.
 
 print ""

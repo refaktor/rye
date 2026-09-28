@@ -2642,7 +2642,7 @@ func NewDictFromSeries(block TSeries, idx *Idxs) Dict {
 	return Dict{data, Word{0, false}}
 }
 
-// IsDictKey reports whether the object is a valid passive-dict (d{ }) key:
+// IsDictKey reports whether the object is a valid passive-dict (D{ }) key:
 // strings, tagwords, words and setwords.
 func IsDictKey(obj Object) bool {
 	switch obj.(type) {

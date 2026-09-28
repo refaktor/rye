@@ -343,73 +343,13 @@ func (l *Lexer) NextToken() NoPEGToken {
 	case ']':
 		return l.readOneCharToken(NPEG_TOKEN_BBLOCK_END, ERR_SPACING_BLK)
 	case '(':
-		// Check if this is a paren-word like (word) or just a group delimiter
-		if isLetter(l.peekChar()) {
-			// This is the start of a paren-word like (word), (word:), (word/word).
-			// The surrounding parentheses are delimiters and must not become part
-			// of the produced token.
-			l.readChar()   // Skip opening '('
-			l.startToken() // token starts after '('
-
-			// Read the word body (word characters, but stop before the closing ')')
-			for isWordCharacter(l.ch) && l.ch != ')' {
-				l.readChar()
-			}
-
-			// Check if it's a set-word (word:)
-			if l.ch == ':' {
-				if l.peekChar() == ':' { // word::
-					if isWhitespaceOrEOF(l.peekCharOffs(1)) || l.peekCharOffs(1) == ')' {
-						l.readChar()
-						l.readChar()
-						end := l.pos
-						if l.ch == ')' {
-							l.readChar()
-						}
-						return l.makeToken(NPEG_TOKEN_MODWORD, l.input[l.tokenStart:end])
-					}
-				}
-				if isWhitespaceOrEOF(l.peekChar()) || l.peekChar() == ')' {
-					l.readChar()
-					end := l.pos
-					if l.ch == ')' {
-						l.readChar()
-					}
-					return l.makeToken(NPEG_TOKEN_SETWORD, l.input[l.tokenStart:end])
-				}
-			}
-
-			// Check if it's a context path (word/word or word/word/word...)
-			if l.ch == '/' {
-				l.readChar()
-
-				// Read the rest of the path (can have multiple parts like one/two/three)
-				for (isWordCharacter(l.ch) || l.ch == '/' || l.ch == '@') && l.ch != ')' {
-					l.readChar()
-				}
-
-				end := l.pos
-				if l.ch == ')' {
-					l.readChar()
-				}
-
-				return l.makeToken(NPEG_TOKEN_CPATH, l.input[l.tokenStart:end])
-			}
-
-			// Plain word (word)
-			end := l.pos
-			if l.ch == ')' {
-				l.readChar()
-			}
-			return l.makeToken(NPEG_TOKEN_WORD, l.input[l.tokenStart:end])
-		}
 		return l.readOneCharToken(NPEG_TOKEN_GROUP_START, ERR_SPACING_BLK)
 	case ')':
 		return l.readOneCharToken(NPEG_TOKEN_GROUP_END, ERR_SPACING_BLK)
 	case ',':
 		return l.readOneCharToken(NPEG_TOKEN_COMMA, ERR_SPACING_OTHR)
 	case '_':
-		if isWhitespaceCh(l.peekChar()) {
+		if isTokenBoundary(l.peekChar()) {
 			l.readChar()
 			return l.makeToken(NPEG_TOKEN_VOID, "_")
 		}
@@ -430,54 +370,25 @@ func (l *Lexer) NextToken() NoPEGToken {
 		if l.ch == '.' && l.peekChar() == '[' {
 			l.readChar() // Skip '.'
 			l.readChar() // Skip '['
-			if isWhitespaceCh(l.ch) {
-				return l.makeToken(NPEG_TOKEN_OPBBLOCK_START, ".[")
-			}
-			// If not followed by whitespace, reset and treat as regular opword
-			l.pos -= 2
-			l.readPos -= 2
-			l.col -= 2
-			l.ch = '.'
+			return l.makeToken(NPEG_TOKEN_OPBBLOCK_START, ".[")
 		}
 		// Special handling for ".( )" (OPGROUP) pattern
 		if l.ch == '.' && l.peekChar() == '(' {
 			l.readChar() // Skip '.'
 			l.readChar() // Skip '('
-			if isWhitespaceCh(l.ch) {
-				return l.makeToken(NPEG_TOKEN_OPGROUP_START, ".(")
-			}
-			// If not followed by whitespace, reset and treat as regular opword
-			l.pos -= 2
-			l.readPos -= 2
-			l.col -= 2
-			l.ch = '.'
+			return l.makeToken(NPEG_TOKEN_OPGROUP_START, ".(")
 		}
 		// Special handling for ".{ }" (OPBLOCK) pattern
 		if l.ch == '.' && l.peekChar() == '{' {
 			l.readChar() // Skip '.'
 			l.readChar() // Skip '{'
-			if isWhitespaceCh(l.ch) {
-				return l.makeToken(NPEG_TOKEN_OPBLOCK_START, ".{")
-			}
-			// If not followed by whitespace, reset and treat as regular opword
-			l.pos -= 2
-			l.readPos -= 2
-			l.col -= 2
-			l.ch = '.'
+			return l.makeToken(NPEG_TOKEN_OPBLOCK_START, ".{")
 		}
 		// Special handling for "//" operator
-		if l.ch == '/' && l.peekChar() == '/' {
+		if l.ch == '/' && l.peekChar() == '/' && isTokenBoundary(l.peekCharOffs(1)) {
 			l.readChar() // Skip first '/'
 			l.readChar() // Skip second '/'
-			if isWhitespaceCh(l.ch) {
-				return l.makeToken(NPEG_TOKEN_OPWORD, "//")
-			}
-			// If not followed by whitespace, continue with normal opword parsing
-			// Reset position to handle as regular opword
-			l.pos -= 2
-			l.readPos -= 2
-			l.col -= 2
-			l.ch = '/'
+			return l.makeToken(NPEG_TOKEN_OPWORD, "//")
 		}
 		return l.readOpWord()
 	case '|':
@@ -486,14 +397,14 @@ func (l *Lexer) NextToken() NoPEGToken {
 		return l.readTagWord()
 	case '<':
 		pch := l.peekChar()
-		if isWhitespaceOrEOF(pch) || pch == '-' || pch == '~' || pch == '=' || pch == '<' || pch == '>' {
+		if isTokenBoundary(pch) || pch == '-' || pch == '~' || pch == '=' || pch == '<' || pch == '>' {
 			return l.readOpWord()
 			// l.readChar()
 			// return l.makeToken(NPEG_TOKEN_OPWORD, "<")
 		}
 		return l.readXWord()
 	case '%':
-		if isWhitespaceOrEOF(l.peekChar()) {
+		if isTokenBoundary(l.peekChar()) {
 			l.readChar()
 			return l.makeToken(NPEG_TOKEN_OPWORD, "%")
 		}
@@ -502,21 +413,21 @@ func (l *Lexer) NextToken() NoPEGToken {
 		return l.readComment()
 	case '~':
 		pch := l.peekChar()
-		if isWhitespaceOrEOF(pch) {
+		if pch == '(' {
+			// ~( is a kindword, even though '(' is normally a token boundary.
+			return l.readKindWord()
+		} else if isTokenBoundary(pch) {
 			l.readChar()
 			return l.makeToken(NPEG_TOKEN_OPWORD, "~")
 		} else if pch == '>' {
 			// ~> is an opword
 			return l.readOpWord()
-		} else if pch == '(' {
-			// ~( is a kindword
-			return l.readKindWord()
 		} else {
 			return l.readPipeWord()
 		}
 	case '=':
 		pch := l.peekChar()
-		if isWhitespaceOrEOF(pch) {
+		if isTokenBoundary(pch) {
 			l.readChar()
 			return l.makeToken(NPEG_TOKEN_OPWORD, "=")
 		} else if pch == '>' || pch == '=' {
@@ -527,7 +438,7 @@ func (l *Lexer) NextToken() NoPEGToken {
 		}
 	case '>':
 		pch := l.peekChar()
-		if isWhitespaceOrEOF(pch) || pch == '=' || pch == '>' {
+		if isTokenBoundary(pch) || pch == '=' || pch == '>' {
 			return l.readOpWord()
 		} else {
 			return l.readPipeWord()
@@ -544,7 +455,7 @@ func (l *Lexer) NextToken() NoPEGToken {
 			}
 
 			// Ensure the token is followed by whitespace
-			if !isWhitespaceOrEOF(l.ch) {
+			if !isTokenBoundary(l.ch) {
 				invalidChar := l.ch
 				tokenValue := l.input[l.tokenStart:l.pos]
 				errMsg := fmt.Sprintf("Missing space after cpath '%s'. Found '%c' immediately after. Cpaths must be followed by whitespace.", tokenValue, invalidChar)
@@ -555,7 +466,7 @@ func (l *Lexer) NextToken() NoPEGToken {
 		}
 		// Just '@' by itself is an opword
 		l.readChar()
-		if isWhitespaceOrEOF(l.ch) {
+		if isTokenBoundary(l.ch) {
 			return l.makeToken(NPEG_TOKEN_OPWORD, "@")
 		}
 		// If followed by other characters without whitespace, it's an error
@@ -572,7 +483,7 @@ func (l *Lexer) NextToken() NoPEGToken {
 			if pch == '-' {
 				// Could be a long flag (--verbose), -- operator, or a multi-char op like -->
 				third := l.peekCharOffs(1)
-				if third == 0 || isWhitespaceCh(third) {
+				if isTokenBoundary(third) {
 					// -- followed by whitespace/EOF is the -- operator
 					return l.readOpWord()
 				}
@@ -588,7 +499,7 @@ func (l *Lexer) NextToken() NoPEGToken {
 			} else if isLetter(pch) {
 				// Could be a short flag (-v)
 				return l.readFlagword()
-			} else if isWhitespaceCh(pch) {
+			} else if isTokenBoundary(pch) {
 				l.readChar()
 				// fmt.Println("***2")
 				return l.makeToken(NPEG_TOKEN_OPWORD, "-")
@@ -602,93 +513,63 @@ func (l *Lexer) NextToken() NoPEGToken {
 		if isDigit(l.ch) {
 			return l.readNumber()
 		} else if isLetter(l.ch) {
-			// Special handling for "l{ }" (LIST_BLOCK) pattern - literal list
-			if l.ch == 'l' && l.peekChar() == '{' {
-				l.readChar() // Skip 'l'
+			// Uppercase L and D are reserved collection prefixes; lowercase l and d
+			// remain ordinary words before a standalone delimiter.
+			if l.ch == 'L' && l.peekChar() == '{' {
+				l.readChar() // Skip 'L'
 				l.readChar() // Skip '{'
-				if isWhitespaceCh(l.ch) {
-					return l.makeToken(NPEG_TOKEN_LIST_BLOCK_START, "l{")
-				}
-				// If not followed by whitespace, reset and treat as regular word
-				l.pos -= 2
-				l.readPos -= 2
-				l.col -= 2
-				l.ch = 'l'
+				return l.makeToken(NPEG_TOKEN_LIST_BLOCK_START, "L{")
 			}
-			// Special handling for "l[ ]" (LIST_BBLOCK) pattern - evaluated list
-			if l.ch == 'l' && l.peekChar() == '[' {
-				l.readChar() // Skip 'l'
+			if l.ch == 'L' && l.peekChar() == '[' {
+				l.readChar() // Skip 'L'
 				l.readChar() // Skip '['
-				if isWhitespaceCh(l.ch) {
-					return l.makeToken(NPEG_TOKEN_LIST_BBLOCK_START, "l[")
-				}
-				// If not followed by whitespace, reset and treat as regular word
-				l.pos -= 2
-				l.readPos -= 2
-				l.col -= 2
-				l.ch = 'l'
+				return l.makeToken(NPEG_TOKEN_LIST_BBLOCK_START, "L[")
 			}
-			// Special handling for "d{ }" (DICT_BLOCK) pattern - literal dict
-			if l.ch == 'd' && l.peekChar() == '{' {
-				l.readChar() // Skip 'd'
+			if l.ch == 'D' && l.peekChar() == '{' {
+				l.readChar() // Skip 'D'
 				l.readChar() // Skip '{'
-				if isWhitespaceCh(l.ch) {
-					return l.makeToken(NPEG_TOKEN_DICT_BLOCK_START, "d{")
-				}
-				// If not followed by whitespace, reset and treat as regular word
-				l.pos -= 2
-				l.readPos -= 2
-				l.col -= 2
-				l.ch = 'd'
+				return l.makeToken(NPEG_TOKEN_DICT_BLOCK_START, "D{")
 			}
-			// Special handling for "d[ ]" (DICT_BBLOCK) pattern - evaluated dict
-			if l.ch == 'd' && l.peekChar() == '[' {
-				l.readChar() // Skip 'd'
+			if l.ch == 'D' && l.peekChar() == '[' {
+				l.readChar() // Skip 'D'
 				l.readChar() // Skip '['
-				if isWhitespaceCh(l.ch) {
-					return l.makeToken(NPEG_TOKEN_DICT_BBLOCK_START, "d[")
-				}
-				// If not followed by whitespace, reset and treat as regular word
-				l.pos -= 2
-				l.readPos -= 2
-				l.col -= 2
-				l.ch = 'd'
+				return l.makeToken(NPEG_TOKEN_DICT_BBLOCK_START, "D[")
 			}
 			// Try to parse as word or special type
 			word := l.readWord()
 
 			// Check if it's a set-word (word:)
-			if l.ch == ':' {
+			if word.Type == NPEG_TOKEN_WORD && l.ch == ':' {
 				if l.peekChar() == ':' { // word::
-					if isWhitespaceOrEOF(l.peekCharOffs(1)) {
+					if isTokenBoundary(l.peekCharOffs(1)) {
 						l.readChar()
 						l.readChar()
 						return l.makeToken(NPEG_TOKEN_MODWORD, l.input[l.tokenStart:l.pos])
 					}
 				}
-				if isWhitespaceOrEOF(l.peekChar()) {
+				if isTokenBoundary(l.peekChar()) {
 					l.readChar()
 					return l.makeToken(NPEG_TOKEN_SETWORD, l.input[l.tokenStart:l.pos])
 				}
 			}
 
 			// Check if it's a URI (word://)
-			if l.ch == ':' && l.peekChar() == '/' && l.peekCharOffs(1) == '/' {
+			if word.Type == NPEG_TOKEN_WORD && l.ch == ':' && l.peekChar() == '/' && l.peekCharOffs(1) == '/' {
 				l.readChar() // :
 				l.readChar() // /
 				l.readChar() // /
 
 				// Read the rest of the URI
-				for l.ch != 0 && !isWhitespaceCh(l.ch) && l.ch != '{' && l.ch != '}' && l.ch != '[' && l.ch != ']' {
+				for l.ch != 0 && !isTokenBoundary(l.ch) {
 					l.readChar()
 				}
 
 				return l.makeToken(NPEG_TOKEN_URI, l.input[l.tokenStart:l.pos])
 			}
 
-			if l.ch == '@' {
+			if word.Type == NPEG_TOKEN_WORD && l.ch == '@' {
 				// Read the rest of the URI
-				for l.ch != 0 && !isWhitespaceCh(l.ch) && l.ch != '{' && l.ch != '}' && l.ch != '[' && l.ch != ']' {
+				for l.ch != 0 && !isTokenBoundary(l.ch) {
 					l.readChar()
 				}
 
@@ -697,7 +578,7 @@ func (l *Lexer) NextToken() NoPEGToken {
 			}
 
 			// Check if it's a context path (word/word or word/word/word...)
-			if l.ch == '/' {
+			if word.Type == NPEG_TOKEN_WORD && l.ch == '/' {
 				l.readChar()
 
 				// Read the rest of the path (can have multiple parts like one/two/three,
@@ -710,7 +591,7 @@ func (l *Lexer) NextToken() NoPEGToken {
 			}
 
 			// Check if it's a data path (word.seg.seg... e.g. person.0."age")
-			if l.ch == '.' && isDataPathSegmentStart(l.peekChar()) {
+			if word.Type == NPEG_TOKEN_WORD && l.ch == '.' && isDataPathSegmentStart(l.peekChar()) {
 				return l.readDataPath()
 			}
 
@@ -741,8 +622,7 @@ func isDigit(ch byte) bool {
 // inside regular words.
 func isWordCharacter(ch byte) bool {
 	return isLetter(ch) || isDigit(ch) || ch == '-' || ch == '+' ||
-		ch == '!' || ch == '*' || ch == '%' || ch == '>' || ch == '<' || ch == '\\' || ch == '?' || ch == '=' || ch == '_' ||
-		ch == '(' || ch == ')'
+		ch == '!' || ch == '*' || ch == '%' || ch == '>' || ch == '<' || ch == '\\' || ch == '?' || ch == '=' || ch == '_'
 }
 
 // isWhitespaceCh checks if a character is whitespace
@@ -756,9 +636,15 @@ func isWhitespaceOrEOF(ch byte) bool {
 	return isWhitespaceCh(ch) || ch == 0
 }
 
-// isTokenDelimiter checks if a character is a token delimiter (whitespace or end of input)
-func isTokenDelimiter(ch byte) bool {
-	return isWhitespaceCh(ch) || ch == 0
+// isStandaloneDelimiter checks the seven characters that separate tokens without spaces.
+func isStandaloneDelimiter(ch byte) bool {
+	return ch == '{' || ch == '}' || ch == '[' || ch == ']' ||
+		ch == '(' || ch == ')' || ch == ','
+}
+
+// isTokenBoundary includes whitespace, EOF and the space-independent delimiters.
+func isTokenBoundary(ch byte) bool {
+	return isWhitespaceOrEOF(ch) || isStandaloneDelimiter(ch)
 }
 
 // isSpecialChar checks if a character is a special character that should be treated as a separate token
@@ -851,34 +737,8 @@ func isValidOpWord(tokenValue string) bool {
 	return false
 }
 
-func (l *Lexer) readOneCharToken(tokenType int, errType int) NoPEGToken {
-	delimiter := l.ch
+func (l *Lexer) readOneCharToken(tokenType int, _ int) NoPEGToken {
 	l.readChar()
-	c := l.ch
-	if c != 0 && !isWhitespaceCh(c) {
-		// Build descriptive error message with the delimiter and what followed
-		var delimiterName string
-		switch delimiter {
-		case '{':
-			delimiterName = "block start '{'"
-		case '}':
-			delimiterName = "block end '}'"
-		case '[':
-			delimiterName = "bblock start '['"
-		case ']':
-			delimiterName = "bblock end ']'"
-		case '(':
-			delimiterName = "group start '('"
-		case ')':
-			delimiterName = "group end ')'"
-		case ',':
-			delimiterName = "comma ','"
-		default:
-			delimiterName = fmt.Sprintf("'%c'", delimiter)
-		}
-		errMsg := fmt.Sprintf("Missing space after %s. Found '%c' immediately after. Block delimiters must be followed by whitespace.", delimiterName, c)
-		return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, errType)
-	}
 	return l.makeToken(tokenType, "")
 }
 
@@ -897,9 +757,9 @@ func (l *Lexer) readWord() NoPEGToken {
 	}
 
 	// Ensure the word is followed by a token delimiter or a valid word terminator.
-	// e.g. word{ word} word[ word] are all invalid - missing space before delimiter.
-	// '.' is a valid terminator here: the caller detects data-paths (word.seg.seg).
-	if !isTokenDelimiter(l.ch) && l.ch != ':' && l.ch != '@' && l.ch != '/' && l.ch != '.' {
+	// The seven standalone delimiters end words even when no space follows.
+	// '.' is also a valid terminator here: the caller detects data-paths (word.seg.seg).
+	if !isTokenBoundary(l.ch) && l.ch != ':' && l.ch != '@' && l.ch != '/' && l.ch != '.' {
 		invalidChar := l.ch
 		tokenValue := l.input[l.tokenStart:l.pos]
 		errMsg := fmt.Sprintf("Missing space after word '%s'. Found '%c' immediately after. Words must be followed by whitespace.", tokenValue, invalidChar)
@@ -988,7 +848,7 @@ func (l *Lexer) readDataPath() NoPEGToken {
 	}
 
 	// Ensure the token is followed by whitespace
-	if !isWhitespaceOrEOF(l.ch) {
+	if !isTokenBoundary(l.ch) {
 		invalidChar := l.ch
 		tokenValue := l.input[l.tokenStart:l.pos]
 		errMsg := fmt.Sprintf("Missing space after data path '%s'. Found '%c' immediately after. Data paths must be followed by whitespace.", tokenValue, invalidChar)
@@ -1034,7 +894,7 @@ func (l *Lexer) readString() NoPEGToken {
 	}
 
 	// Ensure the string is followed by a token delimiter
-	if !isWhitespaceOrEOF(l.ch) {
+	if !isTokenBoundary(l.ch) {
 		invalidChar := l.ch
 		errMsg := fmt.Sprintf("Missing space after string. Found '%c' immediately after the closing quote. Strings must be followed by whitespace.", invalidChar)
 		return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, determineLexerError(l.ch))
@@ -1068,7 +928,7 @@ func (l *Lexer) readNumber() NoPEGToken {
 		}
 
 		// Ensure the decimal is followed by a token delimiter
-		if !isWhitespaceOrEOF(l.ch) {
+		if !isTokenBoundary(l.ch) {
 			invalidChar := l.ch
 			decimalValue := l.input[l.tokenStart:l.pos]
 			errMsg := fmt.Sprintf("Missing space after decimal number '%s'. Found '%c' immediately after. Numbers must be followed by whitespace.", decimalValue, invalidChar)
@@ -1079,7 +939,7 @@ func (l *Lexer) readNumber() NoPEGToken {
 	}
 
 	// Ensure the number is followed by a token delimiter
-	if !isWhitespaceOrEOF(l.ch) {
+	if !isTokenBoundary(l.ch) {
 		invalidChar := l.ch
 		numberValue := l.input[l.tokenStart:l.pos]
 		errMsg := fmt.Sprintf("Missing space after number '%s'. Found '%c' immediately after. Numbers must be followed by whitespace.", numberValue, invalidChar)
@@ -1121,7 +981,7 @@ func (l *Lexer) readLSetWord() NoPEGToken {
 	}
 
 	// Ensure the token is followed by whitespace
-	if !isWhitespaceOrEOF(l.ch) {
+	if !isTokenBoundary(l.ch) {
 		invalidChar := l.ch
 		tokenValue := l.input[l.tokenStart:l.pos]
 		errMsg := fmt.Sprintf("Missing space after lset-word '%s'. Found '%c' immediately after. Lset-words (starting with ':') must be followed by whitespace.", tokenValue, invalidChar)
@@ -1141,7 +1001,7 @@ func (l *Lexer) readLModWord() NoPEGToken {
 	}
 
 	// Ensure the token is followed by whitespace
-	if !isWhitespaceOrEOF(l.ch) {
+	if !isTokenBoundary(l.ch) {
 		invalidChar := l.ch
 		tokenValue := l.input[l.tokenStart:l.pos]
 		errMsg := fmt.Sprintf("Missing space after lmod-word '%s'. Found '%c' immediately after. Lmod-words (starting with '::') must be followed by whitespace.", tokenValue, invalidChar)
@@ -1173,7 +1033,7 @@ func (l *Lexer) readGetWord() NoPEGToken {
 	}
 
 	// Ensure the token is followed by whitespace
-	if !isWhitespaceOrEOF(l.ch) {
+	if !isTokenBoundary(l.ch) {
 		invalidChar := l.ch
 		tokenValue := l.input[l.tokenStart:l.pos]
 		errMsg := fmt.Sprintf("Missing space after get-word '%s'. Found '%c' immediately after. Get-words (starting with '?') must be followed by whitespace.", tokenValue, invalidChar)
@@ -1214,7 +1074,7 @@ func (l *Lexer) readOpWord() NoPEGToken {
 	}
 
 	// Ensure the token is followed by whitespace
-	if !isWhitespaceOrEOF(l.ch) {
+	if !isTokenBoundary(l.ch) {
 		invalidChar := l.ch
 		tokenValue := l.input[l.tokenStart:l.pos]
 		errMsg := fmt.Sprintf("Missing space after op-word '%s'. Found '%c' immediately after. Op-words (operators) must be followed by whitespace.", tokenValue, invalidChar)
@@ -1271,7 +1131,7 @@ func (l *Lexer) readPipeWord() NoPEGToken {
 	}
 
 	// Ensure the token is followed by whitespace
-	if !isWhitespaceOrEOF(l.ch) {
+	if !isTokenBoundary(l.ch) {
 		invalidChar := l.ch
 		tokenValue := l.input[l.tokenStart:l.pos]
 		errMsg := fmt.Sprintf("Missing space after pipe-word '%s'. Found '%c' immediately after. Pipe-words (starting with '|' or '~') must be followed by whitespace.", tokenValue, invalidChar)
@@ -1303,7 +1163,7 @@ func (l *Lexer) readTagWord() NoPEGToken {
 	}
 
 	// Ensure the token is followed by whitespace
-	if !isWhitespaceOrEOF(l.ch) {
+	if !isTokenBoundary(l.ch) {
 		invalidChar := l.ch
 		tokenValue := l.input[l.tokenStart:l.pos]
 		errMsg := fmt.Sprintf("Missing space after tag-word '%s'. Found '%c' immediately after. Tag-words (starting with ''') must be followed by whitespace.", tokenValue, invalidChar)
@@ -1336,7 +1196,7 @@ func (l *Lexer) readKindWord() NoPEGToken {
 	}
 
 	// Ensure the token is followed by whitespace
-	if !isWhitespaceOrEOF(l.ch) {
+	if !isTokenBoundary(l.ch) {
 		invalidChar := l.ch
 		tokenValue := l.input[l.tokenStart:l.pos]
 		errMsg := fmt.Sprintf("Missing space after kind-word '%s'. Found '%c' immediately after. Kind-words (starting with '~(') must be followed by whitespace.", tokenValue, invalidChar)
@@ -1363,7 +1223,7 @@ func (l *Lexer) readXWord() NoPEGToken {
 		}
 
 		// Ensure the token is followed by whitespace
-		if !isWhitespaceOrEOF(l.ch) {
+		if !isTokenBoundary(l.ch) {
 			invalidChar := l.ch
 			tokenValue := l.input[l.tokenStart:l.pos]
 			errMsg := fmt.Sprintf("Missing space after ex-word '%s'. Found '%c' immediately after. Ex-words (starting with '</') must be followed by whitespace.", tokenValue, invalidChar)
@@ -1384,7 +1244,7 @@ func (l *Lexer) readXWord() NoPEGToken {
 	}
 
 	// Ensure the token is followed by whitespace
-	if !isWhitespaceOrEOF(l.ch) {
+	if !isTokenBoundary(l.ch) {
 		invalidChar := l.ch
 		tokenValue := l.input[l.tokenStart:l.pos]
 		errMsg := fmt.Sprintf("Missing space after x-word '%s'. Found '%c' immediately after. X-words (starting with '<') must be followed by whitespace.", tokenValue, invalidChar)
@@ -1398,12 +1258,12 @@ func (l *Lexer) readFPath() NoPEGToken {
 	l.readChar() // Skip percent sign
 
 	// Read the path part
-	for l.ch != 0 && !isWhitespaceCh(l.ch) && l.ch != '{' && l.ch != '}' && l.ch != '[' && l.ch != ']' {
+	for l.ch != 0 && !isTokenBoundary(l.ch) {
 		l.readChar()
 	}
 
 	// Ensure the token is followed by whitespace
-	if !isWhitespaceOrEOF(l.ch) {
+	if !isTokenBoundary(l.ch) {
 		invalidChar := l.ch
 		tokenValue := l.input[l.tokenStart:l.pos]
 		errMsg := fmt.Sprintf("Missing space after file-path '%s'. Found '%c' immediately after. File-paths (starting with '%%') must be followed by whitespace.", tokenValue, invalidChar)
@@ -1458,7 +1318,7 @@ func (l *Lexer) readFlagword() NoPEGToken {
 	}
 
 	// Ensure the token is followed by whitespace
-	if !isWhitespaceOrEOF(l.ch) {
+	if !isTokenBoundary(l.ch) {
 		invalidChar := l.ch
 		tokenValue := l.input[l.tokenStart:l.pos]
 		errMsg := fmt.Sprintf("Missing space after flag-word '%s'. Found '%c' immediately after. Flag-words (starting with '-') must be followed by whitespace.", tokenValue, invalidChar)
@@ -1573,19 +1433,19 @@ func (p *NoPEGParser) parseBlock(blockType int) (env.Object, error) {
 				closingDelimiter = "}"
 			case 6:
 				blockTypeName = "list"
-				openingDelimiter = "l{"
+				openingDelimiter = "L{"
 				closingDelimiter = "}"
 			case 7:
 				blockTypeName = "list-eval"
-				openingDelimiter = "l["
+				openingDelimiter = "L["
 				closingDelimiter = "]"
 			case 8:
 				blockTypeName = "dict"
-				openingDelimiter = "d{"
+				openingDelimiter = "D{"
 				closingDelimiter = "}"
 			case 9:
 				blockTypeName = "dict-eval"
-				openingDelimiter = "d["
+				openingDelimiter = "D["
 				closingDelimiter = "]"
 			}
 			return nil, fmt.Errorf("unexpected end of input while parsing %s (opened with '%s' at line %d, column %d). Missing closing delimiter '%s'", blockTypeName, openingDelimiter, blockLine, blockCol, closingDelimiter)
@@ -1615,23 +1475,23 @@ func (p *NoPEGParser) parseBlock(blockType int) (env.Object, error) {
 			return nil, err
 		}
 
-		// Passive list l{ } and passive dict d{ } only accept literal values.
+		// Passive list L{ } and passive dict D{ } only accept literal values.
 		// Report a clear error instead of silently dropping anything else.
 		if obj != nil {
 			if blockType == 6 && !env.IsCollectionLiteral(obj) {
 				p.l.line = objLine
 				p.l.col = objCol
-				return nil, fmt.Errorf("non-literal value %s in passive list l{ }; only literal values (strings, numbers, nested lists and dicts) are allowed", obj.Inspect(*p.wordIndex))
+				return nil, fmt.Errorf("non-literal value %s in passive list L{ }; only literal values (strings, numbers, nested lists and dicts) are allowed", obj.Inspect(*p.wordIndex))
 			}
 			if blockType == 8 && len(objects)%2 == 0 && !env.IsDictKey(obj) {
 				p.l.line = objLine
 				p.l.col = objCol
-				return nil, fmt.Errorf("invalid key %s in passive dict d{ }; keys must be strings, tagwords, words, or setwords", obj.Inspect(*p.wordIndex))
+				return nil, fmt.Errorf("invalid key %s in passive dict D{ }; keys must be strings, tagwords, words, or setwords", obj.Inspect(*p.wordIndex))
 			}
 			if blockType == 8 && len(objects)%2 == 1 && !env.IsCollectionLiteral(obj) {
 				p.l.line = objLine
 				p.l.col = objCol
-				return nil, fmt.Errorf("non-literal value %s in passive dict d{ }; only literal values (strings, numbers, nested lists and dicts) are allowed", obj.Inspect(*p.wordIndex))
+				return nil, fmt.Errorf("non-literal value %s in passive dict D{ }; only literal values (strings, numbers, nested lists and dicts) are allowed", obj.Inspect(*p.wordIndex))
 			}
 		}
 

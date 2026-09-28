@@ -40,18 +40,15 @@ assert\display "mismatched ( }" {
 } 'error
 
 ; ============================================
-; Spacing errors (should be detected)
+; Spacing errors (only non-delimiters require spaces)
 ; ============================================
 
-; Note: These test if the parser catches missing spacing
-; The parser should error on these malformed tokens
-
-assert\display "number without space before block" {
-	try { do { load "123{ }" } } |type?
+assert\display "number without space before letter errors" {
+	try { load "123abc" } |type?
 } 'error
 
-assert\display "string without space before block" {
-	try { do { load `"hello"{ }` } } |type?
+assert\display "string without space before word errors" {
+	try { load `"hello"word` } |type?
 } 'error
 
 ; ============================================
@@ -106,16 +103,16 @@ assert\display "error message contains line info" {
 ; Error message content checks
 ; ============================================
 
-assert\display "missing space after number - error message mentions Missing space" {
-	try { do { load "123{}" } } |message? |contains "Missing space"
+assert\display "missing space after number before word mentions Missing space" {
+	try { load "123abc" } |message? |contains "Missing space"
 } true
 
-assert\display "missing space after string - produces error" {
-	try { do { load `"hello"{}` } } |type?
+assert\display "missing space after string before word produces error" {
+	try { load `"hello"word` } |type?
 } 'error
 
-assert\display "missing space after block delimiter - produces error" {
-	try { do { load "{ 1}2 }" } } |type?
+assert\display "missing space around non-delimiter operator produces error" {
+	try { load "123+123" } |type?
 } 'error
 
 ; ============================================
