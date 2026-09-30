@@ -1,7 +1,7 @@
 //go:build no_os || b_wasm
 // +build no_os b_wasm
 
-package batteries
+package baseio
 
 import (
 	"github.com/refaktor/rye/env"

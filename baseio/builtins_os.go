@@ -1,6 +1,6 @@
 //go:build !no_os && !b_wasm
 
-package batteries
+package baseio
 
 import (
 	"archive/tar"
@@ -17,9 +17,9 @@ import (
 	"time"
 
 	"github.com/atotto/clipboard"
-	find "github.com/refaktor/rye/util/finder"
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
+	find "github.com/refaktor/rye/util/finder"
 
 	"github.com/shirou/gopsutil/v3/disk"
 	"github.com/shirou/gopsutil/v3/host"

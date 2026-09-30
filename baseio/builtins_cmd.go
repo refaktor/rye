@@ -1,4 +1,4 @@
-package batteries
+package baseio
 
 import (
 	"errors"

@@ -1,7 +1,7 @@
 //go:build no_http
 // +build no_http
 
-package batteries
+package baseio
 
 import (
 	"github.com/refaktor/rye/env"

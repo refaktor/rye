@@ -36,6 +36,50 @@ type ShellEd struct {
 	Return  env.Object
 }
 
+// completeContextPath resolves the parent of the segment being typed and offers
+// only words bound in that context. A trailing slash matches every local word.
+func completeContextPath(es *env.ProgramState, linePrefix, opPrefix, filterPart string) []string {
+	path := strings.Split(filterPart, "/")
+	if len(path) < 2 {
+		return nil
+	}
+	ctx := es.Ctx
+	for _, segment := range path[:len(path)-1] {
+		if ctx == nil || segment == "" {
+			return nil
+		}
+		if segment == "_@" {
+			ctx = ctx.Parent
+			continue
+		}
+		index, ok := es.Idx.GetIndex(segment)
+		if !ok {
+			return nil
+		}
+		value, ok := ctx.Get(index)
+		if !ok {
+			return nil
+		}
+		ctx, ok = value.(*env.RyeCtx)
+		if !ok {
+			return nil
+		}
+	}
+	if ctx == nil {
+		return nil
+	}
+	prefix := strings.ToLower(path[len(path)-1])
+	base := linePrefix + opPrefix + strings.Join(path[:len(path)-1], "/") + "/"
+	var completions []string
+	for key := range ctx.GetState() {
+		word := es.Idx.GetWord(key)
+		if strings.HasPrefix(strings.ToLower(word), prefix) {
+			completions = append(completions, base+word)
+		}
+	}
+	return completions
+}
+
 func genPrompt(shellEd *ShellEd, line string, multiline bool) (string, string) {
 	if shellEd != nil && shellEd.Mode != "" {
 		a := shellEd.Askfor
@@ -781,6 +825,13 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool, localHist
 				}
 			}
 			return
+		}
+
+		// For context paths, resolve every segment before the last one. Complete
+		// only words bound in the resulting context (including when the prefix
+		// ends in '/', so Tab can list all of its words).
+		if strings.Contains(filterPart, "/") {
+			return completeContextPath(es, linePrefix, opPrefix, filterPart)
 		}
 
 		// Word completion based on mode

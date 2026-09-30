@@ -1,7 +1,7 @@
 //go:build !no_io
 // +build !no_io
 
-package batteries
+package baseio
 
 import (
 	"bufio"

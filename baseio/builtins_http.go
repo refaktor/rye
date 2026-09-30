@@ -1,7 +1,7 @@
 //go:build !no_http
 // +build !no_http
 
-package batteries
+package baseio
 
 // import "C"
 
@@ -57,7 +57,7 @@ var Builtins_http = map[string]*env.Builtin{
 		// srv: http-server ":8080"
 		// srv .Handle "/" "Hello world!"
 		// ; srv .Serve   ; blocks and serves requests
-		Doc:   "Creates a new HTTP server that listens on the specified address with a 10-second read header timeout.",
+		Doc: "Creates a new HTTP server that listens on the specified address with a 10-second read header timeout.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.String:
