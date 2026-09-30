@@ -22,7 +22,7 @@ base=(
 )
 baseio=(
   builtins_printing.go builtins_baseio.go
-  builtins_io.go builtins_cmd.go builtins_os.go builtins_http.go
+  builtins_io.go builtins_table_files.go builtins_cmd.go builtins_os.go builtins_http.go
 )
 batteries=(
   builtins_email.go builtins_mail.go builtins_smtpd.go builtins_mqtt.go

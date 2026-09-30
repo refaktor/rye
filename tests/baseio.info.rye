@@ -1133,6 +1133,166 @@ section "Unix Domain Socket Operations " "Unix domain socket operations for IPC"
 
 }
 }
+section "baseio/builtins_table_files.go" "" {
+section "Table files " "Load and save tables as CSV, TSV or XLSX files." {
+	group "file-uri//Load\\csv"
+	"Loads a .csv file to a table datatype."
+	{
+		argsn 1
+		arg `file-uri - location of csv file to load`
+		arg `Tags: #table #loading #csv`
+	}
+
+	{
+	}
+
+	{
+`equal {
+cc os
+f:: mktmp ++ "/test.csv"
+spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+spr1 .Save\csv* f
+spr2:: Load\csv f |autotype 1.0
+spr1 = spr2
+} true
+`	}
+
+	group "file-uri//Load\\csv\\"
+	"Loads a .csv file to a table datatype."
+	{
+		argsn 2
+		arg `file-uri - location of csv file to load`
+		arg `Tags: #table #loading #csv`
+	}
+
+	{
+	}
+
+	{
+`equal {
+cc os
+f:: mktmp ++ "/test.csv"
+spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+spr1 .Save\csv* f
+spr2:: Load\csv f |autotype 1.0
+spr1 = spr2
+} true
+`	}
+
+	group "file-uri//Load\\tsv"
+	"Loads a .csv file to a table datatype."
+	{
+		argsn 1
+		arg `file-uri - location of csv file to load`
+	}
+
+	{
+	}
+
+	{
+`equal {
+cc os
+f:: mktmp ++ "/test.tsv"
+spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+spr1 .Save\tsv* f
+spr2:: Load\tsv f |autotype 1.0
+spr1 = spr2
+} true
+`	}
+
+	group "file-uri//Save\\csv"
+	"Saves a table to a .csv file."
+	{
+		argsn 2
+		arg `file-uri - where to save the sheet as a .csv file`
+		arg `table    - the table to save`
+		arg `Tags: #table #saving #csv`
+	}
+
+	{
+	}
+
+	{
+`equal {
+cc os
+f:: mktmp ++ "/test.csv"
+spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+f .Save\csv spr1
+spr2:: Load\csv f |autotype 1.0
+spr1 = spr2
+} true
+`	}
+
+	group "file-uri//Save\\tsv"
+	"Saves a table to a .tsv file."
+	{
+		argsn 2
+		arg `file-uri - where to save the sheet as a .tsv file`
+		arg `table    - the table to save`
+		arg `Tags: #table #saving #tsv`
+	}
+
+	{
+	}
+
+	{
+`equal {
+cc os
+f:: mktmp ++ "/test.tsv"
+spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+f .Save\tsv spr1
+spr2:: Load\tsv f |autotype 1.0
+spr1 = spr2
+} true
+`	}
+
+	group "file-uri//Load\\xlsx"
+	"Loads the first sheet in an .xlsx file to a Table."
+	{
+		argsn 1
+		arg `file-uri - location of xlsx file to load`
+		arg `Tags: #table #loading #xlsx`
+	}
+
+	{
+	}
+
+	{
+`equal {
+cc os
+f:: mktmp ++ "/test.xlsx"
+spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+spr1 .Save\xlsx* f
+spr2:: Load\xlsx f |autotype 1.0
+spr1 = spr2
+} true
+`	}
+
+	group "file-uri//Save\\xlsx"
+	"Saves a Table to a .xlsx file."
+	{
+		argsn 2
+		arg `file-uri - where to save the table as a .xlsx file`
+		arg `table    - the table to save`
+		arg `Tags: #table #saving #xlsx`
+	}
+
+	{
+	}
+
+	{
+`equal {
+cc os
+f:: mktmp ++ "/test.xlsx"
+spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+f .Save\xlsx spr1
+spr2:: Load\xlsx f |autotype 1.0
+spr1 = spr2
+} true
+`	}
+
+}
+}
 section "baseio/builtins_cmd.go" "" {
 section "Command Operations " "Running other programs" {
 	group "cmd"

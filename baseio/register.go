@@ -20,5 +20,6 @@ func Register(ps *env.ProgramState) {
 	evaldo.RegisterBuiltins2(Builtins_io, ps, "io")
 	evaldo.RegisterBuiltins2(Builtins_cmd, ps, "cmd")
 	evaldo.RegisterBuiltins2(Builtins_http, ps, "http")
+	evaldo.RegisterBuiltins2(Builtins_table_files, ps, "table-files")
 	evaldo.RegisterBuiltinsInContext(Builtins_os, ps, "os")
 }

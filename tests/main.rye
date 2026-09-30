@@ -100,7 +100,11 @@ docs-framework: context {
 	}
 
 	arg: fn { str } {
-		print join [ "<p class='arg'>" join prep-arg str "</p>" ]
+		either ( ( str |trim |lower ) = "none" ) {
+			print "<p class='arg no-arguments'>no arguments</p>"
+		} {
+			print join [ "<p class='arg'>" join prep-arg str "</p>" ]
+		}
 	}
 	
 	returns: fn { str } {

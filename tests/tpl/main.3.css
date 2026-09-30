@@ -82,6 +82,9 @@ p.arg b {
     color: #855;
     font-weight: 600;
 }
+p.arg.no-arguments {
+    color: #888;
+}
 
 p.returns {
     margin: 2px 0px 12px 0;
