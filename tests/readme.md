@@ -1,6 +1,6 @@
 # Tests
 
-Tests are generated from the Go comments above builtin definitions. `regen` writes three `.info.rye` files, one per source directory: `base.info.rye` (evaldo), `baseio.info.rye`, and `batteries.info.rye`. Each source `builtins_*.go` file is a labelled section within its directory. The same files drive tests and HTML reference pages through `main.rye`; there are no duplicate topic inputs.
+Tests are generated from the Go comments above builtin definitions. `regen` writes three `.info.rye` files, one per source directory: `base.info.rye` (evaldo), `baseio.info.rye` (including IO, commands, OS and HTTP), and `batteries.info.rye`. Each source `builtins_*.go` file is a labelled section within its directory. The same files drive tests and HTML reference pages through `main.rye`; there are no duplicate topic inputs.
 
 To find out more about the comment docs and format read this: https://ryelang.org/cookbook/improving-rye/one-source/
 

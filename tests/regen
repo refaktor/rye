@@ -20,9 +20,11 @@ base=(
   builtins_base_printing_not.go builtins_error_handling.go builtins_base_mth.go
   builtins_base_intents.go builtins_table.go builtins_validation.go
 )
-baseio=(builtins_printing.go builtins_baseio.go)
-batteries=(
+baseio=(
+  builtins_printing.go builtins_baseio.go
   builtins_io.go builtins_cmd.go builtins_os.go builtins_http.go
+)
+batteries=(
   builtins_email.go builtins_mail.go builtins_smtpd.go builtins_mqtt.go
   builtins_regexp.go builtins_json.go builtins_bson.go builtins_sxml.go
   builtins_html.go builtins_markdown.go builtins_conversion.go builtins_encoding.go
