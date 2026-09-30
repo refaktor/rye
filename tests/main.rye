@@ -1,12 +1,10 @@
 ; Testing and Documenting frameworks that do test and generate html reference docs
 ; Run test cases: ../rye main.rye test
-; Generate documentation: ../rye main.rye doc > builtins.html
+; Generate documentation: ../rye main.rye doc
 
-rye .Args\raw? |load :args |probe
+rye .Args\raw? |load :args
 
 root-ctx:: current
-
-probe args
 
 t: ?term
 
@@ -45,13 +43,11 @@ test-framework: context {
 	pure: does { }
 	argtypes: fn { block } { }
 
-	end: fn { } { ;prns "Tests:" term/bold prn cnt term/reset\bold , print "FAILED: " + failed , if failed > 0 { exit 1 } }
-		prns "\nGroups:" term/bold prn cnt term/reset\bold
+	end: fn { } {
+		prns "\nGroups: " term/bold prn cnt term/reset
 		either is-zero failed
 		{ term/bold term/green print "\nALL PASSED" term/reset }
-		{ term/red print "\nFailed tests: " ++ failed  term/reset }
-		;if failed > 0 { exit 1 }
-		; exit 0
+		{ term/red print "\nFailed tests: " ++ failed term/reset }
 		failed
 	}
 }
@@ -60,10 +56,10 @@ escape-html: fn { x } { x |replace "&" "&amp;" |replace "<" "&lt;" |replace ">" 
 
 docs-framework: context {
 
-	section: fn { name descr code } { print join [ "<h2>" name "</h2><p>" descr "</p><div class='section'>" ] , do code , print "</div>" }
+	section: fn { name descr code } { print join [ "<h2>" escape-html name "</h2><p>" escape-html descr "</p><div class='section'>" ] , do code , print "</div>" }
 	
 	group: fn { name descr args code example }   {
-		print join [ "<h3>" name "</h3><p>" descr "</p>" ] ,
+		print join [ "<h3>" escape-html name "</h3><p>" escape-html descr "</p>" ] ,
 		do args ,
 		if ( code .length? > 0 ) {
 			print "<div class='group'>" , do code , print "</div>"
@@ -79,7 +75,7 @@ docs-framework: context {
 
 	equal: fn { test res } {
 		cc: extends root-ctx { }
-		do\inside cc test :got = res
+		try { do\inside cc test } :got = res
 		|if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" escape-html mold\nowrap test newline "; returns "  replace escape-html mold got newline newline ++ "; "  "</code></pre>" ] }
 	}
 
@@ -91,7 +87,7 @@ docs-framework: context {
 
 	stdout: fn { test res } {
 		cc: extends root-ctx { }
-		capture-stdout { do\inside cc test } :got = res
+		try { capture-stdout { do\inside cc test } } :got = res
 		|if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" escape-html mold\nowrap test newline "; prints " replace escape-html mold\nowrap got newline newline ++ "; " "</code></pre>" ] }
 	}
 
@@ -131,11 +127,10 @@ docs-framework: context {
 }
 
 generate-menu: fn { menu } {
-	.fold\do 'acc "" { ::x acc .concat " &middot; <a class='menu-item' id='maintab-{{}}' href='{{}}.html'>{{}}</a>" .replace "{{}}" x }
+	.fold\do 'acc "" { ::x acc .concat "<li><a class='menu-item' id='maintab-{{}}' href='{{}}.html'>{{}}</a></li>" .replace "{{}}" x }
 }
 
 generate-doc-file: fn { filename menu } {
-  probe filename
 	join [
 		Read %tpl/header.html
 		|replace "{{title}}" capitalize join [ "Rye function reference: " filename " ( updated: " string date? now " )" ]
@@ -144,12 +139,11 @@ generate-doc-file: fn { filename menu } {
 			do\in docs-framework Load file filename ++ ".info.rye"
 		}
 		Read %tpl/footer.html
-	 ] ; .map { .type? } |probe ; 
-	 |Write* file filename ++ ".html"
+	 ] |Write* file filename ++ ".html"
 }
 
 ; Top-level tabs: base (core), baseio (IO), batteries (extended)
-menu: { "base" "baseio" "batteries" "table" "formats" "io" "crypto" "dialects" "protocols" "system" }
+menu: { "base" "baseio" "batteries" }
 
 print-help: does {
 	print `# Rye's simple testing tool
@@ -160,32 +154,29 @@ Examples:
  rye . test           # runs all tests
  rye . doc            # generates the docs out of tests
  rye . test ls        # lists the test sections available
- rye . test basics    # runs a specific test section
+ rye . test base      # runs the evaldo builtins tests
 `
 }
 
-print "1111"
-
-first args |^fix { print-help } |probe |switch {
+first args |^fix { print-help } |switch {
 test {
-	print "22222"
-
 	var 'sections { }
 	either args .length? > 1 {
-		either probe ( ( second args ) = 'ls ) {
+		either ( ( second args ) = 'ls ) {
 			print "Test sections available:"
 			menu .for { .concat* " * " |print }
 		} {
-			sections:: [ second args ]
+			sections:: [ string second args ]
 		}
 	} {
 		sections:: menu
 	}
 	if sections .length? > 0 {  ; todo add is-empty builtin
 		var 'errors 0
-		for probe sections {
+		for sections {
 			.pass { term/bold , prns "\n#" , .upper .prns , print "#\n" }
-			|++ ".info.rye" |probe |file |Load |^check { "Group does not exist!" } |do\inside* test-framework |+ errors |fix { errors } ::errors }
+			|++ ".info.rye" |file |Load |^check { "Group does not exist!" } |do\inside* test-framework |+ errors |fix { errors } ::errors
+		}
 		print ""
 	
 		; if ( length? sections ) > 1 {
@@ -204,7 +195,7 @@ doc  {
 	print "docs generated" 
 }
 _ { print-help }
-} |probe
+}
 
 ;   maybe we need this at some point 
 ;	true: fn { test } {

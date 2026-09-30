@@ -1,130 +1,114 @@
-function escapeHtml(text) {
-    const map = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-    };
-    return text.replace(/[&<>"']/g, function(m) { return map[m]; });
-}
+// Build a file → section → builtin outline from the generated Rye docs.
+// IDs use ordinals, not names: sections and builtins can share the same name.
+(function () {
+    'use strict';
 
-function generateMenuFromHeadings(node, hh) {
-    // Select all H2 elements
-    const h2Elements = node.querySelectorAll(hh);
-    
-    // Create a menu container, for example, a <ul> element
-    const menu = document.createElement('ul');
-
-    // Iterate over each H2 element
-    h2Elements.forEach((h2, index) => {
-        // Create a menu item, for example, an <li> element
-        const menuItem = document.createElement('li');
-
-        // Set the text of the menu item to the text of the H2 element
-        // menuItem.textContent = h2.textContent;
-
-        // Optionally, set an id on the H2 for navigation
-	var index = escapeHtml(h2.textContent);
-	
-        const h2Id = `heading-${index}`;
-        h2.setAttribute('id', h2Id);
-
-        // Check if the text contains kind//method pattern (only when there is content after //)
-        const slashIdx = h2.textContent.indexOf('//');
-        const hasMethod = slashIdx !== -1 && h2.textContent.substring(slashIdx + 2).trim().length > 0;
-
-        if (hasMethod) {
-            const kind = h2.textContent.substring(0, slashIdx);
-            const method = h2.textContent.substring(slashIdx + 2);
-
-            // Transform the heading element itself
-            h2.textContent = '';
-            const headingTag = document.createElement('span');
-            headingTag.className = 'menu-kind-tag';
-            headingTag.textContent = kind;
-            h2.appendChild(headingTag);
-            h2.appendChild(document.createTextNode(method));
+    // Show kind//Method as a kind badge followed by the method name, both in
+    // the reference heading and in the navigation link. Keep the original
+    // text in the DOM for search and accessible names.
+    function formatMethod(node, name) {
+        const separator = name.indexOf('//');
+        if (separator < 1 || separator + 2 >= name.length) {
+            node.textContent = name;
+            return;
         }
+        const tag = document.createElement('span');
+        tag.className = 'menu-kind-tag';
+        tag.textContent = name.slice(0, separator);
+        node.replaceChildren(tag, document.createTextNode(name.slice(separator + 2)));
+        node.setAttribute('aria-label', name);
+    }
 
-        // Optionally, create a link for navigation
+    function linkTo(heading, id) {
+        heading.id = id;
         const link = document.createElement('a');
-        link.setAttribute('href', `#${h2Id}`);
-
-        if (hasMethod) {
-            const kind = h2.querySelector('.menu-kind-tag').textContent;
-            const method = h2.childNodes[h2.childNodes.length - 1].textContent;
-            const kindTag = document.createElement('span');
-            kindTag.className = 'menu-kind-tag';
-            kindTag.textContent = kind;
-            link.appendChild(kindTag);
-            link.appendChild(document.createTextNode(method));
+        link.href = '#' + id;
+        const name = heading.textContent.trim();
+        if (heading.tagName === 'H3') {
+            formatMethod(heading, name);
+            formatMethod(link, name);
         } else {
-            link.textContent = h2.textContent;
+            link.textContent = name;
         }
+        return link;
+    }
 
-        menuItem.appendChild(link);
-	
-	var div = _dom.seekFwd(h2, "DIV");
+    function itemFor(heading, id) {
+        const li = document.createElement('li');
+        li.appendChild(linkTo(heading, id));
+        return li;
+    }
 
-	if (div != null && div.className == "section") {
-	    var submenu = generateMenuFromHeadings(div, "h3");
-	    if (submenu) {
-		menuItem.appendChild(submenu);
-	    }
-	}
-	
-        // Append the menu item to the menu
-        menu.appendChild(menuItem);
-    });
+    // Source file headings are generated as "directory/builtins_name.go".
+    // Keep the original path as a tooltip while showing a readable title.
+    function sourceTitle(path) {
+        const filename = path.split('/').pop();
+        if (!/^builtins(?:_[\w-]+)?\.go$/.test(filename)) return path;
+        const name = filename.replace(/^builtins_?/, '').replace(/\.go$/, '');
+        if (!name) return 'Builtins';
+        const acronyms = { io: 'IO', os: 'OS', http: 'HTTP', https: 'HTTPS', json: 'JSON', bson: 'BSON', html: 'HTML', xml: 'XML', sxml: 'SXML', sql: 'SQL', sqlite: 'SQLite', psql: 'PostgreSQL', mysql: 'MySQL', ssh: 'SSH', smtpd: 'SMTP', mqtt: 'MQTT', cli: 'CLI', tui: 'TUI', js: 'JS', mcp: 'MCP', gpio: 'GPIO', eyr: 'Eyr' };
+        return name.split('_').map(word => acronyms[word.toLowerCase()] || word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    }
 
-    // Append the menu to the document, for example, to the body or a specific div
-    return menu;
-    // document.getElementById("menu-holder").appendChild(menu);
-}
+    function buildOutline() {
+        const nav = document.getElementById('outline');
+        const tree = document.createElement('ul');
+        tree.className = 'file-list';
+        let fileIndex = 0;
+        for (const file of document.querySelectorAll('main.content > h2')) {
+            const path = file.textContent.trim();
+            file.textContent = sourceTitle(path);
+            file.title = path;
+            const fileItem = itemFor(file, 'file-' + ++fileIndex);
+            fileItem.firstElementChild.title = path;
+            const sections = document.createElement('ul');
+            sections.className = 'section-list';
+            // regen wraps all sections from a Go source file in one div.
+            const body = file.nextElementSibling?.nextElementSibling;
+            if (body?.classList.contains('section')) {
+                let sectionIndex = 0;
+                for (const section of body.querySelectorAll(':scope > h2')) {
+                    const sectionItem = itemFor(section, `file-${fileIndex}-section-${++sectionIndex}`);
+                    const words = document.createElement('ul');
+                    words.className = 'builtin-list';
+                    const sectionBody = section.nextElementSibling?.nextElementSibling;
+                    if (sectionBody?.classList.contains('section')) {
+                        let wordIndex = 0;
+                        for (const word of sectionBody.querySelectorAll(':scope > h3')) {
+                            words.appendChild(itemFor(word, `file-${fileIndex}-section-${sectionIndex}-word-${++wordIndex}`));
+                        }
+                    }
+                    if (words.children.length) sectionItem.appendChild(words);
+                    sections.appendChild(sectionItem);
+                }
+            }
+            if (sections.children.length) fileItem.appendChild(sections);
+            tree.appendChild(fileItem);
+        }
+        nav.appendChild(tree);
 
-function generateMenu() {
-    var menu = generateMenuFromHeadings(document, "h2");
-    document.getElementById("menu-holder").appendChild(menu);
-}
+        const search = document.getElementById('menu-search');
+        search.addEventListener('input', function () {
+            const query = search.value.trim().toLocaleLowerCase();
+            for (const li of tree.querySelectorAll('li')) {
+                li.hidden = false;
+            }
+            if (!query) return;
+            // Match at each level. A matching file/section reveals its entire
+            // subtree; a matching builtin keeps its ancestors visible.
+            function filter(li, inheritedMatch) {
+                const selfMatches = li.firstElementChild.textContent.toLocaleLowerCase().includes(query);
+                const children = Array.from(li.querySelectorAll(':scope > ul > li'));
+                const childMatches = children.map(child => filter(child, inheritedMatch || selfMatches)).some(Boolean);
+                li.hidden = !(inheritedMatch || selfMatches || childMatches);
+                return !li.hidden;
+            }
+            for (const li of tree.children) filter(li, false);
+        });
 
-function generateMenuFromH2_original(div) {
-    // Select all H2 elements
-    const h2Elements = document.querySelectorAll('h2');
+        const current = (location.pathname.split('/').pop() || 'base.html').replace(/\.html$/, '');
+        document.getElementById('maintab-' + current)?.setAttribute('aria-current', 'page');
+    }
 
-    // Create a menu container, for example, a <ul> element
-    const menu = document.createElement('ul');
-
-    // Iterate over each H2 element
-    h2Elements.forEach((h2, index) => {
-        // Create a menu item, for example, an <li> element
-        const menuItem = document.createElement('li');
-
-        // Set the text of the menu item to the text of the H2 element
-        // menuItem.textContent = h2.textContent;
-
-        // Optionally, set an id on the H2 for navigation
-        const h2Id = `heading-${index}`;
-        h2.setAttribute('id', h2Id);
-
-        // Optionally, create a link for navigation
-        const link = document.createElement('a');
-        link.setAttribute('href', `#${h2Id}`);
-        link.textContent = h2.textContent;
-        menuItem.appendChild(link);
-
-        // Append the menu item to the menu
-        menu.appendChild(menuItem);
-    });
-
-    // Append the menu to the document, for example, to the body or a specific div
-    document.getElementById("menu-holder").appendChild(menu);
-}
-
-
-//
-
-function styleCurrentTab() {
-    var cur = document.location.pathname.match(/\/([a-z]+).html$/)[1];
-    document.getElementById("maintab-"+cur).className += " current";
-}
+    document.addEventListener('DOMContentLoaded', buildOutline);
+})();

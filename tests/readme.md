@@ -1,12 +1,12 @@
 # Tests
 
-Tests are generated from the Go comments above builtin definitions. Docs above definitions produce x.info.rye files (structures) that get evaluated by main.rye in tests (current) folder.
+Tests are generated from the Go comments above builtin definitions. `regen` writes three `.info.rye` files, one per source directory: `base.info.rye` (evaldo), `baseio.info.rye`, and `batteries.info.rye`. Each source `builtins_*.go` file is a labelled section within its directory. The same files drive tests and HTML reference pages through `main.rye`; there are no duplicate topic inputs.
 
 To find out more about the comment docs and format read this: https://ryelang.org/cookbook/improving-rye/one-source/
 
 # Generating .info. files
 
-To generate the info files out of builtins call `./regen`. The script uses /cmd/rbit/rbit tool (Go binary) that parses the Go code and creates the x.info.rye structures.
+To generate the info files from builtins, run `./regen` (from `tests`, or `./tests/regen` from the project root). The script uses the `cmd/rbit/rbit` Go binary to parse the Go code. If it is missing, build it first with `cd cmd/rbit && ./build`. Edit the ordered file lists in `regen` when documenting additional source files. It validates inputs before replacing output and generates each source only once.
 
 # Running tests
 
@@ -18,8 +18,8 @@ rye . ls
 
 # Run all the table group tests
 rye . test base
-rye . test table
-rye . test io
+rye . test baseio
+rye . test batteries
 
 # Runs all the tests
 rye . test
@@ -35,3 +35,5 @@ https://ryelang.org/info
 # To generate html docs
 rye . doc
 ```
+
+This writes `base.html`, `baseio.html`, and `batteries.html` in `tests/` (the generated HTML is git-ignored). The sidebar links between the three directories, then lists source files, sections, and builtins. Use the sidebar search to filter the outline.

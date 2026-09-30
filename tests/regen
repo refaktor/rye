@@ -1,106 +1,70 @@
-# Regenerate function reference into grouped categories.
-# Groups:
-# - base: core evaldo builtins (language-level) + math/types/contexts/conditionals/iteration/functions/combinators/error-handling etc.
-# - baseio: IO-related builtins (printing, baseio, cmd/io, os, http/email/mqtt/smtp where they are base-IO focused)
-# - batteries: everything else (formats, crypto, db, web, math extras, dialects, structures, pipes, tables, etc.)
-# Additionally keep legacy per-topic .info.rye files for individual pages.
+#!/usr/bin/env bash
+# Generate each builtin's tests exactly once, grouped by its source directory.
+# Run from any directory: ./tests/regen (or cd tests && ./regen).
+set -euo pipefail
+cd "$(dirname "$0")"
 
-# Clean previous .info.rye to avoid accidental appends from older runs
-rm -f base.info.rye baseio.info.rye batteries.info.rye \
-      table.info.rye formats.info.rye io.info.rye crypto.info.rye \
-      dialects.info.rye protocols.info.rye system.info.rye pipes.info.rye web.info.rye 2>/dev/null
+rbit=../cmd/rbit/rbit
+if [[ ! -x "$rbit" ]]; then
+  echo "Build $rbit first: (cd cmd/rbit && ./build)" >&2
+  exit 1
+fi
 
-# BASE (core language builtins)
-../cmd/rbit/rbit ../evaldo/builtins_base_boolean.go > base.info.rye
-../cmd/rbit/rbit ../evaldo/builtins_base_numbers.go >> base.info.rye
-../cmd/rbit/rbit ../evaldo/builtins_base_strings.go >> base.info.rye
-../cmd/rbit/rbit ../evaldo/builtins_base_time.go >> base.info.rye
-../cmd/rbit/rbit ../evaldo/builtins_base_collections.go >> base.info.rye
-../cmd/rbit/rbit ../evaldo/builtins_base_types.go >> base.info.rye
-../cmd/rbit/rbit ../evaldo/builtins_base_contexts.go >> base.info.rye
-../cmd/rbit/rbit ../evaldo/builtins_base_conditionals.go >> base.info.rye
-../cmd/rbit/rbit ../evaldo/builtins_base_iteration.go >> base.info.rye
-../cmd/rbit/rbit ../evaldo/builtins_base_functions.go >> base.info.rye
-../cmd/rbit/rbit ../evaldo/builtins.go >> base.info.rye
-../cmd/rbit/rbit ../evaldo/builtins_base_combinators.go >> base.info.rye
-../cmd/rbit/rbit ../evaldo/builtins_base_printing_not.go >> base.info.rye
-../cmd/rbit/rbit ../evaldo/builtins_error_handling.go >> base.info.rye
-../cmd/rbit/rbit ../evaldo/builtins_base_mth.go >> base.info.rye
-# Some math helpers that feel core
-../cmd/rbit/rbit ../batteries/builtins_vector.go >> base.info.rye
-../cmd/rbit/rbit ../batteries/builtins_matrix.go >> base.info.rye
+# Keep the order intentional and stable. Files without annotated tests still
+# belong to the tree, but produce no groups; rbit handles those itself.
+base=(
+  builtins_base_boolean.go builtins_base_numbers.go builtins_base_strings.go
+  builtins_base_time.go builtins_base_collections.go builtins_base_types.go
+  builtins_base_contexts.go builtins_base_conditionals.go builtins_base_iteration.go
+  builtins_base_functions.go builtins.go builtins_base_combinators.go
+  builtins_base_printing_not.go builtins_error_handling.go builtins_base_mth.go
+  builtins_base_intents.go builtins_table.go builtins_validation.go
+)
+baseio=(builtins_printing.go builtins_baseio.go)
+batteries=(
+  builtins_io.go builtins_cmd.go builtins_os.go builtins_http.go
+  builtins_email.go builtins_mail.go builtins_smtpd.go builtins_mqtt.go
+  builtins_regexp.go builtins_json.go builtins_bson.go builtins_sxml.go
+  builtins_html.go builtins_markdown.go builtins_conversion.go builtins_encoding.go
+  builtins_sqlite.go builtins_psql.go builtins_mysql.go builtins_crypto.go
+  builtins_bcrypt.go builtins_math.go builtins_match.go builtins_eyr.go
+  builtins_ssh.go builtins_goroutines.go builtins_complex.go
+  builtins_structures.go builtins_vector.go builtins_matrix.go
+)
 
-# BASEIO (IO-related builtins and protocols doing IO)
-../cmd/rbit/rbit ../baseio/builtins_printing.go > baseio.info.rye
-../cmd/rbit/rbit ../baseio/builtins_baseio.go >> baseio.info.rye
-../cmd/rbit/rbit ../batteries/builtins_io.go >> baseio.info.rye
-../cmd/rbit/rbit ../batteries/builtins_cmd.go >> baseio.info.rye
-../cmd/rbit/rbit ../batteries/builtins_os.go >> baseio.info.rye
-../cmd/rbit/rbit ../batteries/builtins_http.go >> baseio.info.rye
-../cmd/rbit/rbit ../batteries/builtins_email.go >> baseio.info.rye
-../cmd/rbit/rbit ../batteries/builtins_mail.go >> baseio.info.rye
-# ../cmd/rbit/rbit ../batteries/builtins_imap.go >> baseio.info.rye
-../cmd/rbit/rbit ../batteries/builtins_smtpd.go >> baseio.info.rye
-../cmd/rbit/rbit ../batteries/builtins_mqtt.go >> baseio.info.rye
+# Fail before replacing anything if an input is missing (the old script could
+# leave a diagnostic string inside an .info.rye file).
+for entry in "${base[@]}"; do test -f "../evaldo/$entry" || { echo "Missing evaldo/$entry" >&2; exit 1; }; done
+for entry in "${baseio[@]}"; do test -f "../baseio/$entry" || { echo "Missing baseio/$entry" >&2; exit 1; }; done
+for entry in "${batteries[@]}"; do test -f "../batteries/$entry" || { echo "Missing batteries/$entry" >&2; exit 1; }; done
 
-# BATTERIES (all the rest)
-../cmd/rbit/rbit ../evaldo/builtins_table.go > batteries.info.rye
-../cmd/rbit/rbit ../batteries/builtins_regexp.go >> batteries.info.rye
-../cmd/rbit/rbit ../batteries/builtins_json.go >> batteries.info.rye 
-../cmd/rbit/rbit ../batteries/builtins_bson.go >> batteries.info.rye
-../cmd/rbit/rbit ../batteries/builtins_sxml.go >> batteries.info.rye
-../cmd/rbit/rbit ../batteries/builtins_html.go >> batteries.info.rye
-../cmd/rbit/rbit ../batteries/builtins_markdown.go >> batteries.info.rye
-../cmd/rbit/rbit ../batteries/builtins_conversion.go >> batteries.info.rye
-../cmd/rbit/rbit ../batteries/builtins_encoding.go >> batteries.info.rye
-../cmd/rbit/rbit ../batteries/builtins_sqlite.go >> batteries.info.rye
-../cmd/rbit/rbit ../batteries/builtins_psql.go >> batteries.info.rye
-../cmd/rbit/rbit ../batteries/builtins_mysql.go >> batteries.info.rye
-../cmd/rbit/rbit ../batteries/builtins_crypto.go >> batteries.info.rye
-../cmd/rbit/rbit ../batteries/builtins_bcrypt.go >> batteries.info.rye
-../cmd/rbit/rbit ../batteries/builtins_math.go >> batteries.info.rye
-../cmd/rbit/rbit ../evaldo/builtins_validation.go >> batteries.info.rye
-../cmd/rbit/rbit ../batteries/builtins_match.go >> batteries.info.rye
-../cmd/rbit/rbit ../batteries/builtins_eyr.go >> batteries.info.rye
-../cmd/rbit/rbit ../batteries/builtins_ssh.go >> batteries.info.rye
-../cmd/rbit/rbit ../batteries/builtins_goroutines.go >> batteries.info.rye
-../cmd/rbit/rbit ../batteries/builtins_complex.go >> batteries.info.rye
-#../cmd/rbit/rbit ../batteries/builtins_pipes.go >> batteries.info.rye
-../cmd/rbit/rbit ../batteries/builtins_structures.go >> batteries.info.rye
+# One page per directory, one labelled source-file wrapper per input. Wrappers
+# are ordinary Rye `section` calls and work in both test and doc mode.
+for area in base baseio batteries; do
+  case "$area" in
+    base) directory=evaldo; files=("${base[@]}");;
+    baseio) directory=baseio; files=("${baseio[@]}");;
+    batteries) directory=batteries; files=("${batteries[@]}");;
+  esac
+  output=$(mktemp "./.${area}.info.XXXXXX")
+  for source in "${files[@]}"; do
+    # Skip files without documented groups (no empty entries in navigation).
+    generated=$("$rbit" "../$directory/$source")
+    if grep -q '^[[:space:]]*group ' <<< "$generated"; then
+      printf 'section "%s/%s" "" {\n' "$directory" "$source" >> "$output"
+      # rbit currently emits trailing spaces on group lines; strip these
+      # without changing the tests or their ordering.
+      printf '%s\n' "$generated" | sed 's/[[:blank:]]*$//' >> "$output"
+      printf '}\n' >> "$output"
+    fi
+  done
+  mv "$output" "$area.info.rye"
+done
 
-# Keep generating per-topic .info.rye for existing individual pages (unchanged below)
-../cmd/rbit/rbit ../evaldo/builtins_table.go > table.info.rye
-../cmd/rbit/rbit ../batteries/builtins_regexp.go > formats.info.rye
-../cmd/rbit/rbit ../batteries/builtins_json.go >> formats.info.rye 
-../cmd/rbit/rbit ../batteries/builtins_bson.go >> formats.info.rye
-../cmd/rbit/rbit ../batteries/builtins_sxml.go >> formats.info.rye
-../cmd/rbit/rbit ../batteries/builtins_html.go >> formats.info.rye
-../cmd/rbit/rbit ../batteries/builtins_markdown.go >> formats.info.rye
-../cmd/rbit/rbit ../batteries/builtins_conversion.go >> formats.info.rye
-../cmd/rbit/rbit ../batteries/builtins_encoding.go >> formats.info.rye
-../cmd/rbit/rbit ../batteries/builtins_io.go > io.info.rye
-../cmd/rbit/rbit ../baseio/builtins_baseio.go >> io.info.rye
-../cmd/rbit/rbit ../batteries/builtins_cmd.go >> io.info.rye
-../cmd/rbit/rbit ../batteries/builtins_sqlite.go >> io.info.rye
-../cmd/rbit/rbit ../batteries/builtins_psql.go >> io.info.rye
-../cmd/rbit/rbit ../batteries/builtins_mysql.go >> io.info.rye
-../cmd/rbit/rbit ../batteries/builtins_crypto.go > crypto.info.rye
-../cmd/rbit/rbit ../batteries/builtins_bcrypt.go >> crypto.info.rye
-../cmd/rbit/rbit ../batteries/builtins_math.go > dialects.info.rye
-../cmd/rbit/rbit ../evaldo/builtins_validation.go >> dialects.info.rye
-../cmd/rbit/rbit ../batteries/builtins_match.go >> dialects.info.rye
-../cmd/rbit/rbit ../batteries/builtins_eyr.go >> dialects.info.rye
-../cmd/rbit/rbit ../batteries/builtins_http.go > protocols.info.rye
-../cmd/rbit/rbit ../batteries/builtins_email.go >> protocols.info.rye
-../cmd/rbit/rbit ../batteries/builtins_mail.go >> protocols.info.rye
-# ../cmd/rbit/rbit ../batteries/builtins_imap.go >> protocols.info.rye
-../cmd/rbit/rbit ../batteries/builtins_smtpd.go >> protocols.info.rye
-../cmd/rbit/rbit ../batteries/builtins_mqtt.go >> protocols.info.rye
-../cmd/rbit/rbit ../batteries/builtins_os.go > system.info.rye
-# ../cmd/rbit/rbit ../batteries/builtins_git.go >> system.info.rye
-../cmd/rbit/rbit ../batteries/builtins_ssh.go >> system.info.rye
-../cmd/rbit/rbit ../batteries/builtins_goroutines.go >> system.info.rye
-../cmd/rbit/rbit ../batteries/builtins_complex.go >> dialects.info.rye
-../cmd/rbit/rbit ../batteries/builtins_pipes.go > pipes.info.rye
-../cmd/rbit/rbit ../batteries/builtins_structures.go >> formats.info.rye
-../cmd/rbit/rbit ../batteries/builtins_web.go > web.info.rye
+# The pipes tests reference a missing ./testdata/ directory and currently
+# abort the entire suite. Add builtins_pipes.go once those tests can run.
+# Topic pages were copies of the same tests. Remove those generated duplicates:
+# only the three directory pages are now inputs to tests/main.rye.
+rm -f table.info.rye formats.info.rye io.info.rye crypto.info.rye \
+  dialects.info.rye protocols.info.rye system.info.rye pipes.info.rye web.info.rye
+printf 'Regenerated base.info.rye, baseio.info.rye, batteries.info.rye\n'

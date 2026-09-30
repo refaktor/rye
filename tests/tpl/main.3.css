@@ -1,13 +1,12 @@
 body {
-    font-family: Roboto;
+    font-family: system-ui, sans-serif;
     background-color: white;
-    padding: 20px;
     font-size: 15px;
 }
 
 
 div.group {
-    width: 550px;
+    max-width: 100%;
     background-color: #3e3e3e;
     border: 1px solid #eee;
     padding: 2px 15px;
@@ -15,10 +14,10 @@ div.group {
 }
 pre.prettyprint {
     __border: 1px solid green;
-    width: 550px;
+    max-width: 100%;
     background-color: transparent;
     padding: 10px;
-    box-model: content;
+    box-sizing: border-box;
     font-size: 13px;
     border-radius: 4px;
 }
@@ -77,7 +76,7 @@ div.group pre.prettyprint {
 
 p.arg {
     margin: 2px 0px;
-    color: 
+    color: #333;
 }
 p.arg b {
     color: #855;

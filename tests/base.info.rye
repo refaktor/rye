@@ -1,5 +1,6 @@
+section "evaldo/builtins_base_boolean.go" "" {
 section "Boolean " "Functions that work with true and false values." {
-	group "true" 
+	group "true"
 	"Returns a boolean true value."
 	{
 		pure
@@ -15,7 +16,7 @@ section "Boolean " "Functions that work with true and false values." {
 	{
 	}
 
-	group "false" 
+	group "false"
 	"Returns a boolean false value."
 	{
 		pure
@@ -31,7 +32,7 @@ section "Boolean " "Functions that work with true and false values." {
 	{
 	}
 
-	group "not" 
+	group "not"
 	"Performs logical negation on boolean values only."
 	{
 		argsn 1
@@ -53,7 +54,7 @@ section "Boolean " "Functions that work with true and false values." {
 	{
 	}
 
-	group "and" 
+	group "and"
 	"Performs a logical AND operation between two boolean values, or a bitwise AND operation between two integer values."
 	{
 		argsn 2
@@ -80,7 +81,7 @@ section "Boolean " "Functions that work with true and false values." {
 	{
 	}
 
-	group "or" 
+	group "or"
 	"Performs a logical OR operation between two boolean values, or a bitwise OR operation between two integer values."
 	{
 		argsn 2
@@ -107,7 +108,7 @@ section "Boolean " "Functions that work with true and false values." {
 	{
 	}
 
-	group "xor" 
+	group "xor"
 	"Performs a logical XOR (exclusive OR) operation between two boolean values, or a bitwise XOR operation between two integer values."
 	{
 		argsn 2
@@ -134,7 +135,7 @@ section "Boolean " "Functions that work with true and false values." {
 	{
 	}
 
-	group "all" 
+	group "all"
 	"Evaluates all expressions in a block and returns the last value if all are truthy, or the first falsy value encountered."
 	{
 		argsn 1
@@ -157,7 +158,7 @@ section "Boolean " "Functions that work with true and false values." {
 	{
 	}
 
-	group "any" 
+	group "any"
 	"Evaluates expressions in a block until a truthy value is found and returns it, or returns the last value if none are truthy."
 	{
 		argsn 1
@@ -180,7 +181,7 @@ section "Boolean " "Functions that work with true and false values." {
 	{
 	}
 
-	group "_any\\with" 
+	group "_any\\with"
 	"Applies each expression in the block to the provided value until a truthy result is found and returns it."
 	{
 		argsn 2
@@ -205,9 +206,10 @@ section "Boolean " "Functions that work with true and false values." {
 	}
 
 }
-
+}
+section "evaldo/builtins_base_numbers.go" "" {
 section "Numbers " "Working with numbers, integers and decimals." {
-	group "addnums" 
+	group "addnums"
 	"Optimized version of + that adds two numbers, working with both integers and decimals."
 	{
 		argsn 2
@@ -230,7 +232,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "inc" 
+	group "inc"
 	"Increments an integer value by 1."
 	{
 		argsn 1
@@ -252,7 +254,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "dec" 
+	group "dec"
 	"Decrements an integer value by 1."
 	{
 		argsn 1
@@ -274,7 +276,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "negate" 
+	group "negate"
 	"Negates a number by multiplying it by -1, works with integers, decimals, and complex numbers."
 	{
 		argsn 1
@@ -298,7 +300,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "invert" 
+	group "invert"
 	"Calculates the reciprocal (1/x) of a number, works with integers, decimals, and complex numbers."
 	{
 		argsn 1
@@ -323,7 +325,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "is-positive" 
+	group "is-positive"
 	"Checks if a number is positive (greater than zero)."
 	{
 		argsn 1
@@ -346,7 +348,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "sign" 
+	group "sign"
 	"Returns the sign of a number as -1, 0, or 1."
 	{
 		argsn 1
@@ -370,7 +372,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "is-zero" 
+	group "is-zero"
 	"Checks if a number is exactly zero."
 	{
 		argsn 1
@@ -392,7 +394,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "is-multiple-of" 
+	group "is-multiple-of"
 	"Checks if the first integer is evenly divisible by the second integer."
 	{
 		argsn 2
@@ -416,7 +418,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "is-odd" 
+	group "is-odd"
 	"Checks if an integer is odd (not divisible by 2)."
 	{
 		argsn 1
@@ -438,7 +440,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "is-even" 
+	group "is-even"
 	"Checks if an integer is even (divisible by 2)."
 	{
 		argsn 1
@@ -460,7 +462,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "mod" 
+	group "mod"
 	"Calculates the modulo (remainder) when dividing the first integer by the second."
 	{
 		argsn 2
@@ -484,7 +486,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "_%" 
+	group "_%"
 	"Alias for mod - calculates the modulo (remainder) when dividing the first integer by the second."
 	{
 		argsn 2
@@ -507,7 +509,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "random\\integer" 
+	group "random\\integer"
 	"Generates a cryptographically secure random integer between 0 (inclusive) and the specified maximum (exclusive)."
 	{
 		argsn 1
@@ -528,7 +530,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "random\\decimal" 
+	group "random\\decimal"
 	"Generates a cryptographically secure random decimal between 0.0 (inclusive) and the specified maximum (exclusive)."
 	{
 		argsn 1
@@ -549,7 +551,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "inc!" 
+	group "inc!"
 	"Increments an integer value stored in a variable (word) by 1 and updates the variable in-place."
 	{
 		argsn 1
@@ -569,7 +571,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "dec!" 
+	group "dec!"
 	"Decrements an integer value stored in a variable (word) by 1 and updates the variable in-place."
 	{
 		argsn 1
@@ -589,7 +591,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "_." 
+	group "_."
 	"Discards the input value and returns a void value, useful only for Eyr (stack based dialect)."
 	{
 		argsn 1
@@ -606,7 +608,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "_+" 
+	group "_+"
 	"Adds two numerical values. Accepts Integer, Decimal, Complex, Time and Vector."
 	{
 		argsn 2
@@ -631,7 +633,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "_-" 
+	group "_-"
 	"Subtracts the second number from the first, working with integers, decimals, complex numbers, and vectors."
 	{
 		argsn 2
@@ -656,7 +658,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "_*" 
+	group "_*"
 	"Multiplies two numbers, working with integers, decimals, complex numbers, and vectors (scalar multiplication)."
 	{
 		argsn 2
@@ -682,7 +684,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "_/" 
+	group "_/"
 	"Divides the first number by the second and returns a result, with error checking for division by zero."
 	{
 		argsn 2
@@ -706,7 +708,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "_//" 
+	group "_//"
 	"Performs integer division, dividing the first number by the second and truncating to an integer result."
 	{
 		argsn 2
@@ -731,7 +733,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "_=" 
+	group "_="
 	"Compares two values for equality, returning 1 if equal or 0 if not equal."
 	{
 		argsn 2
@@ -752,7 +754,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "_!=" 
+	group "_!="
 	"Compares two values for inequality, returning true if not equal or false if equal."
 	{
 		argsn 2
@@ -774,7 +776,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "_>" 
+	group "_>"
 	"Compares if the first value is greater than the second value."
 	{
 		argsn 2
@@ -795,7 +797,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "_>=" 
+	group "_>="
 	"Compares if the first value is greater than or equal to the second value."
 	{
 		argsn 2
@@ -817,7 +819,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "_<" 
+	group "_<"
 	"Compares if the first value is less than the second value."
 	{
 		argsn 2
@@ -838,7 +840,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "_<=" 
+	group "_<="
 	"Compares if the first value is less than or equal to the second value."
 	{
 		argsn 2
@@ -860,7 +862,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "clamp" 
+	group "clamp"
 	"Clamps a number between a minimum and maximum value, ensuring the result stays within the specified bounds."
 	{
 		argsn 3
@@ -890,9 +892,10 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 }
-
+}
+section "evaldo/builtins_base_strings.go" "" {
 section "Strings " "" {
-	group "newline" 
+	group "newline"
 	"Returns a string containing a single newline character."
 	{
 		pure
@@ -907,7 +910,7 @@ section "Strings " "" {
 	{
 	}
 
-	group "tab" 
+	group "tab"
 	"Returns a string containing a single tab character."
 	{
 		pure
@@ -922,7 +925,7 @@ section "Strings " "" {
 	{
 	}
 
-	group "ln" 
+	group "ln"
 	"Appends a newline character to the end of a string."
 	{
 		argsn 1
@@ -939,7 +942,7 @@ section "Strings " "" {
 	{
 	}
 
-	group "trim" 
+	group "trim"
 	"Removes all leading and trailing whitespace characters from a string."
 	{
 		argsn 1
@@ -960,7 +963,7 @@ section "Strings " "" {
 	{
 	}
 
-	group "trim\\" 
+	group "trim\\"
 	"Removes all leading and trailing occurrences of the specified characters from a string."
 	{
 		argsn 2
@@ -982,7 +985,7 @@ section "Strings " "" {
 	{
 	}
 
-	group "trim\\right" 
+	group "trim\\right"
 	"Removes all trailing occurrences of the specified characters from a string."
 	{
 		argsn 2
@@ -1005,7 +1008,7 @@ section "Strings " "" {
 	{
 	}
 
-	group "trim\\left" 
+	group "trim\\left"
 	"Removes all leading occurrences of the specified characters from a string."
 	{
 		argsn 2
@@ -1028,7 +1031,7 @@ section "Strings " "" {
 	{
 	}
 
-	group "replace" 
+	group "replace"
 	"Replaces all occurrences of a substring with another string."
 	{
 		argsn 3
@@ -1054,8 +1057,8 @@ section "Strings " "" {
 	{
 	}
 
-	group "substring" 
-	"Extracts a portion of a string between the specified start and end positions."
+	group "substring"
+	"Extracts a portion of a string or secret between zero-based character positions (start inclusive, end exclusive)."
 	{
 		argsn 3
 		pure
@@ -1079,7 +1082,7 @@ section "Strings " "" {
 	{
 	}
 
-	group "contains" 
+	group "contains"
 	"Checks if a string, block or list contains a specific value, returning true if found or false if not found."
 	{
 		argsn 2
@@ -1104,7 +1107,7 @@ section "Strings " "" {
 	{
 	}
 
-	group "contains\\flag" 
+	group "contains\\flag"
 	"Checks if a block contains a specific flag (long or short), returning true if found or false if not found."
 	{
 		argsn 2
@@ -1128,7 +1131,7 @@ section "Strings " "" {
 	{
 	}
 
-	group "has-suffix" 
+	group "has-suffix"
 	"Checks if a string ends with a specific suffix, returning true if it does or false if it doesn't."
 	{
 		argsn 2
@@ -1151,7 +1154,7 @@ section "Strings " "" {
 	{
 	}
 
-	group "has-prefix" 
+	group "has-prefix"
 	"Checks if a string starts with a specific prefix, returning true if it does or false if it doesn't."
 	{
 		argsn 2
@@ -1174,7 +1177,7 @@ section "Strings " "" {
 	{
 	}
 
-	group "index?" 
+	group "index?"
 	"Finds the 0-based index of the first occurrence of a value in a string or block."
 	{
 		argsn 2
@@ -1198,7 +1201,7 @@ section "Strings " "" {
 	{
 	}
 
-	group "position?" 
+	group "position?"
 	"Finds the 1-based position of the first occurrence of a value in a string or block."
 	{
 		argsn 2
@@ -1222,7 +1225,7 @@ section "Strings " "" {
 	{
 	}
 
-	group "encode-to\\base64" 
+	group "encode-to\\base64"
 	"Encodes a string or binary data as a base64 string."
 	{
 		argsn 1
@@ -1242,7 +1245,7 @@ section "Strings " "" {
 	{
 	}
 
-	group "decode\\base64" 
+	group "decode\\base64"
 	"Decodes a base64-encoded string back to its original form."
 	{
 		argsn 1
@@ -1262,7 +1265,7 @@ section "Strings " "" {
 	{
 	}
 
-	group "space" 
+	group "space"
 	"Appends a space character to the end of a string."
 	{
 		argsn 1
@@ -1282,7 +1285,7 @@ section "Strings " "" {
 	{
 	}
 
-	group "capitalize" 
+	group "capitalize"
 	"Converts the first character of a string to uppercase, leaving the rest unchanged."
 	{
 		argsn 1
@@ -1303,7 +1306,7 @@ section "Strings " "" {
 	{
 	}
 
-	group "lower" 
+	group "lower"
 	"Converts all characters in a string to lowercase."
 	{
 		argsn 1
@@ -1324,7 +1327,7 @@ section "Strings " "" {
 	{
 	}
 
-	group "upper" 
+	group "upper"
 	"Converts all characters in a string to uppercase."
 	{
 		argsn 1
@@ -1345,7 +1348,7 @@ section "Strings " "" {
 	{
 	}
 
-	group "concat3" 
+	group "concat3"
 	"Concatenates three strings together into a single string."
 	{
 		argsn 3
@@ -1369,7 +1372,7 @@ section "Strings " "" {
 	{
 	}
 
-	group "join" 
+	group "join"
 	"Concatenates all strings, numbers (integers and decimals) or URIs in a block or list into a single string with no separator. If the first element is a URI, returns a URI."
 	{
 		argsn 1
@@ -1393,7 +1396,7 @@ section "Strings " "" {
 	{
 	}
 
-	group "join\\with" 
+	group "join\\with"
 	"Concatenates all strings, integers or decimals in a block or list into a single string with a specified delimiter between values."
 	{
 		argsn 2
@@ -1417,7 +1420,7 @@ section "Strings " "" {
 	{
 	}
 
-	group "split" 
+	group "split"
 	"Splits a string into a block of strings using a separator string."
 	{
 		argsn 2
@@ -1441,7 +1444,7 @@ section "Strings " "" {
 	{
 	}
 
-	group "split\\quoted" 
+	group "split\\quoted"
 	"Splits a string into a block of strings using a separator, while respecting quoted sections that should remain intact."
 	{
 		argsn 3
@@ -1465,7 +1468,7 @@ section "Strings " "" {
 	{
 	}
 
-	group "split\\many" 
+	group "split\\many"
 	"Splits a string into a block of strings using any character in the separators string as a delimiter."
 	{
 		argsn 2
@@ -1488,7 +1491,7 @@ section "Strings " "" {
 	{
 	}
 
-	group "split\\every" 
+	group "split\\every"
 	"Splits a string or block into chunks of the specified size, with any remaining elements in the last chunk."
 	{
 		argsn 2
@@ -1515,7 +1518,7 @@ section "Strings " "" {
 }
 
 section "URL Encoding " "" {
-	group "url-encode" 
+	group "url-encode"
 	"Encodes a block of name: value pairs as a URL query string (e.g. name=John+Doe&city=New+York), percent-encoding all special characters. Keys can be set-words (name:) or strings (\"name\"), values can be strings, integers, decimals, or words (looked up in context)."
 	{
 		argsn 1
@@ -1541,9 +1544,10 @@ section "URL Encoding " "" {
 	}
 
 }
-
+}
+section "evaldo/builtins_base_time.go" "" {
 section "Date and Time " "" {
-	group "unix-micro?" 
+	group "unix-micro?"
 	"Converts a time object to Unix time in microseconds (microseconds since January 1, 1970 UTC)."
 	{
 		argsn 1
@@ -1561,7 +1565,7 @@ section "Date and Time " "" {
 	{
 	}
 
-	group "unix-milli?" 
+	group "unix-milli?"
 	"Converts a time object to Unix time in milliseconds (milliseconds since January 1, 1970 UTC)."
 	{
 		argsn 1
@@ -1579,7 +1583,7 @@ section "Date and Time " "" {
 	{
 	}
 
-	group "weekday?" 
+	group "weekday?"
 	"Extracts the day of the week from a time object as an integer (0=Sunday through 6=Saturday)."
 	{
 		argsn 1
@@ -1597,7 +1601,7 @@ section "Date and Time " "" {
 	{
 	}
 
-	group "date" 
+	group "date"
 	"Creates a time object from a date string in YYYY-MM-DD format."
 	{
 		argsn 1
@@ -1617,7 +1621,7 @@ section "Date and Time " "" {
 	{
 	}
 
-	group "datetime" 
+	group "datetime"
 	"Creates a time object from a datetime string in YYYY-MM-DDThh:mm:ss format."
 	{
 		argsn 1
@@ -1636,7 +1640,7 @@ section "Date and Time " "" {
 	{
 	}
 
-	group "now" 
+	group "now"
 	"Creates a time object representing the current local time."
 	{
 		arg `none`
@@ -1650,7 +1654,7 @@ section "Date and Time " "" {
 	{
 	}
 
-	group "yearday?" 
+	group "yearday?"
 	"Extracts the day of year from a time object as an integer (1-366)."
 	{
 		argsn 1
@@ -1668,7 +1672,7 @@ section "Date and Time " "" {
 	{
 	}
 
-	group "year?" 
+	group "year?"
 	"Extracts the year from a time object as an integer."
 	{
 		argsn 1
@@ -1686,7 +1690,7 @@ section "Date and Time " "" {
 	{
 	}
 
-	group "month?" 
+	group "month?"
 	"Extracts the month from a time object as an integer (1-12)."
 	{
 		argsn 1
@@ -1704,7 +1708,7 @@ section "Date and Time " "" {
 	{
 	}
 
-	group "days-in-month?" 
+	group "days-in-month?"
 	"Calculates the number of days in the month of the given time object."
 	{
 		argsn 1
@@ -1723,7 +1727,7 @@ section "Date and Time " "" {
 	{
 	}
 
-	group "time?" 
+	group "time?"
 	"Extracts the time part from a time object as a formatted string (hh:mm:ss)."
 	{
 		argsn 1
@@ -1741,7 +1745,7 @@ section "Date and Time " "" {
 	{
 	}
 
-	group "date?" 
+	group "date?"
 	"Extracts the date part from a time object as a formatted string (YYYY-MM-DD)."
 	{
 		argsn 1
@@ -1759,7 +1763,7 @@ section "Date and Time " "" {
 	{
 	}
 
-	group "format-imap-date" 
+	group "format-imap-date"
 	"Formats a time object as an IMAP search date string (DD-Mon-YYYY)."
 	{
 		argsn 1
@@ -1777,7 +1781,7 @@ section "Date and Time " "" {
 	{
 	}
 
-	group "format-date" 
+	group "format-date"
 	"Formats a time object using a Go time format layout string. Reference time: Mon Jan 2 15:04:05 MST 2006"
 	{
 		argsn 2
@@ -1799,7 +1803,7 @@ section "Date and Time " "" {
 	{
 	}
 
-	group "day?" 
+	group "day?"
 	"Extracts the day of month from a time object as an integer (1-31)."
 	{
 		argsn 1
@@ -1817,7 +1821,7 @@ section "Date and Time " "" {
 	{
 	}
 
-	group "hour?" 
+	group "hour?"
 	"Extracts the hour from a time object as an integer (0-23)."
 	{
 		argsn 1
@@ -1835,7 +1839,7 @@ section "Date and Time " "" {
 	{
 	}
 
-	group "minute?" 
+	group "minute?"
 	"Extracts the minute from a time object as an integer (0-59)."
 	{
 		argsn 1
@@ -1853,7 +1857,7 @@ section "Date and Time " "" {
 	{
 	}
 
-	group "second?" 
+	group "second?"
 	"Extracts the second from a time object as an integer (0-59)."
 	{
 		argsn 1
@@ -1871,7 +1875,7 @@ section "Date and Time " "" {
 	{
 	}
 
-	group "sleep" 
+	group "sleep"
 	"Pauses execution for the specified number of milliseconds."
 	{
 		argsn 1
@@ -1889,7 +1893,7 @@ section "Date and Time " "" {
 	{
 	}
 
-	group "thousands" 
+	group "thousands"
 	"Multiplies the input by 1000 (useful for unit conversion)."
 	{
 		argsn 1
@@ -1907,7 +1911,7 @@ section "Date and Time " "" {
 	{
 	}
 
-	group "millions" 
+	group "millions"
 	"Multiplies the input by 1000000 (useful for unit conversion)."
 	{
 		argsn 1
@@ -1925,7 +1929,7 @@ section "Date and Time " "" {
 	{
 	}
 
-	group "seconds" 
+	group "seconds"
 	"Converts seconds to milliseconds (multiplies by 1000)."
 	{
 		argsn 1
@@ -1943,7 +1947,7 @@ section "Date and Time " "" {
 	{
 	}
 
-	group "minutes" 
+	group "minutes"
 	"Converts minutes to milliseconds (multiplies by 60000)."
 	{
 		argsn 1
@@ -1961,7 +1965,7 @@ section "Date and Time " "" {
 	{
 	}
 
-	group "hours" 
+	group "hours"
 	"Converts hours to milliseconds (multiplies by 3600000)."
 	{
 		argsn 1
@@ -1979,7 +1983,7 @@ section "Date and Time " "" {
 	{
 	}
 
-	group "days" 
+	group "days"
 	"Converts days to milliseconds (multiplies by 86400000)."
 	{
 		argsn 1
@@ -1997,7 +2001,7 @@ section "Date and Time " "" {
 	{
 	}
 
-	group "weeks" 
+	group "weeks"
 	"Converts weeks to milliseconds (multiplies by 604800000)."
 	{
 		argsn 1
@@ -2015,7 +2019,7 @@ section "Date and Time " "" {
 	{
 	}
 
-	group "time-it" 
+	group "time-it"
 	"Accepts a block, does it and times it's execution time."
 	{
 		argsn 1
@@ -2034,9 +2038,10 @@ section "Date and Time " "" {
 	}
 
 }
-
+}
+section "evaldo/builtins_base_collections.go" "" {
 section "Collections " "" {
-	group "random" 
+	group "random"
 	"Selects a random value from a block of values."
 	{
 		argsn 1
@@ -2056,7 +2061,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "randomize" 
+	group "randomize"
 	"Returns a new block or list with the same values as the input but in a randomized (shuffled) order."
 	{
 		argsn 1
@@ -2080,7 +2085,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "unpack" 
+	group "unpack"
 	"Flattens a block of blocks or list of lists by one level, combining all inner collections into a single collection."
 	{
 		argsn 1
@@ -2100,7 +2105,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "sample" 
+	group "sample"
 	"Randomly selects a specified number of elements from a collection without replacement."
 	{
 		argsn 2
@@ -2123,7 +2128,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "max" 
+	group "max"
 	"Finds the maximum value in a block or list of comparable values."
 	{
 		argsn 1
@@ -2146,7 +2151,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "max\\by" 
+	group "max\\by"
 	"Finds the value in a collection that produces the maximum result when transformed by a code block. Returns the original value, not the transformed result."
 	{
 		argsn 2
@@ -2169,7 +2174,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "min" 
+	group "min"
 	"Finds the minimum value in a block or list of comparable values."
 	{
 		argsn 1
@@ -2192,7 +2197,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "min\\by" 
+	group "min\\by"
 	"Finds the value in a collection that produces the minimum result when transformed by a code block. Returns the original value, not the transformed result."
 	{
 		argsn 2
@@ -2215,7 +2220,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "avg" 
+	group "avg"
 	"Calculates the arithmetic mean (average) of numeric values in a collection."
 	{
 		argsn 1
@@ -2239,7 +2244,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "avg\\by" 
+	group "avg\\by"
 	"Calculates the average of the results of transforming each value in a collection by a code block. Returns the average of all transformed results."
 	{
 		argsn 2
@@ -2262,7 +2267,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "sum" 
+	group "sum"
 	"Calculates the sum of all numeric values in a collection."
 	{
 		argsn 1
@@ -2287,7 +2292,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "sum\\by" 
+	group "sum\\by"
 	"Sums the results of transforming each value in a collection by a code block. Returns the sum of all transformed results."
 	{
 		argsn 2
@@ -2310,7 +2315,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "mul" 
+	group "mul"
 	"Calculates the product of all numeric values in a collection."
 	{
 		argsn 1
@@ -2330,7 +2335,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "first" 
+	group "first"
 	"Retrieves the first item from a collection (block, list, string, table, vector, matrix, or bytes)."
 	{
 		argsn 1
@@ -2353,7 +2358,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "rest" 
+	group "rest"
 	"Creates a new collection with all items except the first one from the input collection."
 	{
 		argsn 1
@@ -2373,7 +2378,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "rest\\from" 
+	group "rest\\from"
 	"Creates a new collection with all items starting from the specified position in the input collection."
 	{
 		argsn 2
@@ -2398,7 +2403,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "tail" 
+	group "tail"
 	"Creates a new collection with the last n items from the input collection, or all but the first |n| items if n is negative."
 	{
 		argsn 2
@@ -2424,7 +2429,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "second" 
+	group "second"
 	"Retrieves the second item from a collection (block, list, string, vector, matrix, or bytes)."
 	{
 		argsn 1
@@ -2444,7 +2449,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "third" 
+	group "third"
 	"Retrieves the third item from a collection (block, list, string, vector, matrix, or bytes)."
 	{
 		argsn 1
@@ -2464,7 +2469,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "last" 
+	group "last"
 	"Retrieves the last item from a collection (block, list, string, vector, matrix, or bytes)."
 	{
 		argsn 1
@@ -2485,7 +2490,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "before-last" 
+	group "before-last"
 	"Creates a new collection with all items except the last one from the input collection."
 	{
 		argsn 1
@@ -2506,7 +2511,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "head" 
+	group "head"
 	"Creates a new collection with the first n items from the input collection, or all but the last |n| items if n is negative."
 	{
 		argsn 2
@@ -2529,7 +2534,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "nth" 
+	group "nth"
 	"Retrieves the item at the specified position (1-based indexing) from a collection."
 	{
 		argsn 2
@@ -2551,7 +2556,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "values" 
+	group "values"
 	"Extracts all values from a dictionary and returns them as a list."
 	{
 		argsn 1
@@ -2567,7 +2572,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "sort" 
+	group "sort"
 	"Creates a new collection with items sorted in ascending order."
 	{
 		argsn 1
@@ -2587,7 +2592,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "sort!" 
+	group "sort!"
 	"Sorts a block or list in-place in ascending order and returns the modified collection."
 	{
 		argsn 1
@@ -2604,7 +2609,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "sort\\by" 
+	group "sort\\by"
 	"Creates a new collection with items sorted according to a custom comparison function."
 	{
 		argsn 2
@@ -2626,7 +2631,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "sort\\by\\key" 
+	group "sort\\by\\key"
 	"Efficiently sorts a collection by pre-computing a sort key for each element using a key function. Much faster than sort\\by for large datasets (Schwartzian Transform)."
 	{
 		argsn 2
@@ -2649,7 +2654,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "unique" 
+	group "unique"
 	"Creates a new collection with duplicate values removed, keeping only the first occurrence of each value."
 	{
 		argsn 1
@@ -2670,7 +2675,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "reverse" 
+	group "reverse"
 	"Creates a new collection with items in reverse order from the input collection."
 	{
 		argsn 1
@@ -2688,7 +2693,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "reverse!" 
+	group "reverse!"
 	"Reverses a block or list in-place and returns the modified collection."
 	{
 		argsn 1
@@ -2705,7 +2710,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "concat" 
+	group "concat"
 	"Joins two series values together."
 	{
 		argsn 2
@@ -2730,7 +2735,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "_++" 
+	group "_++"
 	"Joins two values together, with behavior depending on types: concatenates strings, joins blocks, merges dictionaries, etc."
 	{
 		argsn 2
@@ -2755,7 +2760,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "union" 
+	group "union"
 	"Combines two collections, removing any duplicate values to create a union of all unique values."
 	{
 		argsn 2
@@ -2786,8 +2791,8 @@ section "Collections " "" {
 	{
 	}
 
-	group "range" 
-	"Creates a block containing all integers from the start value to the end value, inclusive."
+	group "range"
+	"Creates a block containing all integers from start to end, inclusive. Requires start <= end and at most 16777216 elements."
 	{
 		argsn 2
 		argtypes {
@@ -2809,7 +2814,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "is-empty" 
+	group "is-empty"
 	"Checks if a collection is empty, returning true if empty and false otherwise."
 	{
 		argsn 1
@@ -2831,7 +2836,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "length?" 
+	group "length?"
 	"Returns the number of elements in a collection."
 	{
 		argsn 1
@@ -2852,7 +2857,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "max-idx?" 
+	group "max-idx?"
 	"Returns the maximum valid index in a collection (length? - 1)."
 	{
 		argsn 1
@@ -2870,7 +2875,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "keys" 
+	group "keys"
 	"Extracts the keys from a dictionary or column names from a table as a block."
 	{
 		argsn 1
@@ -2887,7 +2892,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "_->" 
+	group "_->"
 	"Accesses a value in a collection by index or key (0-based indexing for blocks and lists)."
 	{
 		argsn 2
@@ -2908,7 +2913,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "_<-" 
+	group "_<-"
 	"Accesses a value in a collection by index or key, with reversed argument order (0-based indexing for blocks and lists)."
 	{
 		argsn 2
@@ -2926,7 +2931,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "_<~" 
+	group "_<~"
 	"Accesses a value in a collection by index with reversed argument order (1-based indexing)."
 	{
 		argsn 2
@@ -2943,7 +2948,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "_~>" 
+	group "_~>"
 	"Accesses a value in a collection by index (1-based indexing)."
 	{
 		argsn 2
@@ -2960,7 +2965,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "intersection" 
+	group "intersection"
 	"Finds the common elements between two collections, returning only values that appear in both."
 	{
 		argsn 2
@@ -2992,7 +2997,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "intersection\\by" 
+	group "intersection\\by"
 	"Finds the intersection of two collections using a custom comparison function to determine matching elements."
 	{
 		argsn 3
@@ -3019,7 +3024,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "difference" 
+	group "difference"
 	"Creates a new collection containing elements from the first collection that are not present in the second collection."
 	{
 		argsn 2
@@ -3054,7 +3059,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "transpose" 
+	group "transpose"
 	"Transposes a matrix (block of blocks), converting rows to columns and columns to rows."
 	{
 		argsn 1
@@ -3073,7 +3078,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "zip" 
+	group "zip"
 	"Combines two same-size collections into a block of pairs, where each pair contains corresponding elements from both collections."
 	{
 		argsn 2
@@ -3097,7 +3102,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "remove-last!" 
+	group "remove-last!"
 	"Removes the last element from a block in-place and returns the modified block."
 	{
 		argsn 1
@@ -3116,7 +3121,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "append!" 
+	group "append!"
 	"Appends a value to a block, list or string in-place and returns the modified collection."
 	{
 		argsn 2
@@ -3137,7 +3142,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "update!" 
+	group "update!"
 	"Updates the value at a specific index in a block or list in-place and returns the modified collection (0-based indexing)."
 	{
 		argsn 3
@@ -3160,7 +3165,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "update\\with!" 
+	group "update\\with!"
 	"Updates the value at a specific index by evaluating a code block with the current value injected and storing the result (0-based indexing)."
 	{
 		argsn 3
@@ -3185,7 +3190,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "update\\pos!" 
+	group "update\\pos!"
 	"Updates the value at a specific position in a block or list in-place and returns the modified collection (1-based indexing)."
 	{
 		argsn 3
@@ -3208,7 +3213,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "change\\nth!" 
+	group "change\\nth!"
 	"Updates the value at a specific position in a block or list in-place and returns the modified collection (1-based indexing)."
 	{
 		argsn 3
@@ -3224,7 +3229,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "append\\many!" 
+	group "append\\many!"
 	"Appends all values from a block to a collection (block, list or string) in-place and returns the modified collection."
 	{
 		argsn 2
@@ -3247,7 +3252,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "peek" 
+	group "peek"
 	"Returns the current value at a block's cursor position without advancing the cursor."
 	{
 		argsn 1
@@ -3265,7 +3270,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "pop" 
+	group "pop"
 	"Returns the current value at a block's cursor position and advances the cursor."
 	{
 		argsn 1
@@ -3283,7 +3288,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "pos" 
+	group "pos"
 	"Returns the current cursor position in a block."
 	{
 		argsn 1
@@ -3302,7 +3307,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "next" 
+	group "next"
 	"Advances the cursor position in a block and returns the block."
 	{
 		argsn 1
@@ -3320,7 +3325,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "at" 
+	group "at"
 	"Sets the cursor position in a block to the specified index and returns the block."
 	{
 		argsn 2
@@ -3340,7 +3345,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "evals" 
+	group "evals"
 	"Takes a block of Rye values and evaluates each value or expression."
 	{
 		argsn 1
@@ -3360,7 +3365,7 @@ section "Collections " "" {
 	{
 	}
 
-	group "evals\\with" 
+	group "evals\\with"
 	"Evaluate a block with injecting the first argument."
 	{
 		argsn 2
@@ -3381,15 +3386,13 @@ section "Collections " "" {
 	}
 
 }
-
+}
+section "evaldo/builtins_base_types.go" "" {
 section "Types and Kinds " "" {
-	group "integer" 
+	group "integer"
 	"Tries to change a Rye value (like string) to integer."
 	{
 		argsn 1
-		argtypes {
-			1 [ String ]
-		}
 		arg `value: String or decimal value to convert to an integer`
 		returns `An integer value`
 	}
@@ -3406,13 +3409,10 @@ section "Types and Kinds " "" {
 	{
 	}
 
-	group "decimal" 
+	group "decimal"
 	"Tries to change a Rye value (like string) to decimal."
 	{
 		argsn 1
-		argtypes {
-			1 [ String ]
-		}
 		arg `value: String value to convert to a decimal`
 		returns `A decimal value`
 	}
@@ -3425,7 +3425,7 @@ section "Types and Kinds " "" {
 	{
 	}
 
-	group "string" 
+	group "string"
 	"Tries to turn a Rye value to string."
 	{
 		argsn 1
@@ -3445,14 +3445,11 @@ section "Types and Kinds " "" {
 	{
 	}
 
-	group "uri" 
+	group "uri"
 	"Tries to change Rye value to an URI."
 	{
 		argsn 1
 		pure
-		argtypes {
-			1 [ String ]
-		}
 	}
 
 	{
@@ -3463,14 +3460,11 @@ section "Types and Kinds " "" {
 	{
 	}
 
-	group "file" 
+	group "file"
 	"Tries to change Rye value to a file."
 	{
 		argsn 1
 		pure
-		argtypes {
-			1 [ String ]
-		}
 	}
 
 	{
@@ -3481,14 +3475,11 @@ section "Types and Kinds " "" {
 	{
 	}
 
-	group "char" 
+	group "char"
 	"Tries to turn a Rye value (like integer) to ascii character."
 	{
 		argsn 1
 		pure
-		argtypes {
-			1 [ Integer ]
-		}
 		arg `value: Integer representing an ASCII code point`
 		returns `A string containing the character corresponding to the ASCII code`
 	}
@@ -3501,14 +3492,11 @@ section "Types and Kinds " "" {
 	{
 	}
 
-	group "ascii" 
+	group "ascii"
 	"Tries to turn a single character string to its ASCII code integer."
 	{
 		argsn 1
 		pure
-		argtypes {
-			1 [ String ]
-		}
 		arg `value: String containing a single character`
 		returns `An integer representing the ASCII code of the character`
 	}
@@ -3523,14 +3511,11 @@ section "Types and Kinds " "" {
 	{
 	}
 
-	group "block" 
+	group "block"
 	"Turns a List, Vector, or TableRow to a Block"
 	{
 		argsn 1
 		pure
-		argtypes {
-			1 [ List Vector TableRow ]
-		}
 		arg `value: List, Vector, or TableRow to convert to a block`
 		returns `A block containing the same elements as the input`
 	}
@@ -3545,14 +3530,11 @@ section "Types and Kinds " "" {
 	{
 	}
 
-	group "word" 
+	group "word"
 	"Tries to change a Rye value to a word with same name."
 	{
 		argsn 1
 		pure
-		argtypes {
-			1 [ String Word Opword Pipeword Xword EXword ]
-		}
 		arg `value: String or word-like value to convert to a word`
 		returns `A word with the same name as the input value`
 	}
@@ -3565,7 +3547,7 @@ section "Types and Kinds " "" {
 	{
 	}
 
-	group "is-string" 
+	group "is-string"
 	"Returns true if value is a string."
 	{
 		argsn 1
@@ -3583,7 +3565,7 @@ section "Types and Kinds " "" {
 	{
 	}
 
-	group "is-integer" 
+	group "is-integer"
 	"Returns true if value is an integer."
 	{
 		argsn 1
@@ -3601,7 +3583,7 @@ section "Types and Kinds " "" {
 	{
 	}
 
-	group "is-decimal" 
+	group "is-decimal"
 	"Returns true if value is a decimal."
 	{
 		argsn 1
@@ -3619,7 +3601,7 @@ section "Types and Kinds " "" {
 	{
 	}
 
-	group "is-number" 
+	group "is-number"
 	"Returns true if value is a number (integer or decimal)."
 	{
 		argsn 1
@@ -3637,7 +3619,7 @@ section "Types and Kinds " "" {
 	{
 	}
 
-	group "type?" 
+	group "type?"
 	"Returns the type of Rye value as a word."
 	{
 		argsn 1
@@ -3654,7 +3636,7 @@ section "Types and Kinds " "" {
 	{
 	}
 
-	group "kind?" 
+	group "kind?"
 	"Returns the kind of Rye value as a word."
 	{
 		argsn 1
@@ -3670,7 +3652,7 @@ section "Types and Kinds " "" {
 	{
 	}
 
-	group "types?" 
+	group "types?"
 	"Returns the types of Rye values in a block or table row as a block of words."
 	{
 		argsn 1
@@ -3689,7 +3671,7 @@ section "Types and Kinds " "" {
 	{
 	}
 
-	group "dump" 
+	group "dump"
 	"Returns (dumps) Rye code representing the object."
 	{
 		argsn 1
@@ -3707,7 +3689,7 @@ section "Types and Kinds " "" {
 	{
 	}
 
-	group "mold" 
+	group "mold"
 	"Turn value to it's string representation."
 	{
 		argsn 1
@@ -3723,7 +3705,7 @@ section "Types and Kinds " "" {
 	{
 	}
 
-	group "mold\\nowrap" 
+	group "mold\\nowrap"
 	"Turn value to it's string representation. Doesn't wrap the blocks"
 	{
 		argsn 1
@@ -3740,7 +3722,7 @@ section "Types and Kinds " "" {
 	{
 	}
 
-	group "assure-kind" 
+	group "assure-kind"
 	"Assuring kind."
 	{
 		argsn 2
@@ -3760,7 +3742,7 @@ section "Types and Kinds " "" {
 	{
 	}
 
-	group "method" 
+	group "method"
 	"Registers a method (generic function)."
 	{
 		argsn 3
@@ -3777,7 +3759,7 @@ section "Types and Kinds " "" {
 	{
 	}
 
-	group "kind" 
+	group "kind"
 	"Creates new kind."
 	{
 		argsn 2
@@ -3797,14 +3779,11 @@ section "Types and Kinds " "" {
 	{
 	}
 
-	group "secret" 
+	group "secret"
 	"Creates a secret from a string."
 	{
 		argsn 1
 		pure
-		argtypes {
-			1 [ String ]
-		}
 		arg `value: String value to convert to a secret`
 		returns `A secret value that hides the string from casual inspection`
 	}
@@ -3818,14 +3797,11 @@ section "Types and Kinds " "" {
 	{
 	}
 
-	group "reveal" 
+	group "reveal"
 	"Reveals the secret value."
 	{
 		argsn 1
 		pure
-		argtypes {
-			1 [ Secret ]
-		}
 		arg `secret: Secret value to reveal`
 		returns `The string value contained in the secret`
 	}
@@ -3839,13 +3815,10 @@ section "Types and Kinds " "" {
 	{
 	}
 
-	group "lazy" 
+	group "lazy"
 	"Creates a lazy value from a block. The block will only be evaluated when forced with _!."
 	{
 		argsn 1
-		argtypes {
-			1 [ Block ]
-		}
 		arg `value: Dict or context to convert`
 		arg `kind: Kind to convert the value to`
 		returns `A new context of the specified kind`
@@ -3858,41 +3831,11 @@ section "Types and Kinds " "" {
 	{
 	}
 
-	group "_!" 
-	"Forces evaluation of a lazy value. If frozen evaluates the block and caches the result. If already thawed returns cached result."
-	{
-		argsn 1
-		argtypes {
-			1 [ LazyValue ]
-		}
-	}
-
-	{
-	}
-
-	{
-	}
-
-	group "_>>" 
-	"Converts first argument to a specific kind."
-	{
-		argsn 2
-		argtypes {
-			1 [ Dict Kind ]
-			2 [ Kind ]
-		}
-	}
-
-	{
-	}
-
-	{
-	}
-
 }
-
+}
+section "evaldo/builtins_base_contexts.go" "" {
 section "Contexts " "Context related functions" {
-	group "raw-context" 
+	group "raw-context"
 	"Creates a completely isolated context with no parent, where only built-in functions are available."
 	{
 		argsn 1
@@ -3912,7 +3855,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "isolate" 
+	group "isolate"
 	"Creates a context that can access the parent context during creation, but becomes isolated afterward."
 	{
 		argsn 1
@@ -3934,7 +3877,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "context" 
+	group "context"
 	"Creates a new context from a block (evaluated) or dict (converted)."
 	{
 		argsn 1
@@ -3957,7 +3900,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "context\\pure" 
+	group "context\\pure"
 	"Creates a new context using Pure Context (PCtx) as parent, preventing access to regular context changes."
 	{
 		argsn 1
@@ -3977,7 +3920,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "private" 
+	group "private"
 	"Creates a temporary private context for evaluating expressions, returning the last value instead of the context."
 	{
 		argsn 1
@@ -3998,7 +3941,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "private\\" 
+	group "private\\"
 	"Creates a documented private context for evaluating expressions, returning the last value instead of the context."
 	{
 		argsn 2
@@ -4018,7 +3961,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "extends" 
+	group "extends"
 	"Creates a new context that inherits from a specified parent context."
 	{
 		argsn 2
@@ -4039,7 +3982,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "bind!" 
+	group "bind!"
 	"Binds a context as a parent context to first context."
 	{
 		argsn 2
@@ -4059,7 +4002,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "bind" 
+	group "bind"
 	"Creates a clone of the first context and binds the second context as its parent."
 	{
 		argsn 2
@@ -4082,7 +4025,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "anchor" 
+	group "anchor"
 	"Creates a clone of a context and sets current context as its parent."
 	{
 		argsn 1
@@ -4102,7 +4045,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "anchor!" 
+	group "anchor!"
 	"Sets current context as parent of the given context (modifies the context in place)."
 	{
 		argsn 1
@@ -4121,7 +4064,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "unbind" 
+	group "unbind"
 	"Removes the parent relationship from a context, making it a standalone context."
 	{
 		argsn 1
@@ -4140,7 +4083,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "whereis" 
+	group "whereis"
 	"Searches for a word in current context and its parents, returns block with [ depth context ] where word was found."
 	{
 		argsn 1
@@ -4160,7 +4103,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "get" 
+	group "get"
 	"Gets the value of a word from current or parent contexts without calling it (similar to get-word ?word)."
 	{
 		argsn 1
@@ -4180,7 +4123,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "current" 
+	group "current"
 	"Returns current context."
 	{
 	}
@@ -4192,7 +4135,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "parent?" 
+	group "parent?"
 	"Returns parent context of the current context."
 	{
 	}
@@ -4204,7 +4147,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "parent\\of" 
+	group "parent\\of"
 	"Returns parent context of the current context."
 	{
 		argsn 1
@@ -4220,7 +4163,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "lc" 
+	group "lc"
 	"Lists words in current context"
 	{
 		pure
@@ -4234,7 +4177,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "lc\\data" 
+	group "lc\\data"
 	"Returns words in current context as a block."
 	{
 		arg `none`
@@ -4248,7 +4191,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "lc\\data\\" 
+	group "lc\\data\\"
 	"Returns words in specified context as a block."
 	{
 		argsn 1
@@ -4266,7 +4209,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "lcp" 
+	group "lcp"
 	"Lists words in parent context"
 	{
 		arg `none`
@@ -4279,7 +4222,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "lc\\" 
+	group "lc\\"
 	"Lists words in current context with string filter, by type (word: 'function, 'builtin, 'context), or regex filter (native of kind 'regexp)"
 	{
 		argsn 1
@@ -4296,7 +4239,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "lcp\\" 
+	group "lcp\\"
 	"Lists words in parent context with string filter"
 	{
 		argsn 1
@@ -4313,7 +4256,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "cc" 
+	group "cc"
 	"Change to context (pushes current context to stack for ccb)"
 	{
 		argsn 1
@@ -4330,7 +4273,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "ccp" 
+	group "ccp"
 	"Change to parent context (pushes current context to stack for ccb)"
 	{
 		arg `none`
@@ -4343,7 +4286,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "ccb" 
+	group "ccb"
 	"Change context back (pops from context stack)"
 	{
 		arg `none`
@@ -4356,7 +4299,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "mkcc" 
+	group "mkcc"
 	"Make context with current as parent and change to it (pushes current context to stack for ccb)."
 	{
 		argsn 1
@@ -4373,7 +4316,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "cc-stack-size" 
+	group "cc-stack-size"
 	"Returns the current size of the context navigation stack."
 	{
 		arg `none`
@@ -4386,7 +4329,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "cc-clear-stack" 
+	group "cc-clear-stack"
 	"Clears the context navigation stack (removes all stored previous contexts)."
 	{
 		arg `none`
@@ -4399,7 +4342,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "clone" 
+	group "clone"
 	"Creates a copy of a context with the same state and parent relationship."
 	{
 		argsn 1
@@ -4420,7 +4363,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "clone\\" 
+	group "clone\\"
 	"Creates a copy of a context and evaluates a block of code inside the clone."
 	{
 		argsn 2
@@ -4443,7 +4386,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "clone\\deep" 
+	group "clone\\deep"
 	"Creates a deep copy of a context with the same state and parent relationship, recursively copying all nested objects."
 	{
 		argsn 1
@@ -4463,7 +4406,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "call-depth?" 
+	group "call-depth?"
 	"Returns the current function call depth as an integer (0 = top-level, 1 = inside one function call, etc.)."
 	{
 		arg `(none)`
@@ -4478,7 +4421,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "max-call-depth!" 
+	group "max-call-depth!"
 	"Sets the maximum allowed function call depth (recursion limit). Use 0 for unlimited (default). Returns the previous limit. Calls that exceed this depth raise a stack-overflow error."
 	{
 		argsn 1
@@ -4496,7 +4439,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "max-call-depth?" 
+	group "max-call-depth?"
 	"Returns the current maximum call depth limit as an integer (0 = unlimited)."
 	{
 		arg `(none)`
@@ -4511,7 +4454,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "ops-done?" 
+	group "ops-done?"
 	"Returns the total number of expression evaluations performed so far in this program state as an integer."
 	{
 		arg `(none)`
@@ -4525,7 +4468,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "max-ops!" 
+	group "max-ops!"
 	"Sets the maximum number of expression evaluations allowed. Use 0 for unlimited (default). Returns the previous limit. Exceeding the limit raises an evaluation-limit error."
 	{
 		argsn 1
@@ -4543,7 +4486,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "max-ops?" 
+	group "max-ops?"
 	"Returns the current maximum ops limit as an integer (0 = unlimited)."
 	{
 		arg `(none)`
@@ -4558,7 +4501,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "reset-ops" 
+	group "reset-ops"
 	"Resets the OpsCount counter to zero and clears the MaxOps limit. Returns the OpsCount value before reset. Useful for re-arming the budget inside a fresh computation phase."
 	{
 		arg `(none)`
@@ -4572,7 +4515,7 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
-	group "enter" 
+	group "enter"
 	"Combines with and do\\in: takes a value to inject, a context as parent, and a block to evaluate with both."
 	{
 		argsn 3
@@ -4596,9 +4539,10 @@ section "Contexts " "Context related functions" {
 	}
 
 }
-
+}
+section "evaldo/builtins_base_conditionals.go" "" {
 section "Flow control " "Functions for conditional execution and branching logic" {
-	group "if" 
+	group "if"
 	"Executes a block of code only if the condition is true, returning the result of the block or false."
 	{
 		argsn 2
@@ -4622,7 +4566,7 @@ section "Flow control " "Functions for conditional execution and branching logic
 	{
 	}
 
-	group "when" 
+	group "when"
 	"Conditionally executes an action block if a condition block evaluates to true, injecting the same value into both blocks and returning the value of the action block if the condition is truthy or the original value otherwise."
 	{
 		argsn 3
@@ -4645,7 +4589,7 @@ section "Flow control " "Functions for conditional execution and branching logic
 	{
 	}
 
-	group "^when" 
+	group "^when"
 	"Conditionally executes an action block if a condition block evaluates to true, injecting the same value into both blocks and returning the value of the action block if the condition is truthy or the original value otherwise."
 	{
 		argsn 3
@@ -4668,7 +4612,7 @@ section "Flow control " "Functions for conditional execution and branching logic
 	{
 	}
 
-	group "whether" 
+	group "whether"
 	"Evaluates a condition block with the injected value and executes either the true or false block accordingly, returning the result. Like when with an else branch."
 	{
 		argsn 4
@@ -4695,7 +4639,7 @@ section "Flow control " "Functions for conditional execution and branching logic
 	{
 	}
 
-	group "^if" 
+	group "^if"
 	"Conditional that sets the return flag when true, allowing early return from a function when the condition is a boolean."
 	{
 		argsn 2
@@ -4717,7 +4661,7 @@ section "Flow control " "Functions for conditional execution and branching logic
 	{
 	}
 
-	group "either" 
+	group "either"
 	"Executes one of two blocks based on a boolean condition, similar to if/else in other languages."
 	{
 		argsn 3
@@ -4743,7 +4687,7 @@ section "Flow control " "Functions for conditional execution and branching logic
 	{
 	}
 
-	group "choose" 
+	group "choose"
 	"Returns the first or second value from a block of two values based on a boolean condition."
 	{
 		argsn 2
@@ -4769,7 +4713,7 @@ section "Flow control " "Functions for conditional execution and branching logic
 	{
 	}
 
-	group "switch" 
+	group "switch"
 	"Pattern matching construct that executes a block of code corresponding to the first matching case value."
 	{
 		argsn 2
@@ -4789,7 +4733,7 @@ section "Flow control " "Functions for conditional execution and branching logic
 	{
 	}
 
-	group "cases" 
+	group "cases"
 	"Evaluates multiple condition-action pairs and applies all matching actions cumulatively to the initial value."
 	{
 		argsn 2
@@ -4815,9 +4759,10 @@ section "Flow control " "Functions for conditional execution and branching logic
 	}
 
 }
-
+}
+section "evaldo/builtins_base_iteration.go" "" {
 section "Iteration " "Functions for iterating over collections and executing code repeatedly" {
-	group "loop" 
+	group "loop"
 	"Executes a block of code, builtin, or function a specified number of times, injecting the current iteration number (starting from 1)."
 	{
 		argsn 2
@@ -4839,7 +4784,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 	}
 
-	group "produce" 
+	group "produce"
 	"Executes a block of code a specified number of times, passing the result of each execution to the next iteration."
 	{
 		argsn 3
@@ -4864,7 +4809,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 	}
 
-	group "replicate" 
+	group "replicate"
 	"Executes a block of code a specified number of times and collects all results into a block."
 	{
 		argsn 2
@@ -4886,7 +4831,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 	}
 
-	group "replicate\\idx" 
+	group "replicate\\idx"
 	"Executes a block of code a specified number of times, injecting the current index (0-based), and collects all results into a block."
 	{
 		argsn 2
@@ -4908,7 +4853,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 	}
 
-	group "produce\\while" 
+	group "produce\\while"
 	"Executes a block of code repeatedly while a condition is true, passing the result of each execution to the next iteration."
 	{
 		argsn 3
@@ -4930,7 +4875,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 	}
 
-	group "produce\\" 
+	group "produce\\"
 	"Executes a block of code a specified number of times, updating an accumulator word with each iteration result."
 	{
 		argsn 4
@@ -4953,7 +4898,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 	}
 
-	group "forever" 
+	group "forever"
 	"Executes a block of code repeatedly until .return is called within the block."
 	{
 		argsn 1
@@ -4972,7 +4917,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 	}
 
-	group "forever\\with" 
+	group "forever\\with"
 	"Accepts a value and a block, and executes the block repeatedly with the value until .return is called."
 	{
 		argsn 2
@@ -4992,7 +4937,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 	}
 
-	group "for" 
+	group "for"
 	"Accepts a block of values and a block of code, builtin, or function, does the code for each of the values, injecting them."
 	{
 		argsn 2
@@ -5013,7 +4958,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 	}
 
-	group "for\\pos" 
+	group "for\\pos"
 	"Iterates over a collection with position tracking (1-based), setting a word to the current position and injecting each value."
 	{
 		argsn 3
@@ -5036,7 +4981,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 	}
 
-	group "for\\idx" 
+	group "for\\idx"
 	"Iterates over a collection with index tracking (0-based), setting a word to the current index and injecting each value."
 	{
 		argsn 3
@@ -5059,7 +5004,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 	}
 
-	group "walk" 
+	group "walk"
 	"Walks through a block, executing code that can modify the block on each iteration (useful for custom iteration patterns)."
 	{
 		argsn 2
@@ -5080,7 +5025,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 	}
 
-	group "walk\\pos" 
+	group "walk\\pos"
 	"Walks through a block with position tracking (1-based), setting a word to the current position and executing code that can modify the block."
 	{
 		argsn 3
@@ -5102,7 +5047,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 	}
 
-	group "walk\\idx" 
+	group "walk\\idx"
 	"Walks through a block with index tracking (0-based), setting a word to the current index and executing code that can modify the block."
 	{
 		argsn 3
@@ -5124,7 +5069,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 	}
 
-	group "purge" 
+	group "purge"
 	"Purges values from a series based on return of a injected code block."
 	{
 		argsn 2
@@ -5149,7 +5094,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 	}
 
-	group "purge!" 
+	group "purge!"
 	"Purges values from a block stored in a word (modifying it in-place), returning the purged values."
 	{
 		argsn 2
@@ -5169,7 +5114,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 	}
 
-	group "map" 
+	group "map"
 	"Maps values of a block to a new block by evaluating a block of code or function."
 	{
 		argsn 2
@@ -5196,7 +5141,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 	}
 
-	group "map\\pos" 
+	group "map\\pos"
 	"Maps values of a block to a new block by evaluating a block of code."
 	{
 		argsn 3
@@ -5220,7 +5165,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 	}
 
-	group "map\\idx" 
+	group "map\\idx"
 	"Maps values of a block to a new block by evaluating a block of code."
 	{
 		argsn 3
@@ -5244,7 +5189,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 	}
 
-	group "reduce" 
+	group "reduce"
 	"Reduces values of a block to a single value by evaluating a block of code, using the first element as the initial accumulator."
 	{
 		argsn 3
@@ -5273,7 +5218,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 	}
 
-	group "fold\\do" 
+	group "fold\\do"
 	"Reduces values of a block to a new block by evaluating a block of code ..."
 	{
 		argsn 4
@@ -5297,7 +5242,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 	}
 
-	group "fold" 
+	group "fold"
 	"Reduces values of a block to a new block by evaluating a block of code ..."
 	{
 		argsn 3
@@ -5318,7 +5263,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 	}
 
-	group "partition" 
+	group "partition"
 	"Partitions a series by evaluating a block of code, grouping consecutive elements that return the same result."
 	{
 		argsn 2
@@ -5348,7 +5293,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 	}
 
-	group "group" 
+	group "group"
 	"Groups a block or list of values by a key generated from a code block (keys must be strings)."
 	{
 		argsn 2
@@ -5376,7 +5321,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 	}
 
-	group "filter" 
+	group "filter"
 	"Filters values from a seris based on return of a injected code block."
 	{
 		argsn 2
@@ -5403,7 +5348,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 	}
 
-	group "seek" 
+	group "seek"
 	"Seek over a series until a Block of code, Builtin, or Function returns True and return the value."
 	{
 		argsn 2
@@ -5432,7 +5377,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 	}
 
-	group "while" 
+	group "while"
 	"Executes a block of code repeatedly while a condition is true."
 	{
 		argsn 2
@@ -5453,7 +5398,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 	}
 
-	group "until" 
+	group "until"
 	"Executes a block of code repeatedly until a condition becomes true. Executes the body at least once before checking condition (do-until loop)."
 	{
 		argsn 2
@@ -5476,7 +5421,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 	}
 
-	group "for\\" 
+	group "for\\"
 	"Iterates over a collection, setting a word to each value. Works with lists, blocks, and strings."
 	{
 		argsn 3
@@ -5500,7 +5445,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 	}
 
-	group "for\\kv" 
+	group "for\\kv"
 	"Iterates over a collection with separate key and value words. For dicts, uses actual keys and values. For other collections, uses indices as keys."
 	{
 		argsn 4
@@ -5526,15 +5471,13 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 }
-
+}
+section "evaldo/builtins_base_functions.go" "" {
 section "Functions " "functions that create functions" {
-	group "var" 
+	group "var"
 	"Declares a word as a variable with the given value, allowing it to be modified. Returns the word for use with on-change."
 	{
 		argsn 2
-		argtypes {
-			1 [ Tagword Word ]
-		}
 		arg `word: Tagword representing the variable name`
 		arg `value: Initial value for the variable`
 		returns `The initial value`
@@ -5547,14 +5490,11 @@ section "Functions " "functions that create functions" {
 	{
 	}
 
-	group "does" 
+	group "does"
 	"Creates a function with no arguments that executes the given block when called."
 	{
 		argsn 1
 		pure
-		argtypes {
-			1 [ Block ]
-		}
 		arg `body: Block containing the function body code`
 		returns `function object with no parameters`
 	}
@@ -5568,14 +5508,11 @@ section "Functions " "functions that create functions" {
 	{
 	}
 
-	group "fn1" 
+	group "fn1"
 	"Creates a function that accepts one anonymous argument and executes the given block with that argument."
 	{
 		argsn 1
 		pure
-		argtypes {
-			1 [ Block ]
-		}
 		arg `body: Block containing the function body code`
 		returns `function object that accepts one anonymous argument`
 	}
@@ -5590,15 +5527,11 @@ section "Functions " "functions that create functions" {
 	{
 	}
 
-	group "fn" 
+	group "fn"
 	"Creates a function with named parameters specified in the first block and code in the second block."
 	{
 		argsn 2
 		pure
-		argtypes {
-			1 [ Block ]
-			2 [ Block ]
-		}
 		arg `spec: Block containing parameter specifications`
 		arg `body: Block containing the function body code`
 		returns `function object with the specified parameters`
@@ -5615,14 +5548,11 @@ section "Functions " "functions that create functions" {
 	{
 	}
 
-	group "fn\\spec?" 
+	group "fn\\spec?"
 	"Returns the argument specification block of a function."
 	{
 		argsn 1
 		pure
-		argtypes {
-			1 [ Function ]
-		}
 		arg `function: Function to get the argument spec from`
 		returns `Block containing the function's parameter specification`
 	}
@@ -5635,14 +5565,11 @@ section "Functions " "functions that create functions" {
 	{
 	}
 
-	group "fn\\body?" 
+	group "fn\\body?"
 	"Returns the body block of a function."
 	{
 		argsn 1
 		pure
-		argtypes {
-			1 [ Function ]
-		}
 		arg `function: Function to get the body from`
 		returns `Block containing the function's body code`
 	}
@@ -5655,15 +5582,11 @@ section "Functions " "functions that create functions" {
 	{
 	}
 
-	group "pfn" 
+	group "pfn"
 	"Creates a pure function (no side effects allowed) with named parameters and code body."
 	{
 		argsn 2
 		pure
-		argtypes {
-			1 [ Block ]
-			2 [ Block ]
-		}
 		arg `spec: Block containing parameter specifications`
 		arg `body: Block containing the function body code`
 		returns `pure function object with the specified parameters`
@@ -5679,7 +5602,7 @@ section "Functions " "functions that create functions" {
 	{
 	}
 
-	group "fn\\cc" 
+	group "fn\\cc"
 	"Creates a function that captures the current context, allowing access to variables from the enclosing scope."
 	{
 		argsn 2
@@ -5701,7 +5624,7 @@ section "Functions " "functions that create functions" {
 	{
 	}
 
-	group "fn\\in" 
+	group "fn\\in"
 	"Creates a function with a specified parent context, allowing access to variables from that context."
 	{
 		argsn 3
@@ -5724,7 +5647,7 @@ section "Functions " "functions that create functions" {
 	{
 	}
 
-	group "fn\\inside" 
+	group "fn\\inside"
 	"Creates a function that executes directly in the specified context rather than creating a new execution context."
 	{
 		argsn 3
@@ -5747,7 +5670,7 @@ section "Functions " "functions that create functions" {
 	{
 	}
 
-	group "modder" 
+	group "modder"
 	"Creates a function that executes directly in the current context (like fn\\inside with current), allowing arguments and context words to be modified with word::."
 	{
 		argsn 2
@@ -5768,7 +5691,7 @@ section "Functions " "functions that create functions" {
 	{
 	}
 
-	group "closure" 
+	group "closure"
 	"Creates a closure that captures the current context at creation time, preserving access to variables in that scope."
 	{
 		argsn 2
@@ -5790,7 +5713,7 @@ section "Functions " "functions that create functions" {
 	{
 	}
 
-	group "partial" 
+	group "partial"
 	"Creates a partially applied function with specified arguments, using _ (void) for arguments to be filled later."
 	{
 		argsn 2
@@ -5813,7 +5736,7 @@ section "Functions " "functions that create functions" {
 	{
 	}
 
-	group "apply" 
+	group "apply"
 	"Applies a function or builtin to a block of arguments."
 	{
 		argsn 2
@@ -5835,7 +5758,7 @@ section "Functions " "functions that create functions" {
 	{
 	}
 
-	group "on-change" 
+	group "on-change"
 	"Registers an observer block to be executed when a variable changes. Use with 'var' result."
 	{
 		argsn 2
@@ -5856,9 +5779,10 @@ section "Functions " "functions that create functions" {
 	}
 
 }
-
+}
+section "evaldo/builtins.go" "" {
 section "Other " "..." {
-	group "change!" 
+	group "change!"
 	"Searches for a word and changes it's value in-place. Only works on variables declared with var. If value changes returns true otherwise false"
 	{
 		argsn 2
@@ -5880,7 +5804,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "modify!" 
+	group "modify!"
 	"Searches for a word and modifies	 it's value in-place. Only works on variables declared with var. If value changes returns true otherwise false"
 	{
 		argsn 2
@@ -5902,7 +5826,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "set" 
+	group "set"
 	"Set word to value or words by deconstructing a block. Only works on variables declared with var."
 	{
 		argsn 2
@@ -5922,7 +5846,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "unset!" 
+	group "unset!"
 	"Unset a word in current context, only meant to be used in console"
 	{
 		argsn 1
@@ -5940,7 +5864,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "val" 
+	group "val"
 	"Returns value of the word in context"
 	{
 		argsn 1
@@ -5960,7 +5884,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "_<<" 
+	group "_<<"
 	"Converts a value to specific kind (R to L)"
 	{
 		argsn 2
@@ -5980,7 +5904,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "_|" 
+	group "_|"
 	"Pipeline operator that passes the value through unchanged (used with 'not' and other operations)."
 	{
 		argsn 1
@@ -5999,7 +5923,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "doc!" 
+	group "doc!"
 	"Sets docstring of the current context."
 	{
 		argsn 1
@@ -6018,7 +5942,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "doc?" 
+	group "doc?"
 	"Gets docstring of the current context."
 	{
 		pure
@@ -6033,7 +5957,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "doc\\of?" 
+	group "doc\\of?"
 	"Get docstring of the passed context."
 	{
 		argsn 1
@@ -6052,7 +5976,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "ref" 
+	group "ref"
 	"Makes a value mutable instead of immutable"
 	{
 		argsn 1
@@ -6076,7 +6000,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "deref" 
+	group "deref"
 	"Makes a value again immutable"
 	{
 		argsn 1
@@ -6099,7 +6023,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "is-ref" 
+	group "is-ref"
 	"Checks if a value is a mutable reference."
 	{
 		argsn 1
@@ -6119,7 +6043,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "is-same" 
+	group "is-same"
 	"Checks if two values are the same object (identity comparison, not value comparison)."
 	{
 		argsn 2
@@ -6140,7 +6064,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "dict" 
+	group "dict"
 	"Constructs a Dict from the Block of key and value pairs."
 	{
 		argsn 1
@@ -6162,7 +6086,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "change" 
+	group "change"
 	"Returns a new Dict with the specified key changed to the new value. Original dict is unchanged."
 	{
 		argsn 3
@@ -6186,7 +6110,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "list" 
+	group "list"
 	"Constructs a List from the Block of values."
 	{
 		argsn 1
@@ -6208,7 +6132,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "load" 
+	group "load"
 	"Loads a string into Rye values."
 	{
 		argsn 1
@@ -6227,7 +6151,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "load\\mod" 
+	group "load\\mod"
 	"Loads a string into Rye values. During load it allows modification of words."
 	{
 		argsn 1
@@ -6245,7 +6169,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "load\\live" 
+	group "load\\live"
 	"Loads a string into Rye values. During load it allows modification of words."
 	{
 		argsn 1
@@ -6263,7 +6187,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "load\\sig" 
+	group "load\\sig"
 	"Checks the signature, if OK then loads a string into Rye values."
 	{
 		argsn 1
@@ -6278,7 +6202,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "do" 
+	group "do"
 	"Takes a block of code and does (runs) it."
 	{
 		argsn 1
@@ -6304,7 +6228,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "with" 
+	group "with"
 	"Takes a value and a block of code. It does the code with the value injected."
 	{
 		argsn 2
@@ -6324,7 +6248,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "do\\inside" 
+	group "do\\inside"
 	"Takes a Context and a Block. It Does a block inside a given Context."
 	{
 		argsn 2
@@ -6347,7 +6271,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "do\\in" 
+	group "do\\in"
 	"Takes a Context and a Block. It Does a block in current context but with parent a given Context."
 	{
 		argsn 2
@@ -6370,7 +6294,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "do\\inx" 
+	group "do\\inx"
 	"Takes a Context and a Block. It Does a block in current context but with parent a given Context."
 	{
 		argsn 2
@@ -6393,7 +6317,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "lk\\" 
+	group "lk\\"
 	"Lists available kinds with string filter"
 	{
 		argsn 1
@@ -6408,7 +6332,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "lg\\" 
+	group "lg\\"
 	"Lists generic words related to specific kind with string filter"
 	{
 		argsn 2
@@ -6423,7 +6347,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "return" 
+	group "return"
 	"Accepts one value and returns it."
 	{
 		argsn 1
@@ -6436,7 +6360,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "rye" 
+	group "rye"
 	""
 	{
 	}
@@ -6448,7 +6372,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "Rye-itself//Capture" 
+	group "Rye-itself//Capture"
 	"Registers a capture block that will be executed with the error injected if an unhandled error bubbles to the top of the program. The error value is injected as the first value (use .disarm, .print, etc.)."
 	{
 		argsn 2
@@ -6468,7 +6392,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "defer" 
+	group "defer"
 	"Registers a block of code to be executed when the current function exits or the program terminates."
 	{
 		argsn 1
@@ -6486,7 +6410,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "defer\\" 
+	group "defer\\"
 	"Registers a block of code with an injected value to be executed when the current function exits or the program terminates. Works like 'with' but deferred."
 	{
 		argsn 2
@@ -6506,7 +6430,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "assert" 
+	group "assert"
 	"Evaluates a block of code and asserts that its result equals the expected value. Returns the result if assertion passes, fails with error message if not."
 	{
 		argsn 2
@@ -6527,7 +6451,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "assert\\display" 
+	group "assert\\display"
 	"Evaluates a block of code and displays the result. Prints the explanation in magenta followed by OK in green on success, or error message in red on failure. Does not fail - continues evaluation."
 	{
 		argsn 3
@@ -6549,7 +6473,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "recur-if" 
+	group "recur-if"
 	"Internal recursion control function. Resets function execution if condition > 0, otherwise returns result."
 	{
 		argsn 2
@@ -6566,7 +6490,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "recur-if\\1" 
+	group "recur-if\\1"
 	"Internal recursion control function for single-argument functions. Updates first argument and resets if condition > 0."
 	{
 		argsn 2
@@ -6585,7 +6509,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "recur-if\\2" 
+	group "recur-if\\2"
 	"Internal recursion control function for two-argument functions. Updates both arguments and resets if condition > 0."
 	{
 		argsn 3
@@ -6606,7 +6530,7 @@ section "Other " "..." {
 	{
 	}
 
-	group "recur-if\\3" 
+	group "recur-if\\3"
 	"Internal recursion control function for three-argument functions. Updates all three arguments and resets if condition > 0."
 	{
 		argsn 4
@@ -6630,9 +6554,10 @@ section "Other " "..." {
 	}
 
 }
-
+}
+section "evaldo/builtins_base_combinators.go" "" {
 section "Combinators " "Functions that combine other functions or control execution flow" {
-	group "pass" 
+	group "pass"
 	"Accepts a value and a block. It does the block, with value injected, and returns (passes on) the initial value."
 	{
 		argsn 2
@@ -6653,7 +6578,7 @@ section "Combinators " "Functions that combine other functions or control execut
 	{
 	}
 
-	group "wrap" 
+	group "wrap"
 	"Executes a wrapper block before and after executing a main block, returning the result of the main block."
 	{
 		argsn 2
@@ -6673,7 +6598,7 @@ section "Combinators " "Functions that combine other functions or control execut
 	{
 	}
 
-	group "keep" 
+	group "keep"
 	"Do the first block, then the second one but return the result of the first one."
 	{
 		argsn 3
@@ -6695,9 +6620,10 @@ section "Combinators " "Functions that combine other functions or control execut
 	}
 
 }
-
+}
+section "evaldo/builtins_base_printing_not.go" "" {
 section "Default" "" {
-	group "prns" 
+	group "prns"
 	"Prints a value followed by a space, returning the input value."
 	{
 		argsn 1
@@ -6712,7 +6638,7 @@ section "Default" "" {
 	{
 	}
 
-	group "prn" 
+	group "prn"
 	"Prints a value without adding a newline, returning the input value."
 	{
 		argsn 1
@@ -6727,7 +6653,7 @@ section "Default" "" {
 	{
 	}
 
-	group "print" 
+	group "print"
 	"Prints a value followed by a newline, returning the input value."
 	{
 		argsn 1
@@ -6742,7 +6668,7 @@ section "Default" "" {
 	{
 	}
 
-	group "print2" 
+	group "print2"
 	"Prints two values separated by a space and followed by a newline, returning the second value."
 	{
 		argsn 2
@@ -6758,7 +6684,7 @@ section "Default" "" {
 	{
 	}
 
-	group "prn2" 
+	group "prn2"
 	"Prints two values separated by a space without a newline, returning the second value."
 	{
 		argsn 2
@@ -6774,7 +6700,7 @@ section "Default" "" {
 	{
 	}
 
-	group "prns2" 
+	group "prns2"
 	"Prints two values each followed by a space, returning the second value."
 	{
 		argsn 2
@@ -6790,7 +6716,7 @@ section "Default" "" {
 	{
 	}
 
-	group "format" 
+	group "format"
 	"Formats a block of values using a format string with {} placeholders, returning the resulting string."
 	{
 		argsn 2
@@ -6812,7 +6738,7 @@ section "Default" "" {
 	{
 	}
 
-	group "prnf" 
+	group "prnf"
 	"Formats and prints a value by replacing {} in the template string, without a newline."
 	{
 		argsn 2
@@ -6831,7 +6757,7 @@ section "Default" "" {
 	{
 	}
 
-	group "printf" 
+	group "printf"
 	"Formats and prints a value by replacing {} in the template string, followed by a newline."
 	{
 		argsn 2
@@ -6850,7 +6776,7 @@ section "Default" "" {
 	{
 	}
 
-	group "embed" 
+	group "embed"
 	"Embeds a value into a string or URI by replacing {} placeholder with the string representation of the value."
 	{
 		argsn 2
@@ -6870,7 +6796,7 @@ section "Default" "" {
 	{
 	}
 
-	group "prnv" 
+	group "prnv"
 	"Embeds a value into a string by replacing {} placeholder and prints it without a newline, returning the input value."
 	{
 		argsn 2
@@ -6889,7 +6815,7 @@ section "Default" "" {
 	{
 	}
 
-	group "printv" 
+	group "printv"
 	"Embeds a value into a string by replacing {} placeholder and prints it followed by a newline, returning the input value."
 	{
 		argsn 2
@@ -6908,7 +6834,7 @@ section "Default" "" {
 	{
 	}
 
-	group "probe\\" 
+	group "probe\\"
 	"Prints a prefix string followed by detailed type and value information about a value, followed by a newline, returning the input value."
 	{
 		argsn 2
@@ -6923,7 +6849,7 @@ section "Default" "" {
 	{
 	}
 
-	group "inspect" 
+	group "inspect"
 	"Returns a string containing detailed type and value information about a value."
 	{
 		argsn 1
@@ -6938,7 +6864,7 @@ section "Default" "" {
 	{
 	}
 
-	group "esc" 
+	group "esc"
 	"Creates an ANSI escape sequence by prepending the escape character (\\033) to the input string."
 	{
 		argsn 1
@@ -6956,7 +6882,7 @@ section "Default" "" {
 	{
 	}
 
-	group "esc-val" 
+	group "esc-val"
 	"Creates an ANSI escape sequence with an embedded value by replacing {} placeholder and prepending the escape character (\\033)."
 	{
 		argsn 2
@@ -6976,9 +6902,10 @@ section "Default" "" {
 	}
 
 }
-
+}
+section "evaldo/builtins_error_handling.go" "" {
 section "Failure " "Handling failures" {
-	group "fail" 
+	group "fail"
 	"Creates an error and sets the failure flag, but continues execution (unlike ^fail)."
 	{
 		argsn 1
@@ -6995,7 +6922,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "^fail" 
+	group "^fail"
 	"Creates an error and immediately returns from the current function with failure state."
 	{
 		argsn 1
@@ -7013,7 +6940,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "refail" 
+	group "refail"
 	"Re-raises an existing error with additional context. TODO -- duplicate of check"
 	{
 		argsn 2
@@ -7028,7 +6955,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "failure" 
+	group "failure"
 	"Creates an error object without setting any flags (unlike fail and ^fail)."
 	{
 		argsn 1
@@ -7045,7 +6972,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "empty" 
+	group "empty"
 	"Creates an 404 error object without setting any flags."
 	{
 		arg `error_info: String message, Integer code, or block for multiple parameters`
@@ -7061,7 +6988,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "failure\\wrap" 
+	group "failure\\wrap"
 	"Creates a new error that wraps an existing error, allowing for error chaining."
 	{
 		argsn 2
@@ -7081,7 +7008,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "is-error" 
+	group "is-error"
 	"Returns true if the value is an error, false otherwise."
 	{
 		argsn 1
@@ -7097,7 +7024,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "error-kind?" 
+	group "error-kind?"
 	"Returns the kind of an error, or void if not an error."
 	{
 		argsn 1
@@ -7113,7 +7040,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "is-error-of-kind" 
+	group "is-error-of-kind"
 	"Returns true if the value is an error of the specified kind, false otherwise."
 	{
 		argsn 2
@@ -7133,7 +7060,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "cause?" 
+	group "cause?"
 	"Extracts the root cause from an error chain by traversing the Parent references."
 	{
 		argsn 1
@@ -7152,7 +7079,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "status?" 
+	group "status?"
 	"Extracts the numeric status code from an error object."
 	{
 		argsn 1
@@ -7172,7 +7099,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "message?" 
+	group "message?"
 	"Extracts the message string from an error object."
 	{
 		argsn 1
@@ -7192,7 +7119,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "details?" 
+	group "details?"
 	"Extracts additional details from an error object as a dictionary."
 	{
 		argsn 1
@@ -7212,7 +7139,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "has-failed" 
+	group "has-failed"
 	"Tests if a value is an error object, returning true for errors and false for non-errors."
 	{
 		argsn 1
@@ -7230,7 +7157,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "is-failure" 
+	group "is-failure"
 	"Checks if a value is a failure/error type. Unlike has-failed, this doesn't accept failures - the value must already be disarmed."
 	{
 		argsn 1
@@ -7248,7 +7175,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "is-success" 
+	group "is-success"
 	"Returns true for any value that is not a failure/error type. The opposite of is-failure."
 	{
 		argsn 1
@@ -7267,7 +7194,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "disarm" 
+	group "disarm"
 	"Clears the failure flag while preserving the error object, allowing error inspection without propagation."
 	{
 		argsn 1
@@ -7285,7 +7212,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "check" 
+	group "check"
 	"Checks if a value is in failure state and wraps it with a new error if so, otherwise returns the original value."
 	{
 		argsn 2
@@ -7303,7 +7230,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "^check" 
+	group "^check"
 	"Like 'check' but also sets the return flag to immediately exit the current function."
 	{
 		argsn 2
@@ -7320,7 +7247,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "^ensure" 
+	group "^ensure"
 	"Checks if a value is truthy and returns it if so, otherwise creates an error and immediately returns from the function."
 	{
 		argsn 2
@@ -7337,7 +7264,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "ensure" 
+	group "ensure"
 	"Checks if a value is truthy and returns it if so, otherwise creates an error with the failure flag set."
 	{
 		argsn 2
@@ -7354,7 +7281,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "requires-one-of" 
+	group "requires-one-of"
 	"Validates that a value matches one of the provided options, failing with a descriptive error if not."
 	{
 		argsn 2
@@ -7377,7 +7304,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "^requires-one-of" 
+	group "^requires-one-of"
 	"Validates that a value matches one of the provided options, failing with a descriptive error if not."
 	{
 		argsn 2
@@ -7400,7 +7327,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "ensure\\with" 
+	group "ensure\\with"
 	"Injects a value into a validation block and returns the value if the block is truthy, otherwise creates an error."
 	{
 		argsn 3
@@ -7421,7 +7348,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "^ensure\\with" 
+	group "^ensure\\with"
 	"Like ensure\\with but also sets the return flag to immediately exit the current function."
 	{
 		argsn 3
@@ -7442,7 +7369,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "fix" 
+	group "fix"
 	"Handles errors by executing a block if the value is in failure state, clearing the failure flag."
 	{
 		argsn 2
@@ -7463,7 +7390,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "^fix" 
+	group "^fix"
 	"Like 'fix' but also sets the return flag to immediately exit the current function with the handler result."
 	{
 		argsn 2
@@ -7483,7 +7410,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "fix\\either" 
+	group "fix\\either"
 	"Executes one of two blocks depending on whether the value is in failure state."
 	{
 		argsn 3
@@ -7505,7 +7432,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "fix\\else" 
+	group "fix\\else"
 	"Executes a block if the value is not in failure state, otherwise returns the original value."
 	{
 		argsn 2
@@ -7525,7 +7452,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "fix\\continue" 
+	group "fix\\continue"
 	"Executes one of two blocks depending on whether the value is in failure state, like an error-handling if/else."
 	{
 		argsn 3
@@ -7547,7 +7474,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "continue" 
+	group "continue"
 	"Executes a block only if the value is not in failure state, opposite of 'fix'."
 	{
 		argsn 2
@@ -7567,7 +7494,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "^fix\\match" 
+	group "^fix\\match"
 	"Error handling switch that matches error codes with handler blocks and sets the return flag."
 	{
 		argsn 2
@@ -7588,7 +7515,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "try" 
+	group "try"
 	"Takes a block of code and does (runs) it."
 	{
 		argsn 1
@@ -7608,7 +7535,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "try-all" 
+	group "try-all"
 	"Executes a block and returns a result tuple [success, result], where success is true if no error occurred."
 	{
 		argsn 1
@@ -7628,7 +7555,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "try\\in" 
+	group "try\\in"
 	"Takes a Context and a Block. It Does a block inside a given Context."
 	{
 		argsn 2
@@ -7649,7 +7576,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "finally" 
+	group "finally"
 	"Executes a block and ensures another block is executed afterward, regardless of errors."
 	{
 		argsn 2
@@ -7670,7 +7597,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "retry" 
+	group "retry"
 	"Executes a block and retries it up to N times if it results in a failure."
 	{
 		argsn 2
@@ -7692,7 +7619,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "persist" 
+	group "persist"
 	"Executes a block repeatedly until it succeeds (no failure), then returns the successful result. Gives up after 1000 attempts."
 	{
 		argsn 1
@@ -7712,7 +7639,7 @@ section "Failure " "Handling failures" {
 	{
 	}
 
-	group "timeout" 
+	group "timeout"
 	"Executes a block of code with a timeout, failing if execution exceeds the specified duration in milliseconds."
 	{
 		argsn 2
@@ -7734,9 +7661,10 @@ section "Failure " "Handling failures" {
 	}
 
 }
-
+}
+section "evaldo/builtins_base_mth.go" "" {
 section "Fast Math " "Fast infix math evaluator" {
-	group "mth" 
+	group "mth"
 	"Fast infix math evaluator with proper operator precedence (+,-,*,/,//,%,<,>,=,<=,>=,!=). Single-pass Shunting-yard, direct Go arithmetic, no builtin lookup."
 	{
 		argsn 1
@@ -7766,178 +7694,140 @@ section "Fast Math " "Fast infix math evaluator" {
 	}
 
 }
+}
+section "evaldo/builtins_base_intents.go" "" {
+section "Default" "" {
+	group "input-intent"
+	"Declares a semantic input point: input-intent name validator-block provider-block. In scenario mode, returns the mocked value for the given intent name; otherwise evaluates the provider block. The resulting value is always validated using the validation dialect block."
+	{
+		argsn 3
+		pure
+		argtypes {
+			1 [ Tagword Word String ]
+			2 [ Block ]
+			3 [ Block ]
+		}
+	}
 
-section "Vector " "Vector operations" {
-	group "vector" 
-	"Creates a vector from a block of numbers."
+	{
+	}
+
+	{
+	}
+
+	group "output-intent"
+	"Logs an output with optional inline fields and executes the side-effect block unless in scenario mode. Usage: output-intent payload-or-name { fields } { side-effect }."
+	{
+		argsn 3
+		argtypes {
+			2 [ Block ]
+			3 [ Block ]
+		}
+	}
+
+	{
+	}
+
+	{
+	}
+
+}
+}
+section "evaldo/builtins_table.go" "" {
+section "Constructors " "Functions that construct a table." {
+	group "table"
+	"Creates a table by accepting block of column names and flat block of values"
+	{
+		argsn 2
+		argtypes {
+			1 [ Block ]
+			2 [ Block ]
+		}
+		arg `columns`
+		arg `data`
+	}
+
+	{
+		equal { table { "a" } { 1 2 } |type? } 'table
+		equal { table { 'a  } { 1 2 } |type? } 'table
+		equal { table { 'a 'b } { 1 2 3 4 } |length? } 2
+	}
+
+	{
+	}
+
+	group "table\\columns"
+	"Creats a table by accepting a block of columns"
+	{
+		argsn 2
+		arg `columns - names of the columns`
+		arg `data - block or list of columns (each column is a block or list)`
+	}
+
+	{
+		equal { table\columns { "a" } { { 1 2 3 } } |type? } 'table
+		equal { table\columns { "a" "b" } { { 1 2 3 } { 4 5 6 } } |length? } 3
+	}
+
+	{
+`table\columns { 'a 'b } { { 1 2 } { "x" "y" } }
+`	}
+
+	group "table\\rows"
+	"Creates a table by accepting a block or list of rows"
+	{
+		argsn 2
+		argtypes {
+			2 [ Block List ]
+		}
+		arg `columns - names of the columns`
+		arg `data - block or list of rows (each row is a block or list)`
+	}
+
+	{
+		equal { table\rows { 'a 'b } { { 1 2 } { 3 4 } } } table { 'a 'b } { 1 2 3 4 }
+		equal { table\rows { 'a 'b } list [ list [ 1 2 ] list [ 3 4 ] ] |type? } 'table
+	}
+
+	{
+	}
+
+	group "to-table"
+	"Creates a table by accepting block or list of dicts"
 	{
 		argsn 1
-		arg `block: block of numbers to convert to a vector`
-		returns `vector object`
+		argtypes {
+			1 [ Block List ]
+		}
+		arg `data`
 	}
 
 	{
-		equal { vector [ 1 2 3 ] |type? } 'vector
-		equal { vector [ 1 2 3 ] |length? } 3
-	}
-
-	{
-	}
-
-	group "normalize" 
-	"Calculates the L2 norm (Euclidean length) of a vector."
-	{
-		argsn 1
-		arg `vector: vector object to normalize`
-		returns `decimal representing the L2 norm (Euclidean length) of the vector`
-	}
-
-	{
-		equal { vector [ 3 4 ] |normalize } 5.0
+		equal { to-table list [ dict { "a" 1 } dict { "a" 2 } ] |type? } 'table
+		equal { to-table list [ dict { "a" 1 "b" "Jim" } dict { "a" 2 "b" "Bob" } ] |header? |sort } list { "a" "b" }
+		equal { to-table list [ dict { "a" 1 "b" "Jim" } dict { "a" 2 "b" "Bob" } ] |column? "b" |first } "Jim"
 	}
 
 	{
 	}
 
-	group "std-deviation" 
-	"Calculates the standard deviation of a vector's elements."
+	group "to-dict"
+	"Creates a dict from a two-column table, using the first column as keys and the second column as values."
 	{
 		argsn 1
-		arg `vector: vector object`
-		returns `decimal representing the standard deviation of the vector elements`
+		argtypes {
+			1 [ Table ]
+		}
+		arg `table - a two-column table where the first column becomes keys and the second becomes values`
+		returns `a dict mapping each value in the first column (as string key) to the corresponding value in the second column`
 	}
 
 	{
-		equal { cc math , vector [ 1 2 3 4 5 ] |std-deviation |round\to 2 } 1.58
-	}
-
-	{
-	}
-
-	group "cosine-similarity" 
-	"Calculates the cosine similarity between two vectors."
-	{
-		argsn 2
-		arg `vector1: first vector object`
-		arg `vector2: second vector object`
-		returns `decimal representing the cosine similarity between the two vectors`
-	}
-
-	{
-		equal { cosine-similarity vector [ 1 0 ] vector [ 0 1 ] } 0.0
-		equal { cosine-similarity vector [ 1 1 ] vector [ 1 1 ] } 1.0
-	}
-
-	{
-	}
-
-	group "correlation" 
-	"Calculates the correlation coefficient between two vectors."
-	{
-		argsn 2
-		arg `vector1: first vector object`
-		arg `vector2: second vector object`
-		returns `decimal representing the correlation coefficient between the two vectors`
-	}
-
-	{
-		equal { correlation vector [ 1 2 3 4 5 ] vector [ 1 2 3 4 5 ] } 1.0
-		equal { correlation vector [ 1 2 3 4 5 ] vector [ 5 4 3 2 1 ] } -1.0
-	}
-
-	{
-	}
-
-	group "dot-product" 
-	"Calculates the dot product between two vectors."
-	{
-		argsn 2
-		arg `vector1: first vector object`
-		arg `vector2: second vector object`
-		returns `decimal representing the dot product of the two vectors`
-	}
-
-	{
-		equal { dot-product vector [ 1 2 3 ] vector [ 4 5 6 ] } 32.0
-	}
-
-	{
-	}
-
-	group "euclidean-distance" 
-	"Calculates the Euclidean distance between two vectors. Useful for K-Means clustering."
-	{
-		argsn 2
-		arg `vector1: first vector object`
-		arg `vector2: second vector object`
-		returns `decimal representing the Euclidean distance between the two vectors`
-	}
-
-	{
-		equal { euclidean-distance vector [ 0 0 ] vector [ 3 4 ] } 5.0
-		equal { euclidean-distance vector [ 1 2 3 ] vector [ 1 2 3 ] } 0.0
-	}
-
-	{
-	}
-
-	group "mean-vectors" 
-	"Calculates the element-wise mean of multiple vectors. Useful for creating 'Master Anchors'."
-	{
-		argsn 1
-		arg `block: block of vectors to average`
-		returns `new vector representing the element-wise mean of all input vectors`
-	}
-
-	{
-		equal { mean-vectors [ vector [ 1 2 ] vector [ 3 4 ] ] |block } { 2.0 3.0 }
-	}
-
-	{
-	}
-
-	group "unit-vector" 
-	"Returns a new normalized vector (length = 1). Essential for consistent dot products and overlays."
-	{
-		argsn 1
-		arg `vector: vector object to normalize`
-		returns `new vector with length 1 (unit vector)`
-	}
-
-	{
-		equal { vector [ 3 4 ] |unit-vector |normalize } 1.0
-	}
-
-	{
-	}
-
-	group "project-vector" 
-	"Projects vector onto another vector. Answers: 'How much of this vector is in the direction of another?'"
-	{
-		argsn 2
-		arg `vector1: vector to project`
-		arg `vector2: vector to project onto`
-		returns `new vector representing the projection of vector1 onto vector2`
-	}
-
-	{
-		equal { vector [ 3 4 ] |project-vector vector [ 1 0 ] |block } { 3.0 0.0 }
-	}
-
-	{
-	}
-
-	group "reject-vector" 
-	"Removes projection from vector. Use this to 'subtract' a concept direction from a vector."
-	{
-		argsn 2
-		arg `vector1: vector to reject from`
-		arg `vector2: vector representing the direction to remove`
-		returns `new vector with the projection onto vector2 removed`
-	}
-
-	{
-		equal { vector [ 3 4 ] |reject-vector vector [ 1 0 ] |block } { 0.0 4.0 }
+		equal { table { 'k 'v } { "a" 1 "b" 2 } |to-dict |-> "a" } 1
+		equal { table { 'k 'v } { "x" 100 "y" 200 } |to-dict |type? } 'dict
+		equal { table { 'k 'v } { "a" 1 "b" 2 } |to-dict |length? } 2
+		equal { table { 'name 'score } { "Alice" 95 "Bob" 87 } |to-dict |-> "Bob" } 87
+		error { table { 'a } { 1 2 3 } |to-dict }
 	}
 
 	{
@@ -7945,500 +7835,516 @@ section "Vector " "Vector operations" {
 
 }
 
-section "Matrix " "Matrix operations for 2D numerical data" {
-	group "matrix\\zeros" 
-	"Creates a new matrix with the given dimensions, initialized to zeros."
-	{
-		argsn 2
-		arg `rows: number of rows`
-		arg `cols: number of columns`
-		returns `a new zero-initialized matrix`
-	}
-
-	{
-		equal { matrix\zeros 3 4 |type? } 'matrix
-		equal { matrix\zeros 2 3 |rows? } 2
-		equal { matrix\zeros 2 3 |cols? } 3
-	}
-
-	{
-	}
-
-	group "matrix" 
-	"Creates a matrix from a shape block and a data block."
-	{
-		argsn 2
-		arg `shape: block with { rows cols }`
-		arg `data: block of decimal values in row-major order`
-		returns `a new matrix with the given data`
-	}
-
-	{
-		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-get 1 2 } 6.0
-	}
-
-	{
-	}
-
-	group "matrix\\randn" 
-	"Creates a matrix with random normal values (mean 0, std 1)."
-	{
-		argsn 2
-		arg `rows: number of rows`
-		arg `cols: number of columns`
-		returns `a new matrix with random normal values (mean 0, std 1)`
-	}
-
-	{
-		equal { matrix\randn 3 4 |rows? } 3
-		equal { matrix\randn 3 4 |cols? } 4
-	}
-
-	{
-	}
-
-	group "matrix\\ones" 
-	"Creates a matrix filled with ones."
-	{
-		argsn 2
-		arg `rows: number of rows`
-		arg `cols: number of columns`
-		returns `a new matrix filled with ones`
-	}
-
-	{
-		equal { matrix\ones 2 3 |mat-get 0 0 } 1.0
-		equal { matrix\ones 2 3 |mat-get 1 2 } 1.0
-	}
-
-	{
-	}
-
-	group "matrix\\eye" 
-	"Creates an identity matrix of size n×n."
-	{
-		argsn 1
-		arg `n: size of the identity matrix`
-		returns `an n×n identity matrix`
-	}
-
-	{
-		equal { matrix\eye 3 |mat-get 0 0 } 1.0
-		equal { matrix\eye 3 |mat-get 0 1 } 0.0
-		equal { matrix\eye 3 |mat-get 1 1 } 1.0
-	}
-
-	{
-	}
-
-	group "shape?" 
-	"Returns the shape of a matrix as { rows cols }."
-	{
-		argsn 1
-		arg `mat: matrix`
-		returns `block with { rows cols }`
-	}
-
-	{
-		equal { matrix\zeros 3 4 |shape? } { 3 4 }
-	}
-
-	{
-	}
-
-	group "rows?" 
-	"Returns the number of rows in a matrix."
-	{
-		argsn 1
-		arg `mat: matrix`
-		returns `number of rows`
-	}
-
-	{
-		equal { matrix\zeros 3 4 |rows? } 3
-	}
-
-	{
-	}
-
-	group "cols?" 
-	"Returns the number of columns in a matrix."
-	{
-		argsn 1
-		arg `mat: matrix`
-		returns `number of columns`
-	}
-
-	{
-		equal { matrix\zeros 3 4 |cols? } 4
-	}
-
-	{
-	}
-
-	group "mat-get" 
-	"Gets the element at the specified row and column (0-indexed)."
+section "Filtering " "Functions that construct a table." {
+	group "where-equal"
+	"Returns table of rows where specific colum is equal to given value."
 	{
 		argsn 3
-		arg `mat: matrix`
-		arg `row: row index (0-based)`
-		arg `col: column index (0-based)`
-		returns `the element at (row, col)`
+		argtypes {
+			1 [ Table ]
+			2 [ Word String ]
+		}
+		arg `sheet`
+		arg `column`
+		arg `value`
+		arg `Tags: #filter #tables`
 	}
 
 	{
-		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-get 0 1 } 2.0
-		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-get 1 0 } 4.0
+		equal { table { 'a } { 1 2 3 2 } |where-equal "a" 2 |length? } 2
 	}
 
 	{
 	}
 
-	group "mat-set!" 
-	"Sets the element at the specified row and column (0-indexed). Modifies matrix in place."
+	group "where-not-equal"
+	"Returns table of rows where specific colum is not equal to given value."
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Word String ]
+		}
+		arg `sheet`
+		arg `column`
+		arg `value`
+		arg `Tags: #filter #tables`
+	}
+
+	{
+		equal { table { 'a } { 1 2 3 2 } |where-not-equal "a" 2 |length? } 2
+	}
+
+	{
+	}
+
+	group "where-void"
+	"Returns table of rows where specific colum is void."
+	{
+		argsn 2
+		argtypes {
+			1 [ Table ]
+			2 [ Word String ]
+		}
+		arg `sheet`
+		arg `column`
+		arg `Tags: #filter #tables`
+	}
+
+	{
+		equal { table { 'a } { 1 _ 3 _ } |where-void "a" |length? } 2
+	}
+
+	{
+	}
+
+	group "where-match"
+	"Returns table of rows where a specific colum matches a regex."
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Native Word String ]
+			3 [ Native ]
+		}
+		arg `sheet`
+		arg `column`
+		arg `regexp`
+		arg `Tags: #filter #tables`
+	}
+
+	{
+		equal { table { 'a } { "1" "2" "a3" "2b" } |where-match 'a regexp "^[0-9]$" |length? } 2
+	}
+
+	{
+	}
+
+	group "where-contains"
+	"Returns table of rows where specific colum contains a given string value."
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Word String ]
+			3 [ String ]
+		}
+		arg `sheet`
+		arg `column`
+		arg `substring`
+		arg `Tags: #filter #tables`
+	}
+
+	{
+		equal { table { 'a } { "1" "2" "a3" "2b" } |where-contains 'a "2" |length? } 2
+	}
+
+	{
+`sheet: table { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" "Benn" }
+sheet .where-contains 'name "nn"
+`	}
+
+	group "where-not-contains"
+	"Returns table of rows where specific colum does not contain a given string value."
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Word String ]
+			3 [ String ]
+		}
+		arg `sheet`
+		arg `column`
+		arg `substring`
+		arg `Tags: #filter #tables`
+	}
+
+	{
+		equal { table { 'a } { "1" "2" "a3" "2b" } |where-not-contains 'a "3" |length? } 3
+	}
+
+	{
+`sheet: table { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" "Benn" }
+sheet .where-not-contains 'name "nn"
+`	}
+
+	group "where-greater"
+	"Returns table of rows where specific colum is greater than given value."
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Word String ]
+		}
+		arg `sheet`
+		arg `column`
+		arg `value`
+		arg `Tags: #filter #table`
+	}
+
+	{
+		equal { table { 'a } { 1 2 3 2 } |where-greater 'a 1 |length? } 3
+	}
+
+	{
+`sheet: table { "name" "age" } { "Enno" 30 "Enya" 25 "Enid" 40 "Bob" 19 "Bill" 45 "Benn" 29 }
+sheet .where-greater 'age 29
+`	}
+
+	group "where-lesser"
+	"Returns table of rows where specific colum is lesser than given value."
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Word String ]
+		}
+		arg `sheet`
+		arg `column`
+		arg `value`
+		arg `Tags: #filter #table`
+	}
+
+	{
+		equal { table { 'a } { 1 2 3 2 } |where-lesser 'a 3 |length? } 3
+	}
+
+	{
+	}
+
+	group "where-between"
+	"Returns table of rows where specific colum is between given values."
 	{
 		argsn 4
-		arg `mat: matrix (modified in place)`
-		arg `row: row index (0-based)`
-		arg `col: column index (0-based)`
-		arg `val: value to set`
-		returns `the modified matrix`
+		argtypes {
+			1 [ Table ]
+			2 [ Word String ]
+		}
+		arg `sheet`
+		arg `column`
+		arg `lower-limit`
+		arg `upper-limit`
+		arg `Tags: #filter #table`
 	}
 
 	{
-		equal { m: matrix\zeros 2 2 , mat-set! m 0 1 5.0 , mat-get m 0 1 } 5.0
-	}
-
-	{
-	}
-
-	group "mat-row" 
-	"Returns a row of the matrix as a vector."
-	{
-		argsn 2
-		arg `mat: matrix`
-		arg `row: row index (0-based)`
-		returns `the row as a vector`
-	}
-
-	{
-		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-row 0 |type? } 'vector
+		equal { table { 'a } { 1 2 3 2 } |where-between 'a 1 3 |length? } 2
 	}
 
 	{
 	}
 
-	group "mat-col" 
-	"Returns a column of the matrix as a vector."
+	group "where-between\\inclusive"
+	"Returns table of rows where specific colum is between given values (inclusive)."
 	{
-		argsn 2
-		arg `mat: matrix`
-		arg `col: column index (0-based)`
-		returns `the column as a vector`
+		argsn 4
+		argtypes {
+			1 [ Table ]
+			2 [ Word String ]
+		}
+		arg `sheet`
+		arg `column`
+		arg `lower-limit`
+		arg `upper-limit`
+		arg `Tags: #filter #table`
 	}
 
 	{
-		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-col 1 |type? } 'vector
-	}
-
-	{
-	}
-
-	group "mat-transpose" 
-	"Returns the transpose of a matrix."
-	{
-		argsn 1
-		arg `mat: matrix`
-		returns `transposed matrix`
-	}
-
-	{
-		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-transpose |shape? } { 3 2 }
-		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-transpose |mat-get 0 1 } 4.0
+		equal { table { 'a } { 1 2 3 2 5 } |where-between\inclusive 'a 2 3 |length? } 3
 	}
 
 	{
 	}
 
-	group "mat-mul" 
-	"Matrix multiplication. A (m×n) × B (n×p) = C (m×p)."
-	{
-		argsn 2
-		arg `A: left matrix (m×n)`
-		arg `B: right matrix (n×p)`
-		returns `result matrix (m×p)`
-	}
-
-	{
-		equal { A: matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } , B: matrix { 3 2 } { 1.0 2.0 3.0 4.0 5.0 6.0 } , mat-mul A B |shape? } { 2 2 }
-		equal { A: matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } , B: matrix { 3 2 } { 1.0 2.0 3.0 4.0 5.0 6.0 } , mat-mul A B |mat-get 0 0 } 22.0
-	}
-
-	{
-	}
-
-	group "mat-hadamard" 
-	"Element-wise (Hadamard) multiplication of two matrices. In the future, could have a dedicated .* operator."
-	{
-		argsn 2
-		arg `A: first matrix`
-		arg `B: second matrix (same dimensions)`
-		returns `element-wise product`
-	}
-
-	{
-		equal { A: matrix\ones 2 2 , B: matrix\ones 2 2 , mat-hadamard A B |mat-get 0 0 } 1.0
-	}
-
-	{
-	}
-
-	group "mat-add" 
-	"Element-wise addition of two matrices. In the future, could have a dedicated .+ operator."
-	{
-		argsn 2
-		arg `A: first matrix`
-		arg `B: second matrix (same dimensions)`
-		returns `element-wise sum`
-	}
-
-	{
-		equal { A: matrix\ones 2 2 , B: matrix\ones 2 2 , mat-add A B |mat-get 0 0 } 2.0
-	}
-
-	{
-	}
-
-	group "mat-sub" 
-	"Element-wise subtraction of two matrices. In the future, could have a dedicated .- operator."
-	{
-		argsn 2
-		arg `A: first matrix`
-		arg `B: second matrix (same dimensions)`
-		returns `element-wise difference`
-	}
-
-	{
-		equal { A: matrix\ones 2 2 , B: matrix\ones 2 2 , mat-sub A B |mat-get 0 0 } 0.0
-	}
-
-	{
-	}
-
-	group "mat-scale" 
-	"Multiplies all elements of a matrix by a scalar."
-	{
-		argsn 2
-		arg `mat: matrix`
-		arg `scalar: number to multiply by`
-		returns `scaled matrix`
-	}
-
-	{
-		equal { matrix\ones 2 2 |mat-scale 3.0 |mat-get 0 0 } 3.0
-	}
-
-	{
-	}
-
-	group "mat-sum-rows" 
-	"Returns a vector containing the sum of each row."
-	{
-		argsn 1
-		arg `mat: matrix`
-		returns `vector with sum of each row`
-	}
-
-	{
-		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-sum-rows |type? } 'vector
-	}
-
-	{
-	}
-
-	group "mat-sum-cols" 
-	"Returns a vector containing the sum of each column."
-	{
-		argsn 1
-		arg `mat: matrix`
-		returns `vector with sum of each column`
-	}
-
-	{
-		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-sum-cols |type? } 'vector
-	}
-
-	{
-	}
-
-	group "mat-max-rows" 
-	"Returns a vector containing the maximum of each row."
-	{
-		argsn 1
-		arg `mat: matrix`
-		returns `vector with max of each row`
-	}
-
-	{
-		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-max-rows |type? } 'vector
-	}
-
-	{
-	}
-
-	group "mat-max-cols" 
-	"Returns a vector containing the maximum of each column."
-	{
-		argsn 1
-		arg `mat: matrix`
-		returns `vector with max of each column`
-	}
-
-	{
-		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-max-cols |type? } 'vector
-	}
-
-	{
-	}
-
-	group "mat-to-block" 
-	"Converts a matrix to a block of blocks (each row is a block)."
-	{
-		argsn 1
-		arg `mat: matrix`
-		returns `block of blocks (each inner block is a row)`
-	}
-
-	{
-		equal { matrix { 2 2 } { 1.0 2.0 3.0 4.0 } |mat-to-block |length? } 2
-	}
-
-	{
-	}
-
-	group "block-to-mat" 
-	"Converts a block of blocks (rows) to a matrix."
-	{
-		argsn 1
-		arg `block: block of blocks (each inner block is a row)`
-		returns `matrix`
-	}
-
-	{
-		equal { { { 1.0 2.0 } { 3.0 4.0 } } |block-to-mat |shape? } { 2 2 }
-	}
-
-	{
-	}
-
-	group "vector-to-mat" 
-	"Converts a vector to a matrix. Use 'row for 1×n or 'col for n×1."
-	{
-		argsn 2
-		arg `vec: vector`
-		arg `orientation: 'row or 'col`
-		returns `matrix (1×n or n×1)`
-	}
-
-	{
-		equal { vector { 1.0 2.0 3.0 } |vector-to-mat 'row |shape? } { 1 3 }
-		equal { vector { 1.0 2.0 3.0 } |vector-to-mat 'col |shape? } { 3 1 }
-	}
-
-	{
-	}
-
-	group "mat-slice" 
-	"Extracts a sub-matrix. Row and column ranges are { start end } (inclusive, 0-indexed)."
+	group "where-in"
+	"Returns table of rows where specific colum value is found in block of values."
 	{
 		argsn 3
-		arg `mat: matrix`
-		arg `row-range: { start end } (inclusive)`
-		arg `col-range: { start end } (inclusive)`
-		returns `sub-matrix`
+		argtypes {
+			1 [ Table ]
+			2 [ Word String ]
+			3 [ Block ]
+		}
+		arg `sheet`
+		arg `column`
+		arg `values-filtered-for`
+		arg `Tags: #filter #table`
 	}
 
 	{
-		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-slice { 0 1 } { 1 2 } |shape? } { 2 2 }
-	}
-
-	{
-	}
-
-	group "mat-softmax" 
-	"Applies softmax to each column of the matrix. Returns a new matrix."
-	{
-		argsn 1
-		arg `matrix: input matrix`
-		returns `a new matrix with softmax applied to each column`
-	}
-
-	{
-		equal { matrix { 2 2 } { 1.0 2.0 3.0 4.0 } |mat-softmax |mat-get 0 0 |> 0.1 } true
+		equal { table { "name" "age" } { "Enno" 30 "Enya" 25 "Bob" 19 }
+		|where-in 'name { "Enno" "Enya" "Roger" } |column? "age"
+		} { 30 25 }
 	}
 
 	{
 	}
 
-	group "mat-set-col!" 
-	"Sets a column of the matrix from a vector or block. Mutates in place."
+	group "where-not-in"
+	"Returns table of rows where specific colum value is not found in block of values."
 	{
 		argsn 3
-		arg `matrix: matrix to modify`
-		arg `col: column index (0-based)`
-		arg `values: vector or block of values`
-		returns `the modified matrix`
+		argtypes {
+			1 [ Table ]
+			2 [ Word String ]
+			3 [ Block ]
+		}
+		arg `sheet`
+		arg `column`
+		arg `values-filtered-for`
+		arg `Tags: #filter #table`
 	}
 
 	{
-		equal { m: matrix\zeros 3 2 , mat-set-col! m 0 vector { 1.0 2.0 3.0 } , mat-get m 1 0 } 2.0
+		equal { table { "name" "age" } { "Enno" 30 "Enya" 25 "Bob" 19 }
+		|where-not-in 'name { "Enno" "Enya" "Roger" } |column? "age"
+		} { 19 }
 	}
 
 	{
 	}
 
-	group "vec-add" 
-	"Adds two vectors element-wise. Returns a new vector."
+	group "where"
+	"Returns table of rows where code block evaluates to true for the column value."
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Word String Block ]
+			3 [ Block Builtin Function ]
+		}
+		arg `table`
+		arg `column - column name (word or string) or block of column names`
+		arg `code - block that receives column value (or has columns as words) and returns truthy/falsy`
+		arg `Tags: #filter #tables`
+	}
+
+	{
+		equal { table { 'a } { 1 2 3 4 } |where 'a { > 2 } |length? } 2
+		equal { table { 'a } { 1 2 3 4 } |where 'a { .is-even } |length? } 2
+		equal { table { 'name 'age } { "Jim" 30 "Jane" 25 } |where 'age { > 26 } |column? 'name } { "Jim" }
+		equal { table { 'a 'b } { 1 10 2 20 3 30 } |where { 'a 'b } { ( a + b ) > 25 } |length? } 1
+		equal { table { 'a 'b } { 1 10 2 20 3 30 } |where { 'a 'b } { all { a > 1 b > 15 } } |length? } 2
+	}
+
+	{
+`table { "name" "age" } { "Jim" 30 "Jane" 25 "Bob" 35 } |where 'age { > 26 }
+table { "a" "b" } { 1 10 2 20 3 30 } |where { 'a 'b } { ( a + b ) > 25 }
+`	}
+
+	group "distinct"
+	"Returns table with duplicate rows removed based on specified column(s)."
 	{
 		argsn 2
-		arg `v1: first vector`
-		arg `v2: second vector`
-		returns `a new vector with element-wise sum`
+		argtypes {
+			1 [ Table ]
+			2 [ Word String Block ]
+		}
+		arg `table`
+		arg `column - column name (word or string) or block of column names`
+		arg `Tags: #filter #tables`
 	}
 
 	{
-		equal { vec-add vector { 1.0 2.0 } vector { 3.0 4.0 } |first } 4.0
+		equal { table { 'a } { 1 2 1 3 2 } |distinct 'a |length? } 3
+		equal { table { 'a 'b } { 1 10 1 10 1 20 } |distinct { 'a 'b } |length? } 2
 	}
 
 	{
+`table { "name" "age" } { "Jim" 30 "Jane" 25 "Jim" 30 } |distinct 'name
+table { "a" "b" } { 1 10 1 20 2 10 } |distinct { 'a 'b }
+`	}
+
+	group "fill-void"
+	"Returns table with void values in specified column replaced with given value."
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Word String ]
+		}
+		arg `table`
+		arg `column - column name (word or string)`
+		arg `value - value to replace void with`
+		arg `Tags: #transform #tables`
 	}
 
-	group "vec-sub" 
-	"Subtracts two vectors element-wise (v1 - v2). Returns a new vector."
+	{
+		equal { table { 'a } { 1 _ 3 _ } |fill-void 'a 0 |column? 'a } { 1 0 3 0 }
+		equal { table { 'a } { 1 _ 3 _ } |fill-void 'a 99 |column? 'a |sum } 202
+	}
+
+	{
+`table { "name" "age" } { "Jim" 30 "Jane" _ } |fill-void 'age 0
+`	}
+
+	group "count-where"
+	"Returns count of rows where code block evaluates to true for the column value."
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Word String Block ]
+			3 [ Block Builtin Function ]
+		}
+		arg `table`
+		arg `column - column name (word or string) or block of column names`
+		arg `code - block that receives column value and returns truthy/falsy`
+		arg `Tags: #filter #tables`
+	}
+
+	{
+		equal { table { 'a } { 1 2 3 4 } |count-where 'a { > 2 } } 2
+		equal { table { 'a } { 1 2 3 4 } |count-where 'a { .is-even } } 2
+		equal { table { 'a 'b } { 1 10 2 20 3 30 } |count-where { 'a 'b } { ( a + b ) > 25 } } 1
+	}
+
+	{
+`table { "name" "age" } { "Jim" 30 "Jane" 25 "Bob" 35 } |count-where 'age { > 26 }
+`	}
+
+}
+
+section "Row level functions " "Functions that construct a table." {
+	group "add-row"
+	"Returns a table with new-row added to it"
 	{
 		argsn 2
-		arg `v1: first vector`
-		arg `v2: second vector`
-		returns `a new vector with element-wise difference (v1 - v2)`
+		argtypes {
+			1 [ Table ]
+			2 [ Block List ]
+		}
+		arg `sheet`
+		arg `new-row`
 	}
 
 	{
-		equal { vec-sub vector { 5.0 3.0 } vector { 1.0 2.0 } |first } 4.0
+		equal {
+		table { "a" "b" } { 6 60 7 70 } |add-row { 8 80 } |-> 2 |-> "b"
+		} 80
 	}
 
 	{
 	}
 
-	group "vec-to-block" 
-	"Converts a vector to a block of decimal values."
+	group "get-rows"
+	"Get rows as a native. This value can be used in `add-rows` and `add-rows!`"
 	{
 		argsn 1
-		arg `v: vector to convert`
-		returns `a block containing the vector values as decimals`
+		argtypes {
+			1 [ Table ]
+		}
+		arg `sheet`
 	}
 
 	{
-		equal { vec-to-block vector { 1.0 2.0 3.0 } |second } 2.0
+		equal {
+		table { "a" "b" } { 6 60 7 70 } |get-rows |type?
+		} 'native
+	}
+
+	{
+	}
+
+	group "add-rows"
+	"Add one or more rows to a table"
+	{
+		argsn 2
+		argtypes {
+			1 [ Table ]
+			2 [ Block Native ]
+		}
+		arg `sheet - the sheet that is getting rows added to it`
+		arg `rows - a block containing one or more rows worth of values, or a TableRow Native value`
+	}
+
+	{
+		equal {
+		ref table { "a" "b" } { 6 60 7 70 } :sheet
+		sheet .deref |add-rows [ 3 30 ] |length?
+		} 3
+		equal {
+		ref table { "a" "b" } { 1 80 2 90 } :sheet
+		sheet .deref |add-rows { 3 30 } |length?
+		} 3
+	}
+
+	{
+	}
+
+	group "add-rows!"
+	"Add one or more rows to a table ref"
+	{
+		argsn 2
+		argtypes {
+			1 [ Table PersistentTable ]
+			2 [ Block Native ]
+		}
+		arg `sheet - the reference to the sheet that is getting rows added to it`
+		arg `rows - a block containing one or more rows worth of values, or a TableRow Native value`
+		arg `Tags: #spreasheet #mutation`
+	}
+
+	{
+		equal {
+		ref table { "a" "b"  } { 1 10 2 20 } :sheet
+		sheet .add-rows! [ 3 30 ] sheet .deref .length?
+		} 3
+	}
+
+	{
+	}
+
+	group "update-row!"
+	"Update the row at the given index."
+	{
+		argsn 3
+		argtypes {
+			2 [ Integer ]
+			3 [ Function Dict TableRow ]
+		}
+		arg `sheet-ref - A ref to a table`
+		arg `idx - the index of the row to update, 1-based`
+		arg `updater - One of either a function, a dict, or a Table Row`
+		arg `Tags: #table #mutation`
+	}
+
+	{
+		equal {
+		spr1: ref table { "a" "b" } { 1 10 2 20 }
+		spr1 .update-row! 1 dict [ "a" 111 ]
+		spr1 .deref .A1
+		} 111
+		equal {
+		spr1: ref table { "a" "b" } { 1 10 2 20 }
+		incrA: fn { row } { row ++ [ "a" ( "a" <- row ) + 9 ] }
+		update-row! spr1 1 ?incrA
+		spr1 |deref |A1
+		} 10
+	}
+
+	{
+	}
+
+	group "remove-row!"
+	"Remove a row from a table by index"
+	{
+		argsn 2
+		argtypes {
+			1 [ Table ]
+			2 [ Block Native ]
+		}
+		arg `sheet-ref`
+		arg `row-idx - Index of row to remove, 1-based`
+		arg `Tags: #table #mutation`
+	}
+
+	{
+		equal {
+		spr1: ref table { "a" "b" } { 1 10 2 20 }
+		spr1 .remove-row! 1
+		spr1 .deref .A1
+		} 2
 	}
 
 	{
@@ -8446,3 +8352,789 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 
 }
 
+section "Column level functions " "Functions that construct a table." {
+	group "columns?"
+	"Returns table with just given columns. Use lsetwords (:newName) to rename the previous column."
+	{
+		argsn 2
+		argtypes {
+			1 [ Block Table ]
+		}
+	}
+
+	{
+		equal { table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 }
+		|columns? { 'name 'age } |header? } list { "name" "age" }
+	}
+
+	{
+	}
+
+	group "header?"
+	"Gets the column names (header) as block."
+	{
+		argsn 1
+		argtypes {
+			1 [ Table ]
+		}
+	}
+
+	{
+		equal { table { "age" "name" } { 123 "Jim" 29 "Anne" }
+		|header? } list { "age" "name" }
+	}
+
+	{
+	}
+
+	group "column?"
+	"Gets all values of a column as a block."
+	{
+		argsn 2
+		argtypes {
+			1 [ Table ]
+			2 [ Word String ]
+		}
+	}
+
+	{
+		equal { table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Teacher" }
+		|column? 'name }  { "Bob" "Alice" }
+	}
+
+	{
+	}
+
+	group "drop-column"
+	"Remove a column from a table. Returns new table"
+	{
+		argsn 2
+		argtypes {
+			1 [ Table ]
+			2 [ Word String Block ]
+		}
+	}
+
+	{
+		equal { table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" }
+		|drop-column "name" |header? } list { "age" "job_title" }
+	}
+
+	{
+	}
+
+	group "rename-column!"
+	"Remove a column from a table. Returns new table"
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Word Block ]
+		}
+	}
+
+	{
+		equal { tab: ref table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
+		tab .rename-column! "name" "first_name" , tab .header? } list { "first_name" "age" }
+	}
+
+	{
+	}
+
+	group "gen-column"
+	"Adds a new column to table. Changes in-place and returns the new table."
+	{
+		argsn 4
+		argtypes {
+			1 [ Table ]
+			2 [ Word ]
+			3 [ Block ]
+			4 [ Block ]
+		}
+	}
+
+	{
+		equal { table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
+		|gen-column 'job { } { "Cook" } |column? "job" } { "Cook" "Cook" "Cook" }
+		equal { table { "email" } { "john@example.com" "jane@test.org" }
+		|gen-column 'domain 'email [ regexp ".*@(.+)$" "$1" ] |column? "domain" } { "example.com" "test.org" }
+	}
+
+	{
+	}
+
+	group "update-column!"
+	"Updates all cells in a column by applying a function that receives the cell value and the row."
+	{
+		argsn 3
+		argtypes {
+			2 [ Word String ]
+			3 [ Function ]
+		}
+		arg `table-ref - a reference to the table to update`
+		arg `column-name - name of the column to update (word or string)`
+		arg `fn - function that accepts (cell, row) and returns the new cell value`
+		arg `Tags: #table #column #mutation`
+	}
+
+	{
+		equal { ref table { "a" "b" } { 1 10 2 20 } :tab , tab .update-column! "a" fn { c r } { c + 100 } , tab .deref .column? "a" } { 101 102 }
+		equal { ref table { "a" "b" } { 1 10 2 20 } :tab , tab .update-column! "a" fn { c r } { r -> "b" } , tab .deref .column? "a" } { 10 20 }
+	}
+
+	{
+	}
+
+	group "add-column"
+	"Adds a new column to table with the given data. Returns the modified table."
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Word String ]
+			3 [ Block List ]
+		}
+		arg `table - the table to add a column to`
+		arg `column-name - name of the new column (word or string)`
+		arg `data - block or list containing values for the new column (must match number of rows)`
+		arg `Tags: #table #column`
+	}
+
+	{
+		equal { table { "a" "b" } { 1 10 2 20 3 30 } |add-column 'c { 100 200 300 } |column? "c" } { 100 200 300 }
+		equal { table { "a" } { 1 2 3 } |add-column 'b list [ "x" "y" "z" ] |column? "b" } { "x" "y" "z" }
+	}
+
+	{
+	}
+
+}
+
+section "Miscelaneous " "" {
+	group "order-by!"
+	"Sorts row by given column, changes table in place."
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Word ]
+			3 [ Word ]
+		}
+	}
+
+	{
+		equal { tab: table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19  }
+		tab .order-by! 'age 'asc |column? "age" } { 19 25 29 }
+	}
+
+	{
+	}
+
+	group "order-by"
+	"Sorts row by given column, changes table in place."
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Word ]
+			3 [ Word ]
+		}
+	}
+
+	{
+		equal { tab: table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19  }
+		|order-by 'age 'desc |column? "age" } { 29 25 19 }
+	}
+
+	{
+	}
+
+	group "add-indexes!"
+	"Creates an index for all values in the provided columns. Changes in-place and returns the new table."
+	{
+		argsn 2
+		argtypes {
+			1 [ Table ]
+			2 [ Block ]
+		}
+	}
+
+	{
+		equal { table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
+		|add-indexes! { name } |indexes? } { "name" }
+	}
+
+	{
+	}
+
+	group "indexes?"
+	"Returns the columns that are indexed in a table."
+	{
+		argsn 1
+		argtypes {
+			1 [ Table ]
+		}
+	}
+
+	{
+		equal { table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
+		|add-indexes! { name age } |indexes? |length? } 2
+	}
+
+	{
+	}
+
+	group "autotype"
+	"Takes a table and tries to determine and change the types of columns."
+	{
+		argsn 2
+		argtypes {
+			1 [ Table ]
+			2 [ Decimal ]
+		}
+	}
+
+	{
+		equal { table { "age" } { 123 29 19 }
+		|autotype 1.0 |types? } { integer }
+	}
+
+	{
+	}
+
+	group "left-join"
+	"Left joins two tables on the given columns."
+	{
+		argsn 4
+		argtypes {
+			1 [ Table ]
+			2 [ Table ]
+			3 [ Word String ]
+			4 [ Word String ]
+		}
+	}
+
+	{
+		equal {
+		names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+		houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+
+		names .inner-join houses 'id 'id |header?
+		} list { "id" "name" "id_2" "house" }
+		equal {
+		names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+		houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+
+		names .left-join houses 'id 'id |column? "name"
+		} { "Paul" "Chani" "Vladimir" }
+	}
+
+	{
+	}
+
+	group "inner-join"
+	"Inner joins two tables on the given columns."
+	{
+		argsn 4
+		argtypes {
+			1 [ Table ]
+			2 [ Table ]
+			3 [ Word String ]
+			4 [ Word String ]
+		}
+	}
+
+	{
+		equal {
+		names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+		houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+
+		names .inner-join houses 'id 'id |header?
+		} list { "id" "name" "id_2" "house" }
+		equal {
+		names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+		houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+
+		names .inner-join houses 'id 'id |column? "name"
+		} {  "Paul" "Vladimir" }
+	}
+
+	{
+	}
+
+	group "group-by"
+	"Groups a table by the given column(s) and (optional) aggregations."
+	{
+		argsn 3
+		argtypes {
+			1 [ Table ]
+			2 [ Word String Block ]
+			3 [ Block ]
+		}
+	}
+
+	{
+		equal {
+		table { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 7 }
+		|group-by 'name { 'name count 'val sum } |column? "val_sum" |sort
+		} { 13.0 16.0 }
+		equal {
+		table { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 7 }
+		|group-by 'name { 'name count 'val min } |column? "val_min" |sort
+		} { 1.0 6.0 }
+		equal {
+		table { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 12 }
+		|group-by 'name { 'name count 'val avg } |column? "val_avg" |sort
+		} { 6.0 8.0 }
+	}
+
+	{
+	}
+
+	group "A1"
+	"Accepts a Table and returns the first row first column cell."
+	{
+		argsn 1
+	}
+
+	{
+		equal { table { 'a } { 123 234 345 } |A1 } 123
+	}
+
+	{
+	}
+
+	group "B1"
+	"Accepts a Table and returns the first row second column cell."
+	{
+		argsn 1
+	}
+
+	{
+		equal { table { 'a 'b } { 123 234 345 456 } |B1 } 234
+	}
+
+	{
+	}
+
+	group "A2"
+	"Accepts a Table and returns the second row first column cell."
+	{
+		argsn 1
+	}
+
+	{
+		equal { table { 'a 'b } { 123 234 345 456 } |A2 } 345
+	}
+
+	{
+	}
+
+	group "B2"
+	"Accepts a Table and returns the second row second column cell."
+	{
+		argsn 1
+	}
+
+	{
+		equal { table { 'a 'b } { 123 234 345 456 } |B2 } 456
+	}
+
+	{
+	}
+
+}
+
+section "Loading and saving " "Functions that construct a table." {
+	group "file-uri//Load\\csv"
+	"Loads a .csv file to a table datatype."
+	{
+		argsn 1
+		argtypes {
+			1 [ Uri ]
+		}
+		arg `file-uri - location of csv file to load`
+		arg `Tags: #table #loading #csv`
+	}
+
+	{
+	}
+
+	{
+`equal {
+cc os
+f:: mktmp ++ "/test.csv"
+spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+spr1 .Save\csv* f
+spr2:: Load\csv f |autotype 1.0
+spr1 = spr2
+} true
+`	}
+
+}
+
+section "Loading and saving " "Functions that construct a table." {
+	group "file-uri//Load\\csv\\"
+	"Loads a .csv file to a table datatype."
+	{
+		argsn 2
+		argtypes {
+			1 [ Uri ]
+			2 [ String ]
+		}
+		arg `file-uri - location of csv file to load`
+		arg `Tags: #table #loading #csv`
+	}
+
+	{
+	}
+
+	{
+`equal {
+cc os
+f:: mktmp ++ "/test.csv"
+spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+spr1 .Save\csv* f
+spr2:: Load\csv f |autotype 1.0
+spr1 = spr2
+} true
+`	}
+
+	group "file-uri//Load\\tsv"
+	"Loads a .csv file to a table datatype."
+	{
+		argsn 1
+		argtypes {
+			1 [ Uri ]
+		}
+		arg `file-uri - location of csv file to load`
+	}
+
+	{
+	}
+
+	{
+`equal {
+cc os
+f:: mktmp ++ "/test.tsv"
+spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+spr1 .Save\tsv* f
+spr2:: Load\tsv f |autotype 1.0
+spr1 = spr2
+} true
+`	}
+
+	group "file-uri//Save\\csv"
+	"Saves a table to a .csv file."
+	{
+		argsn 2
+		argtypes {
+			1 [ Uri ]
+			2 [ Table ]
+		}
+		arg `file-uri - where to save the sheet as a .csv file`
+		arg `table    - the table to save`
+		arg `Tags: #table #saving #csv`
+	}
+
+	{
+	}
+
+	{
+`equal {
+cc os
+f:: mktmp ++ "/test.csv"
+spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+f .Save\csv spr1
+spr2:: Load\csv f |autotype 1.0
+spr1 = spr2
+} true
+`	}
+
+	group "file-uri//Save\\tsv"
+	"Saves a table to a .tsv file."
+	{
+		argsn 2
+		argtypes {
+			1 [ Uri ]
+			2 [ Table ]
+		}
+		arg `file-uri - where to save the sheet as a .tsv file`
+		arg `table    - the table to save`
+		arg `Tags: #table #saving #tsv`
+	}
+
+	{
+	}
+
+	{
+`equal {
+cc os
+f:: mktmp ++ "/test.tsv"
+spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+f .Save\tsv spr1
+spr2:: Load\tsv f |autotype 1.0
+spr1 = spr2
+} true
+`	}
+
+	group "file-uri//Load\\xlsx"
+	"Loads the first sheet in an .xlsx file to a Table."
+	{
+		argsn 1
+		argtypes {
+			1 [ Uri ]
+		}
+		arg `file-uri - location of xlsx file to load`
+		arg `Tags: #table #loading #xlsx`
+	}
+
+	{
+	}
+
+	{
+`equal {
+cc os
+f:: mktmp ++ "/test.xlsx"
+spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+spr1 .Save\xlsx* f
+spr2:: Load\xlsx f |autotype 1.0
+spr1 = spr2
+} true
+`	}
+
+	group "file-uri//Save\\xlsx"
+	"Saves a Table to a .xlsx file."
+	{
+		argsn 2
+		argtypes {
+			1 [ Uri ]
+			2 [ Table ]
+		}
+		arg `file-uri - where to save the table as a .xlsx file`
+		arg `table    - the table to save`
+		arg `Tags: #table #saving #xlsx`
+	}
+
+	{
+	}
+
+	{
+`equal {
+cc os
+f:: mktmp ++ "/test.xlsx"
+spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+f .Save\xlsx spr1
+spr2:: Load\xlsx f |autotype 1.0
+spr1 = spr2
+} true
+`	}
+
+	group "persistent-table"
+	"Creates a persistent table using BadgerDB for storage"
+	{
+		argsn 3
+		argtypes {
+			2 [ String ]
+			3 [ String ]
+		}
+		arg `columns - block of column names`
+		arg `db-path - path to BadgerDB database`
+		arg `table-name - name of the table`
+	}
+
+	{
+		; equal { persistent-table { "a" "b" } "/tmp/test_db" "test_table" |type? } 'persistent-table
+	}
+
+	{
+	}
+
+	group "close-persistent-table!"
+	"Closes the BadgerDB connection for a persistent table"
+	{
+		argsn 1
+		argtypes {
+			1 [ PersistentTable ]
+		}
+		arg `persistent-table - the persistent table to close`
+	}
+
+	{
+		; equal { pt: persistent-table { "a" "b" } "/tmp/test_db" "test_table"
+		;        pt .close-persistent-table! |type? } 'persistent-table
+	}
+
+	{
+	}
+
+	group "parse\\csv"
+	"Parses a CSV string to a table datatype."
+	{
+		argsn 1
+		argtypes {
+			1 [ String ]
+		}
+		arg `csv-string - string containing CSV data`
+		arg `Tags: #table #parsing #csv`
+	}
+
+	{
+		equal { `a,b\n1,2\n3,4` |parse\csv |length? } 2
+		equal { `a,b\n1,2\n3,4` |parse\csv |column? "a" } { "1" "3" }
+	}
+
+	{
+	}
+
+	group "parse\\csv\\separator"
+	"Parses a CSV string to a table datatype with a custom separator character."
+	{
+		argsn 2
+		argtypes {
+			1 [ String ]
+			2 [ String ]
+		}
+		arg `csv-string - string containing CSV data`
+		arg `separator - single character separator`
+		arg `Tags: #table #parsing #csv`
+	}
+
+	{
+		equal { `a,b\n1,2\n3,4` |parse\csv\separator "," |length? } 2
+		equal { `a;b\n1;2\n3;4` |parse\csv\separator ";" |column? "a" } { "1" "3" }
+	}
+
+	{
+	}
+
+	group "parse\\tsv"
+	"Parses a TSV (tab-separated values) string to a table datatype."
+	{
+		argsn 1
+		argtypes {
+			1 [ String ]
+		}
+		arg `tsv-string - string containing TSV (tab-separated values) data`
+		arg `Tags: #table #parsing #tsv`
+	}
+
+	{
+		equal { `a	b\n1	2\n3	4` |parse\tsv |length? } 2
+		equal { `a	b\n1	2\n3	4` |parse\tsv |column? "a" } { "1" "3" }
+	}
+
+	{
+	}
+
+	group "format\\csv"
+	"Converts a table to a CSV string."
+	{
+		argsn 1
+		argtypes {
+			1 [ Table ]
+		}
+		arg `table - the table to convert to CSV string`
+		arg `Tags: #table #formatting #csv`
+	}
+
+	{
+		equal { table { "a" "b" } { 1 2 3 4 } |format\csv } "a,b\n1,3\n2,4\n"
+		equal { table { "name" "age" } { "Jim" 30 "Jane" 25 } |format\csv |split "\n" |length? } 4
+	}
+
+	{
+	}
+
+	group "format\\tsv"
+	"Converts a table to a TSV string."
+	{
+		argsn 1
+		argtypes {
+			1 [ Table ]
+		}
+		arg `table - the table to convert to TSV string`
+		arg `Tags: #table #formatting #tsv`
+	}
+
+	{
+	}
+
+	{
+`equal { table { "a" "b" } { 1 2 3 4 } |format\tsv } "a\tb\n1\t3\n2\t4\n"
+equal { table { "name" "age" } { "Jim" 30 "Jane" 25 } |format\tsv |split "\n" |length? } 4
+`	}
+
+	group "parse\\xlsx"
+	"Parses an xlsx binary string or bytes into a table (first sheet)."
+	{
+		argsn 1
+		argtypes {
+			1 [ String Bytes ]
+		}
+		arg `data - the string with xlsx binary data or bytes native value`
+		arg `Tags: #table #parsing #xlsx`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "format\\xlsx"
+	"Converts a table to an XLSX as bytes native value."
+	{
+		argsn 1
+		argtypes {
+			1 [ Table ]
+		}
+		arg `table - the table to convert to XLSX bytes`
+		arg `Tags: #table #formatting #xlsx`
+	}
+
+	{
+	}
+
+	{
+`table { "a" "b" } { 1 2 3 4 } |format\xlsx |type? ; => 'native
+`	}
+
+}
+}
+section "evaldo/builtins_validation.go" "" {
+section "Validation dialect " "validation dialect for Rye values" {
+	group "validate"
+	"Validates and transforms data according to specified rules, returning a dictionary with converted values or an error."
+	{
+		argsn 2
+		arg `data: Dictionary, Context, or List to validate`
+		arg `rules: Block containing validation rules`
+		returns `validated Dictionary/Context/List with converted values or error if validation fails`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "validate>ctx"
+	"Validates and transforms data according to specified rules, returning a context object for easy field access."
+	{
+		argsn 2
+		arg `data: Dictionary to validate`
+		arg `rules: Block containing validation rules`
+		returns `validated Context with converted values or error if validation fails`
+	}
+
+	{
+		equal { validate>ctx dict { a: 1 } { a: required } |type? } 'context
+		equal { validate>ctx dict { a: 1 } { a: optional 0 } |-> 'a } 1
+	}
+
+	{
+	}
+
+}
+}
