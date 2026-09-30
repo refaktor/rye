@@ -32,19 +32,44 @@ func processHexEscapesNoPeg(s string) string {
 	return result.String()
 }
 
-// unescapeStringContent processes escape sequences in the inner content of a
-// string literal (without the surrounding quotes).
-// IMPORTANT: \\ and \" must be processed FIRST so that escaped backslashes
-// and quotes don't get consumed by the other escape sequence replacements.
+// unescapeStringContent processes each escape exactly once. In particular,
+// \\ followed by t must remain a literal backslash and t, not become a tab.
 func unescapeStringContent(str string) string {
-	str = strings.Replace(str, "\\\\", "\\", -1)
-	str = strings.Replace(str, "\\\"", "\"", -1)
-	str = strings.Replace(str, "\\n", "\n", -1)
-	str = strings.Replace(str, "\\r", "\r", -1)
-	str = strings.Replace(str, "\\t", "\t", -1)
-	str = strings.Replace(str, "\\e", "\x1b", -1)
-	str = processHexEscapesNoPeg(str) // Handle \xHH hex escapes
-	return str
+	var result strings.Builder
+	for i := 0; i < len(str); i++ {
+		if str[i] != '\\' || i+1 == len(str) {
+			result.WriteByte(str[i])
+			continue
+		}
+		i++
+		switch str[i] {
+		case '\\':
+			result.WriteByte('\\')
+		case '"':
+			result.WriteByte('"')
+		case 'n':
+			result.WriteByte('\n')
+		case 'r':
+			result.WriteByte('\r')
+		case 't':
+			result.WriteByte('\t')
+		case 'e':
+			result.WriteByte('\x1b')
+		case 'x':
+			if i+2 < len(str) {
+				if b, err := strconv.ParseUint(str[i+1:i+3], 16, 8); err == nil {
+					result.WriteByte(byte(b))
+					i += 2
+					break
+				}
+			}
+			result.WriteString(`\x`)
+		default:
+			result.WriteByte('\\')
+			result.WriteByte(str[i])
+		}
+	}
+	return result.String()
 }
 
 // splitDataPathValue splits a data-path token value into its segments on '.',

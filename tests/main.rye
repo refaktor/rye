@@ -54,9 +54,32 @@ test-framework: context {
 
 escape-html: fn { x } { x |replace "&" "&amp;" |replace "<" "&lt;" |replace ">" "&gt;" }
 
+; File wrappers are labelled by regen with their source path. Render a
+; readable title here so the initial HTML and the navigation agree immediately.
+source-title: fn { path } {
+	filename: path .split "/" |last
+	name: filename |replace "builtins_" "" |replace ".go" ""
+	either ( filename = "builtins.go" ) { "Builtins" } {
+		name |replace "_" " " |capitalize
+		|replace "Io" "IO" |replace "Os" "OS" |replace "Http" "HTTP"
+		|replace "Json" "JSON" |replace "Bson" "BSON" |replace "Html" "HTML"
+		|replace "Sxml" "SXML" |replace "Sqlite" "SQLite" |replace "Psql" "PostgreSQL"
+		|replace "Mysql" "MySQL" |replace "Ssh" "SSH" |replace "Smtpd" "SMTP"
+		|replace "Mqtt" "MQTT" |replace "Cli" "CLI" |replace "Tui" "TUI"
+		|replace "Js" "JS" |replace "Mcp" "MCP" |replace "Gpio" "GPIO"
+	}
+}
+
 docs-framework: context {
 
-	section: fn { name descr code } { print join [ "<h2>" escape-html name "</h2><p>" escape-html descr "</p><div class='section'>" ] , do code , print "</div>" }
+	section: fn { name descr code } {
+		either ( name |contains "/builtins" ) {
+			print join [ "<h2 title='" escape-html name "'>" escape-html source-title name "</h2><p>" escape-html descr "</p><div class='section'>" ]
+		} {
+			print join [ "<h2>" escape-html name "</h2><p>" escape-html descr "</p><div class='section'>" ]
+		}
+		do code , print "</div>"
+	}
 	
 	group: fn { name descr args code example }   {
 		print join [ "<h3>" escape-html name "</h3><p>" escape-html descr "</p>" ] ,
@@ -121,7 +144,9 @@ docs-framework: context {
 	}
 	
 	argtypes: fn { block } {
-		print join [ "<p class='meta types'><b>Types:</b> <code>" mold\nowrap block "</code></p>" ]
+		; JavaScript attaches these numbered type hints to the matching argument.
+		; Keep the original metadata available as a fallback without JavaScript.
+		print join [ "<p class='meta types'><b>Types:</b> <code>" escape-html mold\nowrap block "</code></p>" ]
 	}
 	
 	end: fn { } { }

@@ -39,28 +39,14 @@
         return li;
     }
 
-    // Source file headings are generated as "directory/builtins_name.go".
-    // Keep the original path as a tooltip while showing a readable title.
-    function sourceTitle(path) {
-        const filename = path.split('/').pop();
-        if (!/^builtins(?:_[\w-]+)?\.go$/.test(filename)) return path;
-        const name = filename.replace(/^builtins_?/, '').replace(/\.go$/, '');
-        if (!name) return 'Builtins';
-        const acronyms = { io: 'IO', os: 'OS', http: 'HTTP', https: 'HTTPS', json: 'JSON', bson: 'BSON', html: 'HTML', xml: 'XML', sxml: 'SXML', sql: 'SQL', sqlite: 'SQLite', psql: 'PostgreSQL', mysql: 'MySQL', ssh: 'SSH', smtpd: 'SMTP', mqtt: 'MQTT', cli: 'CLI', tui: 'TUI', js: 'JS', mcp: 'MCP', gpio: 'GPIO', eyr: 'Eyr' };
-        return name.split('_').map(word => acronyms[word.toLowerCase()] || word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-    }
-
     function buildOutline() {
         const nav = document.getElementById('outline');
         const tree = document.createElement('ul');
         tree.className = 'file-list';
         let fileIndex = 0;
         for (const file of document.querySelectorAll('main.content > h2')) {
-            const path = file.textContent.trim();
-            file.textContent = sourceTitle(path);
-            file.title = path;
             const fileItem = itemFor(file, 'file-' + ++fileIndex);
-            fileItem.firstElementChild.title = path;
+            if (file.title) fileItem.firstElementChild.title = file.title;
             const sections = document.createElement('ul');
             sections.className = 'section-list';
             // regen wraps all sections from a Go source file in one div.

@@ -6,7 +6,7 @@ To find out more about the comment docs and format read this: https://ryelang.or
 
 # Generating .info. files
 
-To generate the info files from builtins, run `./regen` (from `tests`, or `./tests/regen` from the project root). The script uses the `cmd/rbit/rbit` Go binary to parse the Go code. If it is missing, build it first with `cd cmd/rbit && ./build`. Edit the ordered file lists in `regen` when documenting additional source files. It validates inputs before replacing output and generates each source only once.
+To generate the info files from builtins, run `./regen` (from `tests`, or `./tests/regen` from the project root). The script builds `cmd/rbit` from source into a temporary binary, then uses it to parse the Go code (Go is required). Edit the ordered file lists in `regen` when documenting additional source files. It validates inputs before replacing output and generates each source only once.
 
 # Running tests
 

@@ -23,13 +23,13 @@ type builtinSection struct {
 }
 
 type builtinInfo struct {
-	name      string         // from key value
-	gentype   string         // optional from key value
-	docstring string         // part of builtin definition
-	doc       string         // free text at the top of the comment
-	argsn     int            // Argsn field from builtin definition
-	pure      bool           // Pure field from builtin definition
-	args      []string       // extracted from comment or variable names
+	name      string   // from key value
+	gentype   string   // optional from key value
+	docstring string   // part of builtin definition
+	doc       string   // free text at the top of the comment
+	argsn     int      // Argsn field from builtin definition
+	pure      bool     // Pure field from builtin definition
+	args      []string // extracted from comment or variable names
 	returns   string
 	argtypes  map[int][]string // extracted from MakeArgError calls: arg number → allowed types
 	tests     []string         // extracted from comment
@@ -131,8 +131,8 @@ func outputInfo(sections *[]builtinSection) {
 		fmt.Printf("section \"%s\" \"%s\" {\n", section.name, section.docstring) // name
 		for _, info := range section.builtins {
 			if len(info.tests) > 0 || len(info.args) > 0 || len(info.examples) > 0 || len(info.argtypes) > 0 {
-				fmt.Printf("\tgroup \"%s\" \n", info.name) // name
-				fmt.Printf("\t\"%s\"\n", info.docstring)   // docstring
+				fmt.Printf("\tgroup %s\n", strconv.Quote(info.name)) // Rye string literal; preserve backslashes in builtin names
+				fmt.Printf("\t\"%s\"\n", info.docstring)             // docstring
 
 				fmt.Print("\t{\n") // args block - contains metadata and arg descriptions
 
@@ -398,7 +398,13 @@ func doParsing(args []string) {
 							c.functions = c.functions + 1
 							/// fmt.Printf("Key: %s\n", key.Value)
 							// TODO NEXT - parse key into two values
-							info.name = key.Value[1 : len(key.Value)-1]
+							// Decode the Go map key once. Quote it again when emitting Rye
+							// so e.g. parse\\tsv is not interpreted as a tab.
+							name, err := strconv.Unquote(key.Value)
+							if err != nil {
+								return true
+							}
+							info.name = name
 							// Get comments above the key
 							comment := getCommentsAboveKey(fset, node.Comments, key.Pos())
 							if comment != "" {

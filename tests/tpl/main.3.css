@@ -82,6 +82,16 @@ p.arg b {
     color: #855;
     font-weight: 600;
 }
+.arg-type {
+    display: inline-block;
+    margin-left: .5em;
+    padding: .1em .5em;
+    border-radius: .35em;
+    background: #e6eef5;
+    color: #285477;
+    font-size: .85em;
+    font-weight: 600;
+}
 p.arg.no-arguments {
     color: #888;
 }

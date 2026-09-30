@@ -4,11 +4,11 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-rbit=../cmd/rbit/rbit
-if [[ ! -x "$rbit" ]]; then
-  echo "Build $rbit first: (cd cmd/rbit && ./build)" >&2
-  exit 1
-fi
+# Build from source so regen always uses the current rbit escaping rules,
+# rather than an older binary left in cmd/rbit/.
+rbit=$(mktemp "${TMPDIR:-/tmp}/rye-rbit.XXXXXX")
+trap 'rm -f "$rbit"' EXIT
+go build -o "$rbit" ../cmd/rbit
 
 # Keep the order intentional and stable. Files without annotated tests still
 # belong to the tree, but produce no groups; rbit handles those itself.
