@@ -16,7 +16,10 @@ type Idxs struct {
 	mu     sync.RWMutex // Protects concurrent access for multi-session use
 }
 
-var NativeTypes = [...]string{ // Todo change to BuiltinTypes
+// NativeTypes maps Type values to their display names. Index 0 is unused because
+// the first Type (BlockType) starts at 1.
+var NativeTypes = [...]string{
+	"Invalid",
 	"Block",
 	"Integer",
 	"Word",

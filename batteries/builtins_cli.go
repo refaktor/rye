@@ -23,6 +23,7 @@ type ArgSpec struct {
 	IsMany       bool       // True if positional accepts many values
 	ValueType    string     // "string", "integer", "decimal", "boolean", "file", "any"
 	Default      env.Object // Default value
+	DoBlock      *env.Block // Action evaluated for each explicitly supplied flag
 	CheckBlock   *env.Block // Optional validation block
 	CheckError   string     // Error message if check fails
 	Doc          string     // Documentation string
@@ -50,6 +51,12 @@ type ParsedArgs struct {
 	Command     string   // Full command path: "remote add"
 	CommandPath []string // ["remote", "add"]
 	Positional  []env.Object
+	actions     []cliAction
+}
+
+type cliAction struct {
+	block env.Block
+	value env.Object
 }
 
 // CLI_ParseSpec parses the specification block into a CLISpec
@@ -176,6 +183,15 @@ func parseArgSpec(es *env.ProgramState, ser *env.TSeries, flagword env.Flagword)
 		case env.Word:
 			wordName := es.Idx.GetWord(item.Index)
 			switch wordName {
+			case "do":
+				if ser.Pos() >= ser.Len() {
+					return nil, fmt.Errorf("expected block after 'do'")
+				}
+				block, ok := ser.Pop().(env.Block)
+				if !ok {
+					return nil, fmt.Errorf("expected block after 'do'")
+				}
+				spec.DoBlock = &block
 			case "flag":
 				spec.IsFlag = true
 				spec.ValueType = "boolean"
@@ -741,8 +757,15 @@ func CLI_ParseArgs(es *env.ProgramState, args env.Block, spec *CLISpec) (*Parsed
 			}
 
 			if flagSpec.IsFlag {
-				// Boolean flag - just set to true
-				result.Values[flagSpec.Name] = *env.NewBoolean(true)
+				value := *env.NewBoolean(true)
+				if err := validateWithCheck(es, value, flagSpec); err != nil {
+					errors[flagSpec.Name] = *env.NewString(err.Error())
+					continue
+				}
+				result.Values[flagSpec.Name] = value
+				if flagSpec.DoBlock != nil {
+					result.actions = append(result.actions, cliAction{*flagSpec.DoBlock, value})
+				}
 			} else {
 				// Option that requires a value
 				if i+1 >= len(argsList) {
@@ -765,6 +788,9 @@ func CLI_ParseArgs(es *env.ProgramState, args env.Block, spec *CLISpec) (*Parsed
 					continue
 				}
 
+				if flagSpec.DoBlock != nil {
+					result.actions = append(result.actions, cliAction{*flagSpec.DoBlock, coerced})
+				}
 				if flagSpec.IsList {
 					appendToListCli(result.Values, flagSpec.Name, coerced)
 				} else {
@@ -1115,6 +1141,19 @@ func BuiParseArgs(es *env.ProgramState, args env.Object, specBlock env.Object) e
 		return env.NewError4(400, "argument parsing error", nil, parseErrs)
 	}
 
+	// Run actions only after the entire command line has passed validation.
+	// Preserve the caller's context and inject the validated occurrence value.
+	for _, action := range result.actions {
+		ser := es.Ser
+		es.Ser = action.block.Series
+		es.Ser.Reset()
+		evaldo.EvalBlockInj(es, action.value, true)
+		es.Ser = ser
+		if es.ErrorFlag || es.FailureFlag || es.ReturnFlag {
+			return es.Res
+		}
+	}
+
 	// Convert result to Dict
 	resultData := make(map[string]any)
 	for k, v := range result.Values {
@@ -1262,7 +1301,7 @@ var Builtins_cli = map[string]*env.Builtin{
 		Doc:   "Parses command line arguments according to a specification block, returning a context for easy field access.",
 		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			result := BuiParseArgs(es, arg0, arg1)
-			if es.FailureFlag {
+			if es.FailureFlag || es.ErrorFlag || es.ReturnFlag {
 				return result
 			}
 			switch dict := result.(type) {

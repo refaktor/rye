@@ -94,13 +94,14 @@ var builtins_contexts = map[string]*env.Builtin{
 	// equal { y: 123 c: context { x: does { y } } c/x } 123
 	// equal { c: context { a: 1 b: 2 } c/a + c/b } 3
 	// equal { c: context dict { "a" 1 "b" 2 } c/a + c/b } 3
+	// equal { c: context first table { 'a 'b } { 1 2 } c/a + c/b } 3
 	// Args:
-	// * arg: Block of expressions to evaluate, or Dict to convert to context
+	// * arg: Block of expressions to evaluate, or Dict or TableRow to convert to context
 	// Returns:
-	// * context object with the values defined in the block/dict and access to parent context
+	// * context object with the values defined in the block/dict/table row and access to parent context
 	"context": {
 		Argsn: 1,
-		Doc:   "Creates a new context from a block (evaluated) or dict (converted).",
+		Doc:   "Creates a new context from a block (evaluated), dict, or table row (converted).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -121,8 +122,10 @@ var builtins_contexts = map[string]*env.Builtin{
 				return rctx // return the resulting context (pointer)
 			case env.Dict:
 				return util.Dict2Context(ps, bloc)
+			case env.TableRow:
+				return util.Dict2Context(ps, bloc.ToDict())
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.DictType}, "context")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.DictType, env.TableRowType}, "context")
 			}
 		},
 	},

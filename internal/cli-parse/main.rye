@@ -11,6 +11,7 @@ private Load %test_errors.rye
 private Load %test_subcommands.rye
 private Load %test_args_check.rye
 private Load %test_validation.rye
+private Load %test_do.rye
 private Load %test_help.rye
 private Load %test_cli_integration.rye
 private Load %test_advanced_patterns.rye
