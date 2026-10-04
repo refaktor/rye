@@ -10,6 +10,7 @@
 
 **For comprehensive documentation, tutorials, and examples, visit [ryelang.org](https://ryelang.org/)**
 
+
 ## What is Rye?
 
 Rye is a high-level, dynamic programming language inspired by Rebol, Factor, Linux shells, and Go. It features a Go-based interpreter and interactive console, making it an excellent scripting companion for Go programs. Rye can also be embedded into Go applications as a scripting or configuration language.
