@@ -11,9 +11,6 @@ func registerHooks() {
 	evaldo.BatteryConvertHook = func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) env.Object {
 		return BuiConvert(ps, arg0, arg1)
 	}
-	evaldo.BatteryMarkdownDisplayHook = func(source string) []interface{} {
-		return convertMarkdownDisplayItems(markdownDisplayItems(source))
-	}
 	evaldo.BatteryEyrEvalBlockInsideHook = func(ps *env.ProgramState, inj env.Object, injnow bool) {
 		Eyr_EvalBlockInside(ps, inj, injnow)
 	}
@@ -43,7 +40,6 @@ func RegisterBatteries(ps *env.ProgramState) {
 	evaldo.RegisterBuiltins2(Builtins_conversion, ps, "conversion")
 	evaldo.RegisterBuiltins2(Builtins_control, ps, "control")
 	//	evaldo.RegisterBuiltins2(Builtins_web, ps, "web")
-	evaldo.RegisterBuiltins2(Builtins_markdown, ps, "markdown")
 	evaldo.RegisterBuiltins2(Builtins_sxml, ps, "sxml")
 	evaldo.RegisterBuiltins2(Builtins_html, ps, "html")
 	evaldo.RegisterBuiltins2(Builtins_json, ps, "json")

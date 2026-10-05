@@ -37,13 +37,6 @@ var BatteryIsScenarioHook func(ps *env.ProgramState) bool = func(ps *env.Program
 // Return true to indicate capture/handling succeeded (advisory), false otherwise.
 var BatteryScenarioCaptureOutputHook func(ps *env.ProgramState, payload env.Object) bool = func(ps *env.ProgramState, payload env.Object) bool { return false }
 
-// BatteryMarkdownDisplayHook is called by the base printing builtins to render
-// markdown blocks in the REPL.  Batteries set this to their markdown renderer.
-// The returned []interface{} should be the converted display items.
-var BatteryMarkdownDisplayHook func(source string) []interface{} = func(source string) []interface{} {
-	return nil // no-op without batteries
-}
-
 // PersistentCtxInterface is the interface evaldo's base builtins use to
 // interact with a PersistentCtx without depending on its concrete type.
 // The batteries package's PersistentCtx struct satisfies this interface.
