@@ -1,4 +1,4 @@
-section "evaldo/builtins_base_boolean.go" "" {
+section "evaldo/builtins_boolean.go" "" {
 section "Boolean " "Functions that work with true and false values." {
 	group "true"
 	"Returns a boolean true value."
@@ -181,8 +181,8 @@ section "Boolean " "Functions that work with true and false values." {
 	{
 	}
 
-	group "_any\\with"
-	"Applies each expression in the block to the provided value until a truthy result is found and returns it."
+	group "any\\with"
+	"Evaluates expressions in a block with the provided value injected, returning the first truthy result or the last result if none are truthy. Commas between expressions are supported."
 	{
 		argsn 2
 		argtypes {
@@ -194,12 +194,12 @@ section "Boolean " "Functions that work with true and false values." {
 	}
 
 	{
-		equal { _any\with 10 { + 10 , * 10 } } 20
-		equal { _any\with 0 { + 10 , * 10 } } 10
-		equal { _any\with 5 { - 10 , + 10 } } -5
-		equal { _any\with false { .not , .string } } true
-		; equal { _any\with true { .not , .string } } "true"
-		error { _any\with 5 "not-a-block" }
+		equal { any\with 10 { + 10 , * 10 } } 20
+		equal { any\with 0 { + 10 , * 10 } } 10
+		equal { any\with 5 { - 10 , + 10 } } -5
+		equal { any\with false { .not , .string } } true
+		equal { any\with "abc" { .length , .string } } 3
+		error { any\with 5 "not-a-block" }
 	}
 
 	{
@@ -207,31 +207,8 @@ section "Boolean " "Functions that work with true and false values." {
 
 }
 }
-section "evaldo/builtins_base_numbers.go" "" {
-section "Numbers " "Working with numbers, integers and decimals." {
-	group "addnums"
-	"Optimized version of + that adds two numbers, working with both integers and decimals."
-	{
-		argsn 2
-		pure
-		argtypes {
-			1 [ Integer Decimal Time ]
-			2 [ Integer Decimal ]
-		}
-		arg `value1: Integer, decimal, or time value`
-		arg `value2: Integer or decimal value (or integer for time addition)`
-		returns `sum of the two numbers or time shifted by the integer offset`
-	}
-
-	{
-		equal { addnums 2 3 } 5
-		equal { addnums 2.5 3.5 } 6.0
-		equal { addnums 2 3.5 } 5.5
-	}
-
-	{
-	}
-
+section "evaldo/builtins_numbers.go" "" {
+section "Default" "" {
 	group "inc"
 	"Increments an integer value by 1."
 	{
@@ -486,29 +463,6 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "_%"
-	"Alias for mod - calculates the modulo (remainder) when dividing the first integer by the second."
-	{
-		argsn 2
-		pure
-		argtypes {
-			1 [ Integer ]
-			2 [ Integer ]
-		}
-		arg `value: Integer dividend`
-		arg `divisor: Integer divisor`
-		returns `integer remainder after division`
-	}
-
-	{
-		equal { 4 % 2 } 0
-		equal { 5 % 2 } 1
-		equal { 5 % 3 } 2
-	}
-
-	{
-	}
-
 	group "random\\integer"
 	"Generates a cryptographically secure random integer between 0 (inclusive) and the specified maximum (exclusive)."
 	{
@@ -733,6 +687,58 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
+	group "_%"
+	"Alias for mod - calculates the modulo (remainder) when dividing the first integer by the second."
+	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ Integer ]
+			2 [ Integer ]
+		}
+		arg `value: Integer dividend`
+		arg `divisor: Integer divisor`
+		returns `integer remainder after division`
+	}
+
+	{
+		equal { 4 % 2 } 0
+		equal { 5 % 2 } 1
+		equal { 5 % 3 } 2
+	}
+
+	{
+	}
+
+	group "clamp"
+	"Clamps a number between a minimum and maximum value, ensuring the result stays within the specified bounds."
+	{
+		argsn 3
+		pure
+		argtypes {
+			1 [ Integer Decimal ]
+			2 [ Integer Decimal ]
+			3 [ Integer Decimal ]
+		}
+		arg `value: Number (integer or decimal) to clamp`
+		arg `min: Minimum value (integer or decimal)`
+		arg `max: Maximum value (integer or decimal)`
+		returns `clamped number, ensuring value is between min and max (inclusive)`
+	}
+
+	{
+		equal { clamp 5 0 10 } 5
+		equal { clamp -5 0 10 } 0
+		equal { clamp 15 0 10 } 10
+		equal { clamp 5.5 0.0 10.0 } 5.5
+		equal { clamp -2.3 0 10 } 0.0
+		equal { clamp 12.7 0 10 } 10.0
+		error { clamp "5" 0 10 }
+	}
+
+	{
+	}
+
 	group "_="
 	"Compares two values for equality, returning 1 if equal or 0 if not equal."
 	{
@@ -862,38 +868,9 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
-	group "clamp"
-	"Clamps a number between a minimum and maximum value, ensuring the result stays within the specified bounds."
-	{
-		argsn 3
-		pure
-		argtypes {
-			1 [ Integer Decimal ]
-			2 [ Integer Decimal ]
-			3 [ Integer Decimal ]
-		}
-		arg `value: Number (integer or decimal) to clamp`
-		arg `min: Minimum value (integer or decimal)`
-		arg `max: Maximum value (integer or decimal)`
-		returns `clamped number, ensuring value is between min and max (inclusive)`
-	}
-
-	{
-		equal { clamp 5 0 10 } 5
-		equal { clamp -5 0 10 } 0
-		equal { clamp 15 0 10 } 10
-		equal { clamp 5.5 0.0 10.0 } 5.5
-		equal { clamp -2.3 0 10 } 0.0
-		equal { clamp 12.7 0 10 } 10.0
-		error { clamp "5" 0 10 }
-	}
-
-	{
-	}
-
 }
 }
-section "evaldo/builtins_base_strings.go" "" {
+section "evaldo/builtins_strings.go" "" {
 section "Strings " "" {
 	group "newline"
 	"Returns a string containing a single newline character."
@@ -1545,7 +1522,7 @@ section "URL Encoding " "" {
 
 }
 }
-section "evaldo/builtins_base_time.go" "" {
+section "evaldo/builtins_time.go" "" {
 section "Date and Time " "" {
 	group "unix-micro?"
 	"Converts a time object to Unix time in microseconds (microseconds since January 1, 1970 UTC)."
@@ -2039,7 +2016,7 @@ section "Date and Time " "" {
 
 }
 }
-section "evaldo/builtins_base_collections.go" "" {
+section "evaldo/builtins_collections.go" "" {
 section "Collections " "" {
 	group "random"
 	"Selects a random value from a block of values."
@@ -3387,7 +3364,7 @@ section "Collections " "" {
 
 }
 }
-section "evaldo/builtins_base_types.go" "" {
+section "evaldo/builtins_types.go" "" {
 section "Types and Kinds " "" {
 	group "integer"
 	"Tries to change a Rye value (like string) to integer."
@@ -3833,7 +3810,7 @@ section "Types and Kinds " "" {
 
 }
 }
-section "evaldo/builtins_base_contexts.go" "" {
+section "evaldo/builtins_contexts.go" "" {
 section "Contexts " "Context related functions" {
 	group "raw-context"
 	"Creates a completely isolated context with no parent, where only built-in functions are available."
@@ -3878,14 +3855,14 @@ section "Contexts " "Context related functions" {
 	}
 
 	group "context"
-	"Creates a new context from a block (evaluated) or dict (converted)."
+	"Creates a new context from a block (evaluated), dict, or table row (converted)."
 	{
 		argsn 1
 		argtypes {
-			1 [ Block Dict ]
+			1 [ Block Dict TableRow ]
 		}
-		arg `arg: Block of expressions to evaluate, or Dict to convert to context`
-		returns `context object with the values defined in the block/dict and access to parent context`
+		arg `arg: Block of expressions to evaluate, or Dict or TableRow to convert to context`
+		returns `context object with the values defined in the block/dict/table row and access to parent context`
 	}
 
 	{
@@ -3895,6 +3872,7 @@ section "Contexts " "Context related functions" {
 		equal { y: 123 c: context { x: does { y } } c/x } 123
 		equal { c: context { a: 1 b: 2 } c/a + c/b } 3
 		equal { c: context dict { "a" 1 "b" 2 } c/a + c/b } 3
+		equal { c: context first table { 'a 'b } { 1 2 } c/a + c/b } 3
 	}
 
 	{
@@ -4540,7 +4518,7 @@ section "Contexts " "Context related functions" {
 
 }
 }
-section "evaldo/builtins_base_conditionals.go" "" {
+section "evaldo/builtins_conditionals.go" "" {
 section "Flow control " "Functions for conditional execution and branching logic" {
 	group "if"
 	"Executes a block of code only if the condition is true, returning the result of the block or false."
@@ -4760,7 +4738,7 @@ section "Flow control " "Functions for conditional execution and branching logic
 
 }
 }
-section "evaldo/builtins_base_iteration.go" "" {
+section "evaldo/builtins_iteration.go" "" {
 section "Iteration " "Functions for iterating over collections and executing code repeatedly" {
 	group "loop"
 	"Executes a block of code, builtin, or function a specified number of times, injecting the current iteration number (starting from 1)."
@@ -5472,7 +5450,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 
 }
 }
-section "evaldo/builtins_base_functions.go" "" {
+section "evaldo/builtins_functions.go" "" {
 section "Functions " "functions that create functions" {
 	group "var"
 	"Declares a word as a variable with the given value, allowing it to be modified. Returns the word for use with on-change."
@@ -6555,7 +6533,7 @@ section "Other " "..." {
 
 }
 }
-section "evaldo/builtins_base_combinators.go" "" {
+section "evaldo/builtins_combinators.go" "" {
 section "Combinators " "Functions that combine other functions or control execution flow" {
 	group "pass"
 	"Accepts a value and a block. It does the block, with value injected, and returns (passes on) the initial value."
@@ -6621,7 +6599,7 @@ section "Combinators " "Functions that combine other functions or control execut
 
 }
 }
-section "evaldo/builtins_base_printing_not.go" "" {
+section "evaldo/builtins_printing_not.go" "" {
 section "Default" "" {
 	group "prns"
 	"Prints a value followed by a space, returning the input value."
@@ -7662,7 +7640,7 @@ section "Failure " "Handling failures" {
 
 }
 }
-section "evaldo/builtins_base_mth.go" "" {
+section "evaldo/builtins_mth.go" "" {
 section "Fast Math " "Fast infix math evaluator" {
 	group "mth"
 	"Fast infix math evaluator with proper operator precedence (+,-,*,/,//,%,<,>,=,<=,>=,!=). Single-pass Shunting-yard, direct Go arithmetic, no builtin lookup."
@@ -7695,7 +7673,7 @@ section "Fast Math " "Fast infix math evaluator" {
 
 }
 }
-section "evaldo/builtins_base_intents.go" "" {
+section "evaldo/builtins_intents.go" "" {
 section "Default" "" {
 	group "input-intent"
 	"Declares a semantic input point: input-intent name validator-block provider-block. In scenario mode, returns the mocked value for the given intent name; otherwise evaluates the provider block. The resulting value is always validated using the validation dialect block."

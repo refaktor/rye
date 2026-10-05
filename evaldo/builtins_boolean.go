@@ -229,20 +229,20 @@ var builtins_boolean = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { _any\with 10 { + 10 , * 10 } } 20
-	// equal { _any\with 0 { + 10 , * 10 } } 10
-	// equal { _any\with 5 { - 10 , + 10 } } -5
-	// equal { _any\with false { .not , .string } } true
-	// ; equal { _any\with true { .not , .string } } "true"
-	// error { _any\with 5 "not-a-block" }
+	// equal { any\with 10 { + 10 , * 10 } } 20
+	// equal { any\with 0 { + 10 , * 10 } } 10
+	// equal { any\with 5 { - 10 , + 10 } } -5
+	// equal { any\with false { .not , .string } } true
+	// equal { any\with "abc" { .length , .string } } 3
+	// error { any\with 5 "not-a-block" }
 	// Args:
 	// * value: Value to be used as input to each expression in the block
 	// * block: Block of expressions to evaluate with the provided value injected
 	// Returns:
 	// * the first truthy result of applying an expression to the value, or the last result if none are truthy
-	"_any\\with": { // Doesn't seem to work well , for second expression or expression not taking in arguments
+	"any\\with": {
 		Argsn: 2,
-		Doc:   "Applies each expression in the block to the provided value until a truthy result is found and returns it.",
+		Doc:   "Evaluates expressions in a block with the provided value injected, returning the first truthy result or the last result if none are truthy. Commas between expressions are supported.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg1.(type) {
 			case env.Block:
@@ -250,10 +250,10 @@ var builtins_boolean = map[string]*env.Builtin{
 				ps.Ser = bloc.Series
 				var lastResult env.Object
 				for ps.Ser.Pos() < ps.Ser.Len() {
-					oldPos := ps.Ser.Pos()
-					EvalExpressionInjLimited(ps, arg0, true)
+					// Evaluate a single expression with injection; let evaluator manage token consumption
+					EvalExpressionInj(ps, arg0, true)
 
-					// Check for failures or errors and return immediately
+					// If error or failure, return immediately (mirrors any/all behavior)
 					if ps.ErrorFlag || ps.FailureFlag {
 						ps.Ser = ser
 						return ps.Res
@@ -261,17 +261,14 @@ var builtins_boolean = map[string]*env.Builtin{
 
 					lastResult = ps.Res
 
-					// Ensure we advance position to prevent infinite loops
-					if ps.Ser.Pos() == oldPos {
-						ps.Ser.SetPos(oldPos + 1)
-					}
-
 					if util.IsTruthy(ps.Res) {
 						break
 					}
+
+					// Consume optional comma between expressions
+					MaybeAcceptComma(ps, nil, false)
 				}
 				ps.Ser = ser
-				// Return the last result if we have one, otherwise return the input value
 				if lastResult != nil {
 					return lastResult
 				}

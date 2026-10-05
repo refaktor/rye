@@ -28,70 +28,6 @@ func truncatedDivision(ps *env.ProgramState, dividend, divisor float64) env.Obje
 
 var builtins_numbers = map[string]*env.Builtin{
 
-	//
-	// ##### Numbers ##### "Working with numbers, integers and decimals."
-	//
-	// Tests:
-	// equal { addnums 2 3 } 5
-	// equal { addnums 2.5 3.5 } 6.0
-	// equal { addnums 2 3.5 } 5.5
-	// Args:
-	// * value1: Integer, decimal, or time value
-	// * value2: Integer or decimal value (or integer for time addition)
-	// Returns:
-	// * sum of the two numbers or time shifted by the integer offset
-	"addnums": {
-		Argsn: 2,
-		Doc:   "Optimized version of + that adds two numbers, working with both integers and decimals.",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			// Fast path for the most common case: Integer + Integer
-			if i1, ok1 := arg0.(env.Integer); ok1 {
-				if i2, ok2 := arg1.(env.Integer); ok2 {
-					// Direct integer addition without creating a new object until the end
-					i1.Value = i1.Value + i2.Value
-					return i1 // we don't have to create new Value as it's already copied by value
-					// return *env.NewInteger(i1.Value + i2.Value)
-				}
-
-				// Handle Integer + Decimal case
-				if d2, ok2 := arg1.(env.Decimal); ok2 {
-					return *env.NewDecimal(float64(i1.Value) + d2.Value)
-				}
-
-				// Type error for second argument
-				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "addnums")
-			}
-
-			// Handle Decimal + (Integer or Decimal) case
-			if d1, ok1 := arg0.(env.Decimal); ok1 {
-				if i2, ok2 := arg1.(env.Integer); ok2 {
-					return *env.NewDecimal(d1.Value + float64(i2.Value))
-				}
-
-				if d2, ok2 := arg1.(env.Decimal); ok2 {
-					return *env.NewDecimal(d1.Value + d2.Value)
-				}
-
-				// Type error for second argument
-				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "addnums")
-			}
-
-			// Handle Time + Integer case
-			if t1, ok1 := arg0.(env.Time); ok1 {
-				if i2, ok2 := arg1.(env.Integer); ok2 {
-					return *env.NewTime(t1.Value.Add(time.Duration(i2.Value * 1000000)))
-				}
-
-				// Error for invalid first argument type
-				return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "addnums")
-			}
-
-			// Type error for first argument
-			return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType, env.TimeType}, "addnums")
-		},
-	},
-
 	// Tests:
 	// equal { inc 123 } 124
 	// equal { inc 0 } 1
@@ -429,33 +365,6 @@ var builtins_numbers = map[string]*env.Builtin{
 		},
 	},
 
-	// Tests:
-	// equal { 4 % 2 } 0
-	// equal { 5 % 2 } 1
-	// equal { 5 % 3 } 2
-	// Args:
-	// * value: Integer dividend
-	// * divisor: Integer divisor
-	// Returns:
-	// * integer remainder after division
-	"_%": { // ***
-		Argsn: 2,
-		Doc:   "Alias for mod - calculates the modulo (remainder) when dividing the first integer by the second.",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch a := arg0.(type) {
-			case env.Integer:
-				switch b := arg1.(type) {
-				case env.Integer:
-					return *env.NewInteger(a.Value % b.Value)
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "mod")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "mod")
-			}
-		},
-	},
 	// Tests:
 	// equal { random\integer 2 |type? } 'integer
 	// equal { random\integer 1 |< 2 } true
@@ -1121,148 +1030,29 @@ var builtins_numbers = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { 5 = 5 } true
-	// equal { 5 = 4 } false
-	// equal { "abc" = "abc" } true
-	// equal { { 1 2 } = { 1 2 } } true
-	// equal { { 1 2 } = { 2 1 } } false
+	// equal { 4 % 2 } 0
+	// equal { 5 % 2 } 1
+	// equal { 5 % 3 } 2
 	// Args:
-	// * value1: First value to compare
-	// * value2: Second value to compare
+	// * value: Integer dividend
+	// * divisor: Integer divisor
 	// Returns:
-	// * boolean true if values are equal, false otherwise
-	"_=": { // ***
+	// * integer remainder after division
+	"_%": { // ***
 		Argsn: 2,
-		Doc:   "Compares two values for equality, returning 1 if equal or 0 if not equal.",
+		Doc:   "Alias for mod - calculates the modulo (remainder) when dividing the first integer by the second.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			if arg0.Equal(arg1) {
-				return *env.NewBoolean(true)
-			} else {
-				return *env.NewBoolean(false)
-			}
-		},
-	},
-
-	// Tests:
-	// equal { 5 != 5 } false
-	// equal { 5 != 4 } true
-	// equal { "abc" != "abc" } false
-	// equal { "abc" != "def" } true
-	// equal { { 1 2 } != { 1 2 } } false
-	// equal { { 1 2 } != { 2 1 } } true
-	// Args:
-	// * value1: First value to compare
-	// * value2: Second value to compare
-	// Returns:
-	// * boolean true if values are not equal, false otherwise
-	"_!=": { // ***
-		Argsn: 2,
-		Doc:   "Compares two values for inequality, returning true if not equal or false if equal.",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			if arg0.Equal(arg1) {
-				return *env.NewBoolean(false)
-			} else {
-				return *env.NewBoolean(true)
-			}
-		},
-	},
-
-	// Tests:
-	// equal { 6 > 5 } true
-	// equal { 5 > 5 } false
-	// equal { 4 > 5 } false
-	// equal { 5.5 > 5 } true
-	// equal { "b" > "a" } true
-	// Args:
-	// * value1: First value to compare
-	// * value2: Second value to compare
-	// Returns:
-	// * boolean true if value1 is greater than value2, false otherwise
-	"_>": { // ***
-		Argsn: 2,
-		Doc:   "Compares if the first value is greater than the second value.",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			if greaterThanNew(arg0, arg1) {
-				return *env.NewBoolean(true)
-			} else {
-				return *env.NewBoolean(false)
-			}
-		},
-	},
-
-	// Tests:
-	// equal { 5 >= 6 } false
-	// equal { 5 >= 5 } true
-	// equal { 6.0 >= 5 } true
-	// equal { 4 >= 5 } false
-	// equal { "b" >= "a" } true
-	// equal { "a" >= "a" } true
-	// Args:
-	// * value1: First value to compare
-	// * value2: Second value to compare
-	// Returns:
-	// * boolean true if value1 is greater than or equal to value2, false otherwise
-	"_>=": { // * *
-		Argsn: 2,
-		Doc:   "Compares if the first value is greater than or equal to the second value.",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			if arg0.Equal(arg1) || greaterThanNew(arg0, arg1) {
-				return *env.NewBoolean(true)
-			} else {
-				return *env.NewBoolean(false)
-			}
-		},
-	},
-
-	// Tests:
-	// equal { 5 < 6 } true
-	// equal { 5 < 5 } false
-	// equal { 6 < 5 } false
-	// equal { 4.5 < 5 } true
-	// equal { "a" < "b" } true
-	// Args:
-	// * value1: First value to compare
-	// * value2: Second value to compare
-	// Returns:
-	// * boolean true if value1 is less than value2, false otherwise
-	"_<": { // **
-		Argsn: 2,
-		Doc:   "Compares if the first value is less than the second value.",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			if lesserThanNew(arg0, arg1) {
-				return *env.NewBoolean(true)
-			} else {
-				return *env.NewBoolean(false)
-			}
-		},
-	},
-
-	// Tests:
-	// equal { 5 <= 6 } true
-	// equal { 5 <= 5 } true
-	// equal { 6 <= 5 } false
-	// equal { 4.5 <= 5 } true
-	// equal { "a" <= "b" } true
-	// equal { "a" <= "a" } true
-	// Args:
-	// * value1: First value to compare
-	// * value2: Second value to compare
-	// Returns:
-	// * boolean true if value1 is less than or equal to value2, false otherwise
-	"_<=": {
-		Argsn: 2,
-		Doc:   "Compares if the first value is less than or equal to the second value.",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			if arg0.Equal(arg1) || lesserThanNew(arg0, arg1) {
-				return *env.NewBoolean(true)
-			} else {
-				return *env.NewBoolean(false)
+			switch a := arg0.(type) {
+			case env.Integer:
+				switch b := arg1.(type) {
+				case env.Integer:
+					return *env.NewInteger(a.Value % b.Value)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "mod")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "mod")
 			}
 		},
 	},
@@ -1412,6 +1202,152 @@ var builtins_numbers = map[string]*env.Builtin{
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "clamp")
+			}
+		},
+	},
+	// Tests:
+	// equal { 5 = 5 } true
+	// equal { 5 = 4 } false
+	// equal { "abc" = "abc" } true
+	// equal { { 1 2 } = { 1 2 } } true
+	// equal { { 1 2 } = { 2 1 } } false
+	// Args:
+	// * value1: First value to compare
+	// * value2: Second value to compare
+	// Returns:
+	// * boolean true if values are equal, false otherwise
+	"_=": { // ***
+		Argsn: 2,
+		Doc:   "Compares two values for equality, returning 1 if equal or 0 if not equal.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if arg0.Equal(arg1) {
+				return *env.NewBoolean(true)
+			} else {
+				return *env.NewBoolean(false)
+			}
+		},
+	},
+
+	// Tests:
+	// equal { 5 != 5 } false
+	// equal { 5 != 4 } true
+	// equal { "abc" != "abc" } false
+	// equal { "abc" != "def" } true
+	// equal { { 1 2 } != { 1 2 } } false
+	// equal { { 1 2 } != { 2 1 } } true
+	// Args:
+	// * value1: First value to compare
+	// * value2: Second value to compare
+	// Returns:
+	// * boolean true if values are not equal, false otherwise
+	"_!=": { // ***
+		Argsn: 2,
+		Doc:   "Compares two values for inequality, returning true if not equal or false if equal.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if arg0.Equal(arg1) {
+				return *env.NewBoolean(false)
+			} else {
+				return *env.NewBoolean(true)
+			}
+		},
+	},
+
+	// Tests:
+	// equal { 6 > 5 } true
+	// equal { 5 > 5 } false
+	// equal { 4 > 5 } false
+	// equal { 5.5 > 5 } true
+	// equal { "b" > "a" } true
+	// Args:
+	// * value1: First value to compare
+	// * value2: Second value to compare
+	// Returns:
+	// * boolean true if value1 is greater than value2, false otherwise
+	"_>": { // ***
+		Argsn: 2,
+		Doc:   "Compares if the first value is greater than the second value.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if greaterThanNew(arg0, arg1) {
+				return *env.NewBoolean(true)
+			} else {
+				return *env.NewBoolean(false)
+			}
+		},
+	},
+
+	// Tests:
+	// equal { 5 >= 6 } false
+	// equal { 5 >= 5 } true
+	// equal { 6.0 >= 5 } true
+	// equal { 4 >= 5 } false
+	// equal { "b" >= "a" } true
+	// equal { "a" >= "a" } true
+	// Args:
+	// * value1: First value to compare
+	// * value2: Second value to compare
+	// Returns:
+	// * boolean true if value1 is greater than or equal to value2, false otherwise
+	"_>=": { // * *
+		Argsn: 2,
+		Doc:   "Compares if the first value is greater than or equal to the second value.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if arg0.Equal(arg1) || greaterThanNew(arg0, arg1) {
+				return *env.NewBoolean(true)
+			} else {
+				return *env.NewBoolean(false)
+			}
+		},
+	},
+
+	// Tests:
+	// equal { 5 < 6 } true
+	// equal { 5 < 5 } false
+	// equal { 6 < 5 } false
+	// equal { 4.5 < 5 } true
+	// equal { "a" < "b" } true
+	// Args:
+	// * value1: First value to compare
+	// * value2: Second value to compare
+	// Returns:
+	// * boolean true if value1 is less than value2, false otherwise
+	"_<": { // **
+		Argsn: 2,
+		Doc:   "Compares if the first value is less than the second value.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if lesserThanNew(arg0, arg1) {
+				return *env.NewBoolean(true)
+			} else {
+				return *env.NewBoolean(false)
+			}
+		},
+	},
+
+	// Tests:
+	// equal { 5 <= 6 } true
+	// equal { 5 <= 5 } true
+	// equal { 6 <= 5 } false
+	// equal { 4.5 <= 5 } true
+	// equal { "a" <= "b" } true
+	// equal { "a" <= "a" } true
+	// Args:
+	// * value1: First value to compare
+	// * value2: Second value to compare
+	// Returns:
+	// * boolean true if value1 is less than or equal to value2, false otherwise
+	"_<=": {
+		Argsn: 2,
+		Doc:   "Compares if the first value is less than or equal to the second value.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if arg0.Equal(arg1) || lesserThanNew(arg0, arg1) {
+				return *env.NewBoolean(true)
+			} else {
+				return *env.NewBoolean(false)
 			}
 		},
 	},
