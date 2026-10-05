@@ -13,12 +13,12 @@ go build -o "$rbit" ../cmd/rbit
 # Keep the order intentional and stable. Files without annotated tests still
 # belong to the tree, but produce no groups; rbit handles those itself.
 base=(
-  builtins_base_boolean.go builtins_base_numbers.go builtins_base_strings.go
-  builtins_base_time.go builtins_base_collections.go builtins_base_types.go
-  builtins_base_contexts.go builtins_base_conditionals.go builtins_base_iteration.go
-  builtins_base_functions.go builtins.go builtins_base_combinators.go
-  builtins_base_printing_not.go builtins_error_handling.go builtins_base_mth.go
-  builtins_base_intents.go builtins_table.go builtins_validation.go
+  builtins_boolean.go builtins_numbers.go builtins_strings.go
+  builtins_time.go builtins_collections.go builtins_types.go
+  builtins_contexts.go builtins_conditionals.go builtins_iteration.go
+  builtins_functions.go builtins.go builtins_combinators.go
+  builtins_printing_not.go builtins_error_handling.go builtins_mth.go
+  builtins_intents.go builtins_table.go builtins_validation.go
 )
 baseio=(
   builtins_printing.go builtins_baseio.go
