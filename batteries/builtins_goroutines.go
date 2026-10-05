@@ -5,7 +5,6 @@ package batteries
 
 import (
 	"fmt"
-	"reflect"
 	"sync"
 	"sync/atomic"
 
@@ -27,10 +26,9 @@ func (m *RyeMutex) Lock() {
 }
 
 func (m *RyeMutex) Unlock() error {
-	if !m.locked.Load() {
+	if !m.locked.CompareAndSwap(true, false) {
 		return fmt.Errorf("unlock of unlocked mutex")
 	}
-	m.locked.Store(false)
 	m.mu.Unlock()
 	return nil
 }
@@ -77,6 +75,10 @@ var Builtins_goroutines = map[string]*env.Builtin{
 			case env.Object:
 				switch handler := arg1.(type) {
 				case env.Function:
+					if handler.Argsn != 1 {
+						ps.FailureFlag = true
+						return evaldo.MakeBuiltinError(ps, "function with exactly 1 argument required", "go-with")
+					}
 					// Create a copy of the program state for the goroutine
 					psTemp := env.ProgramState{}
 					err := copier.Copy(&psTemp, &ps)
@@ -125,6 +127,10 @@ var Builtins_goroutines = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch handler := arg0.(type) {
 			case env.Function:
+				if handler.Argsn != 0 {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "function with 0 arguments required", "go")
+				}
 				// Create a copy of the program state for the goroutine
 				psTemp := env.ProgramState{}
 				err := copier.Copy(&psTemp, &ps)
@@ -170,7 +176,10 @@ var Builtins_goroutines = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch buflen := arg0.(type) {
 			case env.Integer:
-				//fmt.Println(str.Value)
+				if buflen.Value < 0 || int64(int(buflen.Value)) != buflen.Value {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "buffer size must be a non-negative integer representable on this platform", "channel")
+				}
 				ch := make(chan *env.Object, int(buflen.Value))
 				return *env.NewNative(ps.Idx, ch, "Rye-channel")
 			default:
@@ -204,7 +213,8 @@ var Builtins_goroutines = map[string]*env.Builtin{
 				if ok {
 					return *msg
 				} else {
-					return *env.NewError("channel closed")
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "channel closed", "Rye-channel//Read")
 				}
 			default:
 				ps.FailureFlag = true
@@ -234,7 +244,12 @@ var Builtins_goroutines = map[string]*env.Builtin{
 			}()
 			switch chn := arg0.(type) {
 			case env.Native:
-				chn.Value.(chan *env.Object) <- &arg1
+				ch, ok := chn.Value.(chan *env.Object)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Invalid channel type", "Rye-channel//Send")
+				}
+				ch <- &arg1
 				return arg0
 			default:
 				ps.FailureFlag = true
@@ -253,11 +268,22 @@ var Builtins_goroutines = map[string]*env.Builtin{
 	// * the closed channel object
 	"Rye-channel//Close": {
 		Argsn: 1,
-		Doc:   "Closes a channel, preventing further sends and causing pending/future reads to return an error.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "Closes a channel, preventing further sends. Buffered values remain readable until the channel is drained.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (result env.Object) {
+			defer func() {
+				if r := recover(); r != nil {
+					ps.FailureFlag = true
+					result = evaldo.MakeBuiltinError(ps, "channel already closed", "Rye-channel//Close")
+				}
+			}()
 			switch chn := arg0.(type) {
 			case env.Native:
-				close(chn.Value.(chan *env.Object))
+				ch, ok := chn.Value.(chan *env.Object)
+				if !ok || ch == nil {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Invalid channel type or nil channel", "Rye-channel//Close")
+				}
+				close(ch)
 				return arg0
 			default:
 				ps.FailureFlag = true
@@ -425,207 +451,24 @@ var Builtins_goroutines = map[string]*env.Builtin{
 	// Args:
 	// * block: Block containing channel-function pairs and optional default function
 	// Returns:
-	// * the original block argument
+	// * the selected handler's result, or failure if a closed channel is selected
 	"select\\fn": {
 		Argsn: 1,
-		Doc:   "Performs a select operation on multiple channels, executing functions when channels are ready or a default function.",
+		Doc:   "Selects a channel or default function and returns its result. Selecting a drained closed channel fails without calling a handler.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch block := arg0.(type) {
-			case env.Block:
-				ser := ps.Ser
-				ps.Ser = block.Series
-
-				var hasDeafult bool
-				var cases []reflect.SelectCase
-				var funcs []env.Function
-				for ps.Ser.Pos() < ps.Ser.Len() {
-					evaldo.EvalExpression_CollectArg(ps, false, false)
-					defaultFn, ok := ps.Res.(env.Function)
-					// handle default case
-					if ok {
-						if hasDeafult {
-							ps.FailureFlag = true
-							return evaldo.MakeBuiltinError(ps, "select can only have one default case", "select\\fn")
-						}
-						if defaultFn.Argsn != 0 {
-							ps.FailureFlag = true
-							return evaldo.MakeBuiltinError(ps, "function with 0 args required", "select\\fn")
-						}
-						defaultCase := make(chan struct{})
-						close(defaultCase) // close it immediately so it's always ready to receive
-						cases = append(cases, reflect.SelectCase{
-							Dir:  reflect.SelectRecv,
-							Chan: reflect.ValueOf(defaultCase),
-						})
-						funcs = append(funcs, defaultFn)
-						hasDeafult = true
-						continue
-					}
-					// handle regular channel case
-					native, ok := ps.Res.(env.Native)
-					if !ok {
-						ps.FailureFlag = true
-						return evaldo.MakeBuiltinError(ps, "first argument of a case must be a channel", "select\\fn")
-					}
-					ch, ok := native.Value.(chan *env.Object)
-					if !ok {
-						ps.FailureFlag = true
-						return evaldo.MakeBuiltinError(ps, "first argument of a case must be a channel", "select\\fn")
-					}
-					cases = append(cases, reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(ch)})
-
-					evaldo.EvalExpression_CollectArg(ps, false, false)
-					fn, ok := ps.Res.(env.Function)
-					if !ok {
-						ps.FailureFlag = true
-						return evaldo.MakeBuiltinError(ps, "second argument of a case must be a function", "select\\fn")
-					}
-					if fn.Argsn > 1 {
-						ps.FailureFlag = true
-						return evaldo.MakeBuiltinError(ps, "function with 0 or 1 arg required", "select\\fn")
-					}
-					funcs = append(funcs, fn)
-				}
-				ps.Ser = ser
-
-				chosen, value, recvOK := reflect.Select(cases)
-				fn := funcs[chosen]
-
-				psTemp := env.ProgramState{}
-				err := copier.Copy(&psTemp, &ps)
-				if err != nil {
-					ps.FailureFlag = true
-					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("failed to copy ps: %s", err), "select\\fn")
-				}
-				var arg env.Object = nil
-				if recvOK {
-					val, ok := value.Interface().(*env.Object)
-					if !ok {
-						ps.FailureFlag = true
-						return evaldo.MakeBuiltinError(ps, "value from channel is not an object", "select\\fn")
-					}
-					arg = *val
-				}
-				if fn.Argsn == 0 {
-					arg = nil
-				}
-				evaldo.CallFunction_CollectArgs(fn, &psTemp, arg, false, nil)
-				return psTemp.Res
-
-			default:
-				ps.FailureFlag = true
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.BlockType}, "select\\fn")
-			}
-			return arg0 // unreachable, but needed for compilation
+			return runChannelSelect(ps, arg0, true)
 		},
 	},
 
-	// Modified select\fn code to accept blocks, at the end there will only be one select probably, accepting blocks, functions and get-words
-	// Further modified so that default case is prepedned by void _ , like we do in switch function for example
-	// Rok did one thing differently than we did so faw. He evaluated the second value in pair, block or fn ...
-	// So faw we haven't done this. We didn't evaluate/retrieve except a value was a get-word ... I have to think what is
-	// better in the long run. In normal use you don't see the difference, but in more edge cases the difference is big and it
-	// must be done consistent across similar functions
+	// Block handlers run in the caller's context with the received value injected.
+	// A default is written as _ { ... }; select { } intentionally blocks forever.
+	// Compatibility: returns the handler result, not the specification block.
 
 	"select": {
 		Argsn: 1,
-		Doc:   "Select on a message on multiple channels or default.",
+		Doc:   "Selects a channel or default block and returns its result. Selecting a drained closed channel fails without running a handler.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch block := arg0.(type) {
-			case env.Block:
-				ser := ps.Ser
-				ps.Ser = block.Series
-
-				var hasDeafult bool
-				var cases []reflect.SelectCase
-				var funcs []env.Block
-				for ps.Ser.Pos() < ps.Ser.Len() {
-					evaldo.EvalExpression_CollectArg(ps, false, false)
-					// handle default case
-					switch maybeChan := ps.Res.(type) {
-					case env.Native:
-						ch, ok := maybeChan.Value.(chan *env.Object)
-						if !ok {
-							ps.FailureFlag = true
-							return evaldo.MakeBuiltinError(ps, "first argument of a case must be a channel", "select")
-						}
-						cases = append(cases, reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(ch)})
-
-						evaldo.EvalExpression_CollectArg(ps, false, false)
-						fn, ok := ps.Res.(env.Block)
-						if !ok {
-							ps.FailureFlag = true
-							return evaldo.MakeBuiltinError(ps, "second argument of a case must be a block", "select")
-						}
-						/* if fn.Argsn > 1 {
-							ps.FailureFlag = true
-							return evaldo.MakeBuiltinError(ps, "function with 0 or 1 arg required", "select")
-						}*/
-						funcs = append(funcs, fn)
-
-					case env.Void:
-						if hasDeafult {
-							ps.FailureFlag = true
-							return evaldo.MakeBuiltinError(ps, "select can only have one default case", "select")
-						}
-						/* if defaultFn.Argsn != 0 {
-							ps.FailureFlag = true
-							return evaldo.MakeBuiltinError(ps, "function with 0 args required", "select")
-						} */
-						defaultCase := make(chan struct{})
-						close(defaultCase) // close it immediately so it's always ready to receive
-						cases = append(cases, reflect.SelectCase{
-							Dir:  reflect.SelectRecv,
-							Chan: reflect.ValueOf(defaultCase),
-						})
-						evaldo.EvalExpression_CollectArg(ps, false, false)
-						fn, ok := ps.Res.(env.Block)
-						if !ok {
-							ps.FailureFlag = true
-							return evaldo.MakeBuiltinError(ps, "second argument of a case must be a block", "select")
-						}
-						funcs = append(funcs, fn)
-						hasDeafult = true
-					}
-				}
-				ps.Ser = ser
-
-				chosen, value, recvOK := reflect.Select(cases)
-				fn := funcs[chosen]
-
-				psTemp := env.ProgramState{}
-				err := copier.Copy(&psTemp, &ps)
-				if err != nil {
-					ps.FailureFlag = true
-					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("failed to copy ps: %s", err), "select")
-				}
-				var arg env.Object = nil
-				if recvOK {
-					val, ok := value.Interface().(*env.Object)
-					if !ok {
-						ps.FailureFlag = true
-						return evaldo.MakeBuiltinError(ps, "value from channel is not an object", "select")
-					}
-					arg = *val
-				}
-				/* if fn.Argsn == 0 {
-					arg = nil
-				}*/
-				psTemp.Ser = fn.Series
-				evaldo.EvalBlockInj(&psTemp, arg, true)
-				evaldo.MaybeDisplayFailureOrError(ps, ps.Idx, "select")
-
-				// TODO -- do we need to do something with ps.Ser
-				if psTemp.ErrorFlag {
-					return psTemp.Res
-				}
-				// CallFunction(fn, &psTemp, arg, false, nil)
-
-			default:
-				ps.FailureFlag = true
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.BlockType}, "select")
-			}
-			return arg0
+			return runChannelSelect(ps, arg0, false)
 		},
 	},
 }

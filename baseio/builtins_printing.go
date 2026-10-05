@@ -2,6 +2,7 @@ package baseio
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
@@ -151,16 +152,21 @@ func DisplayRyeValue(ps *env.ProgramState, arg0 env.Object, interactive bool) (e
 // registered by evaldo.RegisterBaseBuiltins and do not require these deps.
 var builtins_printing_extra = map[string]*env.Builtin{
 
-	// Example:
-	// display [1 2 3]
-	// Args:
-	// * value: Block, Dict, Table, TableRow, Markdown, or Error to display interactively
-	// Returns:
-	// * the selected value or the original value when user exits
+	// Prints the entire value without input or pagination and passes it through.
 	"display": {
-		Pure:  true,
 		Argsn: 1,
-		Doc:   "Interactively displays a value (Block, Dict, Table, TableRow, or Markdown) in the terminal with navigation capabilities.",
+		Doc:   "Displays all entries without interaction or pagination and returns the original value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			term.RenderValue(os.Stdout, arg0, ps.Idx)
+			return arg0
+		},
+	},
+
+	// Example: [1 2 3] |explore  ; choose an item with the arrow keys
+	// Selection and cancellation behave like the former display builtin.
+	"explore": {
+		Argsn: 1,
+		Doc:   "Interactively explores a value; returns the selected item or the original value when cancelled.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			result, _ := DisplayRyeValue(ps, arg0, true)
 			return result
@@ -175,73 +181,21 @@ var builtins_printing_extra = map[string]*env.Builtin{
 	// * the selected value or the original value when user exits
 	"_..": {
 		Argsn: 1,
-		Doc:   "Shorthand alias for 'display' - interactively displays a value in the terminal with navigation capabilities.",
+		Doc:   "Shorthand alias for explore: interactively select a value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			term.SaveCurPos()
-			switch bloc := arg0.(type) {
-			case env.Block:
-				obj, esc := term.DisplayBlock(bloc, ps.Idx)
-				if !esc {
-					return obj
-				}
-			case *env.Block:
-				obj, esc := term.DisplayBlock(*bloc, ps.Idx)
-				if !esc {
-					return obj
-				}
-			case env.Dict:
-				obj, esc := term.DisplayDict(bloc, ps.Idx)
-				if !esc {
-					return obj
-				}
-			case *env.Dict:
-				obj, esc := term.DisplayDict(*bloc, ps.Idx)
-				if !esc {
-					return obj
-				}
-			case env.Table:
-				obj, esc := term.DisplayTable(bloc, ps.Idx)
-				if !esc {
-					return obj
-				}
-			case *env.Table:
-				obj, esc := term.DisplayTable(*bloc, ps.Idx)
-				if !esc {
-					return obj
-				}
-			case env.TableRow:
-				obj, esc := term.DisplayTableRow(bloc, ps.Idx)
-				if !esc {
-					return obj
-				}
-			case *env.TableRow:
-				obj, esc := term.DisplayTableRow(*bloc, ps.Idx)
-				if !esc {
-					return obj
-				}
-			case *env.Error:
-				obj, esc := term.DisplayError(bloc, ps.Idx)
-				if !esc {
-					return obj
-				}
-			case env.Error:
-				obj, esc := term.DisplayError(&bloc, ps.Idx)
-				if !esc {
-					return obj
-				}
-			}
-			return arg0
+			result, _ := DisplayRyeValue(ps, arg0, true)
+			return result
 		},
 	},
 
 	// Example:
-	// table { "n" } { 1 2 3 } |display\custom fn { row is-curr } { if is-curr > 0 { print "*" } print row }
+	// table { "n" } { 1 2 3 } |explore\custom fn { row is-curr } { if is-curr > 0 { print "*" } print row }
 	// Args:
 	// * table: Table to display
 	// * renderer: Function called for each row with args (row is-current)
 	// Returns:
 	// * the selected row or original table when user exits
-	"display\\custom": {
+	"explore\\custom": {
 		Argsn: 2,
 		Doc:   "Interactively displays a Table in the terminal with a custom rendering function for each row.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
