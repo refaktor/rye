@@ -5,6 +5,7 @@ package batteries
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
@@ -13,6 +14,65 @@ import (
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
+
+// mqttURIOptions separates broker, credentials and client ID before handing the
+// address to Paho. Credentials must not remain in the broker URL or its errors.
+func mqttURIOptions(scheme, path string) (*mqtt.ClientOptions, error) {
+	if scheme != "mqtt" && scheme != "mqtts" {
+		return nil, fmt.Errorf("URI scheme must be 'mqtt' or 'mqtts'")
+	}
+	u, err := url.Parse(scheme + "://" + path)
+	if err != nil || u.Hostname() == "" {
+		return nil, fmt.Errorf("invalid MQTT broker URI")
+	}
+	if u.RawQuery != "" || u.ForceQuery || u.Fragment != "" {
+		return nil, fmt.Errorf("MQTT URI must not contain a query or fragment")
+	}
+	clientID := strings.TrimPrefix(u.Path, "/")
+	if strings.Contains(clientID, "/") {
+		return nil, fmt.Errorf("MQTT URI must contain a single client ID path segment")
+	}
+	if clientID == "" {
+		clientID = "mqtt-client"
+	}
+	transport := "tcp"
+	if scheme == "mqtts" {
+		transport = "ssl"
+	}
+	opts := mqtt.NewClientOptions()
+	opts.AddBroker((&url.URL{Scheme: transport, Host: u.Host}).String())
+	opts.SetClientID(clientID)
+	if u.User != nil {
+		opts.SetUsername(u.User.Username())
+		password, _ := u.User.Password()
+		opts.SetPassword(password)
+	}
+	return opts, nil
+}
+
+// Both URI kinds use exactly the same connection implementation.
+func init() {
+	Builtins_mqtt["mqtts-uri//Open"] = Builtins_mqtt["mqtt-uri//Open"]
+}
+
+func mqttMessageHandler(ps *env.ProgramState, handler env.Function) mqtt.MessageHandler {
+	return func(client mqtt.Client, msg mqtt.Message) {
+		psCallback := *ps
+		psCallback.FailureFlag = false
+		psCallback.ErrorFlag = false
+		psCallback.ReturnFlag = false
+		metadata := map[string]any{
+			"topic":      *env.NewString(msg.Topic()),
+			"qos":        *env.NewInteger(int64(msg.Qos())),
+			"retained":   *env.NewBoolean(msg.Retained()),
+			"duplicate":  *env.NewBoolean(msg.Duplicate()),
+			"message-id": *env.NewInteger(int64(msg.MessageID())),
+		}
+		evaldo.CallFunctionArgs2(handler, &psCallback,
+			*env.NewString(string(msg.Payload())), *env.NewDict(metadata), nil)
+		evaldo.MaybeDisplayFailureOrError(&psCallback, psCallback.Idx, "on-mqtt-message")
+	}
+}
 
 var Builtins_mqtt = map[string]*env.Builtin{
 
@@ -38,7 +98,7 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// example { Open mqtt://localhost:1883/my-client-id }
 	// example { Open mqtt://user:pass@localhost:1883/my-client-id }
 	// Args:
-	// * uri: MQTT broker URI (format: mqtt://[user:pass@]host:port/client-id)
+	// * uri: MQTT broker URI (format: mqtt[s]://[user:pass@]host:port/client-id)
 	// Returns:
 	// * native MQTT client connection (type: "mqtt-client")
 	// * error if connection fails
@@ -48,44 +108,13 @@ var Builtins_mqtt = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch uri := arg0.(type) {
 			case env.Uri:
-				// Parse the URI to extract connection details
-				// Format: mqtt://[username:password@]host:port/client-id
+				// Format: mqtt[s]://[username:password@]host:port/client-id
 				scheme := ps.Idx.GetWord(uri.Scheme.Index)
-				if scheme != "mqtt" && scheme != "mqtts" {
+				opts, err := mqttURIOptions(scheme, uri.Path)
+				if err != nil {
 					ps.FailureFlag = true
-					return evaldo.MakeBuiltinError(ps, "URI scheme must be 'mqtt' or 'mqtts'", "mqtt-uri//Open")
+					return evaldo.MakeBuiltinError(ps, err.Error(), "mqtt-uri//Open")
 				}
-
-				// Construct broker URL
-				var brokerURL string
-				if scheme == "mqtts" {
-					brokerURL = "ssl://" + uri.Path
-				} else {
-					brokerURL = "tcp://" + uri.Path
-				}
-
-				// Extract client ID from path (after the host:port)
-				// For now, use a default client ID if not provided in path
-				clientID := "mqtt-client"
-				if len(uri.Path) > 0 {
-					// If there's a slash in the path after host:port, use that as client ID
-					parts := strings.Split(uri.Path, "/")
-					if len(parts) > 1 && parts[1] != "" {
-						clientID = parts[1]
-						// Remove client ID from broker URL
-						brokerURL = strings.Replace(brokerURL, "/"+clientID, "", 1)
-					}
-				}
-
-				opts := mqtt.NewClientOptions()
-				opts.AddBroker(brokerURL)
-				opts.SetClientID(clientID)
-				opts.SetDefaultPublishHandler(func(client mqtt.Client, msg mqtt.Message) {
-					// Default message handler
-				})
-
-				// TODO: Extract username/password from URI if present
-				// This would require parsing uri.Path more thoroughly
 
 				client := mqtt.NewClient(opts)
 				if token := client.Connect(); token.Wait() && token.Error() != nil {
@@ -257,7 +286,7 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// example { client |Subscribe "sensors/+" 1 fn { msg } { print "Received: " + msg } }
+	// example { client |Subscribe "sensors/+" 1 fn { payload msg } { print payload } }
 	// Args:
 	// * client: MQTT client connection (type: "mqtt-client")
 	// * topic: Topic pattern to subscribe to (string, can include wildcards)
@@ -285,32 +314,7 @@ var Builtins_mqtt = map[string]*env.Builtin{
 								return evaldo.MakeBuiltinError(ps, "QoS must be 0, 1, or 2", "mqtt-client//Subscribe")
 							}
 
-							callback := func(client mqtt.Client, msg mqtt.Message) {
-								// Create a new program state copy for the callback
-								psCallback := *ps
-								psCallback.FailureFlag = false
-								psCallback.ErrorFlag = false
-								psCallback.ReturnFlag = false
-
-								// Create message object as a Dict containing topic and payload
-								msgDict := make(map[string]any)
-								msgDict["topic"] = *env.NewString(msg.Topic())
-								// msgDict["payload"] = *env.NewString(string(msg.Payload()))
-								msgDict["qos"] = *env.NewInteger(int64(msg.Qos()))
-								msgDict["retained"] = *env.NewBoolean(msg.Retained())
-								msgDict["duplicate"] = *env.NewBoolean(msg.Duplicate())
-								msgDict["message-id"] = *env.NewInteger(int64(msg.MessageID()))
-
-								evaldo.CallFunctionArgs2(handler,
-									&psCallback,
-									*env.NewString(string(msg.Payload())),
-									*env.NewDict(msgDict),
-									nil)
-								if psCallback.FailureFlag || psCallback.ErrorFlag {
-									fmt.Println("********* CALLBACK ERROR MQTT")
-								}
-								evaldo.MaybeDisplayFailureOrError(&psCallback, psCallback.Idx, "on-mqtt-message")
-							}
+							callback := mqttMessageHandler(ps, handler)
 
 							token := mqttClient.Subscribe(topic.Value, byte(qos.Value), callback)
 							if token.Wait() && token.Error() != nil {
@@ -340,17 +344,18 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// example { client |Subscribe-simple "sensors/temperature" fn { msg } { print msg.payload } }
+	// example { client |Subscribe-simple "sensors/temperature" fn { payload msg } { print payload } }
 	// Args:
 	// * client: MQTT client connection (type: "mqtt-client")
 	// * topic: Topic pattern to subscribe to (string)
-	// * handler: Callback function to handle received messages
+	// * handler: Function receiving payload string and metadata dict (same as Subscribe).
+	//   Older versions passed metadata as the first argument; update handlers accordingly.
 	// Returns:
 	// * integer 1 for success (uses QoS 0)
 	// * error if subscription fails
 	"mqtt-client//Subscribe-simple": {
 		Argsn: 3,
-		Doc:   "Subscribes to an MQTT topic with default QoS 0 and a message handler function.",
+		Doc:   "Subscribes with QoS 0; the handler receives a payload string and metadata dict, just like Subscribe.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch client := arg0.(type) {
 			case env.Native:
@@ -360,21 +365,7 @@ var Builtins_mqtt = map[string]*env.Builtin{
 					case env.Function:
 						mqttClient := client.Value.(mqtt.Client)
 
-						callback := func(client mqtt.Client, msg mqtt.Message) {
-							// Create a new program state copy for the callback
-							psCallback := *ps
-							psCallback.FailureFlag = false
-							psCallback.ErrorFlag = false
-							psCallback.ReturnFlag = false
-
-							// Create message object as a Dict
-							msgDict := make(map[string]any)
-							msgDict["topic"] = *env.NewString(msg.Topic())
-							msgDict["qos"] = *env.NewInteger(int64(msg.Qos()))
-							msgDict["retained"] = *env.NewBoolean(msg.Retained())
-
-							evaldo.CallFunctionArgs2(handler, &psCallback, *env.NewDict(msgDict), env.Void{}, nil)
-						}
+						callback := mqttMessageHandler(ps, handler)
 
 						token := mqttClient.Subscribe(topic.Value, 0, callback)
 						if token.Wait() && token.Error() != nil {
@@ -435,7 +426,7 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// example { client |Connected? }
+	// example { client |Is-connected }
 	// Args:
 	// * client: MQTT client connection (type: "mqtt-client")
 	// Returns:
