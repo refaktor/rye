@@ -168,7 +168,13 @@ func NewIdxs() *Idxs {
 
 	// register words for builtin kinds, which the value objects should return on GetKind()
 
-	for _, value := range NativeTypes {
+	// Index 0 is reserved for "" in words1; Type 0 is not a Rye type.
+	// Skipping it keeps each type name at its Type enum index (type? casts
+	// the Type value directly to a Word index).
+	for typ, value := range NativeTypes {
+		if typ == 0 {
+			continue
+		}
 		e.IndexWord(strings.ToLower(value))
 	}
 	return &e

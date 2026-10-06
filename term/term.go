@@ -10,7 +10,6 @@ import (
 	goterm "golang.org/x/term"
 
 	"github.com/refaktor/rye/env"
-	"github.com/refaktor/rye/util"
 )
 
 // DisplayError renders an env.Error in a user-friendly, interactive view.
@@ -34,11 +33,11 @@ import (
 func DisplayError(e *env.Error, idx *env.Idxs) (env.Object, bool) {
 	// Collect all display rows recursively
 	type row struct {
-		indent  int    // nesting depth (0 = top-level)
-		label   string // left-hand label
-		value   string // right-hand value (empty for separators)
-		sep     bool   // true → this is a visual separator row (not selectable)
-		retVal  env.Object // value returned when Enter is pressed on this row
+		indent int        // nesting depth (0 = top-level)
+		label  string     // left-hand label
+		value  string     // right-hand value (empty for separators)
+		sep    bool       // true → this is a visual separator row (not selectable)
+		retVal env.Object // value returned when Enter is pressed on this row
 	}
 
 	var buildRows func(err *env.Error, depth int) []row
@@ -328,17 +327,7 @@ func DisplayBlock(bloc env.Block, idx *env.Idxs) (env.Object, bool) {
 			} else {
 				termPrint(" ")
 			}
-			var valueStr string
-			switch ob := v.(type) {
-			case env.Object:
-				if mode == 0 {
-					valueStr = ob.Print(*idx)
-				} else {
-					valueStr = ob.Inspect(*idx)
-				}
-			default:
-				valueStr = fmt.Sprint(ob)
-			}
+			valueStr := DisplayValueText(v, idx, mode != 0)
 			termPrintln(valueStr)
 			// Count the actual number of lines this entry takes (including newlines in the value)
 			totalLines += strings.Count(valueStr, "\n") + 1
@@ -980,8 +969,8 @@ func DisplayDict(bloc env.Dict, idx *env.Idxs) (env.Object, bool) {
 		i++
 	}
 	sort.Strings(keys)
-// selection map by index in keys slice
-selected := map[int]bool{}
+	// selection map by index in keys slice
+	selected := map[int]bool{}
 DODO:
 	if moveUp > 0 {
 		CurUp(moveUp)
@@ -1006,17 +995,7 @@ DODO:
 		Bold()
 		termPrint(k + ": ")
 		ResetBold()
-		var valueStr string
-		switch ob := v.(type) {
-		case env.Object:
-			if mode == 0 {
-				valueStr = ob.Print(*idx)
-			} else {
-				valueStr = ob.Inspect(*idx)
-			}
-		default:
-			valueStr = fmt.Sprint(ob)
-		}
+		valueStr := DisplayValueText(v, idx, mode != 0)
 		termPrintln(valueStr)
 		// Count the actual number of lines this entry takes (including newlines in the value)
 		totalLines += strings.Count(valueStr, "\n") + 1
@@ -1122,17 +1101,7 @@ DODO:
 		Bold()
 		termPrint(k + ": ")
 		ResetBold()
-		var valueStr string
-		switch ob := v.(type) {
-		case env.Object:
-			if mode == 0 {
-				valueStr = ob.Print(*idx)
-			} else {
-				valueStr = ob.Inspect(*idx)
-			}
-		default:
-			valueStr = fmt.Sprint(ob)
-		}
+		valueStr := DisplayValueText(v, idx, mode != 0)
 		termPrintln(valueStr)
 		// Count the actual number of lines this entry takes (including newlines in the value)
 		totalLines += strings.Count(valueStr, "\n") + 1
@@ -1208,50 +1177,7 @@ func DisplayTable(bloc env.Table, idx *env.Idxs) (env.Object, bool) {
 		totalPages = 1
 	}
 
-	// get the ideal widths of columns
-	widths := make([]int, len(bloc.Cols))
-	// check all col names
-	for ic, col := range bloc.Cols {
-		widths[ic] = len(col) + 1
-	}
-	// check all data
-	for _, r := range bloc.Rows {
-		for ic, v := range r.Values {
-			ww := 5
-			switch val := v.(type) {
-			case string:
-				ww = len(val) + 2
-				if ww > 52 {
-					ww = 52
-				}
-			case int64:
-				ww = len(strconv.Itoa(int(val))) + 1
-			case env.Integer:
-				ww = len(strconv.Itoa(int(val.Value))) + 1
-			case float64:
-				ww = len(strconv.FormatFloat(val, 'f', 2, 64)) + 1
-			case env.Decimal:
-				ww = len(strconv.FormatFloat(val.Value, 'f', 2, 64)) + 1
-			case env.String:
-				ww = len(val.Print(*idx))
-				if ww > 52 {
-					ww = 52
-				}
-				//if ww > 60 {
-				// ww = 60
-				//}
-			case env.Vector:
-				ww = len(val.Print(*idx))
-			}
-			if len(widths) > ic && widths[ic] < ww {
-				widths[ic] = ww + 1
-			}
-		}
-	}
-	fulwidth := 0
-	for _, w := range widths {
-		fulwidth += w + 2
-	}
+	widths := TableDisplayWidths(bloc, idx, false)
 
 	// Track multi-selection across modes/pages
 	selected := map[int]bool{}
@@ -1272,14 +1198,8 @@ func DisplayTable(bloc env.Table, idx *env.Idxs) (env.Object, bool) {
 		}
 		SaveCurPos()
 
-		// Print header (layout unchanged)
-		for ic, cn := range bloc.Cols {
-			Bold()
-			termPrintf("| %-"+strconv.Itoa(widths[ic])+"s", cn)
-			CloseProps()
-		}
-		termPrintln("|")
-		termPrintln("+" + strings.Repeat("-", fulwidth-1) + "+")
+		// Keep cursor and selection behavior here; share table layout with display.
+		RenderTableHeader(os.Stdout, bloc.Cols, widths)
 
 		// Print all rows with cursor highlighting and selection state (color only)
 		for i, r := range bloc.Rows {
@@ -1295,22 +1215,8 @@ func DisplayTable(bloc env.Table, idx *env.Idxs) (env.Object, bool) {
 				// Current row: bright green (as before)
 				ColorBrGreen()
 			}
-			for ic, v := range r.Values {
-				if ic < len(widths) {
-					switch ob := v.(type) {
-					case env.Object:
-						if mode == 0 {
-							termPrintf("| %-"+strconv.Itoa(widths[ic])+"s", util.TruncateString(ob.Print(*idx), widths[ic]))
-						} else {
-							termPrintf("| %-"+strconv.Itoa(widths[ic])+"s", ob.Inspect(*idx))
-						}
-					default:
-						termPrintf("| %-"+strconv.Itoa(widths[ic])+"s", fmt.Sprint(ob))
-					}
-				}
-			}
+			RenderTableCells(os.Stdout, r.Values, widths, idx, mode != 0)
 			CloseProps()
-			termPrintln("|")
 		}
 
 		// Footer with legend
@@ -1388,14 +1294,8 @@ DODO:
 	}
 	displayedItems := end - start
 
-	// Print header
-	for ic, cn := range bloc.Cols {
-		Bold()
-		termPrintf("| %-"+strconv.Itoa(widths[ic])+"s", cn)
-		CloseProps()
-	}
-	termPrintln("|")
-	termPrintln("+" + strings.Repeat("-", fulwidth-1) + "+")
+	// Print the same header as the non-interactive display.
+	RenderTableHeader(os.Stdout, bloc.Cols, widths)
 
 	// Print rows and clear extra lines
 	for i := 0; i < pageSize; i++ {
@@ -1411,22 +1311,8 @@ DODO:
 			} else if i == localCurr {
 				ColorBrGreen()
 			}
-			for ic, v := range r.Values {
-				if ic < len(widths) {
-					switch ob := v.(type) {
-					case env.Object:
-						if mode == 0 {
-							termPrintf("| %-"+strconv.Itoa(widths[ic])+"s", util.TruncateString(ob.Print(*idx), widths[ic]))
-						} else {
-							termPrintf("| %-"+strconv.Itoa(widths[ic])+"s", ob.Inspect(*idx))
-						}
-					default:
-						termPrintf("| %-"+strconv.Itoa(widths[ic])+"s", fmt.Sprint(ob))
-					}
-				}
-			}
+			RenderTableCells(os.Stdout, r.Values, widths, idx, mode != 0)
 			CloseProps()
-			termPrintln("|")
 		} else {
 			termPrintln("")
 		}

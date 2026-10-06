@@ -2708,6 +2708,7 @@ func RegisterBaseBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_error_inspection, ps, "error-inspection")
 	RegisterBuiltins2(Builtins_error_handling, ps, "error-handling")
 	RegisterBuiltins2(Builtins_table, ps, "table")
+	RegisterBuiltins2(Builtins_markdown, ps, "markdown")
 	RegisterBuiltins2(Builtins_validation, ps, "validation")
 
 	// Execute initialization code after base builtins are loaded

@@ -1,7 +1,7 @@
 //go:build !no_markdown
 // +build !no_markdown
 
-package batteries
+package evaldo
 
 import (
 	"bytes"
@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/refaktor/rye/env"
-	"github.com/refaktor/rye/evaldo"
 	"github.com/refaktor/rye/term"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
@@ -20,8 +19,6 @@ import (
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/text"
 )
-
-// Use the EmptyRM function from builtins_structures.go
 
 // Parses the markdown handler block and creates a Dict with handlers for different markdown elements
 func load_markdown_Dict(ps *env.ProgramState, block env.Block) (env.Dict, *env.Error) {
@@ -38,10 +35,10 @@ func load_markdown_Dict(ps *env.ProgramState, block env.Block) (env.Dict, *env.E
 				block.Series.Next()
 				rmap.Data[key] = nextObj
 			} else {
-				return EmptyRM(), evaldo.MakeBuiltinError(ps, "Expected block after markdown section specifier.", "reader//do-markdown")
+				return *env.NewDict(make(map[string]any)), MakeBuiltinError(ps, "Expected block after markdown section specifier.", "reader//do-markdown")
 			}
 		default:
-			return EmptyRM(), evaldo.MakeBuiltinError(ps, "Expected word specifying markdown section.", "reader//do-markdown")
+			return *env.NewDict(make(map[string]any)), MakeBuiltinError(ps, "Expected word specifying markdown section.", "reader//do-markdown")
 		}
 	}
 	return rmap, nil
@@ -51,18 +48,18 @@ func load_markdown_Dict(ps *env.ProgramState, block env.Block) (env.Dict, *env.E
 func do_markdown(ps *env.ProgramState, reader env.Object, rmap env.Dict) env.Object {
 	file, ok := reader.(env.Native)
 	if !ok {
-		return evaldo.MakeBuiltinError(ps, "Reader must be a file object.", "reader//do-markdown")
+		return MakeBuiltinError(ps, "Reader must be a file object.", "reader//do-markdown")
 	}
 
 	fileObj, ok := file.Value.(io.Reader)
 	if !ok {
-		return evaldo.MakeBuiltinError(ps, "Reader must be a reader object.", "reader//do-markdown")
+		return MakeBuiltinError(ps, "Reader must be a reader object.", "reader//do-markdown")
 	}
 
 	// Read all content from the reader
 	content, err := ioutil.ReadAll(fileObj)
 	if err != nil {
-		return evaldo.MakeBuiltinError(ps, err.Error(), "reader//do-markdown")
+		return MakeBuiltinError(ps, err.Error(), "reader//do-markdown")
 	}
 
 	// Create a markdown parser with extensions
@@ -98,7 +95,7 @@ func processNode(ps *env.ProgramState, n ast.Node, source []byte, rmap env.Dict)
 		// If there's a document handler, call it at the start
 		if block, ok := rmap.Data["document"].(env.Block); ok {
 			ps.Ser = block.Series
-			evaldo.EvalBlockInj(ps, *env.NewString("start"), true)
+			EvalBlockInj(ps, *env.NewString("start"), true)
 		}
 
 	case *ast.Heading:
@@ -109,7 +106,7 @@ func processNode(ps *env.ProgramState, n ast.Node, source []byte, rmap env.Dict)
 		if block, ok := rmap.Data[headingKey].(env.Block); ok {
 			text := string(node.Text(source))
 			ps.Ser = block.Series
-			evaldo.EvalBlockInj(ps, *env.NewString(text), true)
+			EvalBlockInj(ps, *env.NewString(text), true)
 		}
 
 	case *ast.Paragraph:
@@ -126,7 +123,7 @@ func processNode(ps *env.ProgramState, n ast.Node, source []byte, rmap env.Dict)
 				}
 			}
 			ps.Ser = block.Series
-			evaldo.EvalBlockInj(ps, *env.NewString(buf.String()), true)
+			EvalBlockInj(ps, *env.NewString(buf.String()), true)
 		}
 
 	case *ast.List:
@@ -155,8 +152,8 @@ func processNode(ps *env.ProgramState, n ast.Node, source []byte, rmap env.Dict)
 			}
 
 			ps.Ser = block.Series
-			evaldo.EvalBlockInj(ps, *env.NewString(strings.Join(items, "\n")), true)
-			evaldo.EvalBlockInj(ps, *env.NewString(listType), true)
+			EvalBlockInj(ps, *env.NewString(strings.Join(items, "\n")), true)
+			EvalBlockInj(ps, *env.NewString(listType), true)
 		}
 
 	case *ast.ListItem:
@@ -174,7 +171,7 @@ func processNode(ps *env.ProgramState, n ast.Node, source []byte, rmap env.Dict)
 			}
 
 			ps.Ser = block.Series
-			evaldo.EvalBlockInj(ps, *env.NewString(itemText.String()), true)
+			EvalBlockInj(ps, *env.NewString(itemText.String()), true)
 		}
 
 	case *ast.CodeBlock, *ast.FencedCodeBlock:
@@ -201,9 +198,9 @@ func processNode(ps *env.ProgramState, n ast.Node, source []byte, rmap env.Dict)
 
 		if block, ok := rmap.Data["code"].(env.Block); ok {
 			ps.Ser = block.Series
-			evaldo.EvalBlockInj(ps, *env.NewString(content), true)
+			EvalBlockInj(ps, *env.NewString(content), true)
 			if lang != "" {
-				evaldo.EvalBlockInj(ps, *env.NewString(lang), true)
+				EvalBlockInj(ps, *env.NewString(lang), true)
 			}
 		}
 
@@ -223,7 +220,7 @@ func processNode(ps *env.ProgramState, n ast.Node, source []byte, rmap env.Dict)
 			}
 
 			ps.Ser = block.Series
-			evaldo.EvalBlockInj(ps, *env.NewString(strings.TrimSpace(buf.String())), true)
+			EvalBlockInj(ps, *env.NewString(strings.TrimSpace(buf.String())), true)
 		}
 
 	case *ast.Link:
@@ -239,8 +236,8 @@ func processNode(ps *env.ProgramState, n ast.Node, source []byte, rmap env.Dict)
 			}
 
 			ps.Ser = block.Series
-			evaldo.EvalBlockInj(ps, *env.NewString(text), true)
-			evaldo.EvalBlockInj(ps, *env.NewString(destination), true)
+			EvalBlockInj(ps, *env.NewString(text), true)
+			EvalBlockInj(ps, *env.NewString(destination), true)
 		}
 
 	case *ast.Image:
@@ -256,8 +253,8 @@ func processNode(ps *env.ProgramState, n ast.Node, source []byte, rmap env.Dict)
 			}
 
 			ps.Ser = block.Series
-			evaldo.EvalBlockInj(ps, *env.NewString(alt), true)
-			evaldo.EvalBlockInj(ps, *env.NewString(destination), true)
+			EvalBlockInj(ps, *env.NewString(alt), true)
+			EvalBlockInj(ps, *env.NewString(destination), true)
 		}
 
 	// Tables are handled by the extension package, not directly in ast
@@ -271,10 +268,10 @@ func processNode(ps *env.ProgramState, n ast.Node, source []byte, rmap env.Dict)
 
 			if tableText.Len() > 0 {
 				ps.Ser = block.Series
-				evaldo.EvalBlockInj(ps, *env.NewString(tableText.String()), true)
+				EvalBlockInj(ps, *env.NewString(tableText.String()), true)
 				// Since we can't get the row count directly, we'll estimate based on newlines
 				rowCount := strings.Count(tableText.String(), "\n") + 1
-				evaldo.EvalBlockInj(ps, *env.NewInteger(int64(rowCount)), true)
+				EvalBlockInj(ps, *env.NewInteger(int64(rowCount)), true)
 			}
 		}
 
@@ -282,7 +279,7 @@ func processNode(ps *env.ProgramState, n ast.Node, source []byte, rmap env.Dict)
 		// Process horizontal rules
 		if block, ok := rmap.Data["hr"].(env.Block); ok {
 			ps.Ser = block.Series
-			evaldo.EvalBlockInj(ps, env.Void{}, true)
+			EvalBlockInj(ps, env.Void{}, true)
 		}
 
 	case *ast.Text:
@@ -290,7 +287,7 @@ func processNode(ps *env.ProgramState, n ast.Node, source []byte, rmap env.Dict)
 		// This is mainly for inline text that's not part of a larger structure
 		if block, ok := rmap.Data["text"].(env.Block); ok {
 			ps.Ser = block.Series
-			evaldo.EvalBlockInj(ps, *env.NewString(string(node.Text(source))), true)
+			EvalBlockInj(ps, *env.NewString(string(node.Text(source))), true)
 		}
 
 	case *ast.Emphasis:
@@ -305,7 +302,7 @@ func processNode(ps *env.ProgramState, n ast.Node, source []byte, rmap env.Dict)
 			}
 
 			ps.Ser = block.Series
-			evaldo.EvalBlockInj(ps, *env.NewString(text), true)
+			EvalBlockInj(ps, *env.NewString(text), true)
 		}
 
 		// Handle emphasis nodes (bold, italic, etc.)
@@ -322,7 +319,7 @@ func processNode(ps *env.ProgramState, n ast.Node, source []byte, rmap env.Dict)
 			extractText(n, source, &textBuf)
 
 			ps.Ser = block.Series
-			evaldo.EvalBlockInj(ps, *env.NewString(textBuf.String()), true)
+			EvalBlockInj(ps, *env.NewString(textBuf.String()), true)
 		}
 	}
 
@@ -350,7 +347,7 @@ func processNode(ps *env.ProgramState, n ast.Node, source []byte, rmap env.Dict)
 
 			if isTask {
 				ps.Ser = block.Series
-				evaldo.EvalBlockInj(ps, *env.NewBoolean(isChecked), true)
+				EvalBlockInj(ps, *env.NewBoolean(isChecked), true)
 			}
 		}
 	}
@@ -364,7 +361,7 @@ func processNode(ps *env.ProgramState, n ast.Node, source []byte, rmap env.Dict)
 	if _, ok := n.(*ast.Document); ok {
 		if block, ok := rmap.Data["document"].(env.Block); ok {
 			ps.Ser = block.Series
-			evaldo.EvalBlockInj(ps, *env.NewString("end"), true)
+			EvalBlockInj(ps, *env.NewString("end"), true)
 		}
 	}
 }
@@ -969,12 +966,12 @@ var Builtins_markdown = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			text, ok := arg0.(env.String)
 			if !ok {
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType}, "markdown->html")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "markdown->html")
 			}
 
 			html, err := markdown_to_html(ps, text.Value)
 			if err != nil {
-				return evaldo.MakeBuiltinError(ps, err.Error(), "markdown->html")
+				return MakeBuiltinError(ps, err.Error(), "markdown->html")
 			}
 
 			return *env.NewString(html)
@@ -999,7 +996,7 @@ var Builtins_markdown = map[string]*env.Builtin{
 			case env.Markdown:
 				return text
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType, env.MarkdownType}, "markdown")
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.MarkdownType}, "markdown")
 			}
 		},
 	},
@@ -1017,7 +1014,7 @@ var Builtins_markdown = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			md, ok := arg0.(env.Markdown)
 			if !ok {
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.MarkdownType}, "text")
+				return MakeArgError(ps, 1, []env.Type{env.MarkdownType}, "text")
 			}
 			return *env.NewString(md.Value)
 		},
@@ -1044,12 +1041,12 @@ var Builtins_markdown = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			md, ok := arg0.(env.Markdown)
 			if !ok {
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.MarkdownType}, "to-html")
+				return MakeArgError(ps, 1, []env.Type{env.MarkdownType}, "to-html")
 			}
 
 			html, err := markdown_to_html(ps, md.Value)
 			if err != nil {
-				return evaldo.MakeBuiltinError(ps, err.Error(), "to-html")
+				return MakeBuiltinError(ps, err.Error(), "to-html")
 			}
 
 			return *env.NewString(html)
@@ -1069,7 +1066,7 @@ var Builtins_markdown = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			md, ok := arg0.(env.Markdown)
 			if !ok {
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.MarkdownType}, "headings")
+				return MakeArgError(ps, 1, []env.Type{env.MarkdownType}, "headings")
 			}
 
 			headings := extractHeadings(md.Value)
@@ -1094,7 +1091,7 @@ var Builtins_markdown = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			md, ok := arg0.(env.Markdown)
 			if !ok {
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.MarkdownType}, "paragraphs")
+				return MakeArgError(ps, 1, []env.Type{env.MarkdownType}, "paragraphs")
 			}
 
 			paragraphs := extractParagraphs(md.Value)
@@ -1119,7 +1116,7 @@ var Builtins_markdown = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			md, ok := arg0.(env.Markdown)
 			if !ok {
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.MarkdownType}, "links")
+				return MakeArgError(ps, 1, []env.Type{env.MarkdownType}, "links")
 			}
 
 			links := extractLinks(md.Value)
@@ -1133,4 +1130,9 @@ var Builtins_markdown = map[string]*env.Builtin{
 			return *env.NewList(result)
 		},
 	},
+}
+
+// MarkdownDisplayItems returns preformatted sections for terminal rendering.
+func MarkdownDisplayItems(source string) []interface{} {
+	return convertMarkdownDisplayItems(markdownDisplayItems(source))
 }

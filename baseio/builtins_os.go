@@ -2374,7 +2374,7 @@ var Builtins_os = map[string]*env.Builtin{
 	// Tags: #find #execute
 	"finder//Mtime-since!": {
 		Argsn: 2,
-		Doc:   "Filters for files modified within the last N seconds (i.e., since now-N).",
+		Doc:   "Filters for files modified within the last N milliseconds (e.g. 2 .days), truncated to whole seconds.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch f := arg0.(type) {
 			case env.Native:
@@ -2382,9 +2382,10 @@ var Builtins_os = map[string]*env.Builtin{
 				if !ok {
 					return evaldo.MakeBuiltinError(ps, "Expected finder object", "finder//Mtime-since!")
 				}
-				switch secs := arg1.(type) {
+				switch millis := arg1.(type) {
 				case env.Integer:
-					cut := time.Now().Add(-time.Duration(secs.Value) * time.Second)
+					// Rye duration words return milliseconds; convert to whole seconds.
+					cut := time.Now().Add(-time.Duration(millis.Value/1000) * time.Second)
 					finder.FilterFunc(func(p string, info os.FileInfo) bool {
 						return info.ModTime().After(cut)
 					})

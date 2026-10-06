@@ -8893,6 +8893,154 @@ equal { table { "name" "age" } { "Jim" 30 "Jane" 25 } |format\tsv |split "\n" |l
 
 }
 }
+section "evaldo/builtins_markdown.go" "" {
+section "Markdown " "Functions for processing and converting Markdown documents" {
+	group "reader//do-markdown"
+	"Processes Markdown using a streaming approach with section handlers."
+	{
+		argsn 2
+		arg `reader: File reader or similar object to read markdown from`
+		arg `handlers: Block containing section handlers (h1, h2, paragraph, code, etc.)`
+		returns `the result of processing the markdown document`
+	}
+
+	{
+		; Tested manually since it requires file input
+	}
+
+	{
+	}
+
+	group "markdown->html"
+	"Converts Markdown text to HTML."
+	{
+		argsn 1
+		argtypes {
+			1 [ String ]
+		}
+		arg `text: Markdown source string`
+		returns `string containing HTML`
+	}
+
+	{
+		equal { markdown->html "# Title" |contains "<h" } true
+		error { markdown->html 123 }
+	}
+
+	{
+	}
+
+	group "markdown"
+	"Creates a Markdown value from a string."
+	{
+		argsn 1
+		argtypes {
+			1 [ String Markdown ]
+		}
+		arg `text: String or Markdown value`
+		returns `Markdown value`
+	}
+
+	{
+		equal { markdown "Hello" |type? } 'markdown
+		; equal { markdown markdown "Hello" |type? } 'markdown
+	}
+
+	{
+	}
+
+	group "text"
+	"Gets the raw markdown text from a Markdown value."
+	{
+		argsn 1
+		argtypes {
+			1 [ Markdown ]
+		}
+		arg `md: Markdown value`
+		returns `raw markdown text as string`
+	}
+
+	{
+		equal { markdown "Hello" |text } "Hello"
+	}
+
+	{
+	}
+
+	group "to-html"
+	"Converts a Markdown value to HTML."
+	{
+		argsn 1
+		argtypes {
+			1 [ Markdown ]
+		}
+		arg `md: Markdown value`
+		returns `string containing HTML`
+	}
+
+	{
+		equal { markdown "# T" |to-html |contains "<h" } true
+	}
+
+	{
+	}
+
+	group "headings"
+	"Extracts all headings from markdown text as a list of strings."
+	{
+		argsn 1
+		argtypes {
+			1 [ Markdown ]
+		}
+		arg `md: Markdown value`
+		returns `list of strings with headings`
+	}
+
+	{
+		equal { markdown "# A\n## B" |headings |type? } 'list
+	}
+
+	{
+	}
+
+	group "paragraphs"
+	"Extracts all paragraphs from markdown text as a list of strings."
+	{
+		argsn 1
+		argtypes {
+			1 [ Markdown ]
+		}
+		arg `md: Markdown value`
+		returns `list of strings with paragraphs`
+	}
+
+	{
+		equal { markdown "Hello\n\nWorld" |paragraphs |type? } 'list
+	}
+
+	{
+	}
+
+	group "links"
+	"Extracts all links from markdown text as a list of dictionaries with 'text' and 'url' keys."
+	{
+		argsn 1
+		argtypes {
+			1 [ Markdown ]
+		}
+		arg `md: Markdown value`
+		returns `list of dicts with 'text and 'url keys`
+	}
+
+	{
+		equal { markdown "[rye](https://ryelang.org)" |links |type? } 'list
+	}
+
+	{
+	}
+
+}
+}
 section "evaldo/builtins_validation.go" "" {
 section "Validation dialect " "validation dialect for Rye values" {
 	group "validate"

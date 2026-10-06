@@ -1,26 +1,41 @@
 section "baseio/builtins_printing.go" "" {
 section "Default" "" {
 	group "display"
-	"Interactively displays a value (Block, Dict, Table, TableRow, or Markdown) in the terminal with navigation capabilities."
+	"Displays all entries without interaction or pagination and returns the original value."
 	{
 		argsn 1
-		pure
-		arg `value: Block, Dict, Table, TableRow, Markdown, or Error to display interactively`
-		returns `the selected value or the original value when user exits`
+		arg `value: Rye value to display without interaction or pagination`
+		returns `the original value`
 	}
 
 	{
+		stdout { display 42 |type? } "42\n"
 	}
 
 	{
 `display [1 2 3]
 `	}
 
-	group "_.."
-	"Shorthand alias for 'display' - interactively displays a value in the terminal with navigation capabilities."
+	group "explore"
+	"Interactively explores a value; returns the selected item or the original value when cancelled."
 	{
 		argsn 1
-		arg `value: Block, Dict, Table, TableRow, Markdown, or Error to display interactively`
+		arg `value: Block, Dict, Table, TableRow, Markdown, or Error to explore`
+		returns `the selected item or the original value when cancelled`
+	}
+
+	{
+	}
+
+	{
+`[1 2 3] |explore
+`	}
+
+	group "_.."
+	"Shorthand alias for explore: interactively select a value."
+	{
+		argsn 1
+		arg `value: Block, Dict, Table, TableRow, Markdown, or Error to explore interactively`
 		returns `the selected value or the original value when user exits`
 	}
 
@@ -31,7 +46,7 @@ section "Default" "" {
 `_.. [1 2 3]
 `	}
 
-	group "display\\custom"
+	group "explore\\custom"
 	"Interactively displays a Table in the terminal with a custom rendering function for each row."
 	{
 		argsn 2
@@ -44,7 +59,7 @@ section "Default" "" {
 	}
 
 	{
-`table { "n" } { 1 2 3 } |display\custom fn { row is-curr } { if is-curr > 0 { print "*" } print row }
+`table { "n" } { 1 2 3 } |explore\custom fn { row is-curr } { if is-curr > 0 { print "*" } print row }
 `	}
 
 	group "print\\ssv"
@@ -2390,7 +2405,7 @@ cc os cwd?
 	}
 
 	group "finder//Mtime-since!"
-	"Filters for files modified within the last N seconds (i.e., since now-N)."
+	"Filters for files modified within the last N milliseconds (e.g. 2 .days), truncated to whole seconds."
 	{
 		argsn 2
 		arg `finder: native finder object`

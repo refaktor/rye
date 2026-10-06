@@ -287,7 +287,7 @@ section "MQTT Client Functions " "" {
 	"Opens a connection to an MQTT broker."
 	{
 		argsn 1
-		arg `uri: MQTT broker URI (format: mqtt://[user:pass@]host:port/client-id)`
+		arg `uri: MQTT broker URI (format: mqtt[s]://[user:pass@]host:port/client-id)`
 		returns `native MQTT client connection (type: "mqtt-client")error if connection fails`
 	}
 
@@ -391,24 +391,25 @@ client .Disconnect
 	}
 
 	{
-		example { client |Subscribe "sensors/+" 1 fn { msg } { print "Received: " + msg } }
+		example { client |Subscribe "sensors/+" 1 fn { payload msg } { print payload } }
 	}
 
 	{
 	}
 
 	group "mqtt-client//Subscribe-simple"
-	"Subscribes to an MQTT topic with default QoS 0 and a message handler function."
+	"Subscribes with QoS 0; the handler receives a payload string and metadata dict, just like Subscribe."
 	{
 		argsn 3
 		arg `client: MQTT client connection (type: "mqtt-client")`
 		arg `topic: Topic pattern to subscribe to (string)`
-		arg `handler: Callback function to handle received messages`
+		arg `handler: Function receiving payload string and metadata dict (same as Subscribe).`
+		arg `Older versions passed metadata as the first argument; update handlers accordingly.`
 		returns `integer 1 for success (uses QoS 0)error if subscription fails`
 	}
 
 	{
-		example { client |Subscribe-simple "sensors/temperature" fn { msg } { print msg.payload } }
+		example { client |Subscribe-simple "sensors/temperature" fn { payload msg } { print payload } }
 	}
 
 	{
@@ -439,7 +440,7 @@ client .Disconnect
 	}
 
 	{
-		example { client |Connected? }
+		example { client |Is-connected }
 	}
 
 	{
@@ -1038,133 +1039,6 @@ section "HTML " "HTML processing functions" {
 	{
 		; TODO: method resolution not working - needs investigation
 		; stdout { "<div></div>" |reader .Parse-html { <div> [ .Name? |print ] } } "div\n"
-	}
-
-	{
-	}
-
-}
-}
-section "batteries/builtins_markdown.go" "" {
-section "Markdown " "Functions for processing and converting Markdown documents" {
-	group "reader//do-markdown"
-	"Processes Markdown using a streaming approach with section handlers."
-	{
-		argsn 2
-		arg `reader: File reader or similar object to read markdown from`
-		arg `handlers: Block containing section handlers (h1, h2, paragraph, code, etc.)`
-		returns `the result of processing the markdown document`
-	}
-
-	{
-		; Tested manually since it requires file input
-	}
-
-	{
-	}
-
-	group "markdown->html"
-	"Converts Markdown text to HTML."
-	{
-		argsn 1
-		arg `text: Markdown source string`
-		returns `string containing HTML`
-	}
-
-	{
-		equal { markdown->html "# Title" |contains "<h" } true
-		error { markdown->html 123 }
-	}
-
-	{
-	}
-
-	group "markdown"
-	"Creates a Markdown value from a string."
-	{
-		argsn 1
-		arg `text: String or Markdown value`
-		returns `Markdown value`
-	}
-
-	{
-		equal { markdown "Hello" |type? } 'markdown
-		; equal { markdown markdown "Hello" |type? } 'markdown
-	}
-
-	{
-	}
-
-	group "text"
-	"Gets the raw markdown text from a Markdown value."
-	{
-		argsn 1
-		arg `md: Markdown value`
-		returns `raw markdown text as string`
-	}
-
-	{
-		equal { markdown "Hello" |text } "Hello"
-	}
-
-	{
-	}
-
-	group "to-html"
-	"Converts a Markdown value to HTML."
-	{
-		argsn 1
-		arg `md: Markdown value`
-		returns `string containing HTML`
-	}
-
-	{
-		equal { markdown "# T" |to-html |contains "<h" } true
-	}
-
-	{
-	}
-
-	group "headings"
-	"Extracts all headings from markdown text as a list of strings."
-	{
-		argsn 1
-		arg `md: Markdown value`
-		returns `list of strings with headings`
-	}
-
-	{
-		equal { markdown "# A\n## B" |headings |type? } 'list
-	}
-
-	{
-	}
-
-	group "paragraphs"
-	"Extracts all paragraphs from markdown text as a list of strings."
-	{
-		argsn 1
-		arg `md: Markdown value`
-		returns `list of strings with paragraphs`
-	}
-
-	{
-		equal { markdown "Hello\n\nWorld" |paragraphs |type? } 'list
-	}
-
-	{
-	}
-
-	group "links"
-	"Extracts all links from markdown text as a list of dictionaries with 'text' and 'url' keys."
-	{
-		argsn 1
-		arg `md: Markdown value`
-		returns `list of dicts with 'text and 'url keys`
-	}
-
-	{
-		equal { markdown "[rye](https://ryelang.org)" |links |type? } 'list
 	}
 
 	{
@@ -3744,7 +3618,7 @@ go fn { } { mtx .Lock , change! counter + 1 'counter , mtx .Unlock }
 	}
 
 	group "Rye-channel//Close"
-	"Closes a channel, preventing further sends and causing pending/future reads to return an error."
+	"Closes a channel, preventing further sends. Buffered values remain readable until the channel is drained."
 	{
 		argsn 1
 		arg `channel: Channel to close`
@@ -3872,11 +3746,11 @@ go fn { } { mtx .Lock , change! counter + 1 'counter , mtx .Unlock }
 	}
 
 	group "select\\fn"
-	"Performs a select operation on multiple channels, executing functions when channels are ready or a default function."
+	"Selects a channel or default function and returns its result. Selecting a drained closed channel fails without calling a handler."
 	{
 		argsn 1
 		arg `block: Block containing channel-function pairs and optional default function`
-		returns `the original block argument`
+		returns `the selected handler's result, or failure if a closed channel is selected`
 	}
 
 	{

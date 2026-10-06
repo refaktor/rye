@@ -18,7 +18,7 @@ base=(
   builtins_contexts.go builtins_conditionals.go builtins_iteration.go
   builtins_functions.go builtins.go builtins_combinators.go
   builtins_printing_not.go builtins_error_handling.go builtins_mth.go
-  builtins_intents.go builtins_table.go builtins_validation.go
+  builtins_intents.go builtins_table.go builtins_markdown.go builtins_validation.go
 )
 baseio=(
   builtins_printing.go builtins_baseio.go
@@ -27,7 +27,7 @@ baseio=(
 batteries=(
   builtins_email.go builtins_mail.go builtins_smtpd.go builtins_mqtt.go
   builtins_regexp.go builtins_json.go builtins_bson.go builtins_sxml.go
-  builtins_html.go builtins_markdown.go builtins_conversion.go builtins_encoding.go
+  builtins_html.go builtins_conversion.go builtins_encoding.go
   builtins_sqlite.go builtins_psql.go builtins_mysql.go builtins_crypto.go
   builtins_bcrypt.go builtins_math.go builtins_match.go builtins_eyr.go
   builtins_ssh.go builtins_goroutines.go builtins_complex.go
