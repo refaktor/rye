@@ -10,12 +10,34 @@ import (
 	"github.com/refaktor/rye/util"
 )
 
-// DisplayRyeValue handles the display of Rye values, supporting both interactive and non-interactive modes.
+// markdownSource accepts both the Markdown value and its reference form.
+func markdownSource(value env.Object) (string, bool) {
+	switch md := value.(type) {
+	case env.Markdown:
+		return md.Value, true
+	case *env.Markdown:
+		return md.Value, true
+	default:
+		return "", false
+	}
+}
+
+// DisplayRyeValue explores values interactively or returns a compact summary
+// for the console. The display builtin instead prints complete static output.
 // Exported so the console package can reference it via baseio.DisplayRyeValue.
 func DisplayRyeValue(ps *env.ProgramState, arg0 env.Object, interactive bool) (env.Object, string) {
 	if interactive {
 		// Full interactive mode - use terminal display functions for navigation
 		term.SaveCurPos()
+		if source, ok := markdownSource(arg0); ok {
+			items := evaldo.MarkdownDisplayItems(source)
+			if len(items) == 0 {
+				return arg0, ""
+			}
+			if obj, esc := term.DisplayMarkdownItems(items, ps.Idx); !esc {
+				return obj, ""
+			}
+		}
 		switch bloc := arg0.(type) {
 		case env.Block:
 			obj, esc := term.DisplayBlock(bloc, ps.Idx)
@@ -54,24 +76,6 @@ func DisplayRyeValue(ps *env.ProgramState, arg0 env.Object, interactive bool) (e
 			}
 		case *env.TableRow:
 			obj, esc := term.DisplayTableRow(*bloc, ps.Idx)
-			if !esc {
-				return obj, ""
-			}
-		case env.Markdown:
-			items := evaldo.BatteryMarkdownDisplayHook(bloc.Value)
-			if len(items) == 0 {
-				return bloc, ""
-			}
-			obj, esc := term.DisplayMarkdownItems(items, ps.Idx)
-			if !esc {
-				return obj, ""
-			}
-		case *env.Markdown:
-			items := evaldo.BatteryMarkdownDisplayHook(bloc.Value)
-			if len(items) == 0 {
-				return bloc, ""
-			}
-			obj, esc := term.DisplayMarkdownItems(items, ps.Idx)
 			if !esc {
 				return obj, ""
 			}
@@ -146,24 +150,44 @@ func DisplayRyeValue(ps *env.ProgramState, arg0 env.Object, interactive bool) (e
 	}
 }
 
-// builtins_printing_extra contains only the printing builtins that
-// require the term / util packages (interactive display, CSV/SSV output).
+// builtins_printing_extra contains printing builtins that require terminal
+// rendering or util formatting (display, explore, CSV/SSV output).
 // The basic printing builtins (prns, print, probe, inspect, etc.) are
 // registered by evaldo.RegisterBaseBuiltins and do not require these deps.
 var builtins_printing_extra = map[string]*env.Builtin{
 
-	// Prints the entire value without input or pagination and passes it through.
+	// Tests:
+	// stdout { display 42 |type? } "42\n"
+	// Args:
+	// * value: Rye value to display without interaction or pagination
+	// Returns:
+	// * the original value
+	// Example:
+	// display [1 2 3]
 	"display": {
 		Argsn: 1,
 		Doc:   "Displays all entries without interaction or pagination and returns the original value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			term.RenderValue(os.Stdout, arg0, ps.Idx)
+			if source, ok := markdownSource(arg0); ok {
+				if items := evaldo.MarkdownDisplayItems(source); len(items) > 0 {
+					term.RenderMarkdownItems(os.Stdout, items)
+				} else {
+					term.RenderValue(os.Stdout, arg0, ps.Idx)
+				}
+			} else {
+				term.RenderValue(os.Stdout, arg0, ps.Idx)
+			}
 			return arg0
 		},
 	},
 
-	// Example: [1 2 3] |explore  ; choose an item with the arrow keys
 	// Selection and cancellation behave like the former display builtin.
+	// Args:
+	// * value: Block, Dict, Table, TableRow, Markdown, or Error to explore
+	// Returns:
+	// * the selected item or the original value when cancelled
+	// Example:
+	// [1 2 3] |explore
 	"explore": {
 		Argsn: 1,
 		Doc:   "Interactively explores a value; returns the selected item or the original value when cancelled.",
@@ -176,7 +200,7 @@ var builtins_printing_extra = map[string]*env.Builtin{
 	// Example:
 	// _.. [1 2 3]
 	// Args:
-	// * value: Block, Dict, Table, TableRow, Markdown, or Error to display interactively
+	// * value: Block, Dict, Table, TableRow, Markdown, or Error to explore interactively
 	// Returns:
 	// * the selected value or the original value when user exits
 	"_..": {
