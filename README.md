@@ -171,7 +171,6 @@ Thanks to @kseistrup for Arch package and @stefanb for Homebrew.
 ## Extensions and Related Projects
 
 - **[Rye-fyne](https://github.com/refaktor/rye-fyne)** - GUI toolkit binding
-- **[Rye-gio](https://github.com/refaktor/rye-gio)** - Gioui toolkit binding (WIP)
 - **[Rye-ebitengine](https://github.com/refaktor/rye-ebitengine)** - 2D game engine binding (WIP)
 - **[ryegen](https://github.com/refaktor/ryegen)** - Binding generation toolkit (WIP)
 
