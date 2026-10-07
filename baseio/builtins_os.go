@@ -44,6 +44,22 @@ func FileExists(filePath string) int {
 	}
 }
 
+// ryeFinder wraps the underlying finder with per-instance output mode
+type ryeFinder struct {
+	F    *find.Find
+	Mode string // "uris" (default), "filenames", "relative", "full"
+}
+
+func getRyeFinder(native env.Native) (*ryeFinder, bool) {
+	if rf, ok := native.Value.(*ryeFinder); ok {
+		return rf, true
+	}
+	if f, ok := native.Value.(*find.Find); ok {
+		return &ryeFinder{F: f, Mode: ""}, true
+	}
+	return nil, false
+}
+
 var Builtins_os = map[string]*env.Builtin{
 
 	//
@@ -2103,33 +2119,26 @@ var Builtins_os = map[string]*env.Builtin{
 	// ##### Find ##### "File finding functions using go-find library"
 	//
 	// Example:
-	//  find %src |name "*.go" |type 'file |eval
-	//  find %. |max-depth! 2 |name "*.txt" |eval
-	//  find %/home |min-depth! 1 |max-depth! 3 |regex regexp "test.*\.go$" |eval
+	//  finder %src |Name "*.go" |Type 'file |Eval
+	//  finder %. |Max-depth! 2 |Name "*.txt" |Eval
+	//  finder %/home |Min-depth! 1 |Max-depth! 3 |Regex regexp "test.*\.go$" |Eval
 	//
 
 	// Creates a new finder starting from the given path(s).
 	// Args:
-	// * path: uri or block of uris representing starting paths
+	// * path: uri or block of uris/strings representing starting paths
 	// Returns:
 	// * native finder object
 	// Tags: #find #files
-	"find": {
-		Argsn: 1,
-		Doc:   "Removed: use new-finder instead.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return evaldo.MakeBuiltinError(ps, "This function was removed. Use new-finder.", "find")
-		},
-	},
-
 	"finder": {
 		Argsn: 1,
-		Doc:   "Creates a new file finder starting from the given path(s) (alias of find).",
+		Doc:   "Creates a new file finder starting from the given path(s).", 
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Uri:
-				finder := find.NewFind(path.GetPath())
-				return *env.NewNative(ps.Idx, finder, "finder")
+				f := find.NewFind(path.GetPath())
+				rf := &ryeFinder{F: f}
+				return *env.NewNative(ps.Idx, rf, "finder")
 			case env.Block:
 				paths := make([]string, 0, path.Series.Len())
 				for i := 0; i < path.Series.Len(); i++ {
@@ -2140,13 +2149,14 @@ var Builtins_os = map[string]*env.Builtin{
 					case env.String:
 						paths = append(paths, p.Value)
 					default:
-						return evaldo.MakeBuiltinError(ps, "Block must contain only uris or strings", "new-finder")
+						return evaldo.MakeBuiltinError(ps, "Block must contain only uris or strings", "finder")
 					}
 				}
-				finder := find.NewFind(paths...)
-				return *env.NewNative(ps.Idx, finder, "finder")
+				f := find.NewFind(paths...)
+				rf := &ryeFinder{F: f}
+				return *env.NewNative(ps.Idx, rf, "finder")
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType, env.BlockType}, "new-finder")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType, env.BlockType}, "finder")
 			}
 		},
 	},
@@ -2162,12 +2172,13 @@ var Builtins_os = map[string]*env.Builtin{
 		Argsn: 2,
 		Doc:   "Sets the minimum depth for file traversal.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch f := arg0.(type) {
+			switch n := arg0.(type) {
 			case env.Native:
-				if finder, ok := f.Value.(*find.Find); ok {
+				rf, ok := getRyeFinder(n)
+				if ok {
 					switch depth := arg1.(type) {
 					case env.Integer:
-						finder.MinDepth(int(depth.Value))
+						rf.F.MinDepth(int(depth.Value))
 						return arg0
 					default:
 						return evaldo.MakeArgError(ps, 2, []env.Type{env.IntegerType}, "finder//Min-depth!")
@@ -2191,12 +2202,13 @@ var Builtins_os = map[string]*env.Builtin{
 		Argsn: 2,
 		Doc:   "Sets the maximum depth for file traversal.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch f := arg0.(type) {
+			switch n := arg0.(type) {
 			case env.Native:
-				if finder, ok := f.Value.(*find.Find); ok {
+				rf, ok := getRyeFinder(n)
+				if ok {
 					switch depth := arg1.(type) {
 					case env.Integer:
-						finder.MaxDepth(int(depth.Value))
+						rf.F.MaxDepth(int(depth.Value))
 						return arg0
 					default:
 						return evaldo.MakeArgError(ps, 2, []env.Type{env.IntegerType}, "finder//Max-depth!")
@@ -2220,9 +2232,10 @@ var Builtins_os = map[string]*env.Builtin{
 		Argsn: 2,
 		Doc:   "Filters results by type: 'file (or \"f\") for files, 'dir (or \"d\") for directories.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch f := arg0.(type) {
+			switch n := arg0.(type) {
 			case env.Native:
-				if finder, ok := f.Value.(*find.Find); ok {
+				rf, ok := getRyeFinder(n)
+				if ok {
 					var typeStr string
 					switch t := arg1.(type) {
 					case env.Word:
@@ -2243,7 +2256,7 @@ var Builtins_os = map[string]*env.Builtin{
 					default:
 						return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "finder//Type")
 					}
-					finder.Type(typeStr)
+					rf.F.Type(typeStr)
 					return arg0
 				}
 				return evaldo.MakeBuiltinError(ps, "Expected finder object", "finder//Type")
@@ -2264,12 +2277,13 @@ var Builtins_os = map[string]*env.Builtin{
 		Argsn: 2,
 		Doc:   "Filters results by file name using a glob pattern.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch f := arg0.(type) {
+			switch n := arg0.(type) {
 			case env.Native:
-				if finder, ok := f.Value.(*find.Find); ok {
+				rf, ok := getRyeFinder(n)
+				if ok {
 					switch pattern := arg1.(type) {
 					case env.String:
-						finder.Name(pattern.Value)
+						rf.F.Name(pattern.Value)
 						return arg0
 					default:
 						return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "finder//Name")
@@ -2293,12 +2307,13 @@ var Builtins_os = map[string]*env.Builtin{
 		Argsn: 2,
 		Doc:   "Filters results by full path using a glob pattern.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch f := arg0.(type) {
+			switch n := arg0.(type) {
 			case env.Native:
-				if finder, ok := f.Value.(*find.Find); ok {
+				rf, ok := getRyeFinder(n)
+				if ok {
 					switch pattern := arg1.(type) {
 					case env.String:
-						finder.WholeName(pattern.Value)
+						rf.F.WholeName(pattern.Value)
 						return arg0
 					default:
 						return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "finder//Whole-name")
@@ -2322,13 +2337,14 @@ var Builtins_os = map[string]*env.Builtin{
 		Argsn: 2,
 		Doc:   "Filters results by regular expression on the full path.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch f := arg0.(type) {
+			switch n := arg0.(type) {
 			case env.Native:
-				if finder, ok := f.Value.(*find.Find); ok {
+				rf, ok := getRyeFinder(n)
+				if ok {
 					switch r := arg1.(type) {
 					case env.Native:
 						if regex, ok := r.Value.(*regexp.Regexp); ok {
-							finder.Regex(regex)
+							rf.F.Regex(regex)
 							return arg0
 						}
 						return evaldo.MakeBuiltinError(ps, "Expected regexp object", "finder//Regex")
@@ -2353,10 +2369,11 @@ var Builtins_os = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Filters for empty files or directories.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch f := arg0.(type) {
+			switch n := arg0.(type) {
 			case env.Native:
-				if finder, ok := f.Value.(*find.Find); ok {
-					finder.Empty()
+				rf, ok := getRyeFinder(n)
+				if ok {
+					rf.F.Empty()
 					return arg0
 				}
 				return evaldo.MakeBuiltinError(ps, "Expected finder object", "finder//Empty")
@@ -2376,9 +2393,9 @@ var Builtins_os = map[string]*env.Builtin{
 		Argsn: 2,
 		Doc:   "Filters for files modified within the last N milliseconds (e.g. 2 .days), truncated to whole seconds.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch f := arg0.(type) {
+			switch n := arg0.(type) {
 			case env.Native:
-				finder, ok := f.Value.(*find.Find)
+				rf, ok := getRyeFinder(n)
 				if !ok {
 					return evaldo.MakeBuiltinError(ps, "Expected finder object", "finder//Mtime-since!")
 				}
@@ -2386,7 +2403,7 @@ var Builtins_os = map[string]*env.Builtin{
 				case env.Integer:
 					// Rye duration words return milliseconds; convert to whole seconds.
 					cut := time.Now().Add(-time.Duration(millis.Value/1000) * time.Second)
-					finder.FilterFunc(func(p string, info os.FileInfo) bool {
+					rf.F.FilterFunc(func(p string, info os.FileInfo) bool {
 						return info.ModTime().After(cut)
 					})
 					return arg0
@@ -2403,16 +2420,16 @@ var Builtins_os = map[string]*env.Builtin{
 		Argsn: 2,
 		Doc:   "Excludes paths that match a string substring or glob pattern.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch f := arg0.(type) {
+			switch n := arg0.(type) {
 			case env.Native:
-				finder, ok := f.Value.(*find.Find)
+				rf, ok := getRyeFinder(n)
 				if !ok {
 					return evaldo.MakeBuiltinError(ps, "Expected finder object", "finder//Exclude-path")
 				}
 				switch pat := arg1.(type) {
 				case env.String:
 					pattern := pat.Value
-					finder.FilterFunc(func(p string, info os.FileInfo) bool {
+					rf.F.FilterFunc(func(p string, info os.FileInfo) bool {
 						if strings.Contains(p, pattern) {
 							return false
 						}
@@ -2433,16 +2450,16 @@ var Builtins_os = map[string]*env.Builtin{
 		Argsn: 2,
 		Doc:   "Filters for entries with size greater than N bytes.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch f := arg0.(type) {
+			switch nn := arg0.(type) {
 			case env.Native:
-				finder, ok := f.Value.(*find.Find)
+				rf, ok := getRyeFinder(nn)
 				if !ok {
 					return evaldo.MakeBuiltinError(ps, "Expected finder object", "finder//Size>")
 				}
 				switch n := arg1.(type) {
 				case env.Integer:
 					min := n.Value
-					finder.FilterFunc(func(p string, info os.FileInfo) bool {
+					rf.F.FilterFunc(func(p string, info os.FileInfo) bool {
 						if info.IsDir() {
 							return false
 						}
@@ -2462,22 +2479,76 @@ var Builtins_os = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Executes the find operation and returns matching paths as uris.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch f := arg0.(type) {
+			switch n := arg0.(type) {
 			case env.Native:
-				if finder, ok := f.Value.(*find.Find); ok {
-					results, err := finder.Evaluate()
+				rf, ok := getRyeFinder(n)
+				if ok {
+					results, err := rf.F.Evaluate()
 					if err != nil {
 						return evaldo.MakeBuiltinError(ps, "Error evaluating find: "+err.Error(), "finder//Eval")
 					}
 					items := make([]env.Object, len(results))
-					for i, path := range results {
-						items[i] = *env.NewUri1(ps.Idx, "file://"+path)
+					mode := rf.Mode
+					if mode == "" { mode = "uris" }
+					cwd := ps.WorkingPath
+					for i, pth := range results {
+						switch mode {
+						case "filenames":
+							items[i] = *env.NewString(filepath.Base(pth))
+						case "relative":
+							if rel, err := filepath.Rel(cwd, pth); err == nil {
+								items[i] = *env.NewString(rel)
+							} else {
+								items[i] = *env.NewString(pth)
+							}
+						case "full":
+							if abs, err := filepath.Abs(pth); err == nil {
+								items[i] = *env.NewString(abs)
+							} else {
+								items[i] = *env.NewString(pth)
+							}
+						default:
+							items[i] = *env.NewUri1(ps.Idx, "file://"+pth)
+						}
 					}
 					return *env.NewBlock(*env.NewTSeries(items))
 				}
 				return evaldo.MakeBuiltinError(ps, "Expected finder object", "finder//Eval")
 			default:
 				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//Eval")
+			}
+		},
+	},
+
+	// Path-mode! for finder output: 'full, 'relative, or 'filenames (default is uris)
+	"finder//Path-mode!": {
+		Argsn: 2,
+		Doc:   "Sets how finder Eval returns paths: 'full (absolute string), 'relative (to cwd, string), 'filenames (string). Default remains uris when not set.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch n := arg0.(type) {
+			case env.Native:
+				rf, ok := getRyeFinder(n)
+				if !ok {
+					return evaldo.MakeBuiltinError(ps, "Expected finder object", "finder//Path-mode!")
+				}
+				var mode string
+				switch m := arg1.(type) {
+				case env.Word:
+					mode = ps.Idx.GetWord(m.Index)
+				case env.String:
+					mode = m.Value
+				default:
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "finder//Path-mode!")
+				}
+				if mode != "filenames" && mode != "relative" && mode != "full" && mode != "uris" {
+					return evaldo.MakeBuiltinError(ps, "Path-mode must be one of 'filenames, 'relative, 'full, 'uris", "finder//Path-mode!")
+				}
+				rf.Mode = mode
+				// Native is a value type: return the updated copy for plain *find.Find values.
+				n.Value = rf
+				return n
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//Path-mode!")
 			}
 		},
 	},
@@ -2869,6 +2940,48 @@ func createTarGz(srcPath, dstPath string) error {
 	})
 }
 
+// archiveTarget validates a member path and rejects symlinks in existing destination
+// components. Archives cannot create symlinks here, so an existing symlink is the
+// only way an otherwise contained member could escape the extraction directory.
+func archiveTarget(dstPath, name string) (string, error) {
+	root, err := filepath.Abs(dstPath)
+	if err != nil {
+		return "", err
+	}
+	if filepath.IsAbs(name) {
+		return "", fmt.Errorf("invalid archive path: %q", name)
+	}
+	target := filepath.Join(root, name)
+	rel, err := filepath.Rel(root, target)
+	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(os.PathSeparator)) || rel == "." {
+		return "", fmt.Errorf("invalid archive path: %q", name)
+	}
+	// Check the root as well as every existing component through the target.
+	for path := root; ; {
+		info, err := os.Lstat(path)
+		if err == nil {
+			if info.Mode()&os.ModeSymlink != 0 {
+				return "", fmt.Errorf("archive path crosses symlink: %q", name)
+			}
+		} else if !os.IsNotExist(err) {
+			return "", err
+		}
+		if path == target {
+			break
+		}
+		remainder, err := filepath.Rel(path, target)
+		if err != nil {
+			return "", err
+		}
+		component := remainder
+		if i := strings.IndexRune(remainder, os.PathSeparator); i >= 0 {
+			component = remainder[:i]
+		}
+		path = filepath.Join(path, component)
+	}
+	return target, nil
+}
+
 // extractTarGz extracts a .tar.gz archive to the destination path
 func extractTarGz(srcPath, dstPath string) error {
 	inFile, err := os.Open(srcPath)
@@ -2894,11 +3007,9 @@ func extractTarGz(srcPath, dstPath string) error {
 			return err
 		}
 
-		targetPath := filepath.Join(dstPath, header.Name)
-
-		// Security check: prevent path traversal
-		if !strings.HasPrefix(filepath.Clean(targetPath), filepath.Clean(dstPath)) {
-			return fmt.Errorf("invalid file path: %s", header.Name)
+		targetPath, err := archiveTarget(dstPath, header.Name)
+		if err != nil {
+			return err
 		}
 
 		switch header.Typeflag {
@@ -3003,11 +3114,9 @@ func extractZip(srcPath, dstPath string) error {
 	defer reader.Close()
 
 	for _, file := range reader.File {
-		targetPath := filepath.Join(dstPath, file.Name)
-
-		// Security check: prevent path traversal
-		if !strings.HasPrefix(filepath.Clean(targetPath), filepath.Clean(dstPath)) {
-			return fmt.Errorf("invalid file path: %s", file.Name)
+		targetPath, err := archiveTarget(dstPath, file.Name)
+		if err != nil {
+			return err
 		}
 
 		if file.FileInfo().IsDir() {
