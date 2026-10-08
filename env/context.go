@@ -89,10 +89,13 @@ type RyeCtx struct {
 	Kind            Word
 	Doc             string
 	locked          bool
-	IsClosure       bool // Marks contexts captured by closures - should not be pooled
+	IsClosure       bool // Context has escaped (possibly through a descendant); must not be pooled
 }
 
 func NewEnv(par *RyeCtx) *RyeCtx {
+	// Ordinary contexts can outlive the call that creates them. Pooled call
+	// contexts attach their parent separately and do not take this escape path.
+	par.Preserve()
 	var e RyeCtx
 	e.state = make(map[int]Object)
 	e.varFlags = make(map[int]bool)
@@ -102,6 +105,7 @@ func NewEnv(par *RyeCtx) *RyeCtx {
 }
 
 func NewEnv2(par *RyeCtx, doc string) *RyeCtx {
+	par.Preserve()
 	var e RyeCtx
 	e.state = make(map[int]Object)
 	e.varFlags = make(map[int]bool)
@@ -211,6 +215,38 @@ func (e *RyeCtx) DeepCopy() Context {
 
 func (e *RyeCtx) Clear() {
 	clear(e.state)
+}
+
+// Preserve prevents recycling of a context and all reachable ancestors.
+// Parents can change even after capture, so revisit already preserved contexts.
+// The visited set also makes this safe for cyclic context graphs. This is an
+// escape path, not part of ordinary call acquisition or release.
+// As with context mutation, callers must provide execution-local ownership.
+func (e *RyeCtx) Preserve() {
+	seen := make(map[*RyeCtx]struct{})
+	for e != nil {
+		if _, ok := seen[e]; ok {
+			return
+		}
+		seen[e] = struct{}{}
+		e.IsClosure = true
+		e = e.Parent
+	}
+}
+
+// ResetForPool releases references and metadata while retaining map storage.
+// It must only be called for an exclusively owned, non-escaped call context.
+// Clear deliberately retains its existing public semantics.
+func (e *RyeCtx) ResetForPool() {
+	clear(e.state)
+	clear(e.varFlags)
+	clear(e.observers)
+	e.hasAnyObservers = false
+	e.Parent = nil
+	e.Kind = Word{}
+	e.Doc = ""
+	e.locked = false
+	e.IsClosure = false
 }
 
 func (e *RyeCtx) GetState() map[int]Object {
@@ -1080,6 +1116,7 @@ func (ps *ProgramState) ResetStack() {
 
 // PushContext adds current context to the context stack
 func (ps *ProgramState) PushContext(ctx *RyeCtx) {
+	ctx.Preserve()
 	ps.ContextStack = append(ps.ContextStack, ctx)
 }
 
