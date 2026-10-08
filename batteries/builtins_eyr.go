@@ -333,6 +333,7 @@ func Eyr_EvalExpression(ps *env.ProgramState) *env.ProgramState {
 }
 
 func Eyr_EvalBlockInside(ps *env.ProgramState, inj env.Object, injnow bool) *env.ProgramState {
+	ps.EnsureStack()
 	// fmt.Println("** EVALB INSIDE")
 	if injnow {
 		ps.Stack.Push(ps, inj)
@@ -358,6 +359,7 @@ func Eyr_EvalBlockInside(ps *env.ProgramState, inj env.Object, injnow bool) *env
 }
 
 func Eyr_EvalBlock(ps *env.ProgramState, full bool) *env.ProgramState {
+	ps.EnsureStack()
 	// fmt.Println("** EVALB")
 	for ps.Ser.Pos() < ps.Ser.Len() {
 		// fmt.Println(ps.Ser.Pos())
@@ -428,12 +430,8 @@ var Builtins_eyr = map[string]*env.Builtin{
 				ps.Ser = bloc.Series
 				dialect := ps.Dialect
 				ps.Dialect = env.EyrDialect
-				// Initialize/reset the stack for eyr evaluation
-				if ps.Stack == nil {
-					ps.Stack = env.NewEyrStack()
-				} else {
-					ps.ResetStack()
-				}
+				// This builtin starts a fresh evaluation, unlike block re-entry.
+				ps.ResetStack()
 				Eyr_EvalBlock(ps, false)
 				ps.Dialect = dialect
 				ps.Ser = ser
