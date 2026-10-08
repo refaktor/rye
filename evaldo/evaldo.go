@@ -52,7 +52,8 @@ func EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) {
 	case env.Rye2Dialect:
 		EvalBlockInj_Rye2(ps, inj, injnow)
 	case env.EyrDialect:
-		BatteryEyrEvalBlockInsideHook(ps, inj, injnow) // TODO ps.Stack is already in ps ... refactor
+		ps.EnsureStack() // Hooks, including embedding-provided hooks, receive a usable stack.
+		BatteryEyrEvalBlockInsideHook(ps, inj, injnow)
 	case env.Rye0Dialect:
 		Rye0_EvalBlockInj(ps, inj, injnow) // TODO ps.Stack is already in ps ... refactor
 	case env.Rye00Dialect:
@@ -1589,6 +1590,35 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 	*/
 }
 
+// newFunctionCallState initializes only the facilities needed by an explicit-
+// argument child call. Unlike NewProgramStateOLD it does not allocate contexts
+// or a generic registry that would immediately be replaced. Keep the existing
+// call semantics: only the fields below are inherited; flags, results, paths,
+// navigation and deferred cleanup belong to the child, not to the caller.
+// Eyr block entry points lazily allocate an independent stack if the body
+// switches dialects; ordinary Rye calls do not need that allocation.
+func newFunctionCallState(fn env.Function, parent *env.ProgramState, ctx *env.RyeCtx) *env.ProgramState {
+	child := &env.ProgramState{
+		Ser:          fn.Body.Series,
+		Ctx:          ctx,
+		PCtx:         parent.PCtx,
+		Idx:          parent.Idx,
+		Args:         make([]int, 6),
+		Gen:          parent.Gen,
+		Dialect:      parent.Dialect,
+		DeferBlocks:  make([]env.Block, 0),
+		ContextStack: make([]*env.RyeCtx, 0),
+		BlockFile:    fn.Body.FileName,
+		BlockLine:    fn.Body.Line,
+		CallDepth:    parent.CallDepth + 1,
+		MaxCallDepth: parent.MaxCallDepth,
+		MaxOps:       parent.MaxOps,
+		OpsCount:     parent.OpsCount,
+	}
+	child.Ser.SetPos(0)
+	return child
+}
+
 // setupFunctionCall creates a child ProgramState for function execution, determines
 // the appropriate context (via DetermineContext), performs the depth-guard check, and
 // returns a cleanup function that the caller MUST defer.  The cleanup returns the
@@ -1609,18 +1639,7 @@ func setupFunctionCall(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, a
 	}
 	fnCtx, fromPool := DetermineContext(fn, ps, ctx)
 
-	psX := env.NewProgramStateOLD(fn.Body.Series, ps.Idx)
-	psX.Ctx = fnCtx
-	psX.PCtx = ps.PCtx
-	psX.Gen = ps.Gen
-	psX.Dialect = ps.Dialect
-	psX.BlockFile = fn.Body.FileName
-	psX.BlockLine = fn.Body.Line
-	psX.CallDepth = ps.CallDepth + 1
-	psX.MaxCallDepth = ps.MaxCallDepth
-	psX.MaxOps = ps.MaxOps
-	psX.OpsCount = ps.OpsCount
-	psX.Ser.SetPos(0)
+	psX := newFunctionCallState(fn, ps, fnCtx)
 
 	// Check depth guard before running
 	if psX.MaxCallDepth > 0 && psX.CallDepth > psX.MaxCallDepth {

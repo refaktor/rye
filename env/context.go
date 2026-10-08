@@ -1110,6 +1110,15 @@ func (ps *ProgramState) Dump() string {
 	return ps.Ctx.DumpBare(*ps.Idx)
 }
 
+// EnsureStack initializes an execution state's Eyr stack on first use without
+// discarding values on re-entry. Explicit-argument Rye calls start without one.
+// Eyr block entry points must call this before using stack operations.
+func (ps *ProgramState) EnsureStack() {
+	if ps.Stack == nil {
+		ps.Stack = NewEyrStack()
+	}
+}
+
 func (ps *ProgramState) ResetStack() {
 	ps.Stack = NewEyrStack()
 }
