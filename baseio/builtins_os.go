@@ -2132,7 +2132,7 @@ var Builtins_os = map[string]*env.Builtin{
 	// Tags: #find #files
 	"finder": {
 		Argsn: 1,
-		Doc:   "Creates a new file finder starting from the given path(s).", 
+		Doc:   "Creates a new file finder starting from the given path(s).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Uri:
@@ -2489,7 +2489,9 @@ var Builtins_os = map[string]*env.Builtin{
 					}
 					items := make([]env.Object, len(results))
 					mode := rf.Mode
-					if mode == "" { mode = "uris" }
+					if mode == "" {
+						mode = "uris"
+					}
 					cwd := ps.WorkingPath
 					for i, pth := range results {
 						switch mode {
