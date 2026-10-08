@@ -75,7 +75,9 @@ var builtins_functions = map[string]*env.Builtin{
 			case env.Block:
 				//spec := []env.Object{*env.NewWord(aaaidx)}
 				//body := []env.Object{*env.NewWord(printidx), *env.NewWord(aaaidx), *env.NewWord(recuridx), *env.NewWord(greateridx), *env.NewInteger(99), *env.NewWord(aaaidx), *env.NewWord(incidx), *env.NewWord(aaaidx)}
-				return *env.NewFunction(*env.NewBlock(*env.NewTSeries(make([]env.Object, 0))), body, false)
+				fn := env.NewFunctionC(*env.NewBlock(*env.NewTSeries(make([]env.Object, 0))), body, ps.Ctx, false, false, "")
+				fn.Lexical = true
+				return *fn
 			default:
 				return MakeArgError2(ps, 1, []env.Type{env.BlockType}, "does", arg0)
 			}
@@ -100,7 +102,9 @@ var builtins_functions = map[string]*env.Builtin{
 			case env.Block:
 				spec := []env.Object{*env.NewWord(1)}
 				//body := []env.Object{*env.NewWord(printidx), *env.NewWord(aaaidx), *env.NewWord(recuridx), *env.NewWord(greateridx), *env.NewInteger(99), *env.NewWord(aaaidx), *env.NewWord(incidx), *env.NewWord(aaaidx)}
-				return *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), body, false)
+				fn := env.NewFunctionC(*env.NewBlock(*env.NewTSeries(spec)), body, ps.Ctx, false, false, "")
+				fn.Lexical = true
+				return *fn
 			default:
 				return MakeArgError2(ps, 1, []env.Type{env.BlockType}, "fn1", arg0)
 			}
@@ -131,15 +135,41 @@ var builtins_functions = map[string]*env.Builtin{
 				}
 				switch body := arg1.(type) {
 				case env.Block:
-					//spec := []env.Object{*env.NewWord(aaaidx)}
-					//body := []env.Object{*env.NewWord(printidx), *env.NewWord(aaaidx), *env.NewWord(recuridx), *env.NewWord(greateridx), *env.NewInteger(99), *env.NewWord(aaaidx), *env.NewWord(incidx), *env.NewWord(aaaidx)}
-					// fmt.Println(doc)
-					return *env.NewFunctionDoc(args, body, false, doc)
+					fn := env.NewFunctionC(args, body, ps.Ctx, false, false, doc)
+					fn.Lexical = true
+					return *fn
 				default:
 					return MakeArgError2(ps, 2, []env.Type{env.BlockType}, "fn", arg1)
 				}
 			default:
 				return MakeArgError2(ps, 1, []env.Type{env.BlockType}, "fn", arg0)
+			}
+		},
+	},
+
+	// fn\dyn retains the former fn behavior: free words resolve through the
+	// calling context, including nearer shadows introduced by callers.
+	"fn\\dyn": {
+		Argsn: 2,
+		Doc:   "Creates a function whose free words resolve through the caller's context (dynamic scoping).",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch args := arg0.(type) {
+			case env.Block:
+				ok, doc := util.ProcessFunctionSpec(args)
+				if !ok {
+					return MakeBuiltinError(ps, doc, "fn\\dyn")
+				}
+				switch body := arg1.(type) {
+				case env.Block:
+					fn := env.NewFunctionDoc(args, body, false, doc)
+					fn.Dynamic = true
+					return *fn
+				default:
+					return MakeArgError2(ps, 2, []env.Type{env.BlockType}, "fn\\dyn", arg1)
+				}
+			default:
+				return MakeArgError2(ps, 1, []env.Type{env.BlockType}, "fn\\dyn", arg0)
 			}
 		},
 	},

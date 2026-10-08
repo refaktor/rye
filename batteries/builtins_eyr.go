@@ -117,10 +117,11 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 
 // This is separate from CallFuncitonArgsN so it can manage pulling args directly off of the eyr stack
 func Eyr_CallFunction(fn env.Function, es *env.ProgramState, leftVal env.Object, toLeft bool, session *env.RyeCtx) *env.ProgramState {
-	fnCtx, fromPool := evaldo.DetermineContext(fn, es, session)
 	if evaldo.TryHandleFailure(es) {
 		return es
 	}
+	fnCtx, fromPool := evaldo.DetermineContext(fn, es, session)
+	defer evaldo.ReturnContextToPool(fnCtx, fromPool)
 
 	var arg0 env.Object = nil
 	for i := fn.Argsn - 1; i >= 0; i-- {
@@ -171,7 +172,6 @@ func Eyr_CallFunction(fn env.Function, es *env.ProgramState, leftVal env.Object,
 	es.Ser = tempSer
 	es.Ctx = tempCtx
 	es.ReturnFlag = false
-	evaldo.ReturnContextToPool(fnCtx, fromPool)
 	return es
 }
 

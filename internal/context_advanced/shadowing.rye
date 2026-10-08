@@ -58,10 +58,18 @@ assert\display "shadow function" {
 	child7/greet
 } "hello from child"
 
-assert\display "function uses shadowed value" {
+; Lexical methods use their definition context even when called through a child.
+assert\display "lexical function keeps definition value" {
 	parent8: context { val: 10 get-val: does { val } }
 	child8: extends parent8 { val: 99 }
 	child8/get-val
+} 10
+
+; An explicit dynamic function can instead use the child/context-path scope.
+assert\display "dynamic function uses shadowed value" {
+	parent8-dyn: context { val: 10 get-val: fn\dyn { } { val } }
+	child8-dyn: extends parent8-dyn { val: 99 }
+	child8-dyn/get-val
 } 99
 
 ; =============================================================================

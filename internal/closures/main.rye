@@ -11,6 +11,7 @@ private Load %04-multiple-in-contexts.rye
 private Load %closure_advanced.rye
 private Load %comprehensive.rye
 private Load %context_behaviors.rye
+private Load %lexical_scoping.rye
 private Load %try-do.rye
 
 print ""

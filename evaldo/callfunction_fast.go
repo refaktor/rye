@@ -31,7 +31,7 @@ func FastCallFunction(fn env.Function, ps *env.ProgramState, args []env.Object, 
 	// Set up the context based on function properties
 	if fn.Pure {
 		fnCtx.Parent = ps.PCtx
-	} else if fn.Ctx != nil {
+	} else if fn.Ctx != nil && !fn.Dynamic {
 		if fn.InCtx {
 			// Put the pooled context back since we're using the function's context directly
 			fastFunctionContextPool.Put(fnCtx)

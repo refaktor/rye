@@ -1810,17 +1810,19 @@ func (i Void) Dump(e Idxs) string {
 //
 
 type Function struct {
-	Argsn int
-	Spec  Block
-	Body  Block
-	Ctx   *RyeCtx
-	Pure  bool
-	Doc   string
-	InCtx bool
+	Argsn   int
+	Spec    Block
+	Body    Block
+	Ctx     *RyeCtx // Definition context for lexical functions; nil for dynamic functions
+	Pure    bool
+	Doc     string
+	InCtx   bool
+	Dynamic bool // Explicit caller-parent scoping (fn\dyn)
+	Lexical bool // Captured scope must not be rebound by context-path calls
 }
 
 func NewFunction(spec Block, body Block, pure bool) *Function {
-	o := Function{spec.Series.Len(), spec, body, nil, pure, "", false}
+	o := Function{Argsn: spec.Series.Len(), Spec: spec, Body: body, Pure: pure}
 	return &o
 }
 
@@ -1832,7 +1834,7 @@ func NewFunctionC(spec Block, body Block, ctx *RyeCtx, pure bool, inCtx bool, do
 	} else {
 		argn = spec.Series.Len()
 	}
-	o := Function{argn, spec, body, ctx, pure, doc, inCtx}
+	o := Function{Argsn: argn, Spec: spec, Body: body, Ctx: ctx, Pure: pure, Doc: doc, InCtx: inCtx}
 	return &o
 }
 
@@ -1843,7 +1845,7 @@ func NewFunctionDoc(spec Block, body Block, pure bool, doc string) *Function {
 	} else {
 		argn = spec.Series.Len()
 	}
-	o := Function{argn, spec, body, nil, pure, doc, false}
+	o := Function{Argsn: argn, Spec: spec, Body: body, Pure: pure, Doc: doc}
 	return &o
 }
 
@@ -1895,7 +1897,7 @@ func (i Function) Equal(o Object) bool {
 	if !i.Body.Equal(oFunction.Body) {
 		return false
 	}
-	if i.Pure != oFunction.Pure {
+	if i.Pure != oFunction.Pure || i.InCtx != oFunction.InCtx || i.Dynamic != oFunction.Dynamic || i.Lexical != oFunction.Lexical {
 		return false
 	}
 	return true
@@ -1903,7 +1905,11 @@ func (i Function) Equal(o Object) bool {
 
 func (i Function) Dump(e Idxs) string {
 	var b strings.Builder
-	b.WriteString("fn { ")
+	if i.Dynamic {
+		b.WriteString("fn\\dyn { ")
+	} else {
+		b.WriteString("fn { ")
+	}
 	for _, obj := range i.Spec.Series.GetAll() {
 		if obj != nil {
 			b.WriteString(obj.Dump(e))

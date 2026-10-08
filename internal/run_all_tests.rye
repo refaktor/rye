@@ -23,12 +23,15 @@ print ""
 ; builtin_boundaries.rye, collection_safety.rye, function_safety.rye,
 ; and argument_errors.rye (guards, boundaries, handleable failures, callback arity,
 ; defers, pure contexts, and argument error/control-flow preservation).
+; closures/main.rye includes lexical_scoping.rye (definition-context fn,
+; caller-context fn\dyn, escaping contexts, callbacks, and context paths).
 test-folders: { 
 	"basics"
 	"parsing" 
 	"evaluator" 
 	"closures"
-	"failure_handling" 
+	"failure_handling"
+	"return_boundaries" ; includes real subprocess tests for top-level return/Capture
 	"cli-parse"
 	"structures"
 	"observer"

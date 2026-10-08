@@ -596,11 +596,13 @@ func Rye0_DetermineContext(fn env.Function, ps *env.ProgramState, ctx *env.RyeCt
 	if ctx != nil { // Called via context path
 		if fn.Pure {
 			fnCtx = env.NewEnv(ps.PCtx)
-		} else if fn.Ctx != nil { // If context was defined at definition time
+		} else if fn.Ctx != nil && !fn.Dynamic { // If context was defined at definition time
 			if fn.InCtx {
 				fnCtx = fn.Ctx
 			} else {
-				fn.Ctx.Parent = ctx
+				if !fn.Lexical {
+					fn.Ctx.Parent = ctx
+				}
 				fnCtx = env.NewEnv(fn.Ctx)
 			}
 		} else {
@@ -609,7 +611,7 @@ func Rye0_DetermineContext(fn env.Function, ps *env.ProgramState, ctx *env.RyeCt
 	} else {
 		if fn.Pure {
 			fnCtx = env.NewEnv(ps.PCtx)
-		} else if fn.Ctx != nil { // If context was defined at definition time
+		} else if fn.Ctx != nil && !fn.Dynamic { // If context was defined at definition time
 			if fn.InCtx {
 				fnCtx = fn.Ctx
 			} else {
