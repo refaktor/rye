@@ -605,7 +605,9 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 			// OPBLOCK - behaves like fn1 function call
 			// Create a function with one anonymous argument and call it with current result
 			spec := []env.Object{*env.NewWord(1)}
-			ps.Res = *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), block, false)
+			fn := env.NewFunctionC(*env.NewBlock(*env.NewTSeries(spec)), block, ps.Ctx, false, false, "")
+			fn.Lexical = true
+			ps.Res = *fn
 			// injVal := ps.Res // Use current result as argument
 			// CallFunctionWithArgs(fn, ps, nil, injVal)
 			// return ps.Res
@@ -1769,7 +1771,7 @@ func DetermineContext(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx) (*
 	parent := ps.Ctx
 	if fn.Pure {
 		parent = ps.PCtx
-	} else if fn.Ctx != nil {
+	} else if fn.Ctx != nil && !fn.Dynamic {
 		// Also protect contexts supplied by embedded Function literals.
 		if !fn.Ctx.IsClosure {
 			fn.Ctx.Preserve()
@@ -1777,7 +1779,7 @@ func DetermineContext(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx) (*
 		if fn.InCtx {
 			return fn.Ctx, false
 		}
-		if ctx != nil && fn.Ctx != ctx {
+		if ctx != nil && fn.Ctx != ctx && !fn.Lexical {
 			// Preserve the existing context-path parenting semantics. The new
 			// parent escapes through an already captured context.
 			ctx.Preserve()

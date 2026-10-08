@@ -70,6 +70,18 @@ assert\display "@/ calling parent function" {
 		compare: fn\inside { } current { [ double @/double ] }
 	}
 	child6/compare
+} [ 10 10 ] ; lexical double stays bound to parent6 even via child6
+
+assert\display "@/ calling dynamic parent function" {
+	parent6-dyn: context {
+		val: 5
+		double: fn\dyn { } { val * 2 }
+	}
+	child6-dyn: extends parent6-dyn {
+		val: 50
+		compare: fn\inside { } current { [ double @/double ] }
+	}
+	child6-dyn/compare
 } [ 100 10 ]
 
 ; =============================================================================

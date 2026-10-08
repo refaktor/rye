@@ -154,6 +154,9 @@ func (e *RyeCtx) Copy() Context {
 					fn.Ctx != e.Parent) {
 				//					fmt.Println("CTX IS THE SAME OR RELATED ... COPY")
 				fn.Ctx = nc
+				if fn.Lexical {
+					nc.Preserve()
+				}
 				cp[k] = fn // store the modified function
 			} else {
 				// fmt.Println("CTX IS DIFFERENT - NOT COPYING")
