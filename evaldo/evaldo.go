@@ -830,7 +830,8 @@ func findWordValueWithFailureInfo(ps *env.ProgramState, word1 env.Object) (bool,
 					if len(word.Words) > i-1 {
 						continue
 					}
-					// If no more path parts, return the parent context itself
+					// If no more path parts, return the parent context itself.
+					currCtx.Preserve()
 					return true, currCtx, currCtx, ""
 				}
 				return false, nil, currCtx, "@ (no parent context)"
@@ -1743,83 +1744,49 @@ func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, a
 // DetermineContext determines the appropriate context for a function call.
 // Called from: CallFunctionWithArgs, CallFunctionArgs1, CallFunctionArgs2, CallFunctionArgs4, CallFunctionArgsN
 // Purpose: Sets up function execution context based on pure/impure, defined context, and parent context
-// Returns: The context to use and a boolean indicating if it was obtained from the pool (and can be returned)
+// Returns: The context and an ownership flag. An owned context must be released
+// exactly once through returnContextToPool, which checks whether it escaped.
 func DetermineContext(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx) (*env.RyeCtx, bool) {
-	var fnCtx *env.RyeCtx
-	fromPool := false
-	env0 := ps.Ctx  // store reference to current env in local
-	if ctx != nil { // called via contextpath and this is the context
-		if fn.Pure {
-			fnCtx = envPool.Get().(*env.RyeCtx)
-			fnCtx.Clear()
-			fnCtx.Parent = ps.PCtx
-			fromPool = true
-		} else {
-			if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
-				if fn.InCtx {
-					fnCtx = fn.Ctx
-					// fromPool stays false - don't return to pool
-				} else {
-					// Prevent circular parent reference
-					if fn.Ctx != ctx {
-						fn.Ctx.Parent = ctx
-					}
-					fnCtx = envPool.Get().(*env.RyeCtx)
-					fnCtx.Clear()
-					oldParentDC1 := fnCtx.Parent // save before overwriting (pool-reuse cycle detection)
-					fnCtx.Parent = fn.Ctx
-					// Bug fix: if fn.Ctx.Parent == fnCtx, that's a stale pool-reuse cycle; break it.
-					if fn.Ctx.Parent == fnCtx {
-						fn.Ctx.Parent = oldParentDC1
-					}
-					fromPool = true
-				}
-			} else {
-				fnCtx = envPool.Get().(*env.RyeCtx)
-				fnCtx.Clear()
-				fnCtx.Parent = ctx
-				fromPool = true
-			}
+	parent := ps.Ctx
+	if fn.Pure {
+		parent = ps.PCtx
+	} else if fn.Ctx != nil {
+		// Also protect contexts supplied by embedded Function literals.
+		if !fn.Ctx.IsClosure {
+			fn.Ctx.Preserve()
 		}
-	} else {
-		if fn.Pure {
-			fnCtx = envPool.Get().(*env.RyeCtx)
-			fnCtx.Clear()
-			fnCtx.Parent = ps.PCtx
-			fromPool = true
-		} else {
-			if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
-				if fn.InCtx {
-					// fn\inside: use fn.Ctx directly, don't create child context
-					fnCtx = fn.Ctx
-					// fromPool stays false - don't return to pool
-				} else {
-					fnCtx = envPool.Get().(*env.RyeCtx)
-					fnCtx.Clear()
-					oldParentDC2 := fnCtx.Parent // save before overwriting (pool-reuse cycle detection)
-					fnCtx.Parent = fn.Ctx
-					// Bug fix: if fn.Ctx.Parent == fnCtx, that's a stale pool-reuse cycle; break it.
-					if fn.Ctx.Parent == fnCtx {
-						fn.Ctx.Parent = oldParentDC2
-					}
-					fromPool = true
-				}
-			} else {
-				fnCtx = envPool.Get().(*env.RyeCtx)
-				fnCtx.Clear()
-				fnCtx.Parent = env0
-				fromPool = true
-			}
+		if fn.InCtx {
+			return fn.Ctx, false
 		}
+		if ctx != nil && fn.Ctx != ctx {
+			// Preserve the existing context-path parenting semantics. The new
+			// parent escapes through an already captured context.
+			ctx.Preserve()
+			fn.Ctx.Parent = ctx
+		}
+		parent = fn.Ctx
+	} else if ctx != nil {
+		parent = ctx
 	}
-	return fnCtx, fromPool
+	return acquireCallContext(parent), true
+}
+
+// acquireCallContext borrows an exclusively owned, reset context. Parent is a
+// temporary link: unlike NewEnv(parent), this does not preserve the caller.
+func acquireCallContext(parent *env.RyeCtx) *env.RyeCtx {
+	ctx := envPool.Get().(*env.RyeCtx)
+	ctx.Parent = parent
+	return ctx
 }
 
 // returnContextToPool returns a context to the pool if it's safe to do so.
 // Called from: CallFunctionArgs1, CallFunctionArgs2, CallFunctionArgs4, CallFunctionArgsN
-// Purpose: Centralizes the logic for returning contexts to the pool
+// Purpose: Centralizes release after body execution and deferred cleanup. Reset
+// before pooling so idle contexts retain neither caller chains nor local values.
+// Escaped contexts remain intact and are managed by Go's garbage collector.
 func returnContextToPool(fnCtx *env.RyeCtx, fromPool bool) {
 	if fromPool && !fnCtx.IsClosure {
+		fnCtx.ResetForPool()
 		envPool.Put(fnCtx)
 	}
 }

@@ -81,3 +81,5 @@ step*-*.md
 examples/archive
 evaldo/archive
 _sandbox
+*.OLD
+*.REMOVE

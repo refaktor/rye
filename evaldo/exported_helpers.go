@@ -15,7 +15,10 @@ func TryHandleFailure(ps *env.ProgramState) bool {
 }
 
 // ReturnContextToPool is an exported wrapper around returnContextToPool,
-// exposed for use by the batteries package.
+// exposed for use by the batteries package. Pass the ownership flag returned by
+// DetermineContext, and release exactly once after all deferred work finishes.
+// Code retaining a context (or attaching it to a persistent object) must call
+// RyeCtx.Preserve before release. A released context must not be used again.
 func ReturnContextToPool(fnCtx *env.RyeCtx, fromPool bool) {
 	returnContextToPool(fnCtx, fromPool)
 }

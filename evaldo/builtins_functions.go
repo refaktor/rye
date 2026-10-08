@@ -392,7 +392,7 @@ var builtins_functions = map[string]*env.Builtin{
 		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			ctx := ps.Ctx
-			ctx.IsClosure = true // Mark context as closure to prevent pooling
+			// NewFunctionC preserves the context after argument validation.
 
 			switch args := arg0.(type) {
 			case env.Block:
@@ -433,9 +433,9 @@ var builtins_functions = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Reference the current context directly - no copying
 			// This allows closures created in the same execution context to share state
-			// while different function calls naturally get different contexts
+			// while different function calls naturally get different contexts.
+			// NewFunctionC preserves the context after argument validation.
 			ctx := ps.Ctx
-			ctx.IsClosure = true // Mark this context as a closure context to prevent pooling
 
 			switch args := arg0.(type) {
 			case env.Block:

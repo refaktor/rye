@@ -298,6 +298,7 @@ var builtins_contexts = map[string]*env.Builtin{
 			case *env.RyeCtx:
 				switch swCtx2 := arg1.(type) {
 				case *env.RyeCtx:
+					swCtx2.Preserve()
 					swCtx1.Parent = swCtx2
 					return swCtx1
 				default:
@@ -329,6 +330,7 @@ var builtins_contexts = map[string]*env.Builtin{
 				case *env.RyeCtx:
 					clonedCtx := swCtx1.Copy()
 					if cloned2, ok := clonedCtx.(*env.RyeCtx); ok {
+						swCtx2.Preserve()
 						cloned2.Parent = swCtx2
 						return cloned2
 					}
@@ -358,6 +360,7 @@ var builtins_contexts = map[string]*env.Builtin{
 			case *env.RyeCtx:
 				clonedCtx := swCtx1.Copy()
 				if cloned2, ok := clonedCtx.(*env.RyeCtx); ok {
+					ps.Ctx.Preserve()
 					cloned2.Parent = ps.Ctx
 					return cloned2
 				}
@@ -381,6 +384,7 @@ var builtins_contexts = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch swCtx1 := arg0.(type) {
 			case *env.RyeCtx:
+				ps.Ctx.Preserve()
 				swCtx1.Parent = ps.Ctx
 				return swCtx1
 			default:
@@ -480,6 +484,7 @@ var builtins_contexts = map[string]*env.Builtin{
 		Argsn: 0,
 		Doc:   "Returns current context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			ps.Ctx.Preserve()
 			return ps.Ctx
 		},
 	},
@@ -490,6 +495,7 @@ var builtins_contexts = map[string]*env.Builtin{
 		Argsn: 0,
 		Doc:   "Returns parent context of the current context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			ps.Ctx.Parent.Preserve()
 			return ps.Ctx.Parent
 		},
 	},
@@ -502,6 +508,7 @@ var builtins_contexts = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch c := arg0.(type) {
 			case *env.RyeCtx:
+				c.Parent.Preserve()
 				return c.Parent
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "parent?")
@@ -520,6 +527,7 @@ var builtins_contexts = map[string]*env.Builtin{
 		Doc:   "Lists words in current context",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fmt.Println(ps.Ctx.Preview(*ps.Idx, ""))
+			ps.Ctx.Preserve()
 			return ps.Ctx
 		},
 	},
@@ -566,6 +574,7 @@ var builtins_contexts = map[string]*env.Builtin{
 		Argsn: 0,
 		Doc:   "Lists words in parent context",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			ps.Ctx.Preserve()
 			if ps.Ctx.Parent != nil {
 				fmt.Println(ps.Ctx.Parent.Preview(*ps.Idx, ""))
 			} else {
@@ -585,6 +594,7 @@ var builtins_contexts = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Lists words in current context with string filter, by type (word: 'function, 'builtin, 'context), or regex filter (native of kind 'regexp)",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			ps.Ctx.Preserve()
 			switch s1 := arg0.(type) {
 			case env.String:
 				fmt.Println(ps.Ctx.Preview(*ps.Idx, s1.Value))
@@ -630,6 +640,7 @@ var builtins_contexts = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Lists words in parent context with string filter",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			ps.Ctx.Preserve()
 			switch s1 := arg0.(type) {
 			case env.String:
 				if ps.Ctx.Parent != nil {

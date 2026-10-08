@@ -1825,6 +1825,7 @@ func NewFunction(spec Block, body Block, pure bool) *Function {
 }
 
 func NewFunctionC(spec Block, body Block, ctx *RyeCtx, pure bool, inCtx bool, doc string) *Function {
+	ctx.Preserve()
 	var argn int
 	if doc > "" {
 		argn = spec.Series.Len() - 1
@@ -3584,6 +3585,7 @@ type LazyValue struct {
 }
 
 func NewLazyValue(block Block, ctx *RyeCtx) *LazyValue {
+	ctx.Preserve()
 	return &LazyValue{Block: block, Ctx: ctx, Result: nil, State: 0}
 }
 
