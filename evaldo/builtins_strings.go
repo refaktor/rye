@@ -2,6 +2,7 @@ package evaldo
 
 import (
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/pem"
 	"net/url"
 
@@ -585,6 +586,55 @@ var builtins_string = map[string]*env.Builtin{
 				return *env.NewString(string(ata))
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "decode\\base64")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { encode-to\hex "abcd" } "61626364"
+	// equal { encode-to\hex decode\hex "Hello world" } "48656c6c6f20776f726c64"
+	// Args:
+	// * data: String or bytes native value to encode
+	// Returns:
+	// * hexadecimal-encoded string
+	"encode-to\\hex": {
+		Argsn: 1,
+		Doc:   "Encodes a string or bytes value as a hexadecimal string.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Bytes:
+				return *env.NewString(hex.EncodeToString(s1.Value))
+			case env.String:
+				return *env.NewString(hex.EncodeToString([]byte(s1.Value)))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BytesType}, "encode-to\\hex")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { decode\hex "48656c6c6f20576f726c64" |type? } 'bytes
+	// equal { decode\hex "48656c6c6f20576f726c64" |encode-to\hex } "48656c6c6f20576f726c64"
+	// error { decode\hex "invalid" }
+	// Args:
+	// * string: hexadecimal-encoded string to decode
+	// Returns:
+	// * bytes native value containing the decoded data
+	"decode\\hex": {
+		Argsn: 1,
+		Doc:   "Decodes a hexadecimal string to a bytes native value.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				r, err := hex.DecodeString(s1.Value)
+				if err != nil {
+					return MakeBuiltinError(ps, "Failure to decode string.", "decode\\hex")
+				}
+				return *env.NewBytes(r)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "decode\\hex")
 			}
 		},
 	},
