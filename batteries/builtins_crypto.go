@@ -72,54 +72,6 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// ##### Basic Cryptographic Operations ##### "Hashing, encoding, and basic cryptographic functions"
 	//
 	// Tests:
-	//  equal { cc crypto "48656c6c6f20776f726c64" |decode\hex |type? } 'native
-	//  equal { cc crypto "48656c6c6f20776f726c64" |decode\hex |kind? } 'bytes
-	//  equal { cc crypto "invalid" |decode\hex |disarm |type? } 'error
-	// Args:
-	// * hex-string: hexadecimal encoded string to decode
-	// Returns:
-	// * native bytes object containing the decoded data
-	"decode\\hex": {
-		Argsn: 1,
-		Doc:   "Decodes a hexadecimal string to a bytes native value.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch addr := arg0.(type) {
-			case env.String:
-				r, err := hex.DecodeString(addr.Value)
-				if err != nil {
-					ps.FailureFlag = true
-					return evaldo.MakeBuiltinError(ps, "Failure to decode string.", "decode\\hex")
-				}
-				return *env.NewBytes(r)
-			default:
-				ps.FailureFlag = true
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType}, "decode\\hex")
-			}
-		},
-	},
-
-	// Tests:
-	//  equal { cc crypto "48656c6c6f20776f726c64" |decode\hex |encode-to\hex } "48656c6c6f20776f726c64"
-	//  equal { cc crypto "Hello world" |sha512 |decode\hex |encode-to\hex |type? } 'string
-	// Args:
-	// * bytes: native bytes object to encode
-	// Returns:
-	// * string containing the hexadecimal representation of the bytes
-	"encode-to\\hex": {
-		Argsn: 1,
-		Doc:   "Encodes a bytes native value to a hexadecimal string.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch addr := arg0.(type) {
-			case env.Bytes:
-				return *env.NewString(hex.EncodeToString(addr.Value))
-			default:
-				ps.FailureFlag = true
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.BytesType}, "bytes//to-string")
-			}
-		},
-	},
-
-	// Tests:
 	//  equal { cc crypto ed25519-generate-keys |first |string |type? } 'string
 	// Args:
 	// * key: Ed25519 public key as a native value

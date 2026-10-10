@@ -47,14 +47,14 @@ var Builtins_encoding = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { "Hello World" |encode\hex-string } "48656c6c6f20576f726c64"
-	// equal { "Hello World" |encode\hex-string |type? } 'string
-	// equal { "" |encode\hex-string } ""
+	// equal { "Hello World" |encode-to\hex-string } "48656c6c6f20576f726c64"
+	// equal { "Hello World" |encode-to\hex-string |type? } 'string
+	// equal { "" |encode-to\hex-string } ""
 	// Args:
 	// * string: string to encode
 	// Returns:
 	// * hexadecimal string representation
-	"encode\\hex-string": {
+	"encode-to\\hex-string": {
 		Argsn: 1,
 		Doc:   "Encodes a string to its hexadecimal representation.",
 		Pure:  true,
@@ -65,7 +65,7 @@ var Builtins_encoding = map[string]*env.Builtin{
 				return *env.NewString(encoded)
 			default:
 				ps.FailureFlag = true
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType}, "encode\\hex-string")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType}, "encode-to\\hex-string")
 			}
 		},
 	},
@@ -315,7 +315,7 @@ var Builtins_encoding = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { charmap\windows-1250 |Encoder |Encode "Hello" } "Hello"
-	// equal { charmap\windows-1250 |Encoder |Encode "Plačilo" |encode\hex-string } "506c61e8696c6f"
+	// equal { charmap\windows-1250 |Encoder |Encode "Plačilo" |encode-to\hex-string } "506c61e8696c6f"
 	// Args:
 	// * encoder: text encoder as a native value
 	// * input: string to encode
