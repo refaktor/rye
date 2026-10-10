@@ -69,17 +69,20 @@ var builtins_boolean = map[string]*env.Builtin{
 	// equal { false .and true } false
 	// equal { true .and false } false
 	// equal { false .and false } false
+	// equal { bytes { 255 240 } |and bytes { 240 15 } |first } 240
+	// equal { bytes { 255 240 } |and bytes { 240 15 } |last } 0
+	// error { bytes { 255 } |and bytes { 240 15 } }
 	// error { true .and 5 }
 	// error { 5 .and true }
 	// error { "string" .and true }
 	// Args:
-	// * value1: First value (boolean)
-	// * value2: Second value (boolean)
+	// * value1: First value (boolean or bytes)
+	// * value2: Second value (boolean or bytes)
 	// Returns:
-	// * boolean result of logical AND operation if both inputs are booleans, otherwise integer result of bitwise AND
+	// * boolean result of logical AND if both inputs are booleans, or element-wise bitwise AND of two equal-length bytes values
 	"and": {
 		Argsn: 2,
-		Doc:   "Performs a logical AND operation between two boolean values, or a bitwise AND operation between two integer values.",
+		Doc:   "Performs a logical AND operation between two boolean values, or an element-wise bitwise AND operation between two equal-length bytes values.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
@@ -90,8 +93,22 @@ var builtins_boolean = map[string]*env.Builtin{
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.BooleanType}, "and")
 				}
+			case env.Bytes:
+				switch s2 := arg1.(type) {
+				case env.Bytes:
+					if len(s1.Value) != len(s2.Value) {
+						return MakeBuiltinError(ps, "Bytes values must have equal length for bitwise AND.", "and")
+					}
+					result := make([]byte, len(s1.Value))
+					for i := range s1.Value {
+						result[i] = s1.Value[i] & s2.Value[i]
+					}
+					return *env.NewBytes(result)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BytesType}, "and")
+				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BooleanType}, "and")
+				return MakeArgError(ps, 1, []env.Type{env.BooleanType, env.BytesType}, "and")
 			}
 		},
 	},
@@ -101,17 +118,20 @@ var builtins_boolean = map[string]*env.Builtin{
 	// equal { false .or true } true
 	// equal { true .or false } true
 	// equal { false .or false } false
+	// equal { bytes { 255 240 } |or bytes { 240 15 } |first } 255
+	// equal { bytes { 255 240 } |or bytes { 240 15 } |last } 255
+	// error { bytes { 255 } |or bytes { 240 15 } }
 	// error { true .or 5 }
 	// error { 5 .or true }
 	// error { "string" .or true }
 	// Args:
-	// * value1: First value (boolean)
-	// * value2: Second value (boolean)
+	// * value1: First value (boolean or bytes)
+	// * value2: Second value (boolean or bytes)
 	// Returns:
-	// * boolean result of logical OR operation if both inputs are booleans, otherwise integer result of bitwise OR
+	// * boolean result of logical OR if both inputs are booleans, or element-wise bitwise OR of two equal-length bytes values
 	"or": {
 		Argsn: 2,
-		Doc:   "Performs a logical OR operation between two boolean values, or a bitwise OR operation between two integer values.",
+		Doc:   "Performs a logical OR operation between two boolean values, or an element-wise bitwise OR operation between two equal-length bytes values.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
@@ -122,8 +142,22 @@ var builtins_boolean = map[string]*env.Builtin{
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.BooleanType}, "or")
 				}
+			case env.Bytes:
+				switch s2 := arg1.(type) {
+				case env.Bytes:
+					if len(s1.Value) != len(s2.Value) {
+						return MakeBuiltinError(ps, "Bytes values must have equal length for bitwise OR.", "or")
+					}
+					result := make([]byte, len(s1.Value))
+					for i := range s1.Value {
+						result[i] = s1.Value[i] | s2.Value[i]
+					}
+					return *env.NewBytes(result)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BytesType}, "or")
+				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BooleanType}, "or")
+				return MakeArgError(ps, 1, []env.Type{env.BooleanType, env.BytesType}, "or")
 			}
 		},
 	},
@@ -133,17 +167,20 @@ var builtins_boolean = map[string]*env.Builtin{
 	// equal { false .xor true } true
 	// equal { true .xor false } true
 	// equal { false .xor false } false
+	// equal { bytes { 255 240 } |xor bytes { 240 15 } |first } 15
+	// equal { bytes { 255 240 } |xor bytes { 240 15 } |last } 255
+	// error { bytes { 255 } |xor bytes { 240 15 } }
 	// error { true .xor 5 }
 	// error { 5 .xor true }
 	// error { "string" .xor true }
 	// Args:
-	// * value1: First value (boolean)
-	// * value2: Second value (boolean)
+	// * value1: First value (boolean or bytes)
+	// * value2: Second value (boolean or bytes)
 	// Returns:
-	// * boolean result of logical XOR operation if both inputs are booleans, otherwise integer result of bitwise XOR
+	// * boolean result of logical XOR if both inputs are booleans, or element-wise bitwise XOR of two equal-length bytes values
 	"xor": {
 		Argsn: 2,
-		Doc:   "Performs a logical XOR (exclusive OR) operation between two boolean values, or a bitwise XOR operation between two integer values.",
+		Doc:   "Performs a logical XOR (exclusive OR) operation between two boolean values, or an element-wise bitwise XOR operation between two equal-length bytes values.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
@@ -154,8 +191,22 @@ var builtins_boolean = map[string]*env.Builtin{
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.BooleanType}, "xor")
 				}
+			case env.Bytes:
+				switch s2 := arg1.(type) {
+				case env.Bytes:
+					if len(s1.Value) != len(s2.Value) {
+						return MakeBuiltinError(ps, "Bytes values must have equal length for bitwise XOR.", "xor")
+					}
+					result := make([]byte, len(s1.Value))
+					for i := range s1.Value {
+						result[i] = s1.Value[i] ^ s2.Value[i]
+					}
+					return *env.NewBytes(result)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BytesType}, "xor")
+				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BooleanType}, "xor")
+				return MakeArgError(ps, 1, []env.Type{env.BooleanType, env.BytesType}, "xor")
 			}
 		},
 	},

@@ -1,6 +1,7 @@
 package evaldo
 
 import (
+	"encoding/hex"
 	"fmt"
 	"strconv"
 	"strings"
@@ -88,6 +89,56 @@ var builtins_types = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Prefer Dump() to avoid display prefixes like leading "%" for file-uri
 			return *env.NewString(arg0.Dump(*ps.Idx))
+		},
+	},
+
+	// Tests:
+	// equal { bytes 0 |length? } 0
+	// equal { bytes 5 |length? } 5
+	// equal { bytes 5 |first } 0
+	// equal { bytes "ff" |first } 255
+	// equal { bytes { 104 101 108 108 111 } |length? } 5
+	// error { bytes "zz" }
+	// error { bytes { 300 } }
+	// error { bytes { "x" } }
+	// Args:
+	// * value: Integer (number of zero bytes), hex-encoded String, or Block of integers 0..255
+	// Returns:
+	// * A Bytes value
+	"bytes": {
+		Argsn: 1,
+		Doc:   "Creates a Bytes value. Accepts an integer (creates that many zero bytes), a hex-encoded string, or a block of integers in range 0..255.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				if val.Value < 0 {
+					return MakeBuiltinError(ps, "byte count must be non-negative", "bytes")
+				}
+				return *env.NewBytes(make([]byte, val.Value))
+			case env.String:
+				decoded, err := hex.DecodeString(val.Value)
+				if err != nil {
+					return MakeBuiltinError(ps, err.Error(), "bytes")
+				}
+				return *env.NewBytes(decoded)
+			case env.Block:
+				data := make([]byte, val.Series.Len())
+				for i, obj := range val.Series.S {
+					switch n := obj.(type) {
+					case env.Integer:
+						if n.Value < 0 || n.Value > 255 {
+							return MakeBuiltinError(ps, fmt.Sprintf("byte value %d out of range 0..255 at position %d", n.Value, i), "bytes")
+						}
+						data[i] = byte(n.Value)
+					default:
+						return MakeArgError2(ps, 1, []env.Type{env.IntegerType}, "bytes", obj)
+					}
+				}
+				return *env.NewBytes(data)
+			default:
+				return MakeArgError2(ps, 1, []env.Type{env.IntegerType, env.StringType, env.BlockType}, "bytes", arg0)
+			}
 		},
 	},
 

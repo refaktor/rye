@@ -1708,6 +1708,244 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	// Examples:
+	// ; Requires ftp server on localhost:21 with anonymous or test creds
+	// ; Example smoke tests (skip in CI if no server):
+	// ; conn: ftp-uri: Open ftp://localhost:21
+	// ; conn: conn .Login "anonymous" "anonymous" ; or real creds
+	// ; conn .Cwd "/" |kind? |equal 'native
+	// ; conn .Mkdir "rye-test" |kind? |equal 'native
+	// ; conn .List "/" |type? |equal 'block
+	// ; conn .Store "/rye-test/hello.txt" "hi" |kind? |equal 'native
+	// ; r: conn .Retrieve "/rye-test/hello.txt" |kind? |equal 'reader
+	// ; r .Close |drop
+	// ; lst: conn .List "/rye-test"
+	// ; lst |length |>= 1 |assert
+	// ; conn .Rename "/rye-test/hello.txt" "/rye-test/hello2.txt" |kind? |equal 'native
+	// ; conn .Delete "/rye-test/hello2.txt" |kind? |equal 'native
+	// ; conn .Rmdir "/rye-test" |kind? |equal 'native
+	// ; conn .Close |equal 1
+	// Additional FTP operations
+	"ftp-connection//List": {
+		Argsn: 2,
+		Doc:   "Lists directory entries. Returns a block of maps with full info.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(s.Kind.Index) != "ftp-connection" {
+					return evaldo.MakeBuiltinError(ps, "Expected FTP connection.", "ftp-connection//List")
+				}
+				var path string
+				if arg1 != nil {
+					switch p := arg1.(type) {
+					case env.String:
+						path = p.Value
+					default:
+						ps.FailureFlag = true
+						return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "ftp-connection//List")
+					}
+				}
+				entries, err := s.Value.(*ftp.ServerConn).List(path)
+				if err != nil {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, err.Error(), "ftp-connection//List")
+				}
+				// Build block of maps
+				vals := make([]env.Object, 0, len(entries))
+				for _, e := range entries {
+					typeStr := "file"
+					switch e.Type {
+					case ftp.EntryTypeFolder:
+						typeStr = "dir"
+					case ftp.EntryTypeLink:
+						typeStr = "link"
+					}
+					m := env.NewDict(map[string]any{
+						"name":   *env.NewString(e.Name),
+						"type":   *env.NewString(typeStr),
+						"size":   *env.NewInteger(int64(e.Size)),
+						"time":   *env.NewTime(e.Time),
+						"target": *env.NewString(e.Target),
+					})
+					vals = append(vals, *m)
+				}
+				return *env.NewBlock(*env.NewTSeries(vals))
+			default:
+				ps.FailureFlag = true
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "ftp-connection//List")
+			}
+		},
+	},
+	// Examples:
+	// ; conn .Cwd "/" |kind? |equal 'native
+	"ftp-connection//Cwd": {
+		Argsn: 2,
+		Doc:   "Changes working directory.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.Native:
+				p, ok := arg1.(env.String)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "ftp-connection//Cwd")
+				}
+				if err := s.Value.(*ftp.ServerConn).ChangeDir(p.Value); err != nil {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, err.Error(), "ftp-connection//Cwd")
+				}
+				return arg0
+			default:
+				ps.FailureFlag = true
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "ftp-connection//Cwd")
+			}
+		},
+	},
+	// Examples:
+	// ; conn .Mkdir "rye-test" |kind? |equal 'native
+	"ftp-connection//Mkdir": {
+		Argsn: 2,
+		Doc:   "Creates a directory.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.Native:
+				p, ok := arg1.(env.String)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "ftp-connection//Mkdir")
+				}
+				if err := s.Value.(*ftp.ServerConn).MakeDir(p.Value); err != nil {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, err.Error(), "ftp-connection//Mkdir")
+				}
+				return arg0
+			default:
+				ps.FailureFlag = true
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "ftp-connection//Mkdir")
+			}
+		},
+	},
+	// Examples:
+	// ; conn .Rmdir "rye-test" |kind? |equal 'native
+	"ftp-connection//Rmdir": {
+		Argsn: 2,
+		Doc:   "Removes a directory.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.Native:
+				p, ok := arg1.(env.String)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "ftp-connection//Rmdir")
+				}
+				if err := s.Value.(*ftp.ServerConn).RemoveDir(p.Value); err != nil {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, err.Error(), "ftp-connection//Rmdir")
+				}
+				return arg0
+			default:
+				ps.FailureFlag = true
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "ftp-connection//Rmdir")
+			}
+		},
+	},
+	// Examples:
+	// ; conn .Delete "/rye-test/hello.txt" |kind? |equal 'native
+	"ftp-connection//Delete": {
+		Argsn: 2,
+		Doc:   "Deletes a file.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.Native:
+				p, ok := arg1.(env.String)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "ftp-connection//Delete")
+				}
+				if err := s.Value.(*ftp.ServerConn).Delete(p.Value); err != nil {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, err.Error(), "ftp-connection//Delete")
+				}
+				return arg0
+			default:
+				ps.FailureFlag = true
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "ftp-connection//Delete")
+			}
+		},
+	},
+	// Examples:
+	// ; conn .Rename "/rye-test/a.txt" "/rye-test/b.txt" |kind? |equal 'native
+	"ftp-connection//Rename": {
+		Argsn: 3,
+		Doc:   "Renames or moves a file.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.Native:
+				from, ok := arg1.(env.String)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "ftp-connection//Rename")
+				}
+				to, ok := arg2.(env.String)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType}, "ftp-connection//Rename")
+				}
+				if err := s.Value.(*ftp.ServerConn).Rename(from.Value, to.Value); err != nil {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, err.Error(), "ftp-connection//Rename")
+				}
+				return arg0
+			default:
+				ps.FailureFlag = true
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "ftp-connection//Rename")
+			}
+		},
+	},
+	// Examples:
+	// ; conn .Store "/rye-test/up.txt" "content" |kind? |equal 'native
+	"ftp-connection//Store": {
+		Argsn: 3,
+		Doc:   "Uploads data to a remote path. Accepts string or reader.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.Native:
+				path, ok := arg1.(env.String)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "ftp-connection//Store")
+				}
+				var rdr io.Reader
+				switch v := arg2.(type) {
+				case env.String:
+					rdr = strings.NewReader(v.Value)
+				case env.Native:
+					// expect a reader
+					if ps.Idx.GetWord(v.Kind.Index) != "reader" {
+						ps.FailureFlag = true
+						return evaldo.MakeBuiltinError(ps, "Expected reader for data", "ftp-connection//Store")
+					}
+					if r, ok := v.Value.(io.Reader); ok {
+						rdr = r
+					} else {
+						ps.FailureFlag = true
+						return evaldo.MakeBuiltinError(ps, "Invalid reader", "ftp-connection//Store")
+					}
+				default:
+					ps.FailureFlag = true
+					return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType, env.NativeType}, "ftp-connection//Store")
+				}
+				if err := s.Value.(*ftp.ServerConn).Stor(path.Value, rdr); err != nil {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, err.Error(), "ftp-connection//Store")
+				}
+				return arg0
+			default:
+				ps.FailureFlag = true
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "ftp-connection//Store")
+			}
+		},
+	},
+
 	//
 	// ##### File Monitoring ##### "File watching and tailing operations"
 	//

@@ -2942,6 +2942,23 @@ func createTarGz(srcPath, dstPath string) error {
 	})
 }
 
+// cleanArchiveRel validates that name, joined onto root, stays inside root.
+// It resolves any ".." components lexically and rejects absolute or escaping
+// paths. The returned relative path is guaranteed to be contained within root
+// (no leading ".." components).
+func cleanArchiveRel(root, name string) (string, error) {
+	if filepath.IsAbs(name) {
+		return "", fmt.Errorf("invalid archive path: %q", name)
+	}
+	// Join then clean so ".." components are resolved before containment check.
+	target := filepath.Clean(filepath.Join(root, name))
+	rel, err := filepath.Rel(root, target)
+	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(os.PathSeparator)) || rel == "." {
+		return "", fmt.Errorf("invalid archive path: %q", name)
+	}
+	return target, nil
+}
+
 // archiveTarget validates a member path and rejects symlinks in existing destination
 // components. Archives cannot create symlinks here, so an existing symlink is the
 // only way an otherwise contained member could escape the extraction directory.
@@ -2950,13 +2967,9 @@ func archiveTarget(dstPath, name string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if filepath.IsAbs(name) {
-		return "", fmt.Errorf("invalid archive path: %q", name)
-	}
-	target := filepath.Join(root, name)
-	rel, err := filepath.Rel(root, target)
-	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(os.PathSeparator)) || rel == "." {
-		return "", fmt.Errorf("invalid archive path: %q", name)
+	target, err := cleanArchiveRel(root, name)
+	if err != nil {
+		return "", err
 	}
 	// Check the root as well as every existing component through the target.
 	for path := root; ; {
@@ -3012,6 +3025,10 @@ func extractTarGz(srcPath, dstPath string) error {
 		targetPath, err := archiveTarget(dstPath, header.Name)
 		if err != nil {
 			return err
+		}
+		// Inline containment check so CodeQL can verify no path traversal.
+		if rel, err := filepath.Rel(dstPath, targetPath); err != nil || (rel == ".." || strings.HasPrefix(rel, ".."+string(os.PathSeparator))) {
+			return fmt.Errorf("archive entry escapes destination: %q", header.Name)
 		}
 
 		switch header.Typeflag {
@@ -3119,6 +3136,10 @@ func extractZip(srcPath, dstPath string) error {
 		targetPath, err := archiveTarget(dstPath, file.Name)
 		if err != nil {
 			return err
+		}
+		// Inline containment check so CodeQL can verify no path traversal.
+		if rel, err := filepath.Rel(dstPath, targetPath); err != nil || (rel == ".." || strings.HasPrefix(rel, ".."+string(os.PathSeparator))) {
+			return fmt.Errorf("archive entry escapes destination: %q", file.Name)
 		}
 
 		if file.FileInfo().IsDir() {
