@@ -1686,6 +1686,91 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 
 	// Args:
+	// * request: native http-request object
+	// * name: word representing the header name
+	// * value: string containing the header value
+	// Returns:
+	// * the request object if successful
+	"http-request//Header!": {
+		Argsn: 3,
+		Doc:   "Sets a header on a HTTP request.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch req := arg0.(type) {
+			case env.Native:
+				switch method := arg1.(type) {
+				case env.Word:
+					name := ps.Idx.GetWord(method.Index)
+					switch data := arg2.(type) {
+					case env.String:
+						req.Value.(*http.Request).Header.Set(name, data.Value)
+						return arg0
+					default:
+						return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType}, "http-request//Header!")
+					}
+				default:
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.WordType}, "http-request//Header!")
+				}
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "http-request//Header!")
+			}
+		},
+	},
+
+	// Args:
+	// * request: native http-request object
+	// * username: string containing the username
+	// * password: string containing the password
+	// Returns:
+	// * the request object if successful
+	"http-request//Basic-auth!": {
+		Argsn: 3,
+		Doc:   "Sets Basic Authentication on a HTTP request.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch req := arg0.(type) {
+			case env.Native:
+				switch username := arg1.(type) {
+				case env.String:
+					switch password := arg2.(type) {
+					case env.String:
+						req.Value.(*http.Request).SetBasicAuth(username.Value, password.Value)
+						return arg0
+					default:
+						return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType}, "http-request//Basic-auth!")
+					}
+				default:
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "http-request//Basic-auth!")
+				}
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "http-request//Basic-auth!")
+			}
+		},
+	},
+
+	// Args:
+	// * request: native http-request object
+	// Returns:
+	// * native http-response object (always returns response regardless of status code)
+	"http-request//Call": {
+		Argsn: 1,
+		Doc:   "Executes a HTTP request and returns the response object. Always returns the response regardless of status code (200, 404, 500, etc.) - use Status? to check the code.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch req := arg0.(type) {
+			case env.Native:
+				client := &http.Client{}
+				resp, err := client.Do(req.Value.(*http.Request))
+				if err != nil {
+					return evaldo.MakeBuiltinError(ps, err.Error(), "http-request//Call")
+				}
+				// Always return the response object regardless of status code
+				// Users can check the status code using http-response//Status?
+				return *env.NewNative(ps.Idx, resp, "http-response")
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "http-request//Call")
+			}
+		},
+	},
+
+	// Args:
 	// * response: native https-response object
 	// Returns:
 	// * native reader object for the response body
@@ -1722,6 +1807,47 @@ var Builtins_io = map[string]*env.Builtin{
 			default:
 				ps.FailureFlag = true
 				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "https-response//Read-body")
+			}
+		},
+	},
+
+	// Args:
+	// * response: native http-response object
+	// Returns:
+	// * native reader object for the response body
+	"http-response//Reader": {
+		Argsn: 1,
+		Doc:   "Gets a reader for the HTTP response body that can be used with io.Copy.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch resp := arg0.(type) {
+			case env.Native:
+				// Return the Body field, which implements io.Reader, not the entire Response
+				return *env.NewNative(ps.Idx, resp.Value.(*http.Response).Body, "reader")
+			default:
+				ps.FailureFlag = true
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "http-response//Reader")
+			}
+		},
+	},
+
+	// Args:
+	// * response: native http-response object
+	// Returns:
+	// * string containing the response body
+	"http-response//Read-body": {
+		Argsn: 1,
+		Doc:   "Reads the body of a HTTP response as a string.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch resp := arg0.(type) {
+			case env.Native:
+				data, err := io.ReadAll(resp.Value.(*http.Response).Body)
+				if err != nil {
+					return evaldo.MakeBuiltinError(ps, err.Error(), "http-response//Read-body")
+				}
+				return *env.NewString(string(data))
+			default:
+				ps.FailureFlag = true
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "http-response//Read-body")
 			}
 		},
 	},

@@ -2174,6 +2174,12 @@ var Builtins_os = map[string]*env.Builtin{
 						return evaldo.MakeBuiltinError(ps, "https-response does not wrap an http.Response", "unzip\\single")
 					}
 					r = resp.Body
+				case "http-response":
+					resp, ok := src.Value.(*http.Response)
+					if !ok {
+						return evaldo.MakeBuiltinError(ps, "http-response does not wrap an http.Response", "unzip\\single")
+					}
+					r = resp.Body
 				default:
 					return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType, env.NativeType}, "unzip\\single")
 				}
