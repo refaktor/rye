@@ -5,10 +5,12 @@ package baseio
 import (
 	"archive/tar"
 	"archive/zip"
+	"bytes"
 	"compress/gzip"
 	"fmt"
 	"io"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -2138,6 +2140,54 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
+	// Opens the single file inside a .zip archive and returns a reader for it.
+	// Args:
+	// * source: uri representing the .zip file, or a reader/http-response native containing .zip data
+	// Returns:
+	// * native reader object for the archive's only file (fails if there is more than one)
+	// Tags: #archive #extract
+	"unzip\\single": {
+		Argsn: 1,
+		Doc:   "Opens the single file in a .zip archive and returns a reader for it. Fails if the archive contains more than one file.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch src := arg0.(type) {
+			case env.Uri:
+				srcPath := resolvePath(ps.WorkingPath, src.GetPath())
+				rc, err := openSingleZipEntry(srcPath)
+				if err != nil {
+					return evaldo.MakeBuiltinError(ps, err.Error(), "unzip\\single")
+				}
+				return *env.NewNative(ps.Idx, rc, "reader")
+			case env.Native:
+				kind := ps.Idx.GetWord(src.GetKind())
+				var r io.Reader
+				switch kind {
+				case "reader":
+					var ok bool
+					r, ok = src.Value.(io.Reader)
+					if !ok {
+						return evaldo.MakeBuiltinError(ps, "reader does not implement io.Reader", "unzip\\single")
+					}
+				case "https-response":
+					resp, ok := src.Value.(*http.Response)
+					if !ok {
+						return evaldo.MakeBuiltinError(ps, "https-response does not wrap an http.Response", "unzip\\single")
+					}
+					r = resp.Body
+				default:
+					return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType, env.NativeType}, "unzip\\single")
+				}
+				rc, err := openSingleZipReader(r)
+				if err != nil {
+					return evaldo.MakeBuiltinError(ps, err.Error(), "unzip\\single")
+				}
+				return *env.NewNative(ps.Idx, rc, "reader")
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType, env.NativeType}, "unzip\\single")
+			}
+		},
+	},
+
 	//
 	// ##### Find ##### "File finding functions using go-find library"
 	//
@@ -3205,6 +3255,87 @@ func extractZip(srcPath, dstPath string) error {
 		}
 	}
 	return nil
+}
+
+// openSingleZipEntry opens the single file contained in a .zip archive and
+// returns a reader for it. It fails if the archive contains zero files or more
+// than one file. Directories are ignored when counting files.
+func openSingleZipEntry(srcPath string) (io.ReadCloser, error) {
+	reader, err := zip.OpenReader(srcPath)
+	if err != nil {
+		return nil, err
+	}
+
+	theFile, err := singleZipFile(reader.File, fmt.Sprintf("%q", srcPath))
+	if err != nil {
+		reader.Close()
+		return nil, err
+	}
+
+	rc, err := theFile.Open()
+	if err != nil {
+		reader.Close()
+		return nil, err
+	}
+
+	// Wrap the entry reader so closing it also closes the underlying zip reader
+	// (which holds the open file handle).
+	return &singleZipReadCloser{ReadCloser: rc, zipReader: reader}, nil
+}
+
+// openSingleZipReader opens the single file contained in a .zip archive read
+// from an arbitrary io.Reader (e.g. an HTTP response body). The whole archive
+// is read into memory before extracting the single entry.
+func openSingleZipReader(r io.Reader) (io.ReadCloser, error) {
+	data, err := io.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+
+	zr, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
+	if err != nil {
+		return nil, err
+	}
+
+	theFile, err := singleZipFile(zr.File, "reader")
+	if err != nil {
+		return nil, err
+	}
+
+	return theFile.Open()
+}
+
+// singleZipFile returns the single non-directory file entry among files,
+// failing if there is not exactly one such entry.
+func singleZipFile(files []*zip.File, srcDesc string) (*zip.File, error) {
+	var theFile *zip.File
+	for _, file := range files {
+		if file.FileInfo().IsDir() {
+			continue
+		}
+		if theFile != nil {
+			return nil, fmt.Errorf("archive %s contains more than one file", srcDesc)
+		}
+		theFile = file
+	}
+	if theFile == nil {
+		return nil, fmt.Errorf("archive %s contains no files", srcDesc)
+	}
+	return theFile, nil
+}
+
+// singleZipReadCloser closes both the entry reader and the parent zip reader.
+type singleZipReadCloser struct {
+	io.ReadCloser
+	zipReader *zip.ReadCloser
+}
+
+func (s *singleZipReadCloser) Close() error {
+	err := s.ReadCloser.Close()
+	if cerr := s.zipReader.Close(); err == nil {
+		err = cerr
+	}
+	return err
 }
 
 // Helper function to find an executable in PATH
