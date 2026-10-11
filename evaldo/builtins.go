@@ -2021,6 +2021,56 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Evaluates each subblock in a block of subblocks independently.
+	//
+	// Unlike `do`, which treats a block as a flat sequence of expressions,
+	// `do\each` expects a block whose elements are themselves blocks, and
+	// evaluates each subblock one at a time. Each subblock runs in isolation
+	// (no value or comma state is shared between them), which is safer for
+	// generated code where subblock expressions should not be concatenated
+	// into a single flat run.
+	//
+	// Tests:
+	// equal { do\each { { 1 + 2 } { 3 + 4 } } } 7
+	// equal { do\each { { var 'x 10 , x + 1 } { x + 2 } } } 12
+	// Args:
+	// * blocks: Block of subblocks to evaluate
+	// Returns:
+	// * result of evaluating the last subblock
+	"do\\each": {
+		Argsn: 1,
+		Doc:   "Evaluates each subblock of a block of subblocks, one at a time, and returns the result of the last subblock.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg0.(type) {
+			case env.Block:
+				ser := ps.Ser
+				// Iterate over the elements of the outer block; each element is itself a block.
+				for i := 0; i < bloc.Series.Len(); i++ {
+					sub, ok := bloc.Series.Get(i).(env.Block)
+					if !ok {
+						ps.Ser = ser
+						return MakeBuiltinError(ps, "Each element of a block passed to do\\each must be a block", "do\\each")
+					}
+					ps.Ser = sub.Series
+					ps.BlockFile = sub.FileName
+					ps.BlockLine = sub.Line
+					Eval(ps)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "do\\each")
+					if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
+						ps.Ser = ser
+						return ps.Res
+					}
+					ps.Ser.Reset()
+				}
+				ps.Ser = ser
+				return ps.Res
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "do\\each")
+			}
+		},
+	},
+
 	// COLLECTION AND RETURNING  ... NOT DETERMINED IF WILL BE INCLUDED YET EXPERIMENTAL
 
 	"returns!": {
@@ -2303,23 +2353,23 @@ var builtins = map[string]*env.Builtin{
 	// Rye-itself//args?, Args?, Args\raw?, History? moved to builtins_baseio.go
 
 	// Tests:
-	// stdout { rye .Capture { .disarm .print } 1 / 0 } "Error: { message: division by zero  }\n"
-	// stdout { rye .Capture { .disarm .print } "ok" } ""
+	// stdout { rye .On-error { .disarm .print } 1 / 0 } "Error: { message: division by zero  }\n"
+	// stdout { rye .On-error { .disarm .print } "ok" } ""
 	// Args:
 	// * rye-itself: The rye native object (passed via dot-word dispatch)
-	// * block: Block of code to execute with the captured error injected when an error bubbles to top-level
+	// * block: Block of code to execute with the On-errord error injected when an error bubbles to top-level
 	// Returns:
 	// * The rye-itself native (so the chain continues cleanly)
-	"Rye-itself//Capture": {
+	"Rye-itself//On-error": {
 		Argsn: 2,
-		Doc:   "Registers a capture block that will be executed with the error injected if an unhandled error bubbles to the top of the program. The error value is injected as the first value (use .disarm, .print, etc.).",
+		Doc:   "Registers a On-error block that will be executed with the error injected if an unhandled error bubbles to the top of the program. The error value is injected as the first value (use .disarm, .print, etc.).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg1.(type) {
 			case env.Block:
 				ps.CaptureBlock = &bloc
 				return arg0
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "Rye-itself//Capture")
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "Rye-itself//On-error")
 			}
 		},
 	},

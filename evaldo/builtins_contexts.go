@@ -489,6 +489,19 @@ var builtins_contexts = map[string]*env.Builtin{
 		},
 	},
 
+	// Returns parent context of the current context.
+	"parent": { // **
+		Argsn: 0,
+		Doc:   "Returns parent context of the current context.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if ps.Ctx.Parent == nil {
+				return MakeBuiltinError(ps, "No parent context available.", "parent")
+			}
+			ps.Ctx.Parent.Preserve()
+			return ps.Ctx.Parent
+		},
+	},
+
 	// Tests:
 	// equal { var 'y 99 c: context { incr: fn\inside { } parent? { y:: inc y } } c/incr y } 100
 	"parent?": { // **

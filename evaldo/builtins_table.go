@@ -2821,7 +2821,7 @@ func DropColumns(ps *env.ProgramState, s env.Table, names []env.String) env.Obje
 	}
 	newSheet.Kind = s.Kind
 
-	return newSheet
+	return *newSheet
 }
 
 // Drop one or more columns from a table, returning a new table
