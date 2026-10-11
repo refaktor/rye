@@ -781,6 +781,62 @@ section "File Operations " "File system operations and file manipulation" {
 }
 
 section "HTTPs Operations " "Web requests and HTTP protocol functions" {
+	group "https-uri//Ext?"
+	"Gets the extension of the last path component of an HTTPS URL."
+	{
+		argsn 1
+		arg `url: uri representing the HTTPS URL`
+		returns `string containing the extension of the last path component`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "https-uri//Name?"
+	"Gets the last path component (filename) from an HTTPS URL."
+	{
+		argsn 1
+		arg `url: uri representing the HTTPS URL`
+		returns `string containing the last path component with extension`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "https-uri//Stem?"
+	"Gets the last path component (filename) without its extension from an HTTPS URL."
+	{
+		argsn 1
+		arg `url: uri representing the HTTPS URL`
+		returns `string containing the last path component without extension`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "https-uri//Dir?"
+	"Gets the directory portion of an HTTPS URL path (including the host)."
+	{
+		argsn 1
+		arg `url: uri representing the HTTPS URL`
+		returns `string containing the directory portion of the URL path (including host)`
+	}
+
+	{
+	}
+
+	{
+	}
+
 	group "https-uri//Open"
 	"Opens a HTTPS GET request and returns a reader for the response body."
 	{

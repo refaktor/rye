@@ -9,6 +9,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -1044,6 +1045,88 @@ var Builtins_io = map[string]*env.Builtin{
 	//
 	// ##### HTTPs Operations ##### "Web requests and HTTP protocol functions"
 	//
+
+	// Tests:
+	// equal { Ext? uri "https://example.com/data/file.txt" } ".txt"
+	// Args:
+	// * url: uri representing the HTTPS URL
+	// Returns:
+	// * string containing the extension of the last path component
+	"https-uri//Ext?": {
+		Argsn: 1,
+		Doc:   "Gets the extension of the last path component of an HTTPS URL.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.Uri:
+				ext := path.Ext(s.Path)
+				return *env.NewString(ext)
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType}, "https-uri//Ext?")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { Name? uri "https://example.com/data/file.txt" } "file.txt"
+	// Args:
+	// * url: uri representing the HTTPS URL
+	// Returns:
+	// * string containing the last path component with extension
+	"https-uri//Name?": {
+		Argsn: 1,
+		Doc:   "Gets the last path component (filename) from an HTTPS URL.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.Uri:
+				name := path.Base(s.Path)
+				return *env.NewString(name)
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType}, "https-uri//Name?")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { Stem? uri "https://example.com/data/file.txt" } "file"
+	// Args:
+	// * url: uri representing the HTTPS URL
+	// Returns:
+	// * string containing the last path component without extension
+	"https-uri//Stem?": {
+		Argsn: 1,
+		Doc:   "Gets the last path component (filename) without its extension from an HTTPS URL.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.Uri:
+				base := path.Base(s.Path)
+				stem := strings.TrimSuffix(base, path.Ext(base))
+				return *env.NewString(stem)
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType}, "https-uri//Stem?")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { Dir? uri "https://example.com/data/file.txt" } "example.com/data"
+	// Args:
+	// * url: uri representing the HTTPS URL
+	// Returns:
+	// * string containing the directory portion of the URL path (including host)
+	"https-uri//Dir?": {
+		Argsn: 1,
+		Doc:   "Gets the directory portion of an HTTPS URL path (including the host).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.Uri:
+				dir := path.Dir(s.Path)
+				return *env.NewString(dir)
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType}, "https-uri//Dir?")
+			}
+		},
+	},
+
 	// Args:
 	// * url: uri representing the HTTPS URL to request
 	// Returns:
@@ -1623,26 +1706,31 @@ var Builtins_io = map[string]*env.Builtin{
 
 			switch s := arg0.(type) {
 			case env.Native:
+				if ps.Idx.GetWord(s.Kind.Index) != "ftp-connection" {
+					return evaldo.MakeBuiltinError(ps, "Expected FTP connection.", "ftp-connection//Login")
+				}
 				username, ok := arg1.(env.String)
 				if !ok {
-					// TODO ARG ERROR
-					return nil
+					ps.FailureFlag = true
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "ftp-connection//Login")
 				}
 				pwd, ok := arg2.(env.String)
 				if !ok {
-					// TODO ARG ERROR
-					return nil
+					ps.FailureFlag = true
+					return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType}, "ftp-connection//Login")
 				}
-				err := s.Value.(*ftp.ServerConn).Login(username.Value, pwd.Value)
-				if err != nil {
-					// TODO
-					fmt.Println("Error logging in:", err)
-					return nil
+				conn, ok := s.Value.(*ftp.ServerConn)
+				if !ok {
+					return evaldo.MakeBuiltinError(ps, "Invalid FTP connection.", "ftp-connection//Login")
+				}
+				if err := conn.Login(username.Value, pwd.Value); err != nil {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Error logging in to FTP server: "+err.Error(), "ftp-connection//Login")
 				}
 				return s
 			default:
 				ps.FailureFlag = true
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType, env.StringType}, "ftp-connection//Login")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "ftp-connection//Login")
 			}
 		},
 	},
