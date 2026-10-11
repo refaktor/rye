@@ -3206,8 +3206,8 @@ section "Collections " "" {
 	{
 	}
 
-	group "append\\many!"
-	"Appends all values from a block to a collection (block, list or string) in-place and returns the modified collection."
+	group "append\\each!"
+	"Appends each value from a block to a collection (block, list or string) in-place and returns the modified collection."
 	{
 		argsn 2
 		argtypes {
@@ -3216,14 +3216,14 @@ section "Collections " "" {
 		}
 		arg `values: Block of values to append`
 		arg `word: Word referring to a block, list or string to modify`
-		returns `the modified collection with all values from the block appended`
+		returns `the modified collection with each value from the block appended`
 	}
 
 	{
-		equal { var 'x ref { 1 2 3 } append\many! { 4 5 6 } 'x , x } { 1 2 3 4 5 6 }
-		equal { var 'x ref { 1 2 } append\many! { 3 4 5 6 } 'x , x } { 1 2 3 4 5 6 }
-		equal { var 's "hello" append\many! { " " "world" "!" } 's , s } "hello world!"
-		equal { var 'l ref list { 10 20 } append\many! { 30 40 } 'l , l } list { 10 20 30 40 }
+		equal { var 'x ref { 1 2 3 } append\each! { 4 5 6 } 'x , x } { 1 2 3 4 5 6 }
+		equal { var 'x ref { 1 2 } append\each! { 3 4 5 6 } 'x , x } { 1 2 3 4 5 6 }
+		equal { var 's "hello" append\each! { " " "world" "!" } 's , s } "hello world!"
+		equal { var 'l ref list { 10 20 } append\each! { 30 40 } 'l , l } list { 10 20 30 40 }
 	}
 
 	{
@@ -6201,6 +6201,27 @@ section "Other " "..." {
 		equal  { do { 12 * 23 | + 34 } } 310
 		equal  { do { 12 * 23 :a + 34 } } 310
 		equal  { do { 12 * 23 :a a + 34 } } 310
+	}
+
+	{
+	}
+
+	group "do\\each"
+	"Evaluates each subblock of a block of subblocks, one at a time, and returns the result of the last subblock."
+	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ Block ]
+		}
+		arg `blocks: Block of subblocks to evaluate`
+		returns `result of evaluating the last subblock`
+	}
+
+	{
+		equal  { do\each { { 1 + 2 } { 3 + 4 } } } 7
+		equal  { do\each { { var 'x 10 , x + 1 } { x + 2 } } } 12
+		error  { do\each { 5 } }
 	}
 
 	{

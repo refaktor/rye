@@ -2055,14 +2055,14 @@ var Builtins_os = map[string]*env.Builtin{
 
 	// Creates a .zip archive from a directory or file.
 	// Args:
-	// * source: uri representing the file or directory to archive
+	// * source: uri representing the file or directory to archive, or a block of uris/strings to archive together
 	// * destination: uri representing the output .zip file
 	// Returns:
 	// * destination uri if successful
 	// Tags: #archive #compress
 	"zip": {
 		Argsn: 2,
-		Doc:   "Creates a .zip archive from a file or directory.",
+		Doc:   "Creates a .zip archive from a file or directory, or from a block of files/directories.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch src := arg0.(type) {
 			case env.Uri:
@@ -2070,7 +2070,7 @@ var Builtins_os = map[string]*env.Builtin{
 				case env.Uri:
 					srcPath := resolvePath(ps.WorkingPath, src.GetPath())
 					dstPath := resolvePath(ps.WorkingPath, dst.GetPath())
-					err := createZip(srcPath, dstPath)
+					err := createZipFromPaths([]string{srcPath}, dstPath)
 					if err != nil {
 						return evaldo.MakeBuiltinError(ps, "Error creating zip: "+err.Error(), "zip")
 					}
@@ -2078,8 +2078,31 @@ var Builtins_os = map[string]*env.Builtin{
 				default:
 					return evaldo.MakeArgError(ps, 2, []env.Type{env.UriType}, "zip")
 				}
+			case env.Block:
+				switch dst := arg1.(type) {
+				case env.Uri:
+					dstPath := resolvePath(ps.WorkingPath, dst.GetPath())
+					srcPaths := make([]string, 0, src.Series.Len())
+					for i := 0; i < src.Series.Len(); i++ {
+						item := src.Series.Get(i)
+						switch p := item.(type) {
+						case env.Uri:
+							srcPaths = append(srcPaths, resolvePath(ps.WorkingPath, p.GetPath()))
+						case env.String:
+							srcPaths = append(srcPaths, resolvePath(ps.WorkingPath, p.Value))
+						default:
+							return evaldo.MakeBuiltinError(ps, "Block must contain only uris or strings", "zip")
+						}
+					}
+					if err := createZipFromPaths(srcPaths, dstPath); err != nil {
+						return evaldo.MakeBuiltinError(ps, "Error creating zip: "+err.Error(), "zip")
+					}
+					return arg1
+				default:
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.UriType}, "zip")
+				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType}, "zip")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType, env.BlockType}, "zip")
 			}
 		},
 	},
@@ -3046,8 +3069,10 @@ func extractTarGz(srcPath, dstPath string) error {
 	return nil
 }
 
-// createZip creates a .zip archive from the source path
-func createZip(srcPath, dstPath string) error {
+// createZipFromPaths creates a .zip archive from the given source paths.
+// Each source may be a file or a directory. When a source is a directory, its
+// contents are stored under a top-level entry named after the directory.
+func createZipFromPaths(srcPaths []string, dstPath string) error {
 	outFile, err := os.Create(dstPath)
 	if err != nil {
 		return err
@@ -3057,6 +3082,21 @@ func createZip(srcPath, dstPath string) error {
 	zipWriter := zip.NewWriter(outFile)
 	defer zipWriter.Close()
 
+	for _, srcPath := range srcPaths {
+		if err := zipAddPath(zipWriter, srcPath); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// createZip creates a .zip archive from a single source path
+func createZip(srcPath, dstPath string) error {
+	return createZipFromPaths([]string{srcPath}, dstPath)
+}
+
+// zipAddPath walks a single source path and adds its entries to the zip writer.
+func zipAddPath(zipWriter *zip.Writer, srcPath string) error {
 	srcInfo, err := os.Stat(srcPath)
 	if err != nil {
 		return err

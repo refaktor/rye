@@ -3498,25 +3498,34 @@ var builtins_collection = map[string]*env.Builtin{
 		},
 	},
 
+	// Appends each value in a block to a collection in place.
+	//
+	// Like `append!`, but takes a block of values and appends each of them, one
+	// at a time, to the target collection. The target is specified either as a
+	// word referring to a mutable collection (block, list or string) or as a
+	// mutable block value (a `ref` block) passed directly, in which case the
+	// block is modified in place and returned.
+	//
 	// Tests:
-	// equal { var 'x ref { 1 2 3 } append\many! { 4 5 6 } 'x , x } { 1 2 3 4 5 6 }
-	// equal { var 'x ref { 1 2 } append\many! { 3 4 5 6 } 'x , x } { 1 2 3 4 5 6 }
-	// equal { var 's "hello" append\many! { " " "world" "!" } 's , s } "hello world!"
-	// equal { var 'l ref list { 10 20 } append\many! { 30 40 } 'l , l } list { 10 20 30 40 }
+	// equal { var 'x ref { 1 2 3 } append\each! { 4 5 6 } 'x , x } { 1 2 3 4 5 6 }
+	// equal { var 'x ref { 1 2 } append\each! { 3 4 5 6 } 'x , x } { 1 2 3 4 5 6 }
+	// equal { var 's "hello" append\each! { " " "world" "!" } 's , s } "hello world!"
+	// equal { var 'l ref list { 10 20 } append\each! { 30 40 } 'l , l } list { 10 20 30 40 }
+	// equal { b: ref { 1 2 } append\each! { 3 4 } b } { 1 2 3 4 }
 	// Args:
 	// * values: Block of values to append
-	// * word: Word referring to a block, list or string to modify
+	// * word: Word referring to a block, list or string to modify (or a mutable block value)
 	// Returns:
-	// * the modified collection with all values from the block appended
-	"append\\many!": { // **
+	// * the modified collection with each value from the block appended
+	"append\\each!": { // **
 		Argsn: 2,
-		Doc:   "Appends all values from a block to a collection (block, list or string) in-place and returns the modified collection.",
+		Doc:   "Appends each value from a block to a collection (block, list or string) in-place and returns the modified collection.",
 		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Validate that first argument is a block
 			valuesBlock, ok := arg0.(env.Block)
 			if !ok {
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "append\\many")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "append\\each")
 			}
 
 			switch wrd := arg1.(type) {
@@ -3539,7 +3548,7 @@ var builtins_collection = map[string]*env.Builtin{
 							case env.Decimal:
 								result.WriteString(strconv.FormatFloat(elem.Value, 'f', -1, 64))
 							default:
-								return MakeBuiltinError(ps, "Block element must be String, Integer or Decimal for string append", "append\\many")
+								return MakeBuiltinError(ps, "Block element must be String, Integer or Decimal for string append", "append\\each")
 							}
 						}
 
@@ -3550,7 +3559,7 @@ var builtins_collection = map[string]*env.Builtin{
 						}
 						return newval
 					case env.Block: // TODO
-						return MakeBuiltinError(ps, "Value of word is not a ref of a Block", "append\\many")
+						return MakeBuiltinError(ps, "Value of word is not a ref of a Block", "append\\each")
 					case *env.Block:
 						s := &oldval.Series
 						oldval.Series = *s.AppendMul(valuesBlock.Series.GetAll())
@@ -3560,7 +3569,7 @@ var builtins_collection = map[string]*env.Builtin{
 						}
 						return oldval
 					case env.List: // TODO
-						return MakeBuiltinError(ps, "Value of word is not a ref of a List", "append\\many")
+						return MakeBuiltinError(ps, "Value of word is not a ref of a List", "append\\each")
 					case *env.List:
 						dataSlice := make([]any, 0)
 						// Add existing data
@@ -3583,23 +3592,16 @@ var builtins_collection = map[string]*env.Builtin{
 						}
 						return finalList
 					default:
-						return MakeBuiltinError(ps, "Type of word value is not String, Block or List", "append\\many")
+						return MakeBuiltinError(ps, "Type of word value is not String, Block or List", "append\\each")
 					}
 				}
-				return MakeBuiltinError(ps, "Word not found.", "append\\many")
+				return MakeBuiltinError(ps, "Word not found.", "append\\each")
 			case *env.Block:
-				dataSlice := make([]env.Object, 0)
-				// Add existing values
-				for _, v1 := range wrd.Series.S {
-					dataSlice = append(dataSlice, env.ToRyeValue(v1))
-				}
-				// Add new values from the valuesBlock
-				for i := 0; i < valuesBlock.Series.Len(); i++ {
-					dataSlice = append(dataSlice, valuesBlock.Series.Get(i))
-				}
-				return *env.NewBlock(*env.NewTSeries(dataSlice))
+				s := &wrd.Series
+				wrd.Series = *s.AppendMul(valuesBlock.Series.GetAll())
+				return wrd
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.WordType, env.BlockType}, "append\\many")
+				return MakeArgError(ps, 2, []env.Type{env.WordType, env.BlockType}, "append\\each")
 			}
 		},
 	},
