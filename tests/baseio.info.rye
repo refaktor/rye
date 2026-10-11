@@ -1059,6 +1059,52 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	{
 	}
 
+	group "http-request//Header!"
+	"Sets a header on a HTTP request."
+	{
+		argsn 3
+		arg `request: native http-request object`
+		arg `name: word representing the header name`
+		arg `value: string containing the header value`
+		returns `the request object if successful`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "http-request//Basic-auth!"
+	"Sets Basic Authentication on a HTTP request."
+	{
+		argsn 3
+		arg `request: native http-request object`
+		arg `username: string containing the username`
+		arg `password: string containing the password`
+		returns `the request object if successful`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "http-request//Call"
+	"Executes a HTTP request and returns the response object. Always returns the response regardless of status code (200, 404, 500, etc.) - use Status? to check the code."
+	{
+		argsn 1
+		arg `request: native http-request object`
+		returns `native http-response object (always returns response regardless of status code)`
+	}
+
+	{
+	}
+
+	{
+	}
+
 	group "https-response//Reader"
 	"Gets a reader for the HTTPS response body that can be used with io.Copy."
 	{
@@ -1078,6 +1124,34 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	{
 		argsn 1
 		arg `response: native https-response object`
+		returns `string containing the response body`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "http-response//Reader"
+	"Gets a reader for the HTTP response body that can be used with io.Copy."
+	{
+		argsn 1
+		arg `response: native http-response object`
+		returns `native reader object for the response body`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "http-response//Read-body"
+	"Reads the body of a HTTP response as a string."
+	{
+		argsn 1
+		arg `response: native http-response object`
 		returns `string containing the response body`
 	}
 
