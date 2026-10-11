@@ -10,6 +10,7 @@
 
 **For comprehensive documentation, tutorials, and examples, visit [ryelang.org](https://ryelang.org/)**
 
+
 ## What is Rye?
 
 Rye is a high-level, dynamic programming language inspired by Rebol, Factor, Linux shells, and Go. It features a Go-based interpreter and interactive console, making it an excellent scripting companion for Go programs. Rye can also be embedded into Go applications as a scripting or configuration language.
@@ -170,7 +171,6 @@ Thanks to @kseistrup for Arch package and @stefanb for Homebrew.
 ## Extensions and Related Projects
 
 - **[Rye-fyne](https://github.com/refaktor/rye-fyne)** - GUI toolkit binding
-- **[Rye-gio](https://github.com/refaktor/rye-gio)** - Gioui toolkit binding (WIP)
 - **[Rye-ebitengine](https://github.com/refaktor/rye-ebitengine)** - 2D game engine binding (WIP)
 - **[ryegen](https://github.com/refaktor/ryegen)** - Binding generation toolkit (WIP)
 
