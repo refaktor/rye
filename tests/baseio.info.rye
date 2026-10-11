@@ -881,6 +881,76 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	{
 	}
 
+	group "http-uri//Ext?"
+	"Gets the extension of the last path component of an HTTP URL."
+	{
+		argsn 1
+		arg `url: uri representing the HTTP URL`
+		returns `string containing the extension of the last path component`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "http-uri//Name?"
+	"Gets the last path component (filename) from an HTTP URL."
+	{
+		argsn 1
+		arg `url: uri representing the HTTP URL`
+		returns `string containing the last path component with extension`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "http-uri//Stem?"
+	"Gets the last path component (filename) without its extension from an HTTP URL."
+	{
+		argsn 1
+		arg `url: uri representing the HTTP URL`
+		returns `string containing the last path component without extension`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "http-uri//Dir?"
+	"Gets the directory portion of an HTTP URL path (including the host)."
+	{
+		argsn 1
+		arg `url: uri representing the HTTP URL`
+		returns `string containing the directory portion of the URL path (including host)`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "http-uri//Open"
+	"Opens a HTTP GET request and returns a reader for the response body."
+	{
+		argsn 1
+		arg `url: uri representing the HTTP URL to request`
+		returns `native reader object for the response body`
+	}
+
+	{
+	}
+
+	{
+	}
+
 	group "http-uri//Get"
 	"Makes a HTTP GET request and returns the response body as a string."
 	{
@@ -903,6 +973,22 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 		arg `data: string containing the request body`
 		arg `content-type: word specifying the content type (e.g., 'json', 'text')`
 		returns `string containing the response body`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "http-uri//Request"
+	"Creates a new HTTP request object."
+	{
+		argsn 3
+		arg `url: uri representing the HTTP URL to request`
+		arg `method: word specifying the HTTP method (e.g., 'GET', 'POST', 'PUT', 'DELETE')`
+		arg `data: string containing the request body`
+		returns `native http-request object`
 	}
 
 	{
