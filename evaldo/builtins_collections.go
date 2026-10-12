@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -2268,8 +2269,10 @@ var builtins_collection = map[string]*env.Builtin{
 					return *env.NewUri(ps.Idx, s1.Scheme, s1.Path+s2.Value)
 				case env.Integer:
 					return *env.NewUri(ps.Idx, s1.Scheme, s1.Path+strconv.Itoa(int(s2.Value)))
+				case env.Uri:
+					return *env.NewUri(ps.Idx, s1.Scheme, filepath.Join(s1.Path, s2.Path))
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.StringType, env.IntegerType}, "concat")
+					return MakeArgError(ps, 2, []env.Type{env.StringType, env.IntegerType, env.UriType}, "concat")
 				}
 			case env.Block:
 				switch b2 := arg1.(type) {
@@ -2296,6 +2299,7 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { { 1 2 } ++ { 3 4 } } { 1 2 3 4 }
 	// equal { dict { "a" 1 } | ++ { "b" 2 } } dict { "a" 1 "b" 2 }
 	// equal { dict { "a" 1 } | ++ dict { "b" 2 } } dict { "a" 1 "b" 2 }
+	// equal { ( file "a/b" ) ++ ( file "c/d" ) |kind? } 'file-uri
 	// Args:
 	// * value1: First value (string, block, dict, etc.)
 	// * value2: Second value to join
@@ -2353,6 +2357,8 @@ var builtins_collection = map[string]*env.Builtin{
 					return *env.NewUri(ps.Idx, s1.Scheme, s1.Path+s2.Value)
 				case env.Integer:
 					return *env.NewUri(ps.Idx, s1.Scheme, s1.Path+strconv.Itoa(int(s2.Value)))
+				case env.Uri:
+					return *env.NewUri(ps.Idx, s1.Scheme, filepath.Join(s1.Path, s2.Path))
 				case env.Block: // -- TODO turn tagwords and valvar sb strings.Builderues to uri encoded values , turn files into paths ... think more about it
 					var str strings.Builder
 					sepa := ""
@@ -2385,7 +2391,7 @@ var builtins_collection = map[string]*env.Builtin{
 					}
 					return *env.NewUri(ps.Idx, s1.Scheme, s1.Path+str.String())
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.StringType, env.IntegerType, env.BlockType}, "_++")
+					return MakeArgError(ps, 2, []env.Type{env.StringType, env.IntegerType, env.UriType, env.BlockType}, "_++")
 				}
 			case env.Block:
 				switch b2 := arg1.(type) {
