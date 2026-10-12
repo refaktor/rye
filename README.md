@@ -1,7 +1,6 @@
 # Rye language 🌾
 
 [![Build and Test](https://github.com/refaktor/rye/actions/workflows/build.yml/badge.svg)](https://github.com/refaktor/rye/actions/workflows/build.yml)
-[![golangci-lint](https://github.com/refaktor/rye/actions/workflows/golangci-lint.yml/badge.svg)](https://github.com/refaktor/rye/actions/workflows/golangci-lint.yml)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/refaktor/rye/badge)](https://securityscorecards.dev/viewer/?uri=github.com/refaktor/rye)
 [![Go Reference](https://pkg.go.dev/badge/github.com/refaktor/rye.svg)](https://pkg.go.dev/github.com/refaktor/rye)
 [![Go Report Card](https://goreportcard.com/badge/github.com/refaktor/rye)](https://goreportcard.com/report/github.com/refaktor/rye)
@@ -9,6 +8,7 @@
 [![Homebrew](https://img.shields.io/homebrew/v/ryelang.svg?style=flat)](https://formulae.brew.sh/formula/ryelang)
 
 **For comprehensive documentation, tutorials, and examples, visit [ryelang.org](https://ryelang.org/)**
+
 
 ## What is Rye?
 
@@ -170,7 +170,6 @@ Thanks to @kseistrup for Arch package and @stefanb for Homebrew.
 ## Extensions and Related Projects
 
 - **[Rye-fyne](https://github.com/refaktor/rye-fyne)** - GUI toolkit binding
-- **[Rye-gio](https://github.com/refaktor/rye-gio)** - Gioui toolkit binding (WIP)
 - **[Rye-ebitengine](https://github.com/refaktor/rye-ebitengine)** - 2D game engine binding (WIP)
 - **[ryegen](https://github.com/refaktor/ryegen)** - Binding generation toolkit (WIP)
 
