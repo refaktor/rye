@@ -27,6 +27,17 @@ func MakeError(env1 *env.ProgramState, msg string) *env.Error {
 	return err
 }
 
+// AsError returns ps.Res if it's already an *env.Error, otherwise wraps it into a
+// new error. This guarantees a proper Rye error object is always propagated when
+// an error/failure flag is set, instead of a bare non-error value (e.g. Integer 500).
+// Used by block-evaluating builtins that return ps.Res on error.
+func AsError(ps *env.ProgramState) env.Object {
+	if err, ok := ps.Res.(*env.Error); ok {
+		return err
+	}
+	return env.NewError(ps.Res.Inspect(*ps.Idx))
+}
+
 func MakeBuiltinError(env1 *env.ProgramState, msg string, fn string) *env.Error {
 	env1.FailureFlag = true
 	err := env.NewError("`" + fn + "`: " + msg)
@@ -2482,10 +2493,10 @@ var builtins = map[string]*env.Builtin{
 
 				// Check if evaluation produced an error
 				if ps.ErrorFlag {
-					return ps.Res
+					return AsError(ps)
 				}
 				if ps.FailureFlag {
-					return ps.Res
+					return AsError(ps)
 				}
 
 				result := ps.Res
