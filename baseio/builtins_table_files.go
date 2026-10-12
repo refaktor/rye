@@ -41,7 +41,7 @@ var Builtins_table_files = map[string]*env.Builtin{
 				f, err := os.Open(file.GetPath())
 				if err != nil {
 					// log.Fatal("Unable to read input file "+filePath, err)
-					return evaldo.MakeBuiltinError(ps, "Unable to read input file:"+err.Error(), "Load\\csv")
+					return evaldo.MakeBuiltinError(ps, "Unable to read input file '" + file.GetPath() + "': " + err.Error(), "Load\\csv")
 				}
 				defer f.Close()
 
@@ -49,10 +49,10 @@ var Builtins_table_files = map[string]*env.Builtin{
 				rows, err := csvReader.ReadAll()
 				if err != nil {
 					// log.Fatal("Unable to parse file as CSV for "+filePath, err)
-					return evaldo.MakeBuiltinError(ps, "Unable to parse file as CSV: "+err.Error(), "Load\\csv")
+					return evaldo.MakeBuiltinError(ps, "Unable to parse file '" + file.GetPath() + "' as CSV: " + err.Error(), "Load\\csv")
 				}
 				if len(rows) == 0 {
-					return evaldo.MakeBuiltinError(ps, "File is empty", "Load\\csv")
+					return evaldo.MakeBuiltinError(ps, "File '" + file.GetPath() + "' is empty", "Load\\csv")
 				}
 				spr := env.NewTable(rows[0])
 				//				for i, row := range rows {
@@ -100,7 +100,7 @@ var Builtins_table_files = map[string]*env.Builtin{
 					f, err := os.Open(file.GetPath())
 					if err != nil {
 						// log.Fatal("Unable to read input file "+filePath, err)
-						return evaldo.MakeBuiltinError(ps, "Unable to read input file:"+err.Error(), "Load\\csv")
+						return evaldo.MakeBuiltinError(ps, "Unable to read input file '" + file.GetPath() + "': " + err.Error(), "Load\\csv")
 					}
 					defer f.Close()
 
@@ -112,10 +112,10 @@ var Builtins_table_files = map[string]*env.Builtin{
 					rows, err := csvReader.ReadAll()
 					if err != nil {
 						// log.Fatal("Unable to parse file as CSV for "+filePath, err)
-						return evaldo.MakeBuiltinError(ps, "Unable to parse file as CSV: "+err.Error(), "Load\\csv")
+						return evaldo.MakeBuiltinError(ps, "Unable to parse file '" + file.GetPath() + "' as CSV: " + err.Error(), "Load\\csv")
 					}
 					if len(rows) == 0 {
-						return evaldo.MakeBuiltinError(ps, "File is empty", "Load\\csv")
+						return evaldo.MakeBuiltinError(ps, "File '" + file.GetPath() + "' is empty", "Load\\csv")
 					}
 					spr := env.NewTable(rows[0])
 					//				for i, row := range rows {
@@ -166,7 +166,7 @@ var Builtins_table_files = map[string]*env.Builtin{
 				f, err := os.Open(file.GetPath())
 				if err != nil {
 					// log.Fatal("Unable to read input file "+filePath, err)
-					return evaldo.MakeBuiltinError(ps, "Unable to read input file:"+err.Error(), "Load\\csv")
+					return evaldo.MakeBuiltinError(ps, "Unable to read input file '" + file.GetPath() + "': " + err.Error(), "Load\\csv")
 				}
 				defer f.Close()
 
@@ -175,10 +175,10 @@ var Builtins_table_files = map[string]*env.Builtin{
 				rows, err := csvReader.ReadAll()
 				if err != nil {
 					// log.Fatal("Unable to parse file as CSV for "+filePath, err)
-					return evaldo.MakeBuiltinError(ps, "Unable to parse file as CSV: "+err.Error(), "Load\\csv")
+					return evaldo.MakeBuiltinError(ps, "Unable to parse file '" + file.GetPath() + "' as CSV: " + err.Error(), "Load\\csv")
 				}
 				if len(rows) == 0 {
-					return evaldo.MakeBuiltinError(ps, "File is empty", "Load\\csv")
+					return evaldo.MakeBuiltinError(ps, "File '" + file.GetPath() + "' is empty", "Load\\csv")
 				}
 				spr := env.NewTable(rows[0])
 				//				for i, row := range rows {
@@ -380,33 +380,33 @@ var Builtins_table_files = map[string]*env.Builtin{
 			case env.Uri:
 				f, err := excelize.OpenFile(file.GetPath())
 				if err != nil {
-					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Unable to open file: %s", err), "Load\\xlsx")
+					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Unable to open file '%s': %s", file.GetPath(), err), "Load\\xlsx")
 				}
 				defer f.Close()
 
 				sheetMap := f.GetSheetMap()
 				if len(sheetMap) == 0 {
-					return evaldo.MakeBuiltinError(ps, "No sheets found in file", "Load\\xlsx")
+					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("No sheets found in file '%s'", file.GetPath()), "Load\\xlsx")
 				}
 				// sheets map index is 1-based
 				sheetName := sheetMap[1]
 				rows, err := f.Rows(sheetName)
 				if err != nil {
-					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Unable to get rows from sheet: %s", err), "Load\\xlsx")
+					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Unable to get rows from sheet in '%s': %s", file.GetPath(), err), "Load\\xlsx")
 				}
 				rows.Next()
 				header, err := rows.Columns()
 				if err != nil {
-					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Unable to get columns from sheet: %s", err), "Load\\xlsx")
+					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Unable to get columns from sheet in '%s': %s", file.GetPath(), err), "Load\\xlsx")
 				}
 				if len(header) == 0 {
-					return evaldo.MakeBuiltinError(ps, "Header row is empty", "Load\\xlsx")
+					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Header row is empty in '%s'", file.GetPath()), "Load\\xlsx")
 				}
 				spr := env.NewTable(header)
 				for rows.Next() {
 					row, err := rows.Columns()
 					if err != nil {
-						return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Unable to get row: %s", err), "Load\\xlsx")
+						return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Unable to get row in '%s': %s", file.GetPath(), err), "Load\\xlsx")
 					}
 					anyRow := make([]any, len(row))
 					for i, v := range row {
