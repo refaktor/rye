@@ -398,11 +398,11 @@ var Builtins_table = map[string]*env.Builtin{
 	//  sheet: table { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" }
 	//  sheet .where-match 'name "En.+"
 	// Tests:
-	//  equal { table { 'a } { "1" "2" "a3" "2b" } |where-match 'a regexp "^[0-9]$" |length? } 2
+	//  equal { table { 'a } { "1" "2" "a3" "2b" } |where-match 'a regex "^[0-9]$" |length? } 2
 	// Args:
 	// * sheet
 	// * column
-	// * regexp
+	// * regex
 	// Tags: #filter #tables
 	"where-match": {
 		Argsn: 3,
@@ -1417,12 +1417,12 @@ var Builtins_table = map[string]*env.Builtin{
 	//  sheet .gen-column 'job_title { "Jantior" "Librarian" "Line Cook" } ;
 	// Example: Generate column using regex replacement
 	//  sheet: table { "email" } { "john@example.com" "jane@test.org" "bob@company.net" }
-	//  sheet .gen-column 'domain 'email { regexp "@(.+)$" "$1" }
+	//  sheet .gen-column 'domain 'email { regex "@(.+)$" "$1" }
 	// Tests:
 	//  equal { table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
 	//  |gen-column 'job { } { "Cook" } |column? "job" } { "Cook" "Cook" "Cook" }
 	//  equal { table { "email" } { "john@example.com" "jane@test.org" }
-	//  |gen-column 'domain 'email [ regexp ".*@(.+)$" "$1" ] |column? "domain" } { "example.com" "test.org" }
+	//  |gen-column 'domain 'email [ regex ".*@(.+)$" "$1" ] |column? "domain" } { "example.com" "test.org" }
 	"gen-column": {
 		Argsn: 4,
 		Doc:   "Adds a new column to table. Changes in-place and returns the new table.",

@@ -575,19 +575,19 @@ client .Disconnect
 
 }
 }
-section "batteries/builtins_regexp.go" "" {
-section "Regexp " "Go like Regular expressions" {
-	group "regexp"
+section "batteries/builtins_regex.go" "" {
+section "Regex " "Go like Regular expressions" {
+	group "regex"
 	"Creates a compiled regular expression object from a pattern string."
 	{
 		argsn 1
 		arg `pattern: String containing a regular expression pattern`
-		returns `native regexp object or error if pattern is invalid`
+		returns `native regex object or error if pattern is invalid`
 	}
 
 	{
-		equal { regexp "[0-9]" |type? } 'native
-		equal { regexp "[0-9]" |kind? } 'regexp
+		equal { regex "[0-9]" |type? } 'native
+		equal { regex "[0-9]" |kind? } 'regex
 	}
 
 	{
@@ -598,126 +598,126 @@ section "Regexp " "Go like Regular expressions" {
 	{
 		argsn 1
 		arg `pattern: String containing a regular expression pattern`
-		returns `native regexp object or error if pattern is invalid`
+		returns `native regex object or error if pattern is invalid`
 	}
 
 	{
 		equal { re "[0-9]" |type? } 'native
-		equal { re "[0-9]" |kind? } 'regexp
+		equal { re "[0-9]" |kind? } 'regex
 	}
 
 	{
 	}
 
-	group "regexp//Is-match"
+	group "regex//Is-match"
 	"Tests if a string matches the regular expression pattern."
 	{
 		argsn 2
-		arg `regexp: Native regexp object`
+		arg `regex: Native regex object`
 		arg `input: String to test against the pattern`
 		returns `boolean true if the string matches the pattern, false otherwise`
 	}
 
 	{
-		equal { regexp "[0-9]" |Is-match "5" } true
-		equal { regexp "[0-9]" |Is-match "a" } false
+		equal { regex "[0-9]" |Is-match "5" } true
+		equal { regex "[0-9]" |Is-match "a" } false
 	}
 
 	{
 	}
 
-	group "regexp//Submatch?"
+	group "regex//Submatch?"
 	"Extracts the first captured group from a string using the regular expression."
 	{
 		argsn 2
-		arg `regexp: Regular expression with capturing groups`
+		arg `regex: Regular expression with capturing groups`
 		arg `input: String to search in`
 		returns `string containing the first captured group or error if no submatch found`
 	}
 
 	{
-		equal { regexp "x([0-9]+)y" |Submatch? "x123y" } "123"
+		equal { regex "x([0-9]+)y" |Submatch? "x123y" } "123"
 	}
 
 	{
 	}
 
-	group "regexp//Submatches?"
+	group "regex//Submatches?"
 	"Extracts all captured groups from the first match as a block of strings."
 	{
 		argsn 2
-		arg `regexp: Regular expression with capturing groups`
+		arg `regex: Regular expression with capturing groups`
 		arg `input: String to search in`
 		returns `block containing all captured groups from the first match or error if no match found`
 	}
 
 	{
-		equal { regexp "x([0-9]+)y" |Submatches? "x123y x234y" } { "123" }
+		equal { regex "x([0-9]+)y" |Submatches? "x123y x234y" } { "123" }
 	}
 
 	{
 	}
 
-	group "regexp//Submatches\\all?"
+	group "regex//Submatches\\all?"
 	"Extracts all captured groups from all matches as a nested block structure."
 	{
 		argsn 2
-		arg `regexp: Regular expression with capturing groups`
+		arg `regex: Regular expression with capturing groups`
 		arg `input: String to search in`
 		returns `block of blocks, each inner block containing the captured groups from one match`
 	}
 
 	{
-		equal { regexp "x([0-9]+)(y+)?" |Submatches\all? "x11yy x22" } { { "11" "yy" } { "22" "" } }
+		equal { regex "x([0-9]+)(y+)?" |Submatches\all? "x11yy x22" } { { "11" "yy" } { "22" "" } }
 	}
 
 	{
 	}
 
-	group "regexp//Find-all"
+	group "regex//Find-all"
 	"Finds all substrings matching the regular expression and returns them as a block."
 	{
 		argsn 2
-		arg `regexp: Regular expression pattern`
+		arg `regex: Regular expression pattern`
 		arg `input: String to search in`
 		returns `block containing all matching substrings or error if no matches found`
 	}
 
 	{
-		equal { regexp "[0-9]+" |Find-all "x123y x234y" } { "123" "234" }
+		equal { regex "[0-9]+" |Find-all "x123y x234y" } { "123" "234" }
 	}
 
 	{
 	}
 
-	group "regexp//Match?"
+	group "regex//Match?"
 	"Finds the first substring matching the regular expression."
 	{
 		argsn 2
-		arg `regexp: Regular expression pattern`
+		arg `regex: Regular expression pattern`
 		arg `input: String to search in`
 		returns `string containing the first match or empty string if no match found`
 	}
 
 	{
-		equal { regexp "[0-9]+c+" |Match? "aa33bb55cc" } "55cc"
+		equal { regex "[0-9]+c+" |Match? "aa33bb55cc" } "55cc"
 	}
 
 	{
 	}
 
-	group "regexp//Replace-all"
+	group "regex//Replace-all"
 	"Replaces all occurrences of the regular expression pattern with the specified replacement string."
 	{
 		argsn 3
-		arg `regexp: Regular expression pattern`
+		arg `regex: Regular expression pattern`
 		arg `input: String to modify`
 		arg `replacement: String to replace matches with`
 		returns `string with all matches replaced by the replacement string`
 	}
 
 	{
-		equal { regexp "[0-9]+" |Replace-all "x123y x234y" "XXX" } "xXXXy xXXXy"
+		equal { regex "[0-9]+" |Replace-all "x123y x234y" "XXX" } "xXXXy xXXXy"
 	}
 
 	{
@@ -1105,7 +1105,7 @@ section "Default" "" {
 	{
 	}
 
-	group "encode\\hex-string"
+	group "encode-to\\hex-string"
 	"Encodes a string to its hexadecimal representation."
 	{
 		argsn 1
@@ -1115,9 +1115,9 @@ section "Default" "" {
 	}
 
 	{
-		equal { "Hello World" |encode\hex-string } "48656c6c6f20576f726c64"
-		equal { "Hello World" |encode\hex-string |type? } 'string
-		equal { "" |encode\hex-string } ""
+		equal { "Hello World" |encode-to\hex-string } "48656c6c6f20576f726c64"
+		equal { "Hello World" |encode-to\hex-string |type? } 'string
+		equal { "" |encode-to\hex-string } ""
 	}
 
 	{
@@ -1318,7 +1318,7 @@ section "Default" "" {
 
 	{
 		equal { charmap\windows-1250 |Encoder |Encode "Hello" } "Hello"
-		equal { charmap\windows-1250 |Encoder |Encode "Plačilo" |encode\hex-string } "506c61e8696c6f"
+		equal { charmap\windows-1250 |Encoder |Encode "Plačilo" |encode-to\hex-string } "506c61e8696c6f"
 	}
 
 	{
@@ -1645,39 +1645,6 @@ db .Query { SELECT * FROM test where id = ?id }
 }
 section "batteries/builtins_crypto.go" "" {
 section "Basic Cryptographic Operations " "Hashing, encoding, and basic cryptographic functions" {
-	group "decode\\hex"
-	"Decodes a hexadecimal string to a bytes native value."
-	{
-		argsn 1
-		arg `hex-string: hexadecimal encoded string to decode`
-		returns `native bytes object containing the decoded data`
-	}
-
-	{
-		equal { cc crypto "48656c6c6f20776f726c64" |decode\hex |type? } 'native
-		equal { cc crypto "48656c6c6f20776f726c64" |decode\hex |kind? } 'bytes
-		equal { cc crypto "invalid" |decode\hex |disarm |type? } 'error
-	}
-
-	{
-	}
-
-	group "encode-to\\hex"
-	"Encodes a bytes native value to a hexadecimal string."
-	{
-		argsn 1
-		arg `bytes: native bytes object to encode`
-		returns `string containing the hexadecimal representation of the bytes`
-	}
-
-	{
-		equal { cc crypto "48656c6c6f20776f726c64" |decode\hex |encode-to\hex } "48656c6c6f20776f726c64"
-		equal { cc crypto "Hello world" |sha512 |decode\hex |encode-to\hex |type? } 'string
-	}
-
-	{
-	}
-
 	group "Ed25519-pub-key//To-string"
 	"Converts an Ed25519 public key to its hexadecimal string representation."
 	{

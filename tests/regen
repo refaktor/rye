@@ -26,7 +26,7 @@ baseio=(
 )
 batteries=(
   builtins_email.go builtins_mail.go builtins_smtpd.go builtins_mqtt.go
-  builtins_regexp.go builtins_json.go builtins_bson.go builtins_sxml.go
+  builtins_regex.go builtins_json.go builtins_bson.go builtins_sxml.go
   builtins_html.go builtins_conversion.go builtins_encoding.go
   builtins_sqlite.go builtins_psql.go builtins_mysql.go builtins_crypto.go
   builtins_bcrypt.go builtins_math.go builtins_match.go builtins_eyr.go

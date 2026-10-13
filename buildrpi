@@ -22,7 +22,7 @@ export CGO_ENABLED=1
 #   json             - JSON parsing/writing
 #   structures       - tables, vectors, maps, etc.
 #   conversion       - type conversions
-#   regexp           - regular expressions
+#   regex           - regular expressions
 #
 # Batteries EXCLUDED (not needed on RPi, saves ~15-20MB binary):
 #   b_norepl         - interactive console/REPL

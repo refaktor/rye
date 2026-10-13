@@ -7,19 +7,19 @@ import (
 	"github.com/refaktor/rye/evaldo"
 )
 
-var Builtins_regexp = map[string]*env.Builtin{
+var Builtins_regex = map[string]*env.Builtin{
 
 	//
-	// ##### Regexp #####  "Go like Regular expressions"
+	// ##### Regex #####  "Go like Regular expressions"
 	//
 	// Tests:
-	//  equal { regexp "[0-9]" |type? } 'native
-	//  equal { regexp "[0-9]" |kind? } 'regexp
+	//  equal { regex "[0-9]" |type? } 'native
+	//  equal { regex "[0-9]" |kind? } 'regex
 	// Args:
 	// * pattern: String containing a regular expression pattern
 	// Returns:
-	// * native regexp object or error if pattern is invalid
-	"regexp": {
+	// * native regex object or error if pattern is invalid
+	"regex": {
 		Argsn: 1,
 		Doc:   "Creates a compiled regular expression object from a pattern string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -29,21 +29,21 @@ var Builtins_regexp = map[string]*env.Builtin{
 				if err != nil {
 					return evaldo.MakeError(ps, err.Error())
 				}
-				return *env.NewNative(ps.Idx, val, "regexp")
+				return *env.NewNative(ps.Idx, val, "regex")
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType}, "regexp")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType}, "regex")
 			}
 		},
 	},
 
-	// short regexp constructor, mostly for console use like ls\ re "pr.?n.*"
+	// short regex constructor, mostly for console use like ls\ re "pr.?n.*"
 	// Tests:
 	//  equal { re "[0-9]" |type? } 'native
-	//  equal { re "[0-9]" |kind? } 'regexp
+	//  equal { re "[0-9]" |kind? } 'regex
 	// Args:
 	// * pattern: String containing a regular expression pattern
 	// Returns:
-	// * native regexp object or error if pattern is invalid
+	// * native regex object or error if pattern is invalid
 	"re": {
 		Argsn: 1,
 		Doc:   "Creates a compiled regular expression object from a pattern string.",
@@ -54,22 +54,22 @@ var Builtins_regexp = map[string]*env.Builtin{
 				if err != nil {
 					return evaldo.MakeError(ps, err.Error())
 				}
-				return *env.NewNative(ps.Idx, val, "regexp")
+				return *env.NewNative(ps.Idx, val, "regex")
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType}, "regexp")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType}, "regex")
 			}
 		},
 	},
 
 	// Tests:
-	//  equal { regexp "[0-9]" |Is-match "5" } true
-	//  equal { regexp "[0-9]" |Is-match "a" } false
+	//  equal { regex "[0-9]" |Is-match "5" } true
+	//  equal { regex "[0-9]" |Is-match "a" } false
 	// Args:
-	// * regexp: Native regexp object
+	// * regex: Native regex object
 	// * input: String to test against the pattern
 	// Returns:
 	// * boolean true if the string matches the pattern, false otherwise
-	"regexp//Is-match": {
+	"regex//Is-match": {
 		Argsn: 2,
 		Doc:   "Tests if a string matches the regular expression pattern.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -84,22 +84,22 @@ var Builtins_regexp = map[string]*env.Builtin{
 						return *env.NewBoolean(false)
 					}
 				default:
-					return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "regexp//Is-match")
+					return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "regex//Is-match")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "regexp//Is-match")
+				return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "regex//Is-match")
 			}
 		},
 	},
 
 	// Tests:
-	//  equal { regexp "x([0-9]+)y" |Submatch? "x123y" } "123"
+	//  equal { regex "x([0-9]+)y" |Submatch? "x123y" } "123"
 	// Args:
-	// * regexp: Regular expression with capturing groups
+	// * regex: Regular expression with capturing groups
 	// * input: String to search in
 	// Returns:
 	// * string containing the first captured group or error if no submatch found
-	"regexp//Submatch?": {
+	"regex//Submatch?": {
 		Argsn: 2,
 		Doc:   "Extracts the first captured group from a string using the regular expression.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -111,25 +111,25 @@ var Builtins_regexp = map[string]*env.Builtin{
 					if len(res) > 1 {
 						return *env.NewString(res[1])
 					} else {
-						return evaldo.MakeBuiltinError(ps, "No submatch.", "regexp//Submatch?")
+						return evaldo.MakeBuiltinError(ps, "No submatch.", "regex//Submatch?")
 					}
 				default:
-					return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "regexp//Submatch?")
+					return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "regex//Submatch?")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "regexp//Submatch?")
+				return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "regex//Submatch?")
 			}
 		},
 	},
 
 	// Tests:
-	//  equal { regexp "x([0-9]+)y" |Submatches? "x123y x234y" } { "123" }
+	//  equal { regex "x([0-9]+)y" |Submatches? "x123y x234y" } { "123" }
 	// Args:
-	// * regexp: Regular expression with capturing groups
+	// * regex: Regular expression with capturing groups
 	// * input: String to search in
 	// Returns:
 	// * block containing all captured groups from the first match or error if no match found
-	"regexp//Submatches?": {
+	"regex//Submatches?": {
 		Argsn: 2,
 		Doc:   "Extracts all captured groups from the first match as a block of strings.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -158,13 +158,13 @@ var Builtins_regexp = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//  equal { regexp "x([0-9]+)(y+)?" |Submatches\all? "x11yy x22" } { { "11" "yy" } { "22" "" } }
+	//  equal { regex "x([0-9]+)(y+)?" |Submatches\all? "x11yy x22" } { { "11" "yy" } { "22" "" } }
 	// Args:
-	// * regexp: Regular expression with capturing groups
+	// * regex: Regular expression with capturing groups
 	// * input: String to search in
 	// Returns:
 	// * block of blocks, each inner block containing the captured groups from one match
-	"regexp//Submatches\\all?": {
+	"regex//Submatches\\all?": {
 		Argsn: 2,
 		Doc:   "Extracts all captured groups from all matches as a nested block structure.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -197,13 +197,13 @@ var Builtins_regexp = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//  equal { regexp "[0-9]+" |Find-all "x123y x234y" } { "123" "234" }
+	//  equal { regex "[0-9]+" |Find-all "x123y x234y" } { "123" "234" }
 	// Args:
-	// * regexp: Regular expression pattern
+	// * regex: Regular expression pattern
 	// * input: String to search in
 	// Returns:
 	// * block containing all matching substrings or error if no matches found
-	"regexp//Find-all": {
+	"regex//Find-all": {
 		Argsn: 2,
 		Doc:   "Finds all substrings matching the regular expression and returns them as a block.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -230,13 +230,13 @@ var Builtins_regexp = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//	equal { regexp "[0-9]+c+" |Match? "aa33bb55cc" } "55cc"
+	//	equal { regex "[0-9]+c+" |Match? "aa33bb55cc" } "55cc"
 	// Args:
-	// * regexp: Regular expression pattern
+	// * regex: Regular expression pattern
 	// * input: String to search in
 	// Returns:
 	// * string containing the first match or empty string if no match found
-	"regexp//Match?": {
+	"regex//Match?": {
 		Argsn: 2,
 		Doc:   "Finds the first substring matching the regular expression.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -250,23 +250,23 @@ var Builtins_regexp = map[string]*env.Builtin{
 					}
 					return evaldo.MakeBuiltinError(ps, "No result", "Match?")
 				default:
-					return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "regexp//Match?")
+					return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "regex//Match?")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "regexp//Match?")
+				return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "regex//Match?")
 			}
 		},
 	},
 
 	// Tests:
-	//  equal { regexp "[0-9]+" |Replace-all "x123y x234y" "XXX" } "xXXXy xXXXy"
+	//  equal { regex "[0-9]+" |Replace-all "x123y x234y" "XXX" } "xXXXy xXXXy"
 	// Args:
-	// * regexp: Regular expression pattern
+	// * regex: Regular expression pattern
 	// * input: String to modify
 	// * replacement: String to replace matches with
 	// Returns:
 	// * string with all matches replaced by the replacement string
-	"regexp//Replace-all": {
+	"regex//Replace-all": {
 		Argsn: 3,
 		Doc:   "Replaces all occurrences of the regular expression pattern with the specified replacement string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -279,13 +279,13 @@ var Builtins_regexp = map[string]*env.Builtin{
 						res := re.Value.(*regexp.Regexp).ReplaceAllString(val.Value, replac.Value)
 						return *env.NewString(res)
 					default:
-						return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType}, "regexp//Replace-all")
+						return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType}, "regex//Replace-all")
 					}
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "regexp//Replace-all")
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "regex//Replace-all")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "regexp//Replace-all")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "regex//Replace-all")
 			}
 		},
 	},

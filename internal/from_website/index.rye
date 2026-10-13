@@ -8,7 +8,7 @@
 switch 'cow { dog { "woof" } cow { "mooo" } cat { "meow" } }
 ; returns mooo
 
-regexp "([0-9][a-z])" |Submatch? "-7--x3--0k-r--"
+regex "([0-9][a-z])" |Submatch? "-7--x3--0k-r--"
 ; returns 0k
 
 { "Anne" "Joan" "Adam" } |filter { .first = "A" }

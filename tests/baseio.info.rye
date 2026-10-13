@@ -778,9 +778,6 @@ section "File Operations " "File system operations and file manipulation" {
 	{
 	}
 
-}
-
-section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	group "https-uri//Ext?"
 	"Gets the extension of the last path component of an HTTPS URL."
 	{
@@ -790,6 +787,7 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	}
 
 	{
+		equal { Ext? uri "https://example.com/data/file.txt" } ".txt"
 	}
 
 	{
@@ -804,6 +802,7 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	}
 
 	{
+		equal { Name? uri "https://example.com/data/file.txt" } "file.txt"
 	}
 
 	{
@@ -818,6 +817,7 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	}
 
 	{
+		equal { Stem? uri "https://example.com/data/file.txt" } "file"
 	}
 
 	{
@@ -832,6 +832,7 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	}
 
 	{
+		equal { Dir? uri "https://example.com/data/file.txt" } "example.com/data"
 	}
 
 	{
@@ -890,6 +891,7 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	}
 
 	{
+		equal { Ext? uri "http://example.com/data/file.txt" } ".txt"
 	}
 
 	{
@@ -904,6 +906,7 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	}
 
 	{
+		equal { Name? uri "http://example.com/data/file.txt" } "file.txt"
 	}
 
 	{
@@ -918,6 +921,7 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	}
 
 	{
+		equal { Stem? uri "http://example.com/data/file.txt" } "file"
 	}
 
 	{
@@ -932,6 +936,7 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	}
 
 	{
+		equal { Dir? uri "http://example.com/data/file.txt" } "example.com/data"
 	}
 
 	{
@@ -1366,7 +1371,7 @@ section "Unix Domain Socket Operations " "Unix domain socket operations for IPC"
 }
 section "baseio/builtins_table_files.go" "" {
 section "Table files " "Load and save tables as CSV, TSV or XLSX files." {
-	group "file-uri//Load\\csv"
+	group "file-uri//Load\\csv__OLD"
 	"Loads a .csv file to a table datatype."
 	{
 		argsn 1
@@ -1388,7 +1393,7 @@ spr1 = spr2
 } true
 `	}
 
-	group "file-uri//Load\\csv\\"
+	group "file-uri//Load\\csv"
 	"Loads a .csv file to a table datatype."
 	{
 		argsn 2
@@ -1407,6 +1412,28 @@ spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
 spr1 .Save\csv* f
 spr2:: Load\csv f |autotype 1.0
 spr1 = spr2
+} true
+`	}
+
+	group "file-uri//Load\\csv\\ignore-bad"
+	"Loads a .csv file to a table datatype, parsing it line by line and skipping lines that can't be parsed as CSV."
+	{
+		argsn 2
+		arg `file-uri - location of csv file to load`
+		arg `separator - single character used as column separator`
+		arg `Tags: #table #loading #csv`
+	}
+
+	{
+	}
+
+	{
+`equal {
+cc os
+f:: mktmp ++ "/test.csv"
+f .Write "a;b;c\n1;1.1;a\nbad\"line\n2;2.2;b\n3;3.3;c\n"
+spr:: Load\csv\ignore-bad f ";"
+spr .length? 3
 } true
 `	}
 
@@ -2020,10 +2047,10 @@ cc os cwd?
 `	}
 
 	group "ls\\"
-	"Lists files or directories with absolute paths when possible. If argument is a file-uri, lists that directory (or returns failure if not a directory). Otherwise filters current directory: 'dirs' for directories only, 'files' for files only, a string for partial name matching, or a regexp to match names."
+	"Lists files or directories with absolute paths when possible. If argument is a file-uri, lists that directory (or returns failure if not a directory). Otherwise filters current directory: 'dirs' for directories only, 'files' for files only, a string for partial name matching, or a regex to match names."
 	{
 		argsn 1
-		arg `filter: file-uri to list directory, word 'dirs' or 'files' to filter by type, string for partial name matching, or regexp to match names`
+		arg `filter: file-uri to list directory, word 'dirs' or 'files' to filter by type, string for partial name matching, or regex to match names`
 		returns `block of uris representing filtered files or directories in the specified directory or current directory`
 	}
 
@@ -2063,10 +2090,10 @@ cc os cwd?
 `	}
 
 	group "ls\\dirs\\"
-	"Lists directories in the current directory with filtering. Use a string for partial name matching, or a regexp to match names."
+	"Lists directories in the current directory with filtering. Use a string for partial name matching, or a regex to match names."
 	{
 		argsn 1
-		arg `filter: string for partial name matching, or regexp to match names`
+		arg `filter: string for partial name matching, or regex to match names`
 		returns `block of uris representing filtered directories in the current directory`
 	}
 
@@ -2078,10 +2105,10 @@ cc os cwd?
 `	}
 
 	group "ls\\files\\"
-	"Lists files (non-directories) in the current directory with filtering. Use a string for partial name matching, or a regexp to match names."
+	"Lists files (non-directories) in the current directory with filtering. Use a string for partial name matching, or a regex to match names."
 	{
 		argsn 1
-		arg `filter: string for partial name matching, or regexp to match names`
+		arg `filter: string for partial name matching, or regex to match names`
 		returns `block of uris representing filtered files (non-directories) in the current directory`
 	}
 
@@ -2473,10 +2500,10 @@ cc os cwd?
 	}
 
 	group "zip"
-	"Creates a .zip archive from a file or directory."
+	"Creates a .zip archive from a file or directory, or from a block of files/directories."
 	{
 		argsn 2
-		arg `source: uri representing the file or directory to archive`
+		arg `source: uri representing the file or directory to archive, or a block of uris/strings to archive together`
 		arg `destination: uri representing the output .zip file`
 		returns `destination uri if successfulTags: #archive #compress`
 	}
@@ -2502,11 +2529,25 @@ cc os cwd?
 	{
 	}
 
-	group "find"
-	"Removed: use new-finder instead."
+	group "unzip\\single"
+	"Opens the single file in a .zip archive and returns a reader for it. Fails if the archive contains more than one file."
 	{
 		argsn 1
-		arg `path: uri or block of uris representing starting paths`
+		arg `source: uri representing the .zip file, or a reader/http-response native containing .zip data`
+		returns `native reader object for the archive's only file (fails if there is more than one)Tags: #archive #extract`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "finder"
+	"Creates a new file finder starting from the given path(s)."
+	{
+		argsn 1
+		arg `path: uri or block of uris/strings representing starting paths`
 		returns `native finder objectTags: #find #files`
 	}
 
@@ -2596,7 +2637,7 @@ cc os cwd?
 	{
 		argsn 2
 		arg `finder: native finder object`
-		arg `regex: native regexp object`
+		arg `regex: native regex object`
 		returns `native finder object (for chaining)Tags: #find #filter`
 	}
 

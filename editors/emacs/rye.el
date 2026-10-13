@@ -178,7 +178,7 @@
     "capitalize" "lower" "upper"
     "concat3" "space" "ln"
     "encode-to\\base64" "decode\\base64"
-    "regexp" "match" "submatch" "find-all")
+    "regex" "match" "submatch" "find-all")
   "String builtins.")
 
 (defconst rye--builtins-printing
