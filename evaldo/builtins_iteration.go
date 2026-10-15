@@ -418,13 +418,14 @@ var builtins_iteration = map[string]*env.Builtin{
 					}
 					EvalBlockInj(ps, env.NewInteger(int64(i)), true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "forever")
-					if ps.ErrorFlag {
+					if ps.ErrorFlag || ps.FailureFlag {
 						ps.Ser = ser
-						return ps.Res
-					}
-					if ps.FailureFlag {
-						ps.Ser = ser
-						return ps.Res
+						// Ensure we return a proper Rye error object
+						if errObj, ok := ps.Res.(*env.Error); ok {
+							return errObj
+						}
+						// ps.Res may be a non-error (e.g., Integer 500) — wrap it
+						return env.NewError("forever aborted: " + ps.Res.Inspect(*ps.Idx))
 					}
 					if ps.ReturnFlag {
 						ps.ReturnFlag = false
@@ -467,13 +468,14 @@ var builtins_iteration = map[string]*env.Builtin{
 					}
 					EvalBlockInj(ps, arg0, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "forever\\with")
-					if ps.ErrorFlag {
+					if ps.ErrorFlag || ps.FailureFlag {
 						ps.Ser = ser
-						return ps.Res
-					}
-					if ps.FailureFlag {
-						ps.Ser = ser
-						return ps.Res
+						// Ensure we return a proper Rye error object
+						if errObj, ok := ps.Res.(*env.Error); ok {
+							return errObj
+						}
+						// ps.Res may be a non-error (e.g., Integer 500) — wrap it
+						return env.NewError("forever\\with aborted: " + ps.Res.Inspect(*ps.Idx))
 					}
 					if ps.ReturnFlag {
 						ps.ReturnFlag = false

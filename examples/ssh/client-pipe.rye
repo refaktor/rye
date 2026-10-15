@@ -1,0 +1,15 @@
+; Example creates ssh client and pipes a local file over ssh
+; to a command it started on the remote computer
+
+rye .Needs { ssh }
+
+cli: Open\pwd ssh://root@ryelang.org:22 trim Read %.ssh-pwd |defer\ 'Close
+
+cli .New-session |defer\ 'Close
+|with {
+	.Start "cat > /tmp/uploaded_file.txt" ,  ; start async
+	.Stdin Read %./local_file.txt ,          ; stream local file to remote stdin
+	.Close-stdin ,                           ; send EOF
+	
+	.Wait |probe                             ; exit status
+}

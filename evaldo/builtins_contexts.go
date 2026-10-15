@@ -600,12 +600,12 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Example: lc\ "print"
 	// Example: lc\ 'function
 	// Args:
-	// * filter: String to filter by name, Word ('function, 'builtin, 'context) to filter by type, or regexp Native
+	// * filter: String to filter by name, Word ('function, 'builtin, 'context) to filter by type, or regex Native
 	// Returns:
 	// * current context after printing filtered words to stdout
 	"lc\\": {
 		Argsn: 1,
-		Doc:   "Lists words in current context with string filter, by type (word: 'function, 'builtin, 'context), or regex filter (native of kind 'regexp)",
+		Doc:   "Lists words in current context with string filter, by type (word: 'function, 'builtin, 'context), or regex filter (native of kind 'regex)",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			ps.Ctx.Preserve()
 			switch s1 := arg0.(type) {
@@ -625,18 +625,18 @@ var builtins_contexts = map[string]*env.Builtin{
 					return MakeBuiltinError(ps, fmt.Sprintf("Invalid type filter '%s'. Use 'function, 'builtin, or 'context", typeName), "lc\\")
 				}
 			case env.Native:
-				// Handle regex filtering for Native of kind regexp
+				// Handle regex filtering for Native of kind regex
 				kindName := ps.Idx.GetWord(s1.Kind.Index)
-				if kindName == "regexp" {
+				if kindName == "regex" {
 					// Cast the Native value to regex and use it for filtering
 					if regexVal, ok := s1.Value.(interface{ MatchString(string) bool }); ok {
 						fmt.Println(ps.Ctx.PreviewByRegex(*ps.Idx, regexVal))
 						return ps.Ctx
 					} else {
-						return MakeBuiltinError(ps, "Native regexp does not support MatchString method", "lc\\")
+						return MakeBuiltinError(ps, "Native regex does not support MatchString method", "lc\\")
 					}
 				} else {
-					return MakeBuiltinError(ps, fmt.Sprintf("Native filter only supports 'regexp kind, got '%s'", kindName), "lc\\")
+					return MakeBuiltinError(ps, fmt.Sprintf("Native filter only supports 'regex kind, got '%s'", kindName), "lc\\")
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType, env.WordType, env.NativeType}, "lc\\")

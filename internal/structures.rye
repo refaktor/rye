@@ -597,7 +597,7 @@ section "Table related functions"
 		equal { spr .first -> "name" } "Enno"
 		equal { spr .where-equal 'name "Enya" |length? } 1
 		equal { spr .where-contains 'name "En" |length? } 2
-		equal { spr .where-match 'name regexp "En.." |length? } 2
+		equal { spr .where-match 'name regex "En.." |length? } 2
 		equal { spr .where-greater 'weight 140 |length? } 1
 		equal { spr .where-lesser 'weight 130 |length? } 2
 		equal { spr .where-between 'weight 130 170 |length? } 2

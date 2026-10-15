@@ -663,7 +663,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 				EvalBlockInj(ps, arg0, true)
 				if ps.ErrorFlag {
 					ps.Ser = ser
-					return ps.Res
+					return AsError(ps)
 				}
 				ps.Ser = ser
 				if util.IsTruthy(ps.Res) {
@@ -701,7 +701,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 				if ps.ErrorFlag {
 					ps.Ser = ser
 					ps.ReturnFlag = true
-					return ps.Res
+					return AsError(ps)
 				}
 				ps.Ser = ser
 				if util.IsTruthy(ps.Res) {
@@ -744,7 +744,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 					MaybeDisplayFailureOrError(ps, ps.Idx, "fix")
 					if ps.ErrorFlag {
 						ps.Ser = ser
-						return ps.Res
+						return AsError(ps)
 					}
 					ps.Ser = ser
 					return ps.Res

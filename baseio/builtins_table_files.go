@@ -3,15 +3,32 @@
 package baseio
 
 import (
+	"bufio"
 	"encoding/csv"
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
 	"github.com/xuri/excelize/v2"
 )
+
+// newBomReader wraps the file in a buffered reader and removes a leading UTF-8 BOM.
+// Some CSV/TSV files have a BOM which confuses csv encoding.
+func newBomReader(f *os.File) *bufio.Reader {
+	br := bufio.NewReader(f)
+	if b, err := br.Peek(3); err == nil && len(b) == 3 && b[0] == 0xEF && b[1] == 0xBB && b[2] == 0xBF {
+		_, _ = br.Discard(3)
+	}
+	return br
+}
+
+// newCsvReader returns a csv.Reader that skips a leading UTF-8 BOM before parsing.
+func newCsvReader(f *os.File) *csv.Reader {
+	return csv.NewReader(newBomReader(f))
+}
 
 // Builtins_table_files contains table formats that read or write file URIs.
 var Builtins_table_files = map[string]*env.Builtin{
@@ -30,7 +47,7 @@ var Builtins_table_files = map[string]*env.Builtin{
 	// Args:
 	// * file-uri - location of csv file to load
 	// Tags: #table #loading #csv
-	"file-uri//Load\\csv": {
+	"file-uri//Load\\csv__OLD": {
 		// TODO 2 -- this could move to a go function so it could be called by general load that uses extension to define the loader
 		Argsn: 1,
 		Doc:   "Loads a .csv file to a table datatype.",
@@ -45,7 +62,7 @@ var Builtins_table_files = map[string]*env.Builtin{
 				}
 				defer f.Close()
 
-				csvReader := csv.NewReader(f)
+				csvReader := newCsvReader(f)
 				rows, err := csvReader.ReadAll()
 				if err != nil {
 					// log.Fatal("Unable to parse file as CSV for "+filePath, err)
@@ -87,7 +104,7 @@ var Builtins_table_files = map[string]*env.Builtin{
 	// Args:
 	// * file-uri - location of csv file to load
 	// Tags: #table #loading #csv
-	"file-uri//Load\\csv\\": {
+	"file-uri//Load\\csv": {
 		// TODO 2 -- this could move to a go function so it could be called by general load that uses extension to define the loader
 		Argsn: 2,
 		Doc:   "Loads a .csv file to a table datatype.",
@@ -104,7 +121,7 @@ var Builtins_table_files = map[string]*env.Builtin{
 					}
 					defer f.Close()
 
-					csvReader := csv.NewReader(f)
+					csvReader := newCsvReader(f)
 					if len(separator.Value) != 1 {
 						return evaldo.MakeBuiltinError(ps, "Separator must be exactly 1 character long", "Load\\csv\\")
 					}
@@ -142,6 +159,74 @@ var Builtins_table_files = map[string]*env.Builtin{
 		},
 	},
 
+	// Example:
+	//  equal {
+	//	 cc os
+	//   f:: mktmp ++ "/test.csv"
+	//   f .Write "a;b;c\n1;1.1;a\nbad\"line\n2;2.2;b\n3;3.3;c\n"
+	//   spr:: Load\csv\ignore-bad f ";"
+	//   spr .length? 3
+	//  } true
+	// Args:
+	// * file-uri - location of csv file to load
+	// * separator - single character used as column separator
+	// Tags: #table #loading #csv
+	"file-uri//Load\\csv\\ignore-bad": {
+		Argsn: 2,
+		Doc:   "Loads a .csv file to a table datatype, parsing it line by line and skipping lines that can't be parsed as CSV.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch file := arg0.(type) {
+			case env.Uri:
+				switch separator := arg1.(type) {
+				case env.String:
+					if len(separator.Value) != 1 {
+						return evaldo.MakeBuiltinError(ps, "Separator must be exactly 1 character long", "Load\\csv\\ignore-bad")
+					}
+					comma := rune(separator.Value[0])
+
+					f, err := os.Open(file.GetPath())
+					if err != nil {
+						return evaldo.MakeBuiltinError(ps, "Unable to read input file '"+file.GetPath()+"': "+err.Error(), "Load\\csv\\ignore-bad")
+					}
+					defer f.Close()
+
+					scanner := bufio.NewScanner(newBomReader(f))
+					scanner.Buffer(make([]byte, 1024*1024), 1024*1024)
+					var spr *env.Table
+					for scanner.Scan() {
+						r := csv.NewReader(strings.NewReader(scanner.Text()))
+						r.Comma = comma
+						record, err := r.Read()
+						if err != nil {
+							// skip lines that can't be parsed as a single CSV record
+							continue
+						}
+						if spr == nil {
+							spr = env.NewTable(record)
+							continue
+						}
+						anyRow := make([]any, len(record))
+						for i, v := range record {
+							anyRow[i] = *env.NewString(v)
+						}
+						spr.AddRow(*env.NewTableRow(anyRow, spr))
+					}
+					if err := scanner.Err(); err != nil {
+						return evaldo.MakeBuiltinError(ps, "Unable to read input file '"+file.GetPath()+"': "+err.Error(), "Load\\csv\\ignore-bad")
+					}
+					if spr == nil {
+						return evaldo.MakeBuiltinError(ps, "No parseable lines found in '"+file.GetPath()+"'", "Load\\csv\\ignore-bad")
+					}
+					return *spr
+				default:
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "Load\\csv\\ignore-bad")
+				}
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType}, "Load\\csv\\ignore-bad")
+			}
+		},
+	},
+
 	// TODO -- deduplicate with above
 
 	// Example:
@@ -170,7 +255,7 @@ var Builtins_table_files = map[string]*env.Builtin{
 				}
 				defer f.Close()
 
-				csvReader := csv.NewReader(f)
+				csvReader := newCsvReader(f)
 				csvReader.Comma = '\t'
 				rows, err := csvReader.ReadAll()
 				if err != nil {

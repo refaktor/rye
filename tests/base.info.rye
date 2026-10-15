@@ -55,17 +55,17 @@ section "Boolean " "Functions that work with true and false values." {
 	}
 
 	group "and"
-	"Performs a logical AND operation between two boolean values, or a bitwise AND operation between two integer values."
+	"Performs a logical AND operation between two boolean values, or an element-wise bitwise AND operation between two equal-length bytes values."
 	{
 		argsn 2
 		pure
 		argtypes {
-			1 [ Boolean ]
-			2 [ Boolean ]
+			1 [ Boolean Bytes ]
+			2 [ Boolean Bytes ]
 		}
-		arg `value1: First value (boolean)`
-		arg `value2: Second value (boolean)`
-		returns `boolean result of logical AND operation if both inputs are booleans, otherwise integer result of bitwise AND`
+		arg `value1: First value (boolean or bytes)`
+		arg `value2: Second value (boolean or bytes)`
+		returns `boolean result of logical AND if both inputs are booleans, or element-wise bitwise AND of two equal-length bytes values`
 	}
 
 	{
@@ -73,6 +73,9 @@ section "Boolean " "Functions that work with true and false values." {
 		equal { false .and true } false
 		equal { true .and false } false
 		equal { false .and false } false
+		equal { bytes { 255 240 } |and bytes { 240 15 } |first } 240
+		equal { bytes { 255 240 } |and bytes { 240 15 } |last } 0
+		error { bytes { 255 } |and bytes { 240 15 } }
 		error { true .and 5 }
 		error { 5 .and true }
 		error { "string" .and true }
@@ -82,17 +85,17 @@ section "Boolean " "Functions that work with true and false values." {
 	}
 
 	group "or"
-	"Performs a logical OR operation between two boolean values, or a bitwise OR operation between two integer values."
+	"Performs a logical OR operation between two boolean values, or an element-wise bitwise OR operation between two equal-length bytes values."
 	{
 		argsn 2
 		pure
 		argtypes {
-			1 [ Boolean ]
-			2 [ Boolean ]
+			1 [ Boolean Bytes ]
+			2 [ Boolean Bytes ]
 		}
-		arg `value1: First value (boolean)`
-		arg `value2: Second value (boolean)`
-		returns `boolean result of logical OR operation if both inputs are booleans, otherwise integer result of bitwise OR`
+		arg `value1: First value (boolean or bytes)`
+		arg `value2: Second value (boolean or bytes)`
+		returns `boolean result of logical OR if both inputs are booleans, or element-wise bitwise OR of two equal-length bytes values`
 	}
 
 	{
@@ -100,6 +103,9 @@ section "Boolean " "Functions that work with true and false values." {
 		equal { false .or true } true
 		equal { true .or false } true
 		equal { false .or false } false
+		equal { bytes { 255 240 } |or bytes { 240 15 } |first } 255
+		equal { bytes { 255 240 } |or bytes { 240 15 } |last } 255
+		error { bytes { 255 } |or bytes { 240 15 } }
 		error { true .or 5 }
 		error { 5 .or true }
 		error { "string" .or true }
@@ -109,17 +115,17 @@ section "Boolean " "Functions that work with true and false values." {
 	}
 
 	group "xor"
-	"Performs a logical XOR (exclusive OR) operation between two boolean values, or a bitwise XOR operation between two integer values."
+	"Performs a logical XOR (exclusive OR) operation between two boolean values, or an element-wise bitwise XOR operation between two equal-length bytes values."
 	{
 		argsn 2
 		pure
 		argtypes {
-			1 [ Boolean ]
-			2 [ Boolean ]
+			1 [ Boolean Bytes ]
+			2 [ Boolean Bytes ]
 		}
-		arg `value1: First value (boolean)`
-		arg `value2: Second value (boolean)`
-		returns `boolean result of logical XOR operation if both inputs are booleans, otherwise integer result of bitwise XOR`
+		arg `value1: First value (boolean or bytes)`
+		arg `value2: Second value (boolean or bytes)`
+		returns `boolean result of logical XOR if both inputs are booleans, or element-wise bitwise XOR of two equal-length bytes values`
 	}
 
 	{
@@ -127,6 +133,9 @@ section "Boolean " "Functions that work with true and false values." {
 		equal { false .xor true } true
 		equal { true .xor false } true
 		equal { false .xor false } false
+		equal { bytes { 255 240 } |xor bytes { 240 15 } |first } 15
+		equal { bytes { 255 240 } |xor bytes { 240 15 } |last } 255
+		error { bytes { 255 } |xor bytes { 240 15 } }
 		error { true .xor 5 }
 		error { 5 .xor true }
 		error { "string" .xor true }
@@ -1237,6 +1246,47 @@ section "Strings " "" {
 	{
 		equal { decode\base64 encode-to\base64 "abcd" } "abcd"
 		equal { decode\base64 "aGVsbG8gd29ybGQ=" } "hello world"
+	}
+
+	{
+	}
+
+	group "encode-to\\hex"
+	"Encodes a string or bytes value as a hexadecimal string."
+	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ String Bytes ]
+		}
+		arg `data: String or bytes native value to encode`
+		returns `hexadecimal-encoded string`
+	}
+
+	{
+		equal { encode-to\hex "abcd" } "61626364"
+		equal { encode-to\hex decode\hex "Hello world" } "48656c6c6f20776f726c64"
+	}
+
+	{
+	}
+
+	group "decode\\hex"
+	"Decodes a hexadecimal string to a bytes native value."
+	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ String ]
+		}
+		arg `string: hexadecimal-encoded string to decode`
+		returns `bytes native value containing the decoded data`
+	}
+
+	{
+		equal { decode\hex "48656c6c6f20576f726c64" |type? } 'bytes
+		equal { decode\hex "48656c6c6f20576f726c64" |encode-to\hex } "48656c6c6f20576f726c64"
+		error { decode\hex "invalid" }
 	}
 
 	{
@@ -2719,7 +2769,7 @@ section "Collections " "" {
 		pure
 		argtypes {
 			1 [ String Block Dict TableRow Time Uri ]
-			2 [ String Integer Decimal Secret Block Dict ]
+			2 [ String Integer Decimal Secret Uri Block Dict ]
 		}
 		arg `value1: First value (string, block, dict, etc.)`
 		arg `value2: Second value to join`
@@ -2732,6 +2782,7 @@ section "Collections " "" {
 		equal { { 1 2 } ++ { 3 4 } } { 1 2 3 4 }
 		equal { dict { "a" 1 } | ++ { "b" 2 } } dict { "a" 1 "b" 2 }
 		equal { dict { "a" 1 } | ++ dict { "b" 2 } } dict { "a" 1 "b" 2 }
+		equal { ( file "a/b" ) ++ ( file "c/d" ) |kind? } 'file-uri
 	}
 
 	{
@@ -3215,7 +3266,7 @@ section "Collections " "" {
 			2 [ Word Block ]
 		}
 		arg `values: Block of values to append`
-		arg `word: Word referring to a block, list or string to modify`
+		arg `word: Word referring to a block, list or string to modify (or a mutable block value)`
 		returns `the modified collection with each value from the block appended`
 	}
 
@@ -3224,6 +3275,7 @@ section "Collections " "" {
 		equal { var 'x ref { 1 2 } append\each! { 3 4 5 6 } 'x , x } { 1 2 3 4 5 6 }
 		equal { var 's "hello" append\each! { " " "world" "!" } 's , s } "hello world!"
 		equal { var 'l ref list { 10 20 } append\each! { 30 40 } 'l , l } list { 10 20 30 40 }
+		equal { b: ref { 1 2 } append\each! { 3 4 } b } { 1 2 3 4 }
 	}
 
 	{
@@ -3417,6 +3469,29 @@ section "Types and Kinds " "" {
 		equal { string 123.4 } "123.400000"
 		equal { string "test" } "test"
 		equal { string true } "true"
+	}
+
+	{
+	}
+
+	group "bytes"
+	"Creates a Bytes value. Accepts an integer (creates that many zero bytes), a hex-encoded string, or a block of integers in range 0..255."
+	{
+		argsn 1
+		pure
+		arg `value: Integer (number of zero bytes), hex-encoded String, or Block of integers 0..255`
+		returns `A Bytes value`
+	}
+
+	{
+		equal { bytes 0 |length? } 0
+		equal { bytes 5 |length? } 5
+		equal { bytes 5 |first } 0
+		equal { bytes "ff" |first } 255
+		equal { bytes { 104 101 108 108 111 } |length? } 5
+		error { bytes "zz" }
+		error { bytes { 300 } }
+		error { bytes { "x" } }
 	}
 
 	{
@@ -4201,13 +4276,13 @@ section "Contexts " "Context related functions" {
 	}
 
 	group "lc\\"
-	"Lists words in current context with string filter, by type (word: 'function, 'builtin, 'context), or regex filter (native of kind 'regexp)"
+	"Lists words in current context with string filter, by type (word: 'function, 'builtin, 'context), or regex filter (native of kind 'regex)"
 	{
 		argsn 1
 		argtypes {
 			1 [ String Word Native ]
 		}
-		arg `filter: String to filter by name, Word ('function, 'builtin, 'context) to filter by type, or regexp Native`
+		arg `filter: String to filter by name, Word ('function, 'builtin, 'context) to filter by type, or regex Native`
 		returns `current context after printing filtered words to stdout`
 	}
 
@@ -6206,27 +6281,6 @@ section "Other " "..." {
 	{
 	}
 
-	group "do\\each"
-	"Evaluates each subblock of a block of subblocks, one at a time, and returns the result of the last subblock."
-	{
-		argsn 1
-		pure
-		argtypes {
-			1 [ Block ]
-		}
-		arg `blocks: Block of subblocks to evaluate`
-		returns `result of evaluating the last subblock`
-	}
-
-	{
-		equal  { do\each { { 1 + 2 } { 3 + 4 } } } 7
-		equal  { do\each { { var 'x 10 , x + 1 } { x + 2 } } } 12
-		error  { do\each { 5 } }
-	}
-
-	{
-	}
-
 	group "with"
 	"Takes a value and a block of code. It does the code with the value injected."
 	{
@@ -6316,6 +6370,26 @@ section "Other " "..." {
 	{
 	}
 
+	group "do\\each"
+	"Evaluates each subblock of a block of subblocks, one at a time, and returns the result of the last subblock."
+	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ Block ]
+		}
+		arg `blocks: Block of subblocks to evaluate`
+		returns `result of evaluating the last subblock`
+	}
+
+	{
+		equal { do\each { { 1 + 2 } { 3 + 4 } } } 7
+		equal { do\each { { var 'x 10 , x + 1 } { x + 2 } } } 12
+	}
+
+	{
+	}
+
 	group "lk\\"
 	"Lists available kinds with string filter"
 	{
@@ -6371,21 +6445,21 @@ section "Other " "..." {
 	{
 	}
 
-	group "Rye-itself//Capture"
-	"Registers a capture block that will be executed with the error injected if an unhandled error bubbles to the top of the program. The error value is injected as the first value (use .disarm, .print, etc.)."
+	group "Rye-itself//On-error"
+	"Registers a On-error block that will be executed with the error injected if an unhandled error bubbles to the top of the program. The error value is injected as the first value (use .disarm, .print, etc.)."
 	{
 		argsn 2
 		argtypes {
 			2 [ Block ]
 		}
 		arg `rye-itself: The rye native object (passed via dot-word dispatch)`
-		arg `block: Block of code to execute with the captured error injected when an error bubbles to top-level`
+		arg `block: Block of code to execute with the On-errord error injected when an error bubbles to top-level`
 		returns `The rye-itself native (so the chain continues cleanly)`
 	}
 
 	{
-		stdout { rye .Capture { .disarm .print } 1 / 0 } "Error: { message: division by zero  }\n"
-		stdout { rye .Capture { .disarm .print } "ok" } ""
+		stdout { rye .On-error { .disarm .print } 1 / 0 } "Error: { message: division by zero  }\n"
+		stdout { rye .On-error { .disarm .print } "ok" } ""
 	}
 
 	{
@@ -7908,12 +7982,12 @@ section "Filtering " "Functions that construct a table." {
 		}
 		arg `sheet`
 		arg `column`
-		arg `regexp`
+		arg `regex`
 		arg `Tags: #filter #tables`
 	}
 
 	{
-		equal { table { 'a } { "1" "2" "a3" "2b" } |where-match 'a regexp "^[0-9]$" |length? } 2
+		equal { table { 'a } { "1" "2" "a3" "2b" } |where-match 'a regex "^[0-9]$" |length? } 2
 	}
 
 	{
@@ -8456,7 +8530,7 @@ section "Column level functions " "Functions that construct a table." {
 		equal { table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
 		|gen-column 'job { } { "Cook" } |column? "job" } { "Cook" "Cook" "Cook" }
 		equal { table { "email" } { "john@example.com" "jane@test.org" }
-		|gen-column 'domain 'email [ regexp ".*@(.+)$" "$1" ] |column? "domain" } { "example.com" "test.org" }
+		|gen-column 'domain 'email [ regex ".*@(.+)$" "$1" ] |column? "domain" } { "example.com" "test.org" }
 	}
 
 	{

@@ -29,6 +29,7 @@ import (
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
 	"github.com/refaktor/rye/loader"
+	"github.com/refaktor/rye/projectbuiltins"
 	"github.com/refaktor/rye/security"
 	"github.com/refaktor/rye/util"
 )
@@ -186,6 +187,19 @@ func handleError(err error, context string, fatal bool) {
 			fmt.Fprintln(os.Stderr, errMsg)
 		}
 	}
+}
+
+// registerAllBuiltins registers the full standard set of Rye builtins into a
+// program state: core evaluator builtins, base I/O, batteries, variable
+// builtins, contrib modules, and any project-specific builtins compiled in via
+// the local Rye builder (bin/l.rye) using the "proj_builtins" build tag.
+func registerAllBuiltins(ps *env.ProgramState) {
+	evaldo.RegisterBuiltins(ps)
+	baseio.Register(ps)
+	batteries.RegisterBatteries(ps)
+	evaldo.RegisterVarBuiltins(ps)
+	contrib.RegisterBuiltins(ps, &evaldo.BuiltinNames)
+	projectbuiltins.Register(ps)
 }
 
 func DoMain(regfn func(*env.ProgramState) error) {
@@ -509,10 +523,7 @@ func main_ryk() {
 	block, genv := loader.LoadStringNoPEG(input, false)
 	//block, genv := loader.LoadString("{ }", false)
 	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
-	evaldo.RegisterBuiltins(es)
-	baseio.Register(es)
-	batteries.RegisterBatteries(es)
-	contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
+	registerAllBuiltins(es)
 	evaldo.Eval(es)
 
 	if len(os.Args) >= 4 {
@@ -692,11 +703,7 @@ func main_rye_http_repl(port string, file string, code string, lang string, regf
 		}
 		ps.WorkingPath = workingPath
 
-		evaldo.RegisterBuiltins(ps)
-		baseio.Register(ps)
-		batteries.RegisterBatteries(ps)
-		evaldo.RegisterVarBuiltins(ps)
-		contrib.RegisterBuiltins(ps, &evaldo.BuiltinNames)
+		registerAllBuiltins(ps)
 		if err := regfn(ps); err != nil {
 			fmt.Println(err.Error())
 			return
@@ -747,11 +754,7 @@ func main_rye_http_repl(port string, file string, code string, lang string, regf
 		// No file, just initialize with code (original behavior)
 		block, genv := loader.LoadStringNoPEG(code, false)
 		es = env.NewProgramStateOLD(block.(env.Block).Series, genv)
-		evaldo.RegisterBuiltins(es)
-		baseio.Register(es)
-		batteries.RegisterBatteries(es)
-		evaldo.RegisterVarBuiltins(es)
-		contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
+		registerAllBuiltins(es)
 		if err := regfn(es); err != nil {
 			fmt.Println(err.Error())
 			return
@@ -1079,11 +1082,7 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 	}
 	ps.WorkingPath = workingPath
 
-	evaldo.RegisterBuiltins(ps)
-	baseio.Register(ps)
-	batteries.RegisterBatteries(ps)
-	evaldo.RegisterVarBuiltins(ps)
-	contrib.RegisterBuiltins(ps, &evaldo.BuiltinNames)
+	registerAllBuiltins(ps)
 	if err := regfn(ps); err != nil {
 		fmt.Println(err.Error())
 		return
@@ -1181,10 +1180,7 @@ func main_cgi_file(file string, sig bool) {
 		input := " 123 " //" whoami: \"Rye cgi 0.001 alpha\" ctx: 0 result: \"\" session: 0 w: 0 r: 0"
 		block, genv := loader.LoadStringNoPEG(input, false)
 		es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
-		evaldo.RegisterBuiltins(es)
-		baseio.Register(es)
-		batteries.RegisterBatteries(es)
-		contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
+		registerAllBuiltins(es)
 
 		evaldo.Eval(es)
 		env.SetValue(es, "w", *env.NewNative(es.Idx, w, "Go-server-response-writer"))
@@ -1203,10 +1199,7 @@ func main_cgi_file(file string, sig bool) {
 		switch val := block.(type) {
 		case env.Block:
 			es = env.AddToProgramStateNEWWithLocation(es, &val, genv)
-			evaldo.RegisterBuiltins(es)
-			baseio.Register(es)
-			batteries.RegisterBatteries(es)
-			contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
+			registerAllBuiltins(es)
 
 			evaldo.Eval(es)
 			evaldo.MaybeDisplayFailureOrError(es, genv, "main cgi file")
@@ -1269,11 +1262,7 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 
 	block, genv := loader.LoadStringNoPEG("", false)
 	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
-	evaldo.RegisterBuiltins(es)
-	baseio.Register(es)
-	batteries.RegisterBatteries(es)
-	evaldo.RegisterVarBuiltins(es)
-	contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
+	registerAllBuiltins(es)
 	if err := regfn(es); err != nil {
 		fmt.Println(err.Error())
 		return
@@ -1353,10 +1342,7 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 	if *dual {
 		// Create a second program state for the right panel
 		rightEs := env.NewProgramStateOLD(block.(env.Block).Series, genv)
-		evaldo.RegisterBuiltins(rightEs)
-		baseio.Register(rightEs)
-		batteries.RegisterBatteries(rightEs)
-		contrib.RegisterBuiltins(rightEs, &evaldo.BuiltinNames)
+		registerAllBuiltins(rightEs)
 		if err := regfn(rightEs); err != nil {
 			fmt.Println(err.Error())
 			return
@@ -1572,11 +1558,7 @@ func processTemplate(file string, regfn func(*env.ProgramState) error) {
 	ps.WorkingPath = workingPath
 
 	// Register builtins
-	evaldo.RegisterBuiltins(ps)
-	baseio.Register(ps)
-	batteries.RegisterBatteries(ps)
-	evaldo.RegisterVarBuiltins(ps)
-	contrib.RegisterBuiltins(ps, &evaldo.BuiltinNames)
+	registerAllBuiltins(ps)
 	if err := regfn(ps); err != nil {
 		fmt.Println(err.Error())
 		return

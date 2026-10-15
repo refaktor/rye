@@ -660,7 +660,7 @@ var builtins_functions = map[string]*env.Builtin{
 					if ps.ErrorFlag {
 						ps.Ctx = oldCtx
 						ps.Ser = ser
-						return ps.Res
+						return AsError(ps)
 					}
 
 					// Restore original context and series

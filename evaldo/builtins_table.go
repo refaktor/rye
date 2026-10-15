@@ -398,11 +398,11 @@ var Builtins_table = map[string]*env.Builtin{
 	//  sheet: table { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" }
 	//  sheet .where-match 'name "En.+"
 	// Tests:
-	//  equal { table { 'a } { "1" "2" "a3" "2b" } |where-match 'a regexp "^[0-9]$" |length? } 2
+	//  equal { table { 'a } { "1" "2" "a3" "2b" } |where-match 'a regex "^[0-9]$" |length? } 2
 	// Args:
 	// * sheet
 	// * column
-	// * regexp
+	// * regex
 	// Tags: #filter #tables
 	"where-match": {
 		Argsn: 3,
@@ -1417,12 +1417,12 @@ var Builtins_table = map[string]*env.Builtin{
 	//  sheet .gen-column 'job_title { "Jantior" "Librarian" "Line Cook" } ;
 	// Example: Generate column using regex replacement
 	//  sheet: table { "email" } { "john@example.com" "jane@test.org" "bob@company.net" }
-	//  sheet .gen-column 'domain 'email { regexp "@(.+)$" "$1" }
+	//  sheet .gen-column 'domain 'email { regex "@(.+)$" "$1" }
 	// Tests:
 	//  equal { table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
 	//  |gen-column 'job { } { "Cook" } |column? "job" } { "Cook" "Cook" "Cook" }
 	//  equal { table { "email" } { "john@example.com" "jane@test.org" }
-	//  |gen-column 'domain 'email [ regexp ".*@(.+)$" "$1" ] |column? "domain" } { "example.com" "test.org" }
+	//  |gen-column 'domain 'email [ regex ".*@(.+)$" "$1" ] |column? "domain" } { "example.com" "test.org" }
 	"gen-column": {
 		Argsn: 4,
 		Doc:   "Adds a new column to table. Changes in-place and returns the new table.",
@@ -1516,7 +1516,7 @@ var Builtins_table = map[string]*env.Builtin{
 						cell := env.ToRyeValue(spr.Rows[i].Values[colIdx])
 						CallFunctionArgs2(updater, ps, cell, spr.Rows[i], ps.Ctx)
 						if ps.ErrorFlag {
-							return ps.Res
+							return AsError(ps)
 						}
 						spr.Rows[i].Values[colIdx] = ps.Res
 					}
@@ -2877,7 +2877,7 @@ func GenerateColumn(ps *env.ProgramState, s env.Table, name env.Word, extractCol
 		ps.Ser = code.Series
 		EvalBlockInCtxInj(ps, ctx, firstVal, firstVal != nil)
 		if ps.ErrorFlag {
-			return ps.Res
+			return AsError(ps)
 		}
 		ps.Ser = ser
 		// set the result of code block as the new column value in this row
@@ -3091,7 +3091,7 @@ func WhereBlock(ps *env.ProgramState, s *env.Table, name string, block env.Block
 			EvalBlockInj(ps, val, true)
 			if ps.ErrorFlag {
 				ps.Ser = ser
-				return ps.Res
+				return AsError(ps)
 			}
 			if util.IsTruthy(ps.Res) {
 				nspr.AddRow(row)
@@ -3114,7 +3114,7 @@ func WhereBuiltin(ps *env.ProgramState, s *env.Table, name string, builtin env.B
 			val := env.ToRyeValue(row.Values[idx])
 			res := DirectlyCallBuiltin(ps, builtin, val, nil)
 			if ps.ErrorFlag {
-				return ps.Res
+				return AsError(ps)
 			}
 			if util.IsTruthy(res) {
 				nspr.AddRow(row)
@@ -3135,7 +3135,7 @@ func WhereFunction(ps *env.ProgramState, s *env.Table, name string, fn env.Funct
 			val := env.ToRyeValue(row.Values[idx])
 			CallFunctionArgsN(fn, ps, ps.Ctx, val)
 			if ps.ErrorFlag {
-				return ps.Res
+				return AsError(ps)
 			}
 			if util.IsTruthy(ps.Res) {
 				nspr.AddRow(row)
@@ -3183,7 +3183,7 @@ func WhereBlockMultiCol(ps *env.ProgramState, s *env.Table, cols env.Block, code
 		EvalBlockInCtxInj(ps, ctx, firstVal, firstVal != nil)
 		if ps.ErrorFlag {
 			ps.Ser = ser
-			return ps.Res
+			return AsError(ps)
 		}
 		if util.IsTruthy(ps.Res) {
 			nspr.AddRow(row)
@@ -3269,7 +3269,7 @@ func CountWhereBlock(ps *env.ProgramState, s *env.Table, name string, block env.
 			EvalBlockInj(ps, val, true)
 			if ps.ErrorFlag {
 				ps.Ser = ser
-				return ps.Res
+				return AsError(ps)
 			}
 			if util.IsTruthy(ps.Res) {
 				count++
@@ -3292,7 +3292,7 @@ func CountWhereBuiltin(ps *env.ProgramState, s *env.Table, name string, builtin 
 			val := env.ToRyeValue(row.Values[idx])
 			res := DirectlyCallBuiltin(ps, builtin, val, nil)
 			if ps.ErrorFlag {
-				return ps.Res
+				return AsError(ps)
 			}
 			if util.IsTruthy(res) {
 				count++
@@ -3313,7 +3313,7 @@ func CountWhereFunction(ps *env.ProgramState, s *env.Table, name string, fn env.
 			val := env.ToRyeValue(row.Values[idx])
 			CallFunctionArgsN(fn, ps, ps.Ctx, val)
 			if ps.ErrorFlag {
-				return ps.Res
+				return AsError(ps)
 			}
 			if util.IsTruthy(ps.Res) {
 				count++
@@ -3361,7 +3361,7 @@ func CountWhereBlockMultiCol(ps *env.ProgramState, s *env.Table, cols env.Block,
 		EvalBlockInCtxInj(ps, ctx, firstVal, firstVal != nil)
 		if ps.ErrorFlag {
 			ps.Ser = ser
-			return ps.Res
+			return AsError(ps)
 		}
 		if util.IsTruthy(ps.Res) {
 			count++

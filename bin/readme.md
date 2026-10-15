@@ -32,6 +32,48 @@ Builds a local lrye with modules (build tags) that you specified. This means you
 You can invoke ./lrye like any local executable, or with less typing just by calling `lrye` (requires $RYE_HOME/bin in PATH) script.
 
 
+### Adding project-specific builtins
+
+You can compile extra Go builtins into your local rye by adding the `proj_builtins` marker to `lrye.mod` and dropping Go files into a `project_builtins/` directory next to it.
+
+1. Add `proj_builtins` to your `lrye.mod` (it is not prefixed with `b_` like regular modules):
+
+   ```
+   tiny http proj_builtins
+   ```
+
+2. Create `project_builtins/` and put one or more `.go` files in it. Each file must be `package projectbuiltins` and define a single `RegisterProjectBuiltins` function. Register your builtins with `evaldo.RegisterBuiltins2` (flat) and/or `evaldo.RegisterBuiltinsInContext` (context/dialect):
+
+   ```go
+   // project_builtins/mybuiltins.go
+   package projectbuiltins
+
+   import (
+       "github.com/refaktor/rye/env"
+       "github.com/refaktor/rye/evaldo"
+   )
+
+   func RegisterProjectBuiltins(ps *env.ProgramState) {
+       evaldo.RegisterBuiltins2(map[string]*env.Builtin{
+           "my-hello": {
+               Argsn: 0,
+               Fn: func(ps *env.ProgramState, arg0, arg1, arg2, arg3, arg4 env.Object) env.Object {
+                   return *env.NewString("hello from project builtins")
+               },
+           },
+       }, ps, "project")
+   }
+   ```
+
+3. Build as usual. l.rye copies your files into the Rye source and builds with the `proj_builtins` tag, registering them after the standard builtins:
+
+   ```
+   l.rye build
+   ```
+
+If `proj_builtins` is missing from `lrye.mod`, the `project_builtins/` directory is ignored. If the marker is present but the directory has no `.go` files, l.rye warns and builds normally.
+
+
 ### Building executable with embeded main.rye
 
 Example:

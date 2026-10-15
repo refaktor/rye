@@ -40,54 +40,54 @@ section "Regular expressions"
 "Functions for handling and working with Context."
 {	
 	
-	group "regexp"
-	mold\nowrap ?regexp
+	group "regex"
+	mold\nowrap ?regex
 	{ }
 	{
-		equal { regexp "[0-9]" |type? } 'native
+		equal { regex "[0-9]" |type? } 'native
 	}
 
 	group "is-match"
 	"" ; mold\nowrap ?is-match
 	{ }
 	{
-		equal { regexp "[0-9]" |is-match "5" } 1
-		equal { regexp "[0-9]" |is-match "a" } 0
+		equal { regex "[0-9]" |is-match "5" } 1
+		equal { regex "[0-9]" |is-match "a" } 0
 	}
 
 	group "match?"
 	"" ;	mold\nowrap ?match?
 	{ }
 	{
-		equal { regexp "[0-9]+c+" |match? "aa33bb55cc" } "55cc"
+		equal { regex "[0-9]+c+" |match? "aa33bb55cc" } "55cc"
 	}
 	
 	group "submatch?"
 	"" ; mold\nowrap ?submatch?
 	{ }
 	{
-		equal { regexp "([0-9]+)" |submatch? "aa33bb44cc" } "33"
+		equal { regex "([0-9]+)" |submatch? "aa33bb44cc" } "33"
 	}
 
 	group "submatches?"
 	"" ; mold\nowrap ?submatches?
 	{ }
 	{
-		equal { regexp "([0-9]+).*?(c+)" |submatches? "aa33bb55cc" } { "33" "cc" }
+		equal { regex "([0-9]+).*?(c+)" |submatches? "aa33bb55cc" } { "33" "cc" }
 	}
 
 	group "find-all"
 	"" ; "mold\nowrap ?find-all
 	{ }
 	{
-		equal { regexp "([0-9]+)" |find-all "aa33bb55cc" } { "33" "55" }
+		equal { regex "([0-9]+)" |find-all "aa33bb55cc" } { "33" "55" }
 	}
 
 	group "replace-all"
 	"" ; mold\nowrap ?replace-all
 	{ }
 	{
-		equal { regexp "([0-9]+)" |replace-all "aa33bb55cc" "XX" } "aaXXbbXXcc"
+		equal { regex "([0-9]+)" |replace-all "aa33bb55cc" "XX" } "aaXXbbXXcc"
 	}
 
 }

@@ -621,13 +621,13 @@ var Builtins_pipes = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { echo "apple\nbanana\napricot" |match\regexp regexp "^a" |into-block } { "apple" "apricot" }
+	// equal { echo "apple\nbanana\napricot" |match\regex regex "^a" |into-block } { "apple" "apricot" }
 	// Args:
 	// * pipe: script-pipe to filter
-	// * regexp: compiled regexp native to match against each line
+	// * regex: compiled regex native to match against each line
 	// Returns:
-	// * script-pipe with only lines matching the regexp
-	"match\\regexp": {
+	// * script-pipe with only lines matching the regex
+	"match\\regex": {
 		Argsn: 2,
 		Doc:   "Returns a pipe object with lines that match the regular expression.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -642,16 +642,16 @@ var Builtins_pipes = map[string]*env.Builtin{
 							newPipe := pipe.MatchRegexp(regxp)
 							return *env.NewNative(ps.Idx, newPipe, "script-pipe")
 						default:
-							return evaldo.MakeNativeArgError(ps, 2, []string{"regexp"}, "p-match-regexp")
+							return evaldo.MakeNativeArgError(ps, 2, []string{"regex"}, "p-match-regex")
 						}
 					default:
-						return evaldo.MakeArgError(ps, 2, []env.Type{env.NativeType}, "p-match-regexp")
+						return evaldo.MakeArgError(ps, 2, []env.Type{env.NativeType}, "p-match-regex")
 					}
 				default:
-					return evaldo.MakeNativeArgError(ps, 1, []string{"script-pipe"}, "p-match-regexp")
+					return evaldo.MakeNativeArgError(ps, 1, []string{"script-pipe"}, "p-match-regex")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "p-match-regexp")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "p-match-regex")
 			}
 		},
 	},
@@ -689,13 +689,13 @@ var Builtins_pipes = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { echo "apple\nbanana\napricot" |not-match\regexp regexp "^a" |into-block } { "banana" }
+	// equal { echo "apple\nbanana\napricot" |not-match\regex regex "^a" |into-block } { "banana" }
 	// Args:
 	// * pipe: script-pipe to filter
-	// * regexp: compiled regexp native to reject matches
+	// * regex: compiled regex native to reject matches
 	// Returns:
-	// * script-pipe with only lines NOT matching the regexp
-	"not-match\\regexp": {
+	// * script-pipe with only lines NOT matching the regex
+	"not-match\\regex": {
 		Argsn: 2,
 		Doc:   "Returns a pipe object with lines that do not match the regular expression.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -710,16 +710,16 @@ var Builtins_pipes = map[string]*env.Builtin{
 							newPipe := pipe.RejectRegexp(regxp)
 							return *env.NewNative(ps.Idx, newPipe, "script-pipe")
 						default:
-							return evaldo.MakeNativeArgError(ps, 2, []string{"regexp"}, "p-not-match-regexp")
+							return evaldo.MakeNativeArgError(ps, 2, []string{"regex"}, "p-not-match-regex")
 						}
 					default:
-						return evaldo.MakeArgError(ps, 2, []env.Type{env.NativeType}, "p-not-match-regexp")
+						return evaldo.MakeArgError(ps, 2, []env.Type{env.NativeType}, "p-not-match-regex")
 					}
 				default:
-					return evaldo.MakeNativeArgError(ps, 1, []string{"script-pipe"}, "p-not-match-regexp")
+					return evaldo.MakeNativeArgError(ps, 1, []string{"script-pipe"}, "p-not-match-regex")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "p-not-match-regexp")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "p-not-match-regex")
 			}
 		},
 	},
@@ -763,16 +763,16 @@ var Builtins_pipes = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { echo "hello123world" |replace\regexp regexp "[0-9]+" "-" |into-string |trim } "hello-world"
+	// equal { echo "hello123world" |replace\regex regex "[0-9]+" "-" |into-string |trim } "hello-world"
 	// Args:
 	// * pipe: script-pipe to process
-	// * regexp: compiled regexp native pattern to search for
+	// * regex: compiled regex native pattern to search for
 	// * replacement: string to replace matches with
 	// Returns:
-	// * script-pipe with all regexp matches replaced
-	"replace\\regexp": {
+	// * script-pipe with all regex matches replaced
+	"replace\\regex": {
 		Argsn: 3,
-		Doc:   "Replaces all occurrences of strings that match the regexp pattern with a string in the pipe and returns a new pipe object.",
+		Doc:   "Replaces all occurrences of strings that match the regex pattern with a string in the pipe and returns a new pipe object.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -787,19 +787,19 @@ var Builtins_pipes = map[string]*env.Builtin{
 								newPipe := pipe.ReplaceRegexp(searchRegexp, replace.Value)
 								return *env.NewNative(ps.Idx, newPipe, "script-pipe")
 							default:
-								return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType}, "p-replace-regexp")
+								return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType}, "p-replace-regex")
 							}
 						default:
-							return evaldo.MakeNativeArgError(ps, 2, []string{"regexp"}, "p-replace-regexp")
+							return evaldo.MakeNativeArgError(ps, 2, []string{"regex"}, "p-replace-regex")
 						}
 					default:
-						return evaldo.MakeArgError(ps, 2, []env.Type{env.NativeType}, "p-replace-regexp")
+						return evaldo.MakeArgError(ps, 2, []env.Type{env.NativeType}, "p-replace-regex")
 					}
 				default:
-					return evaldo.MakeNativeArgError(ps, 1, []string{"script-pipe"}, "p-replace-regexp")
+					return evaldo.MakeNativeArgError(ps, 1, []string{"script-pipe"}, "p-replace-regex")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "p-replace-regexp")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "p-replace-regex")
 			}
 		},
 	},
@@ -1307,15 +1307,15 @@ var Builtins_pipes = map[string]*env.Builtin{
 	},
 
 	// Example:
-	// echo "id=123 x id=45" |extract\regexp re "id=([0-9]+)" |into-block
+	// echo "id=123 x id=45" |extract\regex re "id=([0-9]+)" |into-block
 	// Args:
 	// * pipe: script-pipe to read from
-	// * regexp: compiled regexp native; if the pattern has a capture group, group 1 is extracted, otherwise the whole match
+	// * regex: compiled regex native; if the pattern has a capture group, group 1 is extracted, otherwise the whole match
 	// Returns:
 	// * script-pipe with one extracted match per output line (like grep -oP)
-	"extract\\regexp": {
+	"extract\\regex": {
 		Argsn: 2,
-		Doc:   "For each line in the pipe, extracts all regexp matches (capture group 1 if present, otherwise the whole match) and outputs each match on a separate line. Equivalent to grep -oP with a capture group.",
+		Doc:   "For each line in the pipe, extracts all regex matches (capture group 1 if present, otherwise the whole match) and outputs each match on a separate line. Equivalent to grep -oP with a capture group.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -1342,16 +1342,16 @@ var Builtins_pipes = map[string]*env.Builtin{
 							})
 							return *env.NewNative(ps.Idx, newPipe, "script-pipe")
 						default:
-							return evaldo.MakeNativeArgError(ps, 2, []string{"regexp"}, "extract\\regexp")
+							return evaldo.MakeNativeArgError(ps, 2, []string{"regex"}, "extract\\regex")
 						}
 					default:
-						return evaldo.MakeArgError(ps, 2, []env.Type{env.NativeType}, "extract\\regexp")
+						return evaldo.MakeArgError(ps, 2, []env.Type{env.NativeType}, "extract\\regex")
 					}
 				default:
-					return evaldo.MakeNativeArgError(ps, 1, []string{"script-pipe"}, "extract\\regexp")
+					return evaldo.MakeNativeArgError(ps, 1, []string{"script-pipe"}, "extract\\regex")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "extract\\regexp")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "extract\\regex")
 			}
 		},
 	},

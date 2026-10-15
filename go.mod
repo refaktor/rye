@@ -46,6 +46,7 @@ require (
 	github.com/muesli/reflow v0.3.0
 	github.com/ollama/ollama v0.30.0
 	github.com/openai/openai-go v1.12.0
+	github.com/oschwald/geoip2-golang v1.9.0
 	github.com/pkg/term v1.2.0-beta.2.0.20211217091447-1a4a3b719465
 	github.com/prometheus/client_golang v1.23.2
 	github.com/refaktor/go-find v0.0.1
@@ -113,6 +114,7 @@ require (
 	github.com/mailru/easyjson v0.9.1 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
+	github.com/oschwald/maxminddb-golang v1.11.0 // indirect
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect

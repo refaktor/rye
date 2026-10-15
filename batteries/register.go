@@ -35,7 +35,7 @@ func RegisterBatteries(ps *env.ProgramState) {
 	evaldo.RegisterBuiltins2(Builtins_vector, ps, "vector")
 	evaldo.RegisterBuiltins2(Builtins_matrix, ps, "matrix")
 	evaldo.RegisterBuiltins2(Builtins_complex, ps, "complex")
-	evaldo.RegisterBuiltins2(Builtins_regexp, ps, "regexp")
+	evaldo.RegisterBuiltins2(Builtins_regex, ps, "regex")
 	evaldo.RegisterBuiltins2(Builtins_cli, ps, "cli")
 	evaldo.RegisterBuiltins2(Builtins_conversion, ps, "conversion")
 	evaldo.RegisterBuiltins2(Builtins_control, ps, "control")

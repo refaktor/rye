@@ -309,7 +309,7 @@
     "builtins-strings": {
       "comment": "String manipulation builtins",
       "name": "support.function.string.rye",
-      "match": "(?<=[\\s{\\[\\(,]|^)(?:trim|trim\\\\|trim\\\\right|trim\\\\left|replace|substring|contains|contains\\?|has-suffix|has-prefix|index\\?|position\\?|split|split\\\\quoted|split\\\\many|split\\\\every|join|join\\\\with|capitalize|lower|upper|concat3|space|ln|encode-to\\\\base64|decode\\\\base64|regexp|match|submatch|find-all)(?=[\\s}\\]\\),;]|$)"
+      "match": "(?<=[\\s{\\[\\(,]|^)(?:trim|trim\\\\|trim\\\\right|trim\\\\left|replace|substring|contains|contains\\?|has-suffix|has-prefix|index\\?|position\\?|split|split\\\\quoted|split\\\\many|split\\\\every|join|join\\\\with|capitalize|lower|upper|concat3|space|ln|encode-to\\\\base64|decode\\\\base64|regex|match|submatch|find-all)(?=[\\s}\\]\\),;]|$)"
     },
 
     "builtins-printing": {

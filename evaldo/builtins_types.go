@@ -686,7 +686,7 @@ var builtins_types = map[string]*env.Builtin{
 					if ps.ErrorFlag {
 						lv.State = 2
 						lv.Result = ps.Res
-						return ps.Res
+						return AsError(ps)
 					}
 					lv.State = 1
 					lv.Result = ps.Res

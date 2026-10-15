@@ -537,14 +537,14 @@ var Builtins_os = map[string]*env.Builtin{
 	},
 
 	// Args:
-	// * filter: file-uri to list directory, word 'dirs' or 'files' to filter by type, string for partial name matching, or regexp to match names
+	// * filter: file-uri to list directory, word 'dirs' or 'files' to filter by type, string for partial name matching, or regex to match names
 	// Returns:
 	// * block of uris representing filtered files or directories in the specified directory or current directory
 	// Example:
 	// cc os ls\ 'files
 	"ls\\": {
 		Argsn: 1,
-		Doc:   "Lists files or directories with absolute paths when possible. If argument is a file-uri, lists that directory (or returns failure if not a directory). Otherwise filters current directory: 'dirs' for directories only, 'files' for files only, a string for partial name matching, or a regexp to match names.",
+		Doc:   "Lists files or directories with absolute paths when possible. If argument is a file-uri, lists that directory (or returns failure if not a directory). Otherwise filters current directory: 'dirs' for directories only, 'files' for files only, a string for partial name matching, or a regex to match names.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var targetDir string = "."
 			var doFiltering bool = true
@@ -636,9 +636,9 @@ var Builtins_os = map[string]*env.Builtin{
 					}
 
 				case env.Native:
-					// Check if it's a regexp
-					if ps.Idx.GetWord(filterArg.Kind.Index) != "regexp" {
-						return evaldo.MakeBuiltinError(ps, "Native object must be a regexp", "ls\\")
+					// Check if it's a regex
+					if ps.Idx.GetWord(filterArg.Kind.Index) != "regex" {
+						return evaldo.MakeBuiltinError(ps, "Native object must be a regex", "ls\\")
 					}
 
 					regex := filterArg.Value.(*regexp.Regexp)
@@ -714,14 +714,14 @@ var Builtins_os = map[string]*env.Builtin{
 	},
 
 	// Args:
-	// * filter: string for partial name matching, or regexp to match names
+	// * filter: string for partial name matching, or regex to match names
 	// Returns:
 	// * block of uris representing filtered directories in the current directory
 	// Example:
 	// cc os ls\\dirs\\ "src"
 	"ls\\dirs\\": {
 		Argsn: 1,
-		Doc:   "Lists directories in the current directory with filtering. Use a string for partial name matching, or a regexp to match names.",
+		Doc:   "Lists directories in the current directory with filtering. Use a string for partial name matching, or a regex to match names.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			files, err := os.ReadDir(".")
 			if err != nil {
@@ -741,9 +741,9 @@ var Builtins_os = map[string]*env.Builtin{
 				}
 
 			case env.Native:
-				// Check if it's a regexp
-				if ps.Idx.GetWord(filterArg.Kind.Index) != "regexp" {
-					return evaldo.MakeBuiltinError(ps, "Native object must be a regexp", "ls\\dirs\\")
+				// Check if it's a regex
+				if ps.Idx.GetWord(filterArg.Kind.Index) != "regex" {
+					return evaldo.MakeBuiltinError(ps, "Native object must be a regex", "ls\\dirs\\")
 				}
 
 				regex := filterArg.Value.(*regexp.Regexp)
@@ -762,14 +762,14 @@ var Builtins_os = map[string]*env.Builtin{
 	},
 
 	// Args:
-	// * filter: string for partial name matching, or regexp to match names
+	// * filter: string for partial name matching, or regex to match names
 	// Returns:
 	// * block of uris representing filtered files (non-directories) in the current directory
 	// Example:
 	// cc os ls\\files\\ re "\.go$"
 	"ls\\files\\": {
 		Argsn: 1,
-		Doc:   "Lists files (non-directories) in the current directory with filtering. Use a string for partial name matching, or a regexp to match names.",
+		Doc:   "Lists files (non-directories) in the current directory with filtering. Use a string for partial name matching, or a regex to match names.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			files, err := os.ReadDir(".")
 			if err != nil {
@@ -789,9 +789,9 @@ var Builtins_os = map[string]*env.Builtin{
 				}
 
 			case env.Native:
-				// Check if it's a regexp
-				if ps.Idx.GetWord(filterArg.Kind.Index) != "regexp" {
-					return evaldo.MakeBuiltinError(ps, "Native object must be a regexp", "ls\\files\\")
+				// Check if it's a regex
+				if ps.Idx.GetWord(filterArg.Kind.Index) != "regex" {
+					return evaldo.MakeBuiltinError(ps, "Native object must be a regex", "ls\\files\\")
 				}
 
 				regex := filterArg.Value.(*regexp.Regexp)
@@ -2200,7 +2200,7 @@ var Builtins_os = map[string]*env.Builtin{
 	// Example:
 	//  finder %src |Name "*.go" |Type 'file |Eval
 	//  finder %. |Max-depth! 2 |Name "*.txt" |Eval
-	//  finder %/home |Min-depth! 1 |Max-depth! 3 |Regex regexp "test.*\.go$" |Eval
+	//  finder %/home |Min-depth! 1 |Max-depth! 3 |Regex regex "test.*\.go$" |Eval
 	//
 
 	// Creates a new finder starting from the given path(s).
@@ -2408,7 +2408,7 @@ var Builtins_os = map[string]*env.Builtin{
 	// Filters by regular expression on the full path.
 	// Args:
 	// * finder: native finder object
-	// * regex: native regexp object
+	// * regex: native regex object
 	// Returns:
 	// * native finder object (for chaining)
 	// Tags: #find #filter
@@ -2426,7 +2426,7 @@ var Builtins_os = map[string]*env.Builtin{
 							rf.F.Regex(regex)
 							return arg0
 						}
-						return evaldo.MakeBuiltinError(ps, "Expected regexp object", "finder//Regex")
+						return evaldo.MakeBuiltinError(ps, "Expected regex object", "finder//Regex")
 					default:
 						return evaldo.MakeArgError(ps, 2, []env.Type{env.NativeType}, "finder//Regex")
 					}
