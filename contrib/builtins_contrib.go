@@ -15,6 +15,7 @@ import (
 	"github.com/refaktor/rye/contrib/ollama"
 	"github.com/refaktor/rye/contrib/postmark"
 	"github.com/refaktor/rye/contrib/ryeopenai"
+	"github.com/refaktor/rye/contrib/maxmind"
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
 )
@@ -56,6 +57,7 @@ func RegisterBuiltins(ps *env.ProgramState, builtinNames *map[string]int) {
 	RegisterBuiltins2(ollama.Builtins_ollama, ps, "ollama", builtinNames)
 	RegisterBuiltins2(postmark.Builtins_postmark, ps, "postmark", builtinNames)
 	RegisterBuiltins2(ryeopenai.Builtins_openai, ps, "openai", builtinNames)
+	RegisterBuiltins2(maxmind.Builtins_maxmind, ps, "maxmind", builtinNames)
 	evaldo.RegisterBuiltinsInContext(genai.Builtins_genai, ps, "genai")
 	//	RegisterBuiltinsInContext(Builtins_prometheus, ps, "prometheus")
 	// Register surf if build tag is present

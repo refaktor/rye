@@ -102,6 +102,12 @@ print-help: does {
 	print "  Create a lrye.mod file in your project directory with a list of modules"
 	print "  Each module will be prefixed with 'b_' automatically"
 	print "  Example lrye.mod content: tiny http bleve"
+	print "\nProject builtins:"
+	print "  Add 'proj_builtins' to your lrye.mod to opt in, e.g.: tiny http proj_builtins"
+	print "  Create a project_builtins/ directory in your project with Go files"
+	print "  (package projectbuiltins) defining a RegisterProjectBuiltins function."
+	print "  l.rye copies them into the Rye source and adds the proj_builtins tag,"
+	print "  registering them after the standard builtins."
 	;print "\n  Optional configuration in lrye.mod (as context):"
 	;print "    config: context {"
 	;print "      app-id: \"com.example.myapp\""
@@ -154,7 +160,9 @@ ensure-rye-replace: fn { } {
 }
 
 ; Helper function to load modules from lrye.mod
-; Returns a dict with 'modules and 'config keys, or none on error
+; Returns a space-separated string of build tags, each module prefixed with 'b_'.
+; The special 'proj_builtins' marker is skipped here (it enables the
+; project_builtins/ directory, not a regular b_ module).
 load-mod-file: fn { } {
 	Open %lrye.mod
 	|fix\either
@@ -170,9 +178,12 @@ load-mod-file: fn { } {
 		print "[no modules]"
 	}
 
-	; Extract modules (first block in file)
+	; Convert module words to strings, skip the proj_builtins marker, and
+	; prefix each remaining module with 'b_'
 	mod-data
-	|map { .string .concat* "b_" }
+	|map { .string }
+	|filter { = "proj_builtins" |not }
+	|map { .concat* "b_" }
 	|join\with " " :modules
 	
 	; Return modules string
@@ -207,6 +218,33 @@ get-embed-command: fn { tags } {
 	} { "" }
 }
 
+; Helper function to detect and prepare a project_builtins/ directory.
+; The proj_builtins marker in lrye.mod opts into project builtins. Returns a
+; context with two keys:
+;   copy - shell command to copy the project's Go files into RYE_HOME/projectbuiltins
+;   tag  - build tag fragment to add (" proj_builtins") or empty string
+; When the marker is absent, or the directory has no .go files, both values are
+; empty and the build proceeds normally.
+get-project-builtins: fn { } {
+	; The proj_builtins marker in lrye.mod opts into project builtins
+	proj-requested: scmd "grep -q 'proj_builtins' lrye.mod 2>/dev/null"
+	either proj-requested = 0 {
+		exists: scmd "test -d project_builtins && ls project_builtins/*.go >/dev/null 2>&1"
+		either exists = 0 {
+			print "* proj_builtins requested, adding proj_builtins tag"
+			context {
+				copy: `find "$RYE_HOME/projectbuiltins" -maxdepth 1 -type f -name '*.go' ! -name 'register_not.go' ! -name 'register_on.go' -delete ; cp "$a/project_builtins/"*.go "$RYE_HOME/projectbuiltins/" ; `
+				tag: " proj_builtins"
+			}
+		} {
+			print "⚠️  proj_builtins requested but project_builtins/ has no .go files"
+			context { copy: "" tag: "" }
+		}
+	} {
+		context { copy: "" tag: "" }
+	}
+}
+
 ; Helper function to execute build command
 run-build-command: fn { command } {
 	term/spin-it "Building ..." {
@@ -227,9 +265,11 @@ build: fn { tags } {
 	cp-embed: get-embed-command tags
 	cp-embed |^check { return 0 }
 	
+	proj: get-project-builtins
+	
 	var 'command join { 
 		cp-embed 
-		join [ ` a=$PWD ; cd $RYE_HOME ; go build -tags "` ++ modules ++ " " ++ tags `" -o "$a/` out `" ; cd "$a"` ]
+		join [ ` a=$PWD ; ` ++ proj/copy ++ ` cd $RYE_HOME ; go build -tags "` ++ modules ++ " " ++ tags ++ proj/tag ++ `" -o "$a/` ++ out ++ `" ; cd "$a"` ]
 	}
 	
 	run-build-command command
@@ -258,10 +298,12 @@ build\fyne: fn { tags } {
 	; Use tags parameter (default to embed_main if empty)
 	build-tags: either tags = "" { "embed_main" "" } { tags }
 	
+	proj: get-project-builtins
+	
 	var 'command join { 
 		cp-embed 
-		` a=$PWD ; cd $RYE_FYNE_HOME ; fyne build -os linux `
-		++ ` -tags "` ++ modules ++ " " ++ build-tags `" -o $a/main ; cd "$a"` 
+		` a=$PWD ; ` ++ proj/copy ++ ` cd $RYE_FYNE_HOME ; fyne build -os linux `
+		++ ` -tags "` ++ modules ++ " " ++ build-tags ++ proj/tag ++ `" -o $a/main ; cd "$a"` 
 	}
 	
 	run-build-command command
@@ -286,11 +328,13 @@ package\fyne: fn { tags } {
 	; Use tags parameter (default to embed_main if empty)
 	build-tags: either tags = "" { "embed_main" "" } { tags }
 	
+	proj: get-project-builtins
+	
 	var 'command join { 
 		cp-embed 
-		` a=$PWD ; cd $RYE_FYNE_HOME ; fyne package -icon ` ++ default-config/icon 
+		` a=$PWD ; ` ++ proj/copy ++ ` cd $RYE_FYNE_HOME ; fyne package -icon ` ++ default-config/icon 
 		++ ` -appVersion ` ++ default-config/app-version 
-		++ ` -tags "` ++ modules ++ " " ++ build-tags `" ; cd "$a"` 
+		++ ` -tags "` ++ modules ++ " " ++ build-tags ++ proj/tag ++ `" ; cd "$a"` 
 	}
 	
 	run-build-command command
@@ -315,12 +359,14 @@ package\fyne\apk: fn { tags } {
 	; Use tags parameter (default to embed_main if empty)
 	build-tags: either tags = "" { "embed_main" } { tags }
 	
+	proj: get-project-builtins
+	
 	var 'command join { 
 		cp-embed 
-		` a=$PWD ; cd $RYE_FYNE_HOME ; fyne package -os android/arm64 -appID ` ++ default-config/app-id 
+		` a=$PWD ; ` ++ proj/copy ++ ` cd $RYE_FYNE_HOME ; fyne package -os android/arm64 -appID ` ++ default-config/app-id 
 		++ ` -icon ` ++ default-config/icon 
 		++ ` -appVersion ` ++ default-config/app-version 
-		++ ` -tags "` ++ modules ++ " " ++ build-tags `" ; cd "$a"` 
+		++ ` -tags "` ++ modules ++ " " ++ build-tags ++ proj/tag ++ `" ; cd "$a"` 
 	}
 	
 	run-build-command command
