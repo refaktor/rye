@@ -1884,6 +1884,36 @@ var Builtins_table = map[string]*env.Builtin{
 	//    table { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 12 }
 	// 	  |group-by 'name { 'name count 'val avg } |column? "val_avg" |sort
 	//   } { 6.0 8.0 }
+	// Tests: concat on strings with duplicates
+	//  equal {
+	//    table { "user" "tag" } { "u1" "a" "u1" "b" "u1" "b" "u2" "a" }
+	//    |group-by 'user { 'user count 'tag concat } |order-by! 'user 'asc |column? "tag_concat"
+	//  } { { "a" "b" "b" } { "a" } }
+	// Tests: concat on integers preserves order
+	//  equal {
+	//    table { "g" "n" } { "a" 1 "a" 2 "b" 2 "b" 3 "b" 3 }
+	//    |group-by 'g { 'n concat } |order-by! 'g 'asc |column? "n_concat"
+	//  } { { 1 2 } { 2 3 3 } }
+	// Tests: concat skips voids (empty strings become strings, Void is skipped)
+	//  equal {
+	//    table { "g" "v" } { "a" "x" "a" "" "a" "y" "b" "" }
+	//    |group-by 'g { 'v concat } |order-by! 'g 'asc |column? "v_concat"
+	//  } { { "x" "" "y" } { "" } }
+	// Tests: concat-distinct on strings
+	//  equal {
+	//    table { "user" "tag" } { "u1" "a" "u1" "b" "u1" "b" "u1" "a" "u2" "a" "u2" "a" }
+	//    |group-by 'user { 'tag concat-distinct } |order-by! 'user 'asc |column? "tag_concat_distinct"
+	//  } { { "a" "b" } { "a" } }
+	// Tests: concat-distinct preserves first-seen order
+	//  equal {
+	//    table { "g" "v" } { "a" "b" "a" "a" "a" "c" "a" "b" }
+	//    |group-by 'g { 'v concat-distinct } |column? "v_concat_distinct"
+	//  } { { "b" "a" "c" } }
+	// Tests: concat-distinct with integers
+	//  equal {
+	//    table { "g" "n" } { "a" 1 "a" 1 "a" 2 "b" 3 "b" 2 "b" 3 }
+	//    |group-by 'g { 'n concat-distinct } |order-by! 'g 'asc |column? "n_concat_distinct"
+	//  } { { 1 2 } { 3 2 } }
 	"group-by": {
 		Argsn: 3,
 		Doc:   "Groups a table by the given column(s) and (optional) aggregations.",
@@ -3621,7 +3651,14 @@ func GroupBy(ps *env.ProgramState, s env.Table, cols []string, aggregations map[
 	}
 
 	aggregatesByGroup := make(map[string]map[string]float64)
+	// for avg counts
 	countByGroup := make(map[string]int)
+	// for concat results per group per agg column
+	type aggConcat struct{ vals []any }
+	concatByGroup := make(map[string]map[string]*aggConcat)
+	// for concat-distinct tracking per group per agg column
+	type aggConcatDistinct struct{ order []any; seen map[string]bool }
+	concatDistinctByGroup := make(map[string]map[string]*aggConcatDistinct)
 	for i, row := range s.Rows {
 		// Create composite key for multi-column grouping
 		groupKeyParts := make([]string, len(cols))
@@ -3670,6 +3707,35 @@ func GroupBy(ps *env.ProgramState, s env.Table, cols []string, aggregations map[
 					}
 					groupAggregates[colAgg]++
 					continue
+				}
+				if fun == "concat" || fun == "concat-distinct" {
+					// For concat, we keep values as-is (Rye values), skipping Void
+					valObj, err := s.GetRowValue(aggCol, row)
+					if err != nil {
+						return MakeError(ps, fmt.Sprintf("Couldn't retrieve value at row %d (%s)", i, err))
+					}
+					v := env.ToRyeValue(valObj)
+					if _, isVoid := v.(env.Void); isVoid {
+						continue
+					}
+					if fun == "concat" {
+						if _, ok := concatByGroup[groupKey]; !ok { concatByGroup[groupKey] = make(map[string]*aggConcat) }
+						agg := concatByGroup[groupKey][aggCol]
+						if agg == nil { agg = &aggConcat{}; concatByGroup[groupKey][aggCol] = agg }
+						agg.vals = append(agg.vals, v)
+						continue
+					}
+					if fun == "concat-distinct" {
+						if _, ok := concatDistinctByGroup[groupKey]; !ok { concatDistinctByGroup[groupKey] = make(map[string]*aggConcatDistinct) }
+						agg := concatDistinctByGroup[groupKey][aggCol]
+						if agg == nil { agg = &aggConcatDistinct{seen: make(map[string]bool)}; concatDistinctByGroup[groupKey][aggCol] = agg }
+						key := env.ToRyeValue(v).Print(*ps.Idx)
+						if !agg.seen[key] {
+							agg.seen[key] = true
+							agg.order = append(agg.order, v)
+						}
+						continue
+					}
 				}
 				valObj, err := s.GetRowValue(aggCol, row)
 				if err != nil {
@@ -3729,6 +3795,41 @@ func GroupBy(ps *env.ProgramState, s env.Table, cols []string, aggregations map[
 				newRow[len(cols)+i] = *env.NewInteger(int64(groupAggregates[colName]))
 			} else if strings.HasSuffix(colName, "_avg") {
 				newRow[len(cols)+i] = *env.NewDecimal(groupAggregates[colName] / float64(countByGroup[groupKey]))
+			} else if strings.HasSuffix(colName, "_concat") {
+				// build block from concatByGroup
+				parts := strings.Split(colName, "_")
+				aggCol := strings.Join(parts[:len(parts)-1], "_")
+				if cg, ok := concatByGroup[groupKey]; ok {
+					if agg := cg[aggCol]; agg != nil {
+						b := env.NewBlock(*env.NewTSeries(nil))
+						b.Series.S = make([]env.Object, 0, len(agg.vals))
+						for _, v := range agg.vals {
+							b.Series.S = append(b.Series.S, env.ToRyeValue(v))
+						}
+						newRow[len(cols)+i] = *b
+					} else {
+						newRow[len(cols)+i] = *env.NewBlock(*env.NewTSeries(nil))
+					}
+				} else {
+					newRow[len(cols)+i] = *env.NewBlock(*env.NewTSeries(nil))
+				}
+			} else if strings.HasSuffix(colName, "_concat_distinct") {
+				parts := strings.Split(colName, "_")
+				aggCol := strings.Join(parts[:len(parts)-2], "_")
+				if cdg, ok := concatDistinctByGroup[groupKey]; ok {
+					if agg := cdg[aggCol]; agg != nil {
+						b := env.NewBlock(*env.NewTSeries(nil))
+						b.Series.S = make([]env.Object, 0, len(agg.order))
+						for _, v := range agg.order {
+							b.Series.S = append(b.Series.S, env.ToRyeValue(v))
+						}
+						newRow[len(cols)+i] = *b
+					} else {
+						newRow[len(cols)+i] = *env.NewBlock(*env.NewTSeries(nil))
+					}
+				} else {
+					newRow[len(cols)+i] = *env.NewBlock(*env.NewTSeries(nil))
+				}
 			} else {
 				newRow[len(cols)+i] = *env.NewDecimal(groupAggregates[colName])
 			}

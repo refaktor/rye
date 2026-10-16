@@ -60,7 +60,7 @@ var Builtins_aws = map[string]*env.Builtin{
 	// * session: native aws-session object
 	// Returns:
 	// * native aws-s3-client object
-	"aws-session//open-s3": {
+	"aws-session//Open-s3": {
 		Argsn: 1,
 		Doc:   "Creates an S3 client from an AWS session.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -69,7 +69,7 @@ var Builtins_aws = map[string]*env.Builtin{
 				client := s3.NewFromConfig(sess.Value.(aws.Config))
 				return *env.NewNative(ps.Idx, client, "aws-s3-client")
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "aws-session//new-s3-client")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "aws-session//Open-s3")
 			}
 		},
 	},
@@ -83,7 +83,7 @@ var Builtins_aws = map[string]*env.Builtin{
 	// * reader: native reader object containing the data to upload
 	// Returns:
 	// * the aws-s3-client object if successful
-	"aws-s3-client//put-object": {
+	"aws-s3-client//Put-object": {
 		Argsn: 4,
 		Doc:   "Uploads an object to an S3 bucket.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -122,16 +122,16 @@ var Builtins_aws = map[string]*env.Builtin{
 							}
 							return arg0
 						default:
-							return evaldo.MakeArgError(ps, 4, []env.Type{env.NativeType}, "aws-s3-client//put-object")
+							return evaldo.MakeArgError(ps, 4, []env.Type{env.NativeType}, "aws-s3-client//Put-object")
 						}
 					default:
-						return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType}, "aws-s3-client//put-object")
+						return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType}, "aws-s3-client//Put-object")
 					}
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "aws-s3-client//put-object")
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "aws-s3-client//Put-object")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "aws-s3-client//put-object")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "aws-s3-client//Put-object")
 			}
 		},
 	},
@@ -144,7 +144,7 @@ var Builtins_aws = map[string]*env.Builtin{
 	// * key: string containing the S3 object key
 	// Returns:
 	// * native reader object containing the downloaded data
-	"aws-s3-client//get-object": {
+	"aws-s3-client//Get-object": {
 		Argsn: 3,
 		Doc:   "Downloads an object from an S3 bucket.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -169,13 +169,13 @@ var Builtins_aws = map[string]*env.Builtin{
 						}
 						return *env.NewNative(ps.Idx, bytes.NewReader(b), "reader")
 					default:
-						return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType}, "aws-s3-client//get-object")
+						return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType}, "aws-s3-client//Get-object")
 					}
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "aws-s3-client//get-object")
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "aws-s3-client//Get-object")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "aws-s3-client//get-object")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "aws-s3-client//Get-object")
 			}
 		},
 	},
@@ -188,7 +188,7 @@ var Builtins_aws = map[string]*env.Builtin{
 	// * key: string containing the S3 object key
 	// Returns:
 	// * the aws-s3-client object if successful
-	"aws-s3-client//delete-object": {
+	"aws-s3-client//Delete-object": {
 		Argsn: 3,
 		Doc:   "Deletes an object from an S3 bucket.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -207,13 +207,13 @@ var Builtins_aws = map[string]*env.Builtin{
 						}
 						return arg0
 					default:
-						return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType}, "aws-s3-client//delete-object")
+						return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType}, "aws-s3-client//Delete-object")
 					}
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "aws-s3-client//delete-object")
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "aws-s3-client//Delete-object")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "aws-s3-client//delete-object")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "aws-s3-client//Delete-object")
 			}
 		},
 	},
@@ -225,7 +225,7 @@ var Builtins_aws = map[string]*env.Builtin{
 	// * session: native aws-session object
 	// Returns:
 	// * native aws-ses-session object
-	"aws-session//open-ses": {
+	"aws-session//Open-ses": {
 		Argsn: 1,
 		Doc:   "Creates an SES client from an AWS session.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -251,7 +251,7 @@ var Builtins_aws = map[string]*env.Builtin{
 	// * from: email address to send from
 	// Returns:
 	// * the aws-ses-session object if successful
-	"aws-ses-session//send-raw": {
+	"aws-ses-session//Send-raw": {
 		Argsn: 4,
 		Doc:   "Sends a raw email using Amazon SES.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

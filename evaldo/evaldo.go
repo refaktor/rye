@@ -396,6 +396,11 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 		case env.Opword, env.Pipeword, env.LSetword, env.LModword:
 			OptionallyEvalExpressionRight(next, ps, limited, allowOpwords, allowDotwords)
 			return
+		case env.CachedBuiltin:
+			if next.Mode == env.CachedModeOpword || next.Mode == env.CachedModePipeword || next.Mode == env.CachedModeDotword {
+				OptionallyEvalExpressionRight(next, ps, limited, allowOpwords, allowDotwords)
+				return
+			}
 		case env.CPath:
 			OptionallyEvalExpressionRight(next, ps, limited, allowOpwords, allowDotwords)
 			return

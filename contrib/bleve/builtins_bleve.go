@@ -81,7 +81,7 @@ var Builtins_bleve = map[string]*env.Builtin{
 		},
 	},
 
-	"bleve-index-mapping//add-document-mapping": {
+	"bleve-index-mapping//Add-document-mapping": {
 		Argsn: 3,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch docmap := arg0.(type) {
@@ -104,7 +104,7 @@ var Builtins_bleve = map[string]*env.Builtin{
 		},
 	},
 
-	"bleve-document-mapping//add-field-mapping-at": {
+	"bleve-document-mapping//Add-field-mapping-at": {
 		Argsn: 3,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch docmap := arg0.(type) {
@@ -127,7 +127,7 @@ var Builtins_bleve = map[string]*env.Builtin{
 		},
 	},
 
-	"bleve-index//index": {
+	"bleve-index//Index": {
 		Argsn: 3,
 		Doc:   "[ ses-session* gomail-message from-email recipients ]",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -175,7 +175,7 @@ var Builtins_bleve = map[string]*env.Builtin{
 			}
 		},
 	},
-	"bleve-query//new-search-request": {
+	"bleve-query//New-search-request": {
 		Argsn: 1,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch qry := arg0.(type) {
@@ -187,7 +187,7 @@ var Builtins_bleve = map[string]*env.Builtin{
 			}
 		},
 	},
-	"bleve-search//search": {
+	"bleve-search//Search": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch search := arg0.(type) {
@@ -247,7 +247,7 @@ var Builtins_bleve = map[string]*env.Builtin{
 			}
 		},
 	},
-	"bleve-results//summary": {
+	"bleve-results//Summary": {
 		Argsn: 1,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch sr := arg0.(type) {
@@ -259,7 +259,7 @@ var Builtins_bleve = map[string]*env.Builtin{
 			}
 		},
 	},
-	"bleve-results//to-list": {
+	"bleve-results//To-list": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch sr := arg0.(type) {
@@ -285,7 +285,7 @@ var Builtins_bleve = map[string]*env.Builtin{
 
 					}
 
-					return env.List{data, env.Word{0}}
+					return env.List{data, env.Word{0, false}}
 				default:
 					return evaldo.MakeError(ps, "Arg 2 not native.")
 				}
