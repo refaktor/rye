@@ -25,6 +25,9 @@ print ""
 ; defers, pure contexts, and argument error/control-flow preservation).
 ; closures/main.rye includes lexical_scoping.rye (definition-context fn,
 ; caller-context fn\dyn, escaping contexts, callbacks, and context paths).
+; failure_handling/main.rye includes 07-dotword-continuation.rye (a failing
+; generic-method dotword must reach a following cached |fix/|disarm handler
+; inside map/filter; regression for cached Opword/Pipeword/Dotword continuation).
 test-folders: { 
 	"basics"
 	"parsing" 

@@ -46,7 +46,7 @@ var Builtins_postmark = map[string]*env.Builtin{
 		},
 	},
 
-	"postmark-email//from<-": {
+	"postmark-email//From!": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch pe := arg0.(type) {
@@ -64,7 +64,7 @@ var Builtins_postmark = map[string]*env.Builtin{
 		},
 	},
 
-	"postmark-email//to<-": {
+	"postmark-email//To!": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch pe := arg0.(type) {
@@ -82,7 +82,7 @@ var Builtins_postmark = map[string]*env.Builtin{
 		},
 	},
 
-	"postmark-email//subject<-": {
+	"postmark-email//Subject!": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch pe := arg0.(type) {
@@ -100,7 +100,7 @@ var Builtins_postmark = map[string]*env.Builtin{
 		},
 	},
 
-	"postmark-email//text-body<-": {
+	"postmark-email//Text-body!": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch pe := arg0.(type) {
@@ -118,7 +118,7 @@ var Builtins_postmark = map[string]*env.Builtin{
 		},
 	},
 
-	"postmark-email//attach!": {
+	"postmark-email//Attach!": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch pe := arg0.(type) {
@@ -155,7 +155,7 @@ var Builtins_postmark = map[string]*env.Builtin{
 		},
 	},
 
-	"postmark-email//send": {
+	"postmark-email//Send": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch pe := arg0.(type) {

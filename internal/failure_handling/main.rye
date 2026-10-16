@@ -7,6 +7,8 @@
 ;   03-handling  - try, disarm, fix, check, ensure, ^check, ^ensure, ^fix, try-all, finally
 ;   04-propagation - failure through user functions, opwords, dotwords, pipewords
 ;   05-advanced  - fix\either, fix\else, fix\continue, continue, ^fix\match, retry, refail
+;   07-dotword-continuation - failing generic-method dotword reaching cached
+;                             |fix/|disarm handlers inside map/filter
 
 print "========================================"
 print "     FAILURE HANDLING TEST SUITE"
@@ -19,6 +21,7 @@ private Load %03-handling.rye
 private Load %04-propagation.rye
 private Load %05-advanced.rye
 private Load %06-loops-do.rye
+private Load %07-dotword-continuation.rye
 
 print ""
 print "========================================"
