@@ -602,7 +602,7 @@ var Builtins_ssh = map[string]*env.Builtin{
 	},
 
 	//
-	// ##### SSH client #####
+	// ##### SSH client ##### "Connecting to remote hosts and running commands over SSH."
 	//
 	// Example:
 	//  cli: Open ssh://me:secret@example.com:22

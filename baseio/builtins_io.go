@@ -2100,6 +2100,12 @@ var Builtins_io = map[string]*env.Builtin{
 	// ; conn .Rmdir "/rye-test" |kind? |equal 'native
 	// ; conn .Close |equal 1
 	// Additional FTP operations
+	// Args:
+	// * connection: native FTP connection.
+	// * path: String directory path to list.
+	//
+	// Returns:
+	// * Block of dicts describing each directory entry.
 	"ftp-connection//List": {
 		Argsn: 2,
 		Doc:   "Lists directory entries. Returns a block of maps with full info.",
@@ -2152,6 +2158,12 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 	// Examples:
 	// ; conn .Cwd "/" |kind? |equal 'native
+	// Args:
+	// * connection: native FTP connection.
+	// * path: String directory to change to.
+	//
+	// Returns:
+	// * the FTP connection.
 	"ftp-connection//Cwd": {
 		Argsn: 2,
 		Doc:   "Changes working directory.",
@@ -2176,6 +2188,12 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 	// Examples:
 	// ; conn .Mkdir "rye-test" |kind? |equal 'native
+	// Args:
+	// * connection: native FTP connection.
+	// * path: String directory to create.
+	//
+	// Returns:
+	// * the FTP connection.
 	"ftp-connection//Mkdir": {
 		Argsn: 2,
 		Doc:   "Creates a directory.",
@@ -2200,6 +2218,12 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 	// Examples:
 	// ; conn .Rmdir "rye-test" |kind? |equal 'native
+	// Args:
+	// * connection: native FTP connection.
+	// * path: String directory to remove.
+	//
+	// Returns:
+	// * the FTP connection.
 	"ftp-connection//Rmdir": {
 		Argsn: 2,
 		Doc:   "Removes a directory.",
@@ -2224,6 +2248,12 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 	// Examples:
 	// ; conn .Delete "/rye-test/hello.txt" |kind? |equal 'native
+	// Args:
+	// * connection: native FTP connection.
+	// * path: String file to delete.
+	//
+	// Returns:
+	// * the FTP connection.
 	"ftp-connection//Delete": {
 		Argsn: 2,
 		Doc:   "Deletes a file.",
@@ -2248,6 +2278,13 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 	// Examples:
 	// ; conn .Rename "/rye-test/a.txt" "/rye-test/b.txt" |kind? |equal 'native
+	// Args:
+	// * connection: native FTP connection.
+	// * from: String current path.
+	// * to: String new path.
+	//
+	// Returns:
+	// * the FTP connection.
 	"ftp-connection//Rename": {
 		Argsn: 3,
 		Doc:   "Renames or moves a file.",
@@ -2277,6 +2314,13 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 	// Examples:
 	// ; conn .Store "/rye-test/up.txt" "content" |kind? |equal 'native
+	// Args:
+	// * connection: native FTP connection.
+	// * path: String remote destination path.
+	// * reader: Reader supplying the file contents.
+	//
+	// Returns:
+	// * the FTP connection.
 	"ftp-connection//Store": {
 		Argsn: 3,
 		Doc:   "Uploads data to a remote path. Accepts string or reader.",

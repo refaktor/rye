@@ -23,7 +23,7 @@ import (
 var Builtins_table = map[string]*env.Builtin{
 
 	//
-	// ##### Constructors #####  "Functions that construct a table."
+	// ##### Constructors ##### "Create tables from column names and row values."
 	//
 	// Tests:
 	//  equal { table { "a" } { 1 2 } |type? } 'table
@@ -32,6 +32,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// Args:
 	//  * columns
 	//  * data
+	// Returns:
+	// * new Table built from the column names and row values.
 	"table": {
 		Argsn: 2,
 		Doc:   "Creates a table by accepting block of column names and flat block of values",
@@ -92,6 +94,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// Args:
 	//  * columns - names of the columns
 	//  * data - block or list of columns (each column is a block or list)
+	// Returns:
+	// * new Table built from the provided columns.
 	"table\\columns": {
 		Argsn: 2,
 		Doc:   "Creats a table by accepting a block of columns",
@@ -106,6 +110,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// Args:
 	//  * columns - names of the columns
 	//  * data - block or list of rows (each row is a block or list)
+	// Returns:
+	// * new Table built from the provided rows.
 	"table\\rows": {
 		Argsn: 2,
 		Doc:   "Creates a table by accepting a block or list of rows",
@@ -147,6 +153,8 @@ var Builtins_table = map[string]*env.Builtin{
 	//  equal { to-table list [ dict { "a" 1 "b" "Jim" } dict { "a" 2 "b" "Bob" } ] |column? "b" |first } "Jim"
 	// Args:
 	//  * data
+	// Returns:
+	// * Table built from the block or list of dicts.
 	"to-table": {
 		Argsn: 1,
 		Doc:   "Creates a table by accepting block or list of dicts",
@@ -294,7 +302,7 @@ var Builtins_table = map[string]*env.Builtin{
 		},
 	},
 	//
-	// ##### Filtering #####  "Functions that construct a table."
+	// ##### Filtering ##### "Select, reject, or fill rows based on column values."
 	//
 	// Example: filtering for rows with the name "Enno"
 	//  sheet: table { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" }
@@ -306,6 +314,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// * column
 	// * value
 	// Tags: #filter #tables
+	// Returns:
+	// * new Table containing rows whose column equals the value.
 	"where-equal": {
 		Argsn: 3,
 		Doc:   "Returns table of rows where specific colum is equal to given value.",
@@ -336,6 +346,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// * column
 	// * value
 	// Tags: #filter #tables
+	// Returns:
+	// * new Table containing rows whose column does not equal the value.
 	"where-not-equal": {
 		Argsn: 3,
 		Doc:   "Returns table of rows where specific colum is not equal to given value.",
@@ -370,6 +382,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// * sheet
 	// * column
 	// Tags: #filter #tables
+	// Returns:
+	// * new Table containing rows where the column is void.
 	"where-void": {
 		Argsn: 2,
 		Doc:   "Returns table of rows where specific colum is void.",
@@ -404,6 +418,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// * column
 	// * regex
 	// Tags: #filter #tables
+	// Returns:
+	// * new Table containing rows whose column matches the regular expression.
 	"where-match": {
 		Argsn: 3,
 		Doc:   "Returns table of rows where a specific colum matches a regex.",
@@ -447,6 +463,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// * column
 	// * substring
 	// Tags: #filter #tables
+	// Returns:
+	// * new Table containing rows whose column contains the substring.
 	"where-contains": {
 		Argsn: 3,
 		Doc:   "Returns table of rows where specific colum contains a given string value.",
@@ -486,6 +504,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// * column
 	// * substring
 	// Tags: #filter #tables
+	// Returns:
+	// * new Table containing rows whose column does not contain the substring.
 	"where-not-contains": {
 		Argsn: 3,
 		Doc:   "Returns table of rows where specific colum does not contain a given string value.",
@@ -524,6 +544,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// * column
 	// * value
 	// Tags: #filter #table
+	// Returns:
+	// * new Table containing rows whose column is greater than the value.
 	"where-greater": {
 		Argsn: 3,
 		Doc:   "Returns table of rows where specific colum is greater than given value.",
@@ -557,6 +579,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// * column
 	// * value
 	// Tags: #filter #table
+	// Returns:
+	// * new Table containing rows whose column is less than the value.
 	"where-lesser": {
 		Argsn: 3,
 		Doc:   "Returns table of rows where specific colum is lesser than given value.",
@@ -593,6 +617,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// * lower-limit
 	// * upper-limit
 	// Tags: #filter #table
+	// Returns:
+	// * new Table containing rows whose column is between the limits (exclusive).
 	"where-between": {
 		Argsn: 4,
 		Doc:   "Returns table of rows where specific colum is between given values.",
@@ -627,6 +653,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// * lower-limit
 	// * upper-limit
 	// Tags: #filter #table
+	// Returns:
+	// * new Table containing rows whose column is within the inclusive limits.
 	"where-between\\inclusive": {
 		Argsn: 4,
 		Doc:   "Returns table of rows where specific colum is between given values (inclusive).",
@@ -663,6 +691,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// * column
 	// * values-filtered-for
 	// Tags: #filter #table
+	// Returns:
+	// * new Table containing rows whose column value is in the provided block.
 	"where-in": {
 		Argsn: 3,
 		Doc:   "Returns table of rows where specific colum value is found in block of values.",
@@ -704,6 +734,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// * column
 	// * values-filtered-for
 	// Tags: #filter #table
+	// Returns:
+	// * new Table containing rows whose column value is not in the provided block.
 	"where-not-in": {
 		Argsn: 3,
 		Doc:   "Returns table of rows where specific colum value is not found in block of values.",
@@ -748,6 +780,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// * column - column name (word or string) or block of column names
 	// * code - block that receives column value (or has columns as words) and returns truthy/falsy
 	// Tags: #filter #tables
+	// Returns:
+	// * new Table containing rows for which the block returns a truthy value.
 	"where": {
 		Argsn: 3,
 		Doc:   "Returns table of rows where code block evaluates to true for the column value.",
@@ -811,6 +845,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// * table
 	// * column - column name (word or string) or block of column names
 	// Tags: #filter #tables
+	// Returns:
+	// * new Table with duplicate rows removed.
 	"distinct": {
 		Argsn: 2,
 		Doc:   "Returns table with duplicate rows removed based on specified column(s).",
@@ -861,6 +897,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// * column - column name (word or string)
 	// * value - value to replace void with
 	// Tags: #transform #tables
+	// Returns:
+	// * new Table with void cells replaced in the specified column.
 	"fill-void": {
 		Argsn: 3,
 		Doc:   "Returns table with void values in specified column replaced with given value.",
@@ -899,6 +937,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// * column - column name (word or string) or block of column names
 	// * code - block that receives column value and returns truthy/falsy
 	// Tags: #filter #tables
+	// Returns:
+	// * Integer count of matching rows.
 	"count-where": {
 		Argsn: 3,
 		Doc:   "Returns count of rows where code block evaluates to true for the column value.",
@@ -952,7 +992,7 @@ var Builtins_table = map[string]*env.Builtin{
 	},
 
 	//
-	// ##### Row level functions #####  "Functions that construct a table."
+	// ##### Row level functions ##### "Read, update, add, or remove individual table rows."
 	//
 	// Tests:
 	//  equal {
@@ -961,6 +1001,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// Args:
 	// * sheet
 	// * new-row
+	// Returns:
+	// * new Table with the row appended.
 	"add-row": {
 		Argsn: 2,
 		Doc:   "Returns a table with new-row added to it",
@@ -997,6 +1039,8 @@ var Builtins_table = map[string]*env.Builtin{
 	//  } 'native
 	// Args:
 	// * sheet
+	// Returns:
+	// * native rows value that can be passed to add-rows or add-rows!.
 	"get-rows": {
 		Argsn: 1,
 		Doc:   "Get rows as a native. This value can be used in `add-rows` and `add-rows!`",
@@ -1029,6 +1073,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// Args:
 	// * sheet - the sheet that is getting rows added to it
 	// * rows - a block containing one or more rows worth of values, or a TableRow Native value
+	// Returns:
+	// * new Table with the rows appended.
 	"add-rows": {
 		Argsn: 2,
 		Doc:   "Add one or more rows to a table",
@@ -1083,6 +1129,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// * sheet - the reference to the sheet that is getting rows added to it
 	// * rows - a block containing one or more rows worth of values, or a TableRow Native value
 	// Tags: #spreasheet #mutation
+	// Returns:
+	// * the updated table.
 	"add-rows!": {
 		Argsn: 2,
 		Doc:   "Add one or more rows to a table ref",
@@ -1149,6 +1197,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// * idx - the index of the row to update, 1-based
 	// * updater - One of either a function, a dict, or a Table Row
 	// Tags: #table #mutation
+	// Returns:
+	// * the updated table reference.
 	"update-row!": {
 		Argsn: 3, // Table, index function/dict
 		Doc:   `Update the row at the given index.`,
@@ -1213,6 +1263,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// * sheet-ref
 	// * row-idx - Index of row to remove, 1-based
 	// Tags: #table #mutation
+	// Returns:
+	// * the updated table reference.
 	"remove-row!": {
 		Argsn: 2,
 		Doc:   "Remove a row from a table by index",
@@ -1237,7 +1289,7 @@ var Builtins_table = map[string]*env.Builtin{
 	},
 
 	//
-	// ##### Column level functions #####  "Functions that construct a table."
+	// ##### Column level functions ##### "Read, rename, add, drop, or transform table columns."
 	//
 	// Example: Select "name" and "age" columns
 	//  sheet: table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
@@ -1245,6 +1297,12 @@ var Builtins_table = map[string]*env.Builtin{
 	// Tests:
 	//  equal { table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 }
 	//   |columns? { 'name 'age } |header? } list { "name" "age" }
+	// Args:
+	// * sheet: Table to select columns from.
+	// * columns: Block of column names; lsetwords rename the preceding column.
+	//
+	// Returns:
+	// * new Table containing only the selected columns.
 	"columns?": {
 		Argsn: 2,
 		Doc:   "Returns table with just given columns. Use lsetwords (:newName) to rename the previous column.",
@@ -1292,6 +1350,11 @@ var Builtins_table = map[string]*env.Builtin{
 	// Tests:
 	//  equal { table { "age" "name" } { 123 "Jim" 29 "Anne" }
 	//   |header? } list { "age" "name" }
+	// Args:
+	// * sheet: Table to read the header from.
+	//
+	// Returns:
+	// * Block of column names.
 	"header?": {
 		Argsn: 1,
 		Doc:   "Gets the column names (header) as block.",
@@ -1313,6 +1376,12 @@ var Builtins_table = map[string]*env.Builtin{
 	// Tests:
 	//  equal { table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Teacher" }
 	//  |column? 'name }  { "Bob" "Alice" }
+	// Args:
+	// * sheet: Table or Block to read from.
+	// * column: Word or String column name, or Integer index for a Block.
+	//
+	// Returns:
+	// * Block of values from the requested column.
 	"column?": {
 		Argsn: 2,
 		Doc:   "Gets all values of a column as a block.",
@@ -1367,6 +1436,12 @@ var Builtins_table = map[string]*env.Builtin{
 	// Tests:
 	//  equal { table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" }
 	//  |drop-column "name" |header? } list { "age" "job_title" }
+	// Args:
+	// * sheet: Table to modify.
+	// * column: Word, String, or Block of column names to drop.
+	//
+	// Returns:
+	// * new Table without the dropped column(s).
 	"drop-column": {
 		Argsn: 2,
 		Doc:   "Remove a column from a table. Returns new table",
@@ -1390,6 +1465,13 @@ var Builtins_table = map[string]*env.Builtin{
 	// Tests:
 	//  equal { tab: ref table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
 	//  tab .rename-column! "name" "first_name" , tab .header? } list { "first_name" "age" }
+	// Args:
+	// * sheet-ref: reference to the Table.
+	// * old-name: String current column name.
+	// * new-name: String new column name.
+	//
+	// Returns:
+	// * the updated table reference.
 	"rename-column!": {
 		Argsn: 3,
 		Doc:   "Remove a column from a table. Returns new table",
@@ -1423,6 +1505,14 @@ var Builtins_table = map[string]*env.Builtin{
 	//  |gen-column 'job { } { "Cook" } |column? "job" } { "Cook" "Cook" "Cook" }
 	//  equal { table { "email" } { "john@example.com" "jane@test.org" }
 	//  |gen-column 'domain 'email [ regex ".*@(.+)$" "$1" ] |column? "domain" } { "example.com" "test.org" }
+	// Args:
+	// * sheet: Table to modify.
+	// * new-column: Word or String name for the new column.
+	// * source: Word/String source column, or Block of values.
+	// * generator: Block or function producing values for the new column.
+	//
+	// Returns:
+	// * the updated table.
 	"gen-column": {
 		Argsn: 4,
 		Doc:   "Adds a new column to table. Changes in-place and returns the new table.",
@@ -1489,6 +1579,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// * column-name - name of the column to update (word or string)
 	// * fn - function that accepts (cell, row) and returns the new cell value
 	// Tags: #table #column #mutation
+	// Returns:
+	// * the updated table reference.
 	"update-column!": {
 		Argsn: 3,
 		Doc:   "Updates all cells in a column by applying a function that receives the cell value and the row.",
@@ -1538,6 +1630,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// * column-name - name of the new column (word or string)
 	// * data - block or list containing values for the new column (must match number of rows)
 	// Tags: #table #column
+	// Returns:
+	// * the updated table.
 	"add-column": {
 		Argsn: 3,
 		Doc:   "Adds a new column to table with the given data. Returns the modified table.",
@@ -1592,7 +1686,7 @@ var Builtins_table = map[string]*env.Builtin{
 	},
 
 	//
-	// ##### Miscelaneous #####  ""
+	// ##### Miscellaneous ##### "Ordering, indexing, joining, and type inference for tables."
 	//
 	// Example: Order by age ascending
 	//  sheet: table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19  }
@@ -1600,6 +1694,13 @@ var Builtins_table = map[string]*env.Builtin{
 	// Tests:
 	//  equal { tab: table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19  }
 	//  tab .order-by! 'age 'asc |column? "age" } { 19 25 29 }
+	// Args:
+	// * sheet: Table to sort in place.
+	// * column: Word or String column name.
+	// * direction: Word asc or desc.
+	//
+	// Returns:
+	// * the updated table.
 	"order-by!": {
 		Argsn: 3,
 		Doc:   "Sorts row by given column, changes table in place.",
@@ -1648,6 +1749,13 @@ var Builtins_table = map[string]*env.Builtin{
 	// Tests:
 	//  equal { tab: table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19  }
 	//  |order-by 'age 'desc |column? "age" } { 29 25 19 }
+	// Args:
+	// * sheet: Table to sort.
+	// * column: Word or String column name.
+	// * direction: Word asc or desc.
+	//
+	// Returns:
+	// * new sorted Table.
 	"order-by": {
 		Argsn: 3,
 		Doc:   "Sorts row by given column, changes table in place.",
@@ -1697,6 +1805,12 @@ var Builtins_table = map[string]*env.Builtin{
 	// Tests:
 	//  equal { table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
 	//  |add-indexes! { name } |indexes? } { "name" }
+	// Args:
+	// * sheet: Table to modify.
+	// * columns: Block of column names to index.
+	//
+	// Returns:
+	// * the updated table.
 	"add-indexes!": {
 		Argsn: 2,
 		Doc:   "Creates an index for all values in the provided columns. Changes in-place and returns the new table.",
@@ -1730,6 +1844,11 @@ var Builtins_table = map[string]*env.Builtin{
 	// Tests:
 	//  equal { table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
 	//  |add-indexes! { name age } |indexes? |length? } 2
+	// Args:
+	// * sheet: Table to inspect.
+	//
+	// Returns:
+	// * Block of indexed column names.
 	"indexes?": {
 		Argsn: 1,
 		Doc:   "Returns the columns that are indexed in a table.",
@@ -1749,6 +1868,12 @@ var Builtins_table = map[string]*env.Builtin{
 	// Tests:
 	//  equal { table { "age" } { 123 29 19 }
 	//  |autotype 1.0 |types? } { integer }
+	// Args:
+	// * sheet: Table whose column types should be inferred.
+	// * percent: Decimal fraction of values that must convert for a column to change type.
+	//
+	// Returns:
+	// * the updated table with inferred column types.
 	"autotype": {
 		Argsn: 2,
 		Doc:   "Takes a table and tries to determine and change the types of columns.",
@@ -1783,6 +1908,14 @@ var Builtins_table = map[string]*env.Builtin{
 	//
 	//    names .left-join houses 'id 'id |column? "name"
 	//  } { "Paul" "Chani" "Vladimir" }
+	// Args:
+	// * left: left Table.
+	// * right: right Table.
+	// * left-column: Word or String join column in the left table.
+	// * right-column: Word or String join column in the right table.
+	//
+	// Returns:
+	// * new joined Table including all left-table rows.
 	"left-join": {
 		Argsn: 4,
 		Doc:   "Left joins two tables on the given columns.",
@@ -1833,6 +1966,14 @@ var Builtins_table = map[string]*env.Builtin{
 	//
 	//    names .inner-join houses 'id 'id |column? "name"
 	//  } {  "Paul" "Vladimir" }
+	// Args:
+	// * left: left Table.
+	// * right: right Table.
+	// * left-column: Word or String join column in the left table.
+	// * right-column: Word or String join column in the right table.
+	//
+	// Returns:
+	// * new joined Table containing only matching rows.
 	"inner-join": {
 		Argsn: 4,
 		Doc:   "Inner joins two tables on the given columns.",
@@ -1914,6 +2055,13 @@ var Builtins_table = map[string]*env.Builtin{
 	//    table { "g" "n" } { "a" 1 "a" 1 "a" 2 "b" 3 "b" 2 "b" 3 }
 	//    |group-by 'g { 'n concat-distinct } |order-by! 'g 'asc |column? "n_concat_distinct"
 	//  } { { 1 2 } { 3 2 } }
+	// Args:
+	// * sheet: Table to group.
+	// * columns: Word, String, or Block of column names to group by.
+	// * aggregations: Block of column/function pairs, such as { 'val sum }.
+	//
+	// Returns:
+	// * new Table with one row per group and the requested aggregations.
 	"group-by": {
 		Argsn: 3,
 		Doc:   "Groups a table by the given column(s) and (optional) aggregations.",
@@ -1978,6 +2126,11 @@ var Builtins_table = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { table { 'a } { 123 234 345 } |A1 } 123
+	// Args:
+	// * sheet: Table to read from.
+	//
+	// Returns:
+	// * the cell at row 1, column 1.
 	"A1": {
 		Argsn: 1,
 		Doc:   "Accepts a Table and returns the first row first column cell.",
@@ -1997,6 +2150,11 @@ var Builtins_table = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { table { 'a 'b } { 123 234 345 456 } |B1 } 234
+	// Args:
+	// * sheet: Table to read from.
+	//
+	// Returns:
+	// * the cell at row 1, column 2.
 	"B1": {
 		Argsn: 1,
 		Doc:   "Accepts a Table and returns the first row second column cell.",
@@ -2016,6 +2174,11 @@ var Builtins_table = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { table { 'a 'b } { 123 234 345 456 } |A2 } 345
+	// Args:
+	// * sheet: Table to read from.
+	//
+	// Returns:
+	// * the cell at row 2, column 1.
 	"A2": {
 		Argsn: 1,
 		Doc:   "Accepts a Table and returns the second row first column cell.",
@@ -2033,6 +2196,11 @@ var Builtins_table = map[string]*env.Builtin{
 	},
 	// Tests:
 	// equal { table { 'a 'b } { 123 234 345 456 } |B2 } 456
+	// Args:
+	// * sheet: Table to read from.
+	//
+	// Returns:
+	// * the cell at row 2, column 2.
 	"B2": {
 		Argsn: 1,
 		Doc:   "Accepts a Table and returns the second row second column cell.",
@@ -2145,6 +2313,8 @@ var Builtins_table = map[string]*env.Builtin{
 	//  * columns - block of column names
 	//  * db-path - path to BadgerDB database
 	//  * table-name - name of the table
+	// Returns:
+	// * persistent table object.
 	"persistent-table": {
 		Argsn: 3,
 		Doc:   "Creates a persistent table using BadgerDB for storage",
@@ -2177,6 +2347,8 @@ var Builtins_table = map[string]*env.Builtin{
 	//  ;        pt .close-persistent-table! |type? } 'persistent-table
 	// Args:
 	//  * persistent-table - the persistent table to close
+	// Returns:
+	// * the closed persistent table.
 	"close-persistent-table!": {
 		Argsn: 1,
 		Doc:   "Closes the BadgerDB connection for a persistent table",
@@ -2200,6 +2372,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// Args:
 	// * csv-string - string containing CSV data
 	// Tags: #table #parsing #csv
+	// Returns:
+	// * Table parsed from the CSV string.
 	"parse\\csv": {
 		Argsn: 1,
 		Doc:   "Parses a CSV string to a table datatype.",
@@ -2238,6 +2412,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// * csv-string - string containing CSV data
 	// * separator - single character separator
 	// Tags: #table #parsing #csv
+	// Returns:
+	// * Table parsed from the CSV string using the separator.
 	"parse\\csv\\separator": {
 		Argsn: 2,
 		Doc:   "Parses a CSV string to a table datatype with a custom separator character.",
@@ -2284,6 +2460,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// Args:
 	// * tsv-string - string containing TSV (tab-separated values) data
 	// Tags: #table #parsing #tsv
+	// Returns:
+	// * Table parsed from the TSV string.
 	"parse\\tsv": {
 		Argsn: 1,
 		Doc:   "Parses a TSV (tab-separated values) string to a table datatype.",
@@ -2322,6 +2500,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// Args:
 	// * table - the table to convert to CSV string
 	// Tags: #table #formatting #csv
+	// Returns:
+	// * CSV string representation of the table.
 	"format\\csv": {
 		Argsn: 1,
 		Doc:   "Converts a table to a CSV string.",
@@ -2382,6 +2562,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// Args:
 	// * table - the table to convert to TSV string
 	// Tags: #table #formatting #tsv
+	// Returns:
+	// * TSV string representation of the table.
 	"format\\tsv": {
 		Argsn: 1,
 		Doc:   "Converts a table to a TSV string.",
@@ -2437,11 +2619,13 @@ var Builtins_table = map[string]*env.Builtin{
 		},
 	},
 
-	// Example: Not applicable, this function needs binary data
-	//  equal { `name,age\nJim,30\nJane,25` |parse\xlsx } "" ; not applicable, xlsx needs binary data
+	// Example:
+	// ; Parsing requires real XLSX binary data, so no runnable example is shown here.
 	// Args:
 	// * data - the string with xlsx binary data or bytes native value
 	// Tags: #table #parsing #xlsx
+	// Returns:
+	// * Table containing the first sheet of the XLSX data.
 	"parse\\xlsx": {
 		Argsn: 1,
 		Doc:   "Parses an xlsx binary string or bytes into a table (first sheet).",
@@ -2524,6 +2708,8 @@ var Builtins_table = map[string]*env.Builtin{
 	// Args:
 	// * table - the table to convert to XLSX bytes
 	// Tags: #table #formatting #xlsx
+	// Returns:
+	// * XLSX bytes native value.
 	"format\\xlsx": {
 		Argsn: 1,
 		Doc:   "Converts a table to an XLSX as bytes native value.",
@@ -3657,7 +3843,10 @@ func GroupBy(ps *env.ProgramState, s env.Table, cols []string, aggregations map[
 	type aggConcat struct{ vals []any }
 	concatByGroup := make(map[string]map[string]*aggConcat)
 	// for concat-distinct tracking per group per agg column
-	type aggConcatDistinct struct{ order []any; seen map[string]bool }
+	type aggConcatDistinct struct {
+		order []any
+		seen  map[string]bool
+	}
 	concatDistinctByGroup := make(map[string]map[string]*aggConcatDistinct)
 	for i, row := range s.Rows {
 		// Create composite key for multi-column grouping
@@ -3692,7 +3881,9 @@ func GroupBy(ps *env.ProgramState, s env.Table, cols []string, aggregations map[
 
 		for aggCol, funs := range aggregations {
 			for _, fun := range funs {
-				colAgg := aggCol + "_" + fun
+				// Aggregation names use hyphens in Rye (concat-distinct), while
+				// generated column names use underscores (tag_concat_distinct).
+				colAgg := aggCol + "_" + strings.ReplaceAll(fun, "-", "_")
 				if fun == "count" {
 					// Count aggregation can be applied on any of the grouping columns
 					isGroupingCol := false
@@ -3719,16 +3910,26 @@ func GroupBy(ps *env.ProgramState, s env.Table, cols []string, aggregations map[
 						continue
 					}
 					if fun == "concat" {
-						if _, ok := concatByGroup[groupKey]; !ok { concatByGroup[groupKey] = make(map[string]*aggConcat) }
+						if _, ok := concatByGroup[groupKey]; !ok {
+							concatByGroup[groupKey] = make(map[string]*aggConcat)
+						}
 						agg := concatByGroup[groupKey][aggCol]
-						if agg == nil { agg = &aggConcat{}; concatByGroup[groupKey][aggCol] = agg }
+						if agg == nil {
+							agg = &aggConcat{}
+							concatByGroup[groupKey][aggCol] = agg
+						}
 						agg.vals = append(agg.vals, v)
 						continue
 					}
 					if fun == "concat-distinct" {
-						if _, ok := concatDistinctByGroup[groupKey]; !ok { concatDistinctByGroup[groupKey] = make(map[string]*aggConcatDistinct) }
+						if _, ok := concatDistinctByGroup[groupKey]; !ok {
+							concatDistinctByGroup[groupKey] = make(map[string]*aggConcatDistinct)
+						}
 						agg := concatDistinctByGroup[groupKey][aggCol]
-						if agg == nil { agg = &aggConcatDistinct{seen: make(map[string]bool)}; concatDistinctByGroup[groupKey][aggCol] = agg }
+						if agg == nil {
+							agg = &aggConcatDistinct{seen: make(map[string]bool)}
+							concatDistinctByGroup[groupKey][aggCol] = agg
+						}
 						key := env.ToRyeValue(v).Print(*ps.Idx)
 						if !agg.seen[key] {
 							agg.seen[key] = true
@@ -3776,7 +3977,7 @@ func GroupBy(ps *env.ProgramState, s env.Table, cols []string, aggregations map[
 	copy(newCols, cols)
 	for aggCol, funs := range aggregations {
 		for _, fun := range funs {
-			newCols = append(newCols, aggCol+"_"+fun)
+			newCols = append(newCols, aggCol+"_"+strings.ReplaceAll(fun, "-", "_"))
 		}
 	}
 	newS := env.NewTable(newCols)

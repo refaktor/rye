@@ -14,7 +14,7 @@ import (
 var builtins_types = map[string]*env.Builtin{
 
 	//
-	// ##### Types and Kinds ##### ""
+	// ##### Types and Kinds ##### "Inspecting and converting Rye values, types, and kinds."
 	//
 	// Tests:
 	// equal { integer "1234" } 1234
@@ -145,6 +145,11 @@ var builtins_types = map[string]*env.Builtin{
 	// Tests:
 	// equal   { uri "https://example.com" } https://example.com
 	// ; error { uri "not-uri" }
+	// Args:
+	// * value: String to convert to a URI.
+	//
+	// Returns:
+	// * URI value.
 	"uri": { // ** TODO-FIXME: return possible failures
 		Argsn: 1,
 		Doc:   "Tries to change Rye value to an URI.",
@@ -163,6 +168,11 @@ var builtins_types = map[string]*env.Builtin{
 	// Tests:
 	// equal   { file "example.txt" } %example.txt
 	// equal { file 123 } %123
+	// Args:
+	// * value: String or Integer to convert to a file URI.
+	//
+	// Returns:
+	// * file URI value.
 	"file": { // **  TODO-FIXME: return possible failures
 		Argsn: 1,
 		Doc:   "Tries to change Rye value to a file.",

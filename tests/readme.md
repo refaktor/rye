@@ -2,6 +2,34 @@
 
 Tests are generated from the Go comments above builtin definitions. `regen` writes three `.info.rye` files, one per source directory: `base.info.rye` (evaldo), `baseio.info.rye` (including IO, commands, OS and HTTP), and `batteries.info.rye`. Each source `builtins_*.go` file is a labelled section within its directory. The same files drive tests and HTML reference pages through `main.rye`; there are no duplicate topic inputs.
 
+## Comment format
+
+Each builtin is documented by the comment immediately above its map key. The
+recognised sections are:
+
+```go
+// ##### Section Name ##### "One-sentence section description."
+//
+// Tests:
+// equal { expression } expected
+// error { expression }
+//
+// Example:
+// ; Short, readable usage example.
+//
+// Args:
+// * value: What the argument means and which types it accepts.
+//
+// Returns:
+// * What the builtin returns, including its type.
+//
+// Tags: #category #topic
+```
+
+`Example:` and `Examples:` are both accepted. `Tags:` is metadata for the
+source comment; it is not rendered as an argument or return value. Keep each
+structured line on its own `//` line. Blank lines are allowed between sections.
+
 To find out more about the comment docs and format read this: https://ryelang.org/cookbook/improving-rye/one-source/
 
 # Generating .info. files

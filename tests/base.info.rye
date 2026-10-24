@@ -1,5 +1,5 @@
-section "evaldo/builtins_boolean.go" "" {
-section "Boolean " "Functions that work with true and false values." {
+section "evaldo/builtins_boolean.go" "Functions that work with true and false values." {
+section "Boolean" "Functions that work with true and false values." {
 	group "true"
 	"Returns a boolean true value."
 	{
@@ -207,7 +207,7 @@ section "Boolean " "Functions that work with true and false values." {
 		equal { any\with 0 { + 10 , * 10 } } 10
 		equal { any\with 5 { - 10 , + 10 } } -5
 		equal { any\with false { .not , .string } } true
-		equal { any\with "abc" { .length , .string } } 3
+		equal { any\with "abc" { .length? , .string } } 3
 		error { any\with 5 "not-a-block" }
 	}
 
@@ -216,8 +216,8 @@ section "Boolean " "Functions that work with true and false values." {
 
 }
 }
-section "evaldo/builtins_numbers.go" "" {
-section "Default" "" {
+section "evaldo/builtins_numbers.go" "Integer arithmetic, sign checks, random numbers, and numeric predicates." {
+section "Numbers" "Integer arithmetic, sign checks, random numbers, and numeric predicates." {
 	group "inc"
 	"Increments an integer value by 1."
 	{
@@ -879,8 +879,8 @@ section "Default" "" {
 
 }
 }
-section "evaldo/builtins_strings.go" "" {
-section "Strings " "" {
+section "evaldo/builtins_strings.go" "Creating, inspecting, transforming, and splitting strings." {
+section "Strings" "Creating, inspecting, transforming, and splitting strings." {
 	group "newline"
 	"Returns a string containing a single newline character."
 	{
@@ -1265,7 +1265,7 @@ section "Strings " "" {
 
 	{
 		equal { encode-to\hex "abcd" } "61626364"
-		equal { encode-to\hex decode\hex "Hello world" } "48656c6c6f20776f726c64"
+		equal { encode-to\hex decode\hex "48656c6c6f20776f726c64" } "48656c6c6f20776f726c64"
 	}
 
 	{
@@ -1544,7 +1544,7 @@ section "Strings " "" {
 
 }
 
-section "URL Encoding " "" {
+section "URL Encoding" "Encoding and decoding URL components and query strings." {
 	group "url-encode"
 	"Encodes a block of name: value pairs as a URL query string (e.g. name=John+Doe&city=New+York), percent-encoding all special characters. Keys can be set-words (name:) or strings (\"name\"), values can be strings, integers, decimals, or words (looked up in context)."
 	{
@@ -1572,8 +1572,8 @@ section "URL Encoding " "" {
 
 }
 }
-section "evaldo/builtins_time.go" "" {
-section "Date and Time " "" {
+section "evaldo/builtins_time.go" "Creating, formatting, comparing, and arithmetic on dates and times." {
+section "Date and Time" "Creating, formatting, comparing, and arithmetic on dates and times." {
 	group "unix-micro?"
 	"Converts a time object to Unix time in microseconds (microseconds since January 1, 1970 UTC)."
 	{
@@ -2066,8 +2066,8 @@ section "Date and Time " "" {
 
 }
 }
-section "evaldo/builtins_collections.go" "" {
-section "Collections " "" {
+section "evaldo/builtins_collections.go" "Working with blocks, lists, dicts, sets, and other collection values." {
+section "Collections" "Working with blocks, lists, dicts, sets, and other collection values." {
 	group "random"
 	"Selects a random value from a block of values."
 	{
@@ -3249,6 +3249,10 @@ section "Collections " "" {
 			1 [ Block List ]
 			2 [ Integer ]
 		}
+		arg `collection: Block or List to update.`
+		arg `index: Integer 1-based position.`
+		arg `value: New value for the position.`
+		returns `the updated collection.`
 	}
 
 	{
@@ -3416,8 +3420,8 @@ section "Collections " "" {
 
 }
 }
-section "evaldo/builtins_types.go" "" {
-section "Types and Kinds " "" {
+section "evaldo/builtins_types.go" "Inspecting and converting Rye values, types, and kinds." {
+section "Types and Kinds" "Inspecting and converting Rye values, types, and kinds." {
 	group "integer"
 	"Tries to change a Rye value (like string) to integer."
 	{
@@ -3502,6 +3506,8 @@ section "Types and Kinds " "" {
 	{
 		argsn 1
 		pure
+		arg `value: String to convert to a URI.`
+		returns `URI value.`
 	}
 
 	{
@@ -3517,6 +3523,8 @@ section "Types and Kinds " "" {
 	{
 		argsn 1
 		pure
+		arg `value: String or Integer to convert to a file URI.`
+		returns `file URI value.`
 	}
 
 	{
@@ -3801,7 +3809,7 @@ section "Types and Kinds " "" {
 		arg `kind: Word representing the kind for which to register the function`
 		arg `method: Word representing the method name`
 		arg `function: Function to register for the kind and method`
-		returns `The registered functionmethod <integer> <add> fn [ a b ] [ a + b ] // tagwords are temporary here`
+		returns `The registered function; method <integer> <add> fn [ a b ] [ a + b ] // tagwords are temporary here`
 	}
 
 	{
@@ -3885,8 +3893,8 @@ section "Types and Kinds " "" {
 
 }
 }
-section "evaldo/builtins_contexts.go" "" {
-section "Contexts " "Context related functions" {
+section "evaldo/builtins_contexts.go" "Context related functions" {
+section "Contexts" "Context related functions" {
 	group "raw-context"
 	"Creates a completely isolated context with no parent, where only built-in functions are available."
 	{
@@ -4207,6 +4215,8 @@ section "Contexts " "Context related functions" {
 		argtypes {
 			1 [ Context ]
 		}
+		arg `context: Context whose parent should be returned.`
+		returns `the parent Context.`
 	}
 
 	{
@@ -4228,6 +4238,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
+		"lc"
 	}
 
 	group "lc\\data"
@@ -4273,6 +4284,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
+		"lcp"
 	}
 
 	group "lc\\"
@@ -4290,6 +4302,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
+		"lc\\ \"print\"\nlc\\ 'function"
 	}
 
 	group "lcp\\"
@@ -4307,6 +4320,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
+		"lcp\\ \"print\""
 	}
 
 	group "cc"
@@ -4324,6 +4338,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
+		"cc my-context"
 	}
 
 	group "ccp"
@@ -4337,6 +4352,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
+		"ccp"
 	}
 
 	group "ccb"
@@ -4350,6 +4366,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
+		"ccb"
 	}
 
 	group "mkcc"
@@ -4367,6 +4384,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
+		"mkcc 'my-sub-context"
 	}
 
 	group "cc-stack-size"
@@ -4380,6 +4398,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
+		"cc-stack-size"
 	}
 
 	group "cc-clear-stack"
@@ -4393,6 +4412,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
+		"cc-clear-stack"
 	}
 
 	group "clone"
@@ -4593,8 +4613,8 @@ section "Contexts " "Context related functions" {
 
 }
 }
-section "evaldo/builtins_conditionals.go" "" {
-section "Flow control " "Functions for conditional execution and branching logic" {
+section "evaldo/builtins_conditionals.go" "Functions for conditional execution and branching logic" {
+section "Flow control" "Functions for conditional execution and branching logic" {
 	group "if"
 	"Executes a block of code only if the condition is true, returning the result of the block or false."
 	{
@@ -4813,8 +4833,8 @@ section "Flow control " "Functions for conditional execution and branching logic
 
 }
 }
-section "evaldo/builtins_iteration.go" "" {
-section "Iteration " "Functions for iterating over collections and executing code repeatedly" {
+section "evaldo/builtins_iteration.go" "Functions for iterating over collections and executing code repeatedly" {
+section "Iteration" "Functions for iterating over collections and executing code repeatedly" {
 	group "loop"
 	"Executes a block of code, builtin, or function a specified number of times, injecting the current iteration number (starting from 1)."
 	{
@@ -5176,6 +5196,9 @@ section "Iteration " "Functions for iterating over collections and executing cod
 			1 [ Block List String ]
 			2 [ Block Builtin Function ]
 		}
+		arg `collection: Block, List, or String to map over.`
+		arg `function: Block, function, or builtin applied to each item.`
+		returns `a Block or List with the mapped values.`
 	}
 
 	{
@@ -5204,6 +5227,10 @@ section "Iteration " "Functions for iterating over collections and executing cod
 			2 [ Word ]
 			3 [ Block ]
 		}
+		arg `collection: Block, List, or String to map over.`
+		arg `index-word: Word bound to the 1-based position.`
+		arg `function: Block applied to each item with the position bound.`
+		returns `a Block or List with the mapped values.`
 	}
 
 	{
@@ -5228,6 +5255,10 @@ section "Iteration " "Functions for iterating over collections and executing cod
 			2 [ Word ]
 			3 [ Block ]
 		}
+		arg `collection: Block, List, or String to map over.`
+		arg `index-word: Word bound to the 0-based index.`
+		arg `function: Block applied to each item with the index bound.`
+		returns `a Block or List with the mapped values.`
 	}
 
 	{
@@ -5281,6 +5312,11 @@ section "Iteration " "Functions for iterating over collections and executing cod
 			2 [ Word ]
 			4 [ Block ]
 		}
+		arg `collection: Block, List, or String to fold.`
+		arg `accumulator-word: Word bound to the accumulator.`
+		arg `initial: Initial accumulator value.`
+		arg `function: Block evaluated for each item.`
+		returns `the final accumulator value.`
 	}
 
 	{
@@ -5304,6 +5340,10 @@ section "Iteration " "Functions for iterating over collections and executing cod
 			1 [ Block List String ]
 			4 [ Function ]
 		}
+		arg `collection: Block, List, or String to fold.`
+		arg `initial: Initial accumulator value.`
+		arg `function: Function receiving (value accumulator) for each item.`
+		returns `the final accumulator value.`
 	}
 
 	{
@@ -5383,6 +5423,9 @@ section "Iteration " "Functions for iterating over collections and executing cod
 			1 [ Block List String ]
 			2 [ Block Builtin ]
 		}
+		arg `collection: Block, List, or String to filter.`
+		arg `predicate: Block, function, or builtin returning truthy for kept items.`
+		returns `a collection of the same kind containing matching items.`
 	}
 
 	{
@@ -5525,8 +5568,8 @@ section "Iteration " "Functions for iterating over collections and executing cod
 
 }
 }
-section "evaldo/builtins_functions.go" "" {
-section "Functions " "functions that create functions" {
+section "evaldo/builtins_functions.go" "Functions that create and inspect functions." {
+section "Functions" "Functions that create and inspect functions." {
 	group "var"
 	"Declares a word as a variable with the given value, allowing it to be modified. Returns the word for use with on-change."
 	{
@@ -5783,7 +5826,7 @@ section "Functions " "functions that create functions" {
 	{
 		equal { prepend-star: partial ?concat [ "* " _ ] , prepend-star "hello" } "* hello"
 		equal { add-5: partial ?_+ [ _ 5 ] , add-5 10 } 15
-		equal { fn-add: fn { x y } { x + y } , add-5: partial ?fn-add [ _ 5 ] , add-5 10 } 15
+		equal { fn-add: fn { x y } { x + y } , add-5: partial ?fn-add { _ 5 } , add-5 10 } 15
 	}
 
 	{
@@ -5833,8 +5876,8 @@ section "Functions " "functions that create functions" {
 
 }
 }
-section "evaldo/builtins.go" "" {
-section "Other " "..." {
+section "evaldo/builtins.go" "Assignments, word lookup, contexts, and runtime helpers." {
+section "Other" "Assignments, word lookup, contexts, and runtime helpers." {
 	group "change!"
 	"Searches for a word and changes it's value in-place. Only works on variables declared with var. If value changes returns true otherwise false"
 	{
@@ -6212,7 +6255,7 @@ section "Other " "..." {
 			1 [ String ]
 		}
 		arg `source: String containing Rye code or URI of file to load with modification allowed`
-		returns `Block containing the parsed Rye valuesload\mod - string-only; file URI variant moved to builtins_baseio.go as "load\\mod\\file"`
+		returns `Block containing the parsed Rye values`
 	}
 
 	{
@@ -6230,7 +6273,7 @@ section "Other " "..." {
 			1 [ String ]
 		}
 		arg `source: String containing Rye code to load with modification allowed and file watching`
-		returns `Block containing the parsed Rye valuesload\live - string-only; file URI variant moved to builtins_baseio.go`
+		returns `Block containing the parsed Rye values`
 	}
 
 	{
@@ -6397,6 +6440,8 @@ section "Other " "..." {
 		argtypes {
 			1 [ String ]
 		}
+		arg `prefix: String used to filter kind names.`
+		returns `Void after printing the matching kinds.`
 	}
 
 	{
@@ -6412,6 +6457,9 @@ section "Other " "..." {
 		argtypes {
 			2 [ String ]
 		}
+		arg `kind: Word or value whose kind should be listed.`
+		arg `prefix: String used to filter method names.`
+		returns `Void after printing the matching methods.`
 	}
 
 	{
@@ -6424,6 +6472,8 @@ section "Other " "..." {
 	"Accepts one value and returns it."
 	{
 		argsn 1
+		arg `value: Value to return from the current function.`
+		returns `the provided value.`
 	}
 
 	{
@@ -6434,8 +6484,10 @@ section "Other " "..." {
 	}
 
 	group "rye"
-	""
+	"Returns the native Rye-itself object used to inspect and configure the running interpreter."
 	{
+		arg `none`
+		returns `native Rye-itself object used to access runtime properties.`
 	}
 
 	{
@@ -6472,6 +6524,8 @@ section "Other " "..." {
 		argtypes {
 			1 [ Block ]
 		}
+		arg `block: Block to execute when the current function exits.`
+		returns `Void value.`
 	}
 
 	{
@@ -6628,8 +6682,8 @@ section "Other " "..." {
 
 }
 }
-section "evaldo/builtins_combinators.go" "" {
-section "Combinators " "Functions that combine other functions or control execution flow" {
+section "evaldo/builtins_combinators.go" "Functions that combine other functions or control execution flow" {
+section "Combinators" "Functions that combine other functions or control execution flow" {
 	group "pass"
 	"Accepts a value and a block. It does the block, with value injected, and returns (passes on) the initial value."
 	{
@@ -6694,14 +6748,14 @@ section "Combinators " "Functions that combine other functions or control execut
 
 }
 }
-section "evaldo/builtins_printing_not.go" "" {
-section "Default" "" {
+section "evaldo/builtins_printing_not.go" "Functions for displaying and formatting values" {
+section "Printing" "Functions for displaying and formatting values" {
 	group "prns"
 	"Prints a value followed by a space, returning the input value."
 	{
 		argsn 1
 		arg `value: Value to print`
-		returns `returns the input value`
+		returns `the input value`
 	}
 
 	{
@@ -6716,7 +6770,7 @@ section "Default" "" {
 	{
 		argsn 1
 		arg `value: Value to print`
-		returns `returns the input value`
+		returns `the input value`
 	}
 
 	{
@@ -6731,7 +6785,7 @@ section "Default" "" {
 	{
 		argsn 1
 		arg `value: Value to print`
-		returns `returns the input value`
+		returns `the input value`
 	}
 
 	{
@@ -6747,7 +6801,7 @@ section "Default" "" {
 		argsn 2
 		arg `a: First value to print`
 		arg `b: Second value to print`
-		returns `returns the second input value`
+		returns `the second input value`
 	}
 
 	{
@@ -6763,7 +6817,7 @@ section "Default" "" {
 		argsn 2
 		arg `a: First value to print`
 		arg `b: Second value to print`
-		returns `returns the second input value`
+		returns `the second input value`
 	}
 
 	{
@@ -6779,7 +6833,7 @@ section "Default" "" {
 		argsn 2
 		arg `a: First value to print`
 		arg `b: Second value to print`
-		returns `returns the second input value`
+		returns `the second input value`
 	}
 
 	{
@@ -6820,7 +6874,7 @@ section "Default" "" {
 		}
 		arg `value: Value to embed`
 		arg `template: String with {} placeholder`
-		returns `returns the input value after printing`
+		returns `the input value after printing`
 	}
 
 	{
@@ -6839,7 +6893,7 @@ section "Default" "" {
 		}
 		arg `value: Value to embed`
 		arg `template: String with {} placeholder`
-		returns `returns the input value after printing`
+		returns `the input value after printing`
 	}
 
 	{
@@ -6878,7 +6932,7 @@ section "Default" "" {
 		}
 		arg `value: Value to embed`
 		arg `template: String with {} placeholder`
-		returns `returns the input value after printing`
+		returns `the input value after printing`
 	}
 
 	{
@@ -6897,7 +6951,7 @@ section "Default" "" {
 		}
 		arg `value: Value to embed`
 		arg `template: String with {} placeholder`
-		returns `returns the input value after printing`
+		returns `the input value after printing`
 	}
 
 	{
@@ -6914,6 +6968,9 @@ section "Default" "" {
 		argtypes {
 			2 [ String ]
 		}
+		arg `value: Value to inspect.`
+		arg `prefix: String printed before the value.`
+		returns `the input value.`
 	}
 
 	{
@@ -6976,8 +7033,8 @@ section "Default" "" {
 
 }
 }
-section "evaldo/builtins_error_handling.go" "" {
-section "Failure " "Handling failures" {
+section "evaldo/builtins_error_handling.go" "Handling failures" {
+section "Failure" "Handling failures" {
 	group "fail"
 	"Creates an error and sets the failure flag, but continues execution (unlike ^fail)."
 	{
@@ -7020,6 +7077,9 @@ section "Failure " "Handling failures" {
 		argtypes {
 			1 [ Error ]
 		}
+		arg `error: Error to re-raise.`
+		arg `error-info: Additional String, Integer, or Block context.`
+		returns `a new Error with the additional context.`
 	}
 
 	{
@@ -7596,6 +7656,8 @@ section "Failure " "Handling failures" {
 		argtypes {
 			1 [ Block ]
 		}
+		arg `block: Block to evaluate, capturing errors.`
+		returns `the block result, or an Error value if evaluation fails.`
 	}
 
 	{
@@ -7636,6 +7698,9 @@ section "Failure " "Handling failures" {
 			1 [ Context ]
 			2 [ Block ]
 		}
+		arg `context: Context in which to evaluate the block.`
+		arg `block: Block to evaluate, capturing errors.`
+		returns `the block result, or an Error value if evaluation fails.`
 	}
 
 	{
@@ -7735,8 +7800,8 @@ section "Failure " "Handling failures" {
 
 }
 }
-section "evaldo/builtins_mth.go" "" {
-section "Fast Math " "Fast infix math evaluator" {
+section "evaldo/builtins_mth.go" "Fast infix math evaluator" {
+section "Fast Math" "Fast infix math evaluator" {
 	group "mth"
 	"Fast infix math evaluator with proper operator precedence (+,-,*,/,//,%,<,>,=,<=,>=,!=). Single-pass Shunting-yard, direct Go arithmetic, no builtin lookup."
 	{
@@ -7768,8 +7833,8 @@ section "Fast Math " "Fast infix math evaluator" {
 
 }
 }
-section "evaldo/builtins_intents.go" "" {
-section "Default" "" {
+section "evaldo/builtins_intents.go" "Semantic input and output points with scenario overrides and validation." {
+section "Intents" "Semantic input and output points with scenario overrides and validation." {
 	group "input-intent"
 	"Declares a semantic input point: input-intent name validator-block provider-block. In scenario mode, returns the mocked value for the given intent name; otherwise evaluates the provider block. The resulting value is always validated using the validation dialect block."
 	{
@@ -7780,12 +7845,17 @@ section "Default" "" {
 			2 [ Block ]
 			3 [ Block ]
 		}
+		arg `name: Word, String, or Tagword identifying the intent.`
+		arg `validator: Validation-dialect block used to validate the result.`
+		arg `provider: Block that produces the real value outside scenario mode.`
+		returns `The validated value, or the configured mock value in scenario mode.`
 	}
 
 	{
 	}
 
 	{
+		"input-intent 'username { string? } { \"real-user\" }"
 	}
 
 	group "output-intent"
@@ -7796,18 +7866,23 @@ section "Default" "" {
 			2 [ Block ]
 			3 [ Block ]
 		}
+		arg `payload: Name or value to log and return.`
+		arg `fields: Block of additional values to include in the log entry.`
+		arg `side-effect: Block to execute outside scenario mode.`
+		returns `The first argument (payload or name), so it can be captured or piped.`
 	}
 
 	{
 	}
 
 	{
+		"output-intent \"user-login\" { \"alice\" } { print \"logged in\" }"
 	}
 
 }
 }
-section "evaldo/builtins_table.go" "" {
-section "Constructors " "Functions that construct a table." {
+section "evaldo/builtins_table.go" "Create tables from column names and row values." {
+section "Constructors" "Create tables from column names and row values." {
 	group "table"
 	"Creates a table by accepting block of column names and flat block of values"
 	{
@@ -7818,6 +7893,7 @@ section "Constructors " "Functions that construct a table." {
 		}
 		arg `columns`
 		arg `data`
+		returns `new Table built from the column names and row values.`
 	}
 
 	{
@@ -7835,6 +7911,7 @@ section "Constructors " "Functions that construct a table." {
 		argsn 2
 		arg `columns - names of the columns`
 		arg `data - block or list of columns (each column is a block or list)`
+		returns `new Table built from the provided columns.`
 	}
 
 	{
@@ -7843,8 +7920,8 @@ section "Constructors " "Functions that construct a table." {
 	}
 
 	{
-`table\columns { 'a 'b } { { 1 2 } { "x" "y" } }
-`	}
+		"table\\columns { 'a 'b } { { 1 2 } { \"x\" \"y\" } }"
+	}
 
 	group "table\\rows"
 	"Creates a table by accepting a block or list of rows"
@@ -7855,6 +7932,7 @@ section "Constructors " "Functions that construct a table." {
 		}
 		arg `columns - names of the columns`
 		arg `data - block or list of rows (each row is a block or list)`
+		returns `new Table built from the provided rows.`
 	}
 
 	{
@@ -7873,6 +7951,7 @@ section "Constructors " "Functions that construct a table." {
 			1 [ Block List ]
 		}
 		arg `data`
+		returns `Table built from the block or list of dicts.`
 	}
 
 	{
@@ -7908,7 +7987,7 @@ section "Constructors " "Functions that construct a table." {
 
 }
 
-section "Filtering " "Functions that construct a table." {
+section "Filtering" "Select, reject, or fill rows based on column values." {
 	group "where-equal"
 	"Returns table of rows where specific colum is equal to given value."
 	{
@@ -7920,7 +7999,7 @@ section "Filtering " "Functions that construct a table." {
 		arg `sheet`
 		arg `column`
 		arg `value`
-		arg `Tags: #filter #tables`
+		returns `new Table containing rows whose column equals the value.`
 	}
 
 	{
@@ -7928,6 +8007,7 @@ section "Filtering " "Functions that construct a table." {
 	}
 
 	{
+		"filtering for rows with the name \"Enno\"\nsheet: table { \"name\" } { \"Enno\" \"Enya\" \"Enid\" \"Bob\" \"Bill\" }\nsheet .where-equal 'name \"Enno\""
 	}
 
 	group "where-not-equal"
@@ -7941,7 +8021,7 @@ section "Filtering " "Functions that construct a table." {
 		arg `sheet`
 		arg `column`
 		arg `value`
-		arg `Tags: #filter #tables`
+		returns `new Table containing rows whose column does not equal the value.`
 	}
 
 	{
@@ -7961,7 +8041,7 @@ section "Filtering " "Functions that construct a table." {
 		}
 		arg `sheet`
 		arg `column`
-		arg `Tags: #filter #tables`
+		returns `new Table containing rows where the column is void.`
 	}
 
 	{
@@ -7983,7 +8063,7 @@ section "Filtering " "Functions that construct a table." {
 		arg `sheet`
 		arg `column`
 		arg `regex`
-		arg `Tags: #filter #tables`
+		returns `new Table containing rows whose column matches the regular expression.`
 	}
 
 	{
@@ -7991,6 +8071,7 @@ section "Filtering " "Functions that construct a table." {
 	}
 
 	{
+		"filting for names that start with \"En\"\nsheet: table { \"name\" } { \"Enno\" \"Enya\" \"Enid\" \"Bob\" \"Bill\" }\nsheet .where-match 'name \"En.+\""
 	}
 
 	group "where-contains"
@@ -8005,7 +8086,7 @@ section "Filtering " "Functions that construct a table." {
 		arg `sheet`
 		arg `column`
 		arg `substring`
-		arg `Tags: #filter #tables`
+		returns `new Table containing rows whose column contains the substring.`
 	}
 
 	{
@@ -8013,9 +8094,8 @@ section "Filtering " "Functions that construct a table." {
 	}
 
 	{
-`sheet: table { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" "Benn" }
-sheet .where-contains 'name "nn"
-`	}
+		"sheet: table { \"name\" } { \"Enno\" \"Enya\" \"Enid\" \"Bob\" \"Bill\" \"Benn\" }\nsheet .where-contains 'name \"nn\""
+	}
 
 	group "where-not-contains"
 	"Returns table of rows where specific colum does not contain a given string value."
@@ -8029,7 +8109,7 @@ sheet .where-contains 'name "nn"
 		arg `sheet`
 		arg `column`
 		arg `substring`
-		arg `Tags: #filter #tables`
+		returns `new Table containing rows whose column does not contain the substring.`
 	}
 
 	{
@@ -8037,9 +8117,8 @@ sheet .where-contains 'name "nn"
 	}
 
 	{
-`sheet: table { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" "Benn" }
-sheet .where-not-contains 'name "nn"
-`	}
+		"sheet: table { \"name\" } { \"Enno\" \"Enya\" \"Enid\" \"Bob\" \"Bill\" \"Benn\" }\nsheet .where-not-contains 'name \"nn\""
+	}
 
 	group "where-greater"
 	"Returns table of rows where specific colum is greater than given value."
@@ -8052,7 +8131,7 @@ sheet .where-not-contains 'name "nn"
 		arg `sheet`
 		arg `column`
 		arg `value`
-		arg `Tags: #filter #table`
+		returns `new Table containing rows whose column is greater than the value.`
 	}
 
 	{
@@ -8060,9 +8139,8 @@ sheet .where-not-contains 'name "nn"
 	}
 
 	{
-`sheet: table { "name" "age" } { "Enno" 30 "Enya" 25 "Enid" 40 "Bob" 19 "Bill" 45 "Benn" 29 }
-sheet .where-greater 'age 29
-`	}
+		"sheet: table { \"name\" \"age\" } { \"Enno\" 30 \"Enya\" 25 \"Enid\" 40 \"Bob\" 19 \"Bill\" 45 \"Benn\" 29 }\nsheet .where-greater 'age 29"
+	}
 
 	group "where-lesser"
 	"Returns table of rows where specific colum is lesser than given value."
@@ -8075,7 +8153,7 @@ sheet .where-greater 'age 29
 		arg `sheet`
 		arg `column`
 		arg `value`
-		arg `Tags: #filter #table`
+		returns `new Table containing rows whose column is less than the value.`
 	}
 
 	{
@@ -8083,6 +8161,7 @@ sheet .where-greater 'age 29
 	}
 
 	{
+		"filting for names that contain \"nn\"\nsheet: table { \"name\" \"age\" } { \"Enno\" 30 \"Enya\" 25 \"Enid\" 40 \"Bob\" 19 \"Bill\" 45 \"Benn\" 29 }\nsheet .where-lesser 'age 29"
 	}
 
 	group "where-between"
@@ -8097,7 +8176,7 @@ sheet .where-greater 'age 29
 		arg `column`
 		arg `lower-limit`
 		arg `upper-limit`
-		arg `Tags: #filter #table`
+		returns `new Table containing rows whose column is between the limits (exclusive).`
 	}
 
 	{
@@ -8105,6 +8184,7 @@ sheet .where-greater 'age 29
 	}
 
 	{
+		"filtering for folks in their 20s\nsheet: table { \"name\" \"age\" } { \"Enno\" 30 \"Enya\" 25 \"Enid\" 40 \"Bob\" 19 \"Bill\" 45 \"Benn\" 29 }\nsheet .where-between 'age 19 30"
 	}
 
 	group "where-between\\inclusive"
@@ -8119,7 +8199,7 @@ sheet .where-greater 'age 29
 		arg `column`
 		arg `lower-limit`
 		arg `upper-limit`
-		arg `Tags: #filter #table`
+		returns `new Table containing rows whose column is within the inclusive limits.`
 	}
 
 	{
@@ -8141,7 +8221,7 @@ sheet .where-greater 'age 29
 		arg `sheet`
 		arg `column`
 		arg `values-filtered-for`
-		arg `Tags: #filter #table`
+		returns `new Table containing rows whose column value is in the provided block.`
 	}
 
 	{
@@ -8151,6 +8231,7 @@ sheet .where-greater 'age 29
 	}
 
 	{
+		"filtering for folks named \"Enno\" or \"Enya\"\nsheet: table { \"name\" \"age\" } { \"Enno\" 30 \"Enya\" 25 \"Enid\" 40 \"Bob\" 19 \"Bill\" 45 \"Benn\" 29 }\nsheet .where-in 'name { \"Enno\" \"Enya\" }"
 	}
 
 	group "where-not-in"
@@ -8165,7 +8246,7 @@ sheet .where-greater 'age 29
 		arg `sheet`
 		arg `column`
 		arg `values-filtered-for`
-		arg `Tags: #filter #table`
+		returns `new Table containing rows whose column value is not in the provided block.`
 	}
 
 	{
@@ -8175,6 +8256,7 @@ sheet .where-greater 'age 29
 	}
 
 	{
+		"filtering for folks named \"Enno\" or \"Enya\"\nsheet: table { \"name\" \"age\" } { \"Enno\" 30 \"Enya\" 25 \"Enid\" 40 \"Bob\" 19 \"Bill\" 45 \"Benn\" 29 }\nsheet .where-not-in 'name { \"Enno\" \"Enya\" }"
 	}
 
 	group "where"
@@ -8189,7 +8271,7 @@ sheet .where-greater 'age 29
 		arg `table`
 		arg `column - column name (word or string) or block of column names`
 		arg `code - block that receives column value (or has columns as words) and returns truthy/falsy`
-		arg `Tags: #filter #tables`
+		returns `new Table containing rows for which the block returns a truthy value.`
 	}
 
 	{
@@ -8201,9 +8283,8 @@ sheet .where-greater 'age 29
 	}
 
 	{
-`table { "name" "age" } { "Jim" 30 "Jane" 25 "Bob" 35 } |where 'age { > 26 }
-table { "a" "b" } { 1 10 2 20 3 30 } |where { 'a 'b } { ( a + b ) > 25 }
-`	}
+		"table { \"name\" \"age\" } { \"Jim\" 30 \"Jane\" 25 \"Bob\" 35 } |where 'age { > 26 }\ntable { \"a\" \"b\" } { 1 10 2 20 3 30 } |where { 'a 'b } { ( a + b ) > 25 }"
+	}
 
 	group "distinct"
 	"Returns table with duplicate rows removed based on specified column(s)."
@@ -8215,7 +8296,7 @@ table { "a" "b" } { 1 10 2 20 3 30 } |where { 'a 'b } { ( a + b ) > 25 }
 		}
 		arg `table`
 		arg `column - column name (word or string) or block of column names`
-		arg `Tags: #filter #tables`
+		returns `new Table with duplicate rows removed.`
 	}
 
 	{
@@ -8224,9 +8305,8 @@ table { "a" "b" } { 1 10 2 20 3 30 } |where { 'a 'b } { ( a + b ) > 25 }
 	}
 
 	{
-`table { "name" "age" } { "Jim" 30 "Jane" 25 "Jim" 30 } |distinct 'name
-table { "a" "b" } { 1 10 1 20 2 10 } |distinct { 'a 'b }
-`	}
+		"table { \"name\" \"age\" } { \"Jim\" 30 \"Jane\" 25 \"Jim\" 30 } |distinct 'name\ntable { \"a\" \"b\" } { 1 10 1 20 2 10 } |distinct { 'a 'b }"
+	}
 
 	group "fill-void"
 	"Returns table with void values in specified column replaced with given value."
@@ -8239,7 +8319,7 @@ table { "a" "b" } { 1 10 1 20 2 10 } |distinct { 'a 'b }
 		arg `table`
 		arg `column - column name (word or string)`
 		arg `value - value to replace void with`
-		arg `Tags: #transform #tables`
+		returns `new Table with void cells replaced in the specified column.`
 	}
 
 	{
@@ -8248,8 +8328,8 @@ table { "a" "b" } { 1 10 1 20 2 10 } |distinct { 'a 'b }
 	}
 
 	{
-`table { "name" "age" } { "Jim" 30 "Jane" _ } |fill-void 'age 0
-`	}
+		"table { \"name\" \"age\" } { \"Jim\" 30 \"Jane\" _ } |fill-void 'age 0"
+	}
 
 	group "count-where"
 	"Returns count of rows where code block evaluates to true for the column value."
@@ -8263,7 +8343,7 @@ table { "a" "b" } { 1 10 1 20 2 10 } |distinct { 'a 'b }
 		arg `table`
 		arg `column - column name (word or string) or block of column names`
 		arg `code - block that receives column value and returns truthy/falsy`
-		arg `Tags: #filter #tables`
+		returns `Integer count of matching rows.`
 	}
 
 	{
@@ -8273,12 +8353,12 @@ table { "a" "b" } { 1 10 1 20 2 10 } |distinct { 'a 'b }
 	}
 
 	{
-`table { "name" "age" } { "Jim" 30 "Jane" 25 "Bob" 35 } |count-where 'age { > 26 }
-`	}
+		"table { \"name\" \"age\" } { \"Jim\" 30 \"Jane\" 25 \"Bob\" 35 } |count-where 'age { > 26 }"
+	}
 
 }
 
-section "Row level functions " "Functions that construct a table." {
+section "Row level functions" "Read, update, add, or remove individual table rows." {
 	group "add-row"
 	"Returns a table with new-row added to it"
 	{
@@ -8289,6 +8369,7 @@ section "Row level functions " "Functions that construct a table." {
 		}
 		arg `sheet`
 		arg `new-row`
+		returns `new Table with the row appended.`
 	}
 
 	{
@@ -8308,6 +8389,7 @@ section "Row level functions " "Functions that construct a table." {
 			1 [ Table ]
 		}
 		arg `sheet`
+		returns `native rows value that can be passed to add-rows or add-rows!.`
 	}
 
 	{
@@ -8329,6 +8411,7 @@ section "Row level functions " "Functions that construct a table." {
 		}
 		arg `sheet - the sheet that is getting rows added to it`
 		arg `rows - a block containing one or more rows worth of values, or a TableRow Native value`
+		returns `new Table with the rows appended.`
 	}
 
 	{
@@ -8355,7 +8438,7 @@ section "Row level functions " "Functions that construct a table." {
 		}
 		arg `sheet - the reference to the sheet that is getting rows added to it`
 		arg `rows - a block containing one or more rows worth of values, or a TableRow Native value`
-		arg `Tags: #spreasheet #mutation`
+		returns `the updated table.`
 	}
 
 	{
@@ -8379,7 +8462,7 @@ section "Row level functions " "Functions that construct a table." {
 		arg `sheet-ref - A ref to a table`
 		arg `idx - the index of the row to update, 1-based`
 		arg `updater - One of either a function, a dict, or a Table Row`
-		arg `Tags: #table #mutation`
+		returns `the updated table reference.`
 	}
 
 	{
@@ -8409,7 +8492,7 @@ section "Row level functions " "Functions that construct a table." {
 		}
 		arg `sheet-ref`
 		arg `row-idx - Index of row to remove, 1-based`
-		arg `Tags: #table #mutation`
+		returns `the updated table reference.`
 	}
 
 	{
@@ -8425,7 +8508,7 @@ section "Row level functions " "Functions that construct a table." {
 
 }
 
-section "Column level functions " "Functions that construct a table." {
+section "Column level functions" "Read, rename, add, drop, or transform table columns." {
 	group "columns?"
 	"Returns table with just given columns. Use lsetwords (:newName) to rename the previous column."
 	{
@@ -8433,6 +8516,9 @@ section "Column level functions " "Functions that construct a table." {
 		argtypes {
 			1 [ Block Table ]
 		}
+		arg `sheet: Table to select columns from.`
+		arg `columns: Block of column names; lsetwords rename the preceding column.`
+		returns `new Table containing only the selected columns.`
 	}
 
 	{
@@ -8441,6 +8527,7 @@ section "Column level functions " "Functions that construct a table." {
 	}
 
 	{
+		"Select \"name\" and \"age\" columns\nsheet: table { \"name\" \"age\" \"job_title\" } { \"Bob\" 25 \"Janitor\" \"Alice\" 29 \"Librarian\" \"Charlie\" 19 \"Line Cook\" }\nsheet .columns? { 'name 'age }"
 	}
 
 	group "header?"
@@ -8450,6 +8537,8 @@ section "Column level functions " "Functions that construct a table." {
 		argtypes {
 			1 [ Table ]
 		}
+		arg `sheet: Table to read the header from.`
+		returns `Block of column names.`
 	}
 
 	{
@@ -8458,6 +8547,7 @@ section "Column level functions " "Functions that construct a table." {
 	}
 
 	{
+		"Get sheet column names\nsheet: table { \"name\" \"age\" \"job_title\" } { \"Bob\" 25 \"Janitor\" \"Alice\" 29 \"Librarian\" \"Charlie\" 19 \"Line Cook\" }\nsheet .header? ; { \"name\" \"age\" \"job_title\" }"
 	}
 
 	group "column?"
@@ -8468,6 +8558,9 @@ section "Column level functions " "Functions that construct a table." {
 			1 [ Table ]
 			2 [ Word String ]
 		}
+		arg `sheet: Table or Block to read from.`
+		arg `column: Word or String column name, or Integer index for a Block.`
+		returns `Block of values from the requested column.`
 	}
 
 	{
@@ -8476,6 +8569,7 @@ section "Column level functions " "Functions that construct a table." {
 	}
 
 	{
+		"Get sheet column names\nsheet: table { \"name\" \"age\" \"job_title\" } { \"Bob\" 25 \"Janitor\" \"Alice\" 29 \"Librarian\" \"Charlie\" 19 \"Line Cook\" }\nsheet .column? 'name ; => { \"Bob\" \"Alice\" \"Charlie\" }"
 	}
 
 	group "drop-column"
@@ -8486,6 +8580,9 @@ section "Column level functions " "Functions that construct a table." {
 			1 [ Table ]
 			2 [ Word String Block ]
 		}
+		arg `sheet: Table to modify.`
+		arg `column: Word, String, or Block of column names to drop.`
+		returns `new Table without the dropped column(s).`
 	}
 
 	{
@@ -8494,6 +8591,7 @@ section "Column level functions " "Functions that construct a table." {
 	}
 
 	{
+		"Drop \"job_title\" column from sheet\nsheet: table { \"name\" \"age\" \"job_title\" } { \"Bob\" 25 \"Janitor\" \"Alice\" 29 \"Librarian\" \"Charlie\" 19 \"Line Cook\" }\nsheet .drop-column 'job_title ;"
 	}
 
 	group "rename-column!"
@@ -8504,6 +8602,10 @@ section "Column level functions " "Functions that construct a table." {
 			1 [ Table ]
 			2 [ Word Block ]
 		}
+		arg `sheet-ref: reference to the Table.`
+		arg `old-name: String current column name.`
+		arg `new-name: String new column name.`
+		returns `the updated table reference.`
 	}
 
 	{
@@ -8524,6 +8626,11 @@ section "Column level functions " "Functions that construct a table." {
 			3 [ Block ]
 			4 [ Block ]
 		}
+		arg `sheet: Table to modify.`
+		arg `new-column: Word or String name for the new column.`
+		arg `source: Word/String source column, or Block of values.`
+		arg `generator: Block or function producing values for the new column.`
+		returns `the updated table.`
 	}
 
 	{
@@ -8534,6 +8641,7 @@ section "Column level functions " "Functions that construct a table." {
 	}
 
 	{
+		"Add a column to a sheet\nsheet: table { \"name\" \"age\" } { \"Bob\" 25 \"Alice\" 29 \"Charlie\" 19 }\nsheet .gen-column 'job_title { \"Jantior\" \"Librarian\" \"Line Cook\" } ;\nGenerate column using regex replacement\nsheet: table { \"email\" } { \"john@example.com\" \"jane@test.org\" \"bob@company.net\" }\nsheet .gen-column 'domain 'email { regex \"@(.+)$\" \"$1\" }"
 	}
 
 	group "update-column!"
@@ -8547,7 +8655,7 @@ section "Column level functions " "Functions that construct a table." {
 		arg `table-ref - a reference to the table to update`
 		arg `column-name - name of the column to update (word or string)`
 		arg `fn - function that accepts (cell, row) and returns the new cell value`
-		arg `Tags: #table #column #mutation`
+		returns `the updated table reference.`
 	}
 
 	{
@@ -8556,6 +8664,7 @@ section "Column level functions " "Functions that construct a table." {
 	}
 
 	{
+		"update column \"a\" by adding 1 to each cell\ntable { \"a\" \"b\" } { 123 234 334 556 } :tab\ntab .update-column! \"a\" fn { cell row } { cell + 1 }\n; column \"a\" now contains { 124 335 }"
 	}
 
 	group "add-column"
@@ -8570,7 +8679,7 @@ section "Column level functions " "Functions that construct a table." {
 		arg `table - the table to add a column to`
 		arg `column-name - name of the new column (word or string)`
 		arg `data - block or list containing values for the new column (must match number of rows)`
-		arg `Tags: #table #column`
+		returns `the updated table.`
 	}
 
 	{
@@ -8583,7 +8692,7 @@ section "Column level functions " "Functions that construct a table." {
 
 }
 
-section "Miscelaneous " "" {
+section "Miscellaneous" "Ordering, indexing, joining, and type inference for tables." {
 	group "order-by!"
 	"Sorts row by given column, changes table in place."
 	{
@@ -8593,6 +8702,10 @@ section "Miscelaneous " "" {
 			2 [ Word ]
 			3 [ Word ]
 		}
+		arg `sheet: Table to sort in place.`
+		arg `column: Word or String column name.`
+		arg `direction: Word asc or desc.`
+		returns `the updated table.`
 	}
 
 	{
@@ -8601,6 +8714,7 @@ section "Miscelaneous " "" {
 	}
 
 	{
+		"Order by age ascending\nsheet: table { \"name\" \"age\" } { \"Bob\" 25 \"Alice\" 29 \"Charlie\" 19  }\nsheet .order-by! 'age 'asc"
 	}
 
 	group "order-by"
@@ -8612,6 +8726,10 @@ section "Miscelaneous " "" {
 			2 [ Word ]
 			3 [ Word ]
 		}
+		arg `sheet: Table to sort.`
+		arg `column: Word or String column name.`
+		arg `direction: Word asc or desc.`
+		returns `new sorted Table.`
 	}
 
 	{
@@ -8620,6 +8738,7 @@ section "Miscelaneous " "" {
 	}
 
 	{
+		"Order by age ascending\nsheet: table { \"name\" \"age\" } { \"Bob\" 25 \"Alice\" 29 \"Charlie\" 19  }\nsheet .order-by 'age 'asc"
 	}
 
 	group "add-indexes!"
@@ -8630,6 +8749,9 @@ section "Miscelaneous " "" {
 			1 [ Table ]
 			2 [ Block ]
 		}
+		arg `sheet: Table to modify.`
+		arg `columns: Block of column names to index.`
+		returns `the updated table.`
 	}
 
 	{
@@ -8647,6 +8769,8 @@ section "Miscelaneous " "" {
 		argtypes {
 			1 [ Table ]
 		}
+		arg `sheet: Table to inspect.`
+		returns `Block of indexed column names.`
 	}
 
 	{
@@ -8665,6 +8789,9 @@ section "Miscelaneous " "" {
 			1 [ Table ]
 			2 [ Decimal ]
 		}
+		arg `sheet: Table whose column types should be inferred.`
+		arg `percent: Decimal fraction of values that must convert for a column to change type.`
+		returns `the updated table with inferred column types.`
 	}
 
 	{
@@ -8685,24 +8812,28 @@ section "Miscelaneous " "" {
 			3 [ Word String ]
 			4 [ Word String ]
 		}
+		arg `left: left Table.`
+		arg `right: right Table.`
+		arg `left-column: Word or String join column in the left table.`
+		arg `right-column: Word or String join column in the right table.`
+		returns `new joined Table including all left-table rows.`
 	}
 
 	{
 		equal {
 		names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
 		houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
-
 		names .inner-join houses 'id 'id |header?
 		} list { "id" "name" "id_2" "house" }
 		equal {
 		names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
 		houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
-
 		names .left-join houses 'id 'id |column? "name"
 		} { "Paul" "Chani" "Vladimir" }
 	}
 
 	{
+		"join two tables, putting in empty cells if the left sheet doesn't have a value\nnames: table { \"id\" \"name\" } { 1 \"Paul\" 2 \"Chani\" 3 \"Vladimir\" } ,\nhouses: table { \"id\" \"house\" } { 1 \"Atreides\" 3 \"Harkonnen\" } ,\nnames .left-join houses 'id 'id"
 	}
 
 	group "inner-join"
@@ -8715,19 +8846,22 @@ section "Miscelaneous " "" {
 			3 [ Word String ]
 			4 [ Word String ]
 		}
+		arg `left: left Table.`
+		arg `right: right Table.`
+		arg `left-column: Word or String join column in the left table.`
+		arg `right-column: Word or String join column in the right table.`
+		returns `new joined Table containing only matching rows.`
 	}
 
 	{
 		equal {
 		names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
 		houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
-
 		names .inner-join houses 'id 'id |header?
 		} list { "id" "name" "id_2" "house" }
 		equal {
 		names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
 		houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
-
 		names .inner-join houses 'id 'id |column? "name"
 		} {  "Paul" "Vladimir" }
 	}
@@ -8744,6 +8878,10 @@ section "Miscelaneous " "" {
 			2 [ Word String Block ]
 			3 [ Block ]
 		}
+		arg `sheet: Table to group.`
+		arg `columns: Word, String, or Block of column names to group by.`
+		arg `aggregations: Block of column/function pairs, such as { 'val sum }.`
+		returns `new Table with one row per group and the requested aggregations.`
 	}
 
 	{
@@ -8759,15 +8897,42 @@ section "Miscelaneous " "" {
 		table { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 12 }
 		|group-by 'name { 'name count 'val avg } |column? "val_avg" |sort
 		} { 6.0 8.0 }
+		equal {
+		table { "user" "tag" } { "u1" "a" "u1" "b" "u1" "b" "u2" "a" }
+		|group-by 'user { 'user count 'tag concat } |order-by! 'user 'asc |column? "tag_concat"
+		} { { "a" "b" "b" } { "a" } }
+		equal {
+		table { "g" "n" } { "a" 1 "a" 2 "b" 2 "b" 3 "b" 3 }
+		|group-by 'g { 'n concat } |order-by! 'g 'asc |column? "n_concat"
+		} { { 1 2 } { 2 3 3 } }
+		equal {
+		table { "g" "v" } { "a" "x" "a" "" "a" "y" "b" "" }
+		|group-by 'g { 'v concat } |order-by! 'g 'asc |column? "v_concat"
+		} { { "x" "" "y" } { "" } }
+		equal {
+		table { "user" "tag" } { "u1" "a" "u1" "b" "u1" "b" "u1" "a" "u2" "a" "u2" "a" }
+		|group-by 'user { 'tag concat-distinct } |order-by! 'user 'asc |column? "tag_concat_distinct"
+		} { { "a" "b" } { "a" } }
+		equal {
+		table { "g" "v" } { "a" "b" "a" "a" "a" "c" "a" "b" }
+		|group-by 'g { 'v concat-distinct } |column? "v_concat_distinct"
+		} { { "b" "a" "c" } }
+		equal {
+		table { "g" "n" } { "a" 1 "a" 1 "a" 2 "b" 3 "b" 2 "b" 3 }
+		|group-by 'g { 'n concat-distinct } |order-by! 'g 'asc |column? "n_concat_distinct"
+		} { { 1 2 } { 3 2 } }
 	}
 
 	{
+		"group table rows by name, running various aggregations on the val column\ntable { \"name\" \"val\" } { \"a\" 1 \"b\" 6 \"a\" 5 \"b\" 10 \"a\" 7 }\n|group-by 'name { 'name count 'val sum 'val min 'val max 'val avg }\n|order-by! 'name 'asc"
 	}
 
 	group "A1"
 	"Accepts a Table and returns the first row first column cell."
 	{
 		argsn 1
+		arg `sheet: Table to read from.`
+		returns `the cell at row 1, column 1.`
 	}
 
 	{
@@ -8781,6 +8946,8 @@ section "Miscelaneous " "" {
 	"Accepts a Table and returns the first row second column cell."
 	{
 		argsn 1
+		arg `sheet: Table to read from.`
+		returns `the cell at row 1, column 2.`
 	}
 
 	{
@@ -8794,6 +8961,8 @@ section "Miscelaneous " "" {
 	"Accepts a Table and returns the second row first column cell."
 	{
 		argsn 1
+		arg `sheet: Table to read from.`
+		returns `the cell at row 2, column 1.`
 	}
 
 	{
@@ -8807,6 +8976,8 @@ section "Miscelaneous " "" {
 	"Accepts a Table and returns the second row second column cell."
 	{
 		argsn 1
+		arg `sheet: Table to read from.`
+		returns `the cell at row 2, column 2.`
 	}
 
 	{
@@ -8816,6 +8987,9 @@ section "Miscelaneous " "" {
 	{
 	}
 
+}
+
+section "Persistent Tables" "Functions for persistent tables using BadgerDB." {
 	group "persistent-table"
 	"Creates a persistent table using BadgerDB for storage"
 	{
@@ -8827,6 +9001,7 @@ section "Miscelaneous " "" {
 		arg `columns - block of column names`
 		arg `db-path - path to BadgerDB database`
 		arg `table-name - name of the table`
+		returns `persistent table object.`
 	}
 
 	{
@@ -8844,6 +9019,7 @@ section "Miscelaneous " "" {
 			1 [ PersistentTable ]
 		}
 		arg `persistent-table - the persistent table to close`
+		returns `the closed persistent table.`
 	}
 
 	{
@@ -8862,7 +9038,7 @@ section "Miscelaneous " "" {
 			1 [ String ]
 		}
 		arg `csv-string - string containing CSV data`
-		arg `Tags: #table #parsing #csv`
+		returns `Table parsed from the CSV string.`
 	}
 
 	{
@@ -8883,7 +9059,7 @@ section "Miscelaneous " "" {
 		}
 		arg `csv-string - string containing CSV data`
 		arg `separator - single character separator`
-		arg `Tags: #table #parsing #csv`
+		returns `Table parsed from the CSV string using the separator.`
 	}
 
 	{
@@ -8902,7 +9078,7 @@ section "Miscelaneous " "" {
 			1 [ String ]
 		}
 		arg `tsv-string - string containing TSV (tab-separated values) data`
-		arg `Tags: #table #parsing #tsv`
+		returns `Table parsed from the TSV string.`
 	}
 
 	{
@@ -8921,7 +9097,7 @@ section "Miscelaneous " "" {
 			1 [ Table ]
 		}
 		arg `table - the table to convert to CSV string`
-		arg `Tags: #table #formatting #csv`
+		returns `CSV string representation of the table.`
 	}
 
 	{
@@ -8940,16 +9116,15 @@ section "Miscelaneous " "" {
 			1 [ Table ]
 		}
 		arg `table - the table to convert to TSV string`
-		arg `Tags: #table #formatting #tsv`
+		returns `TSV string representation of the table.`
 	}
 
 	{
 	}
 
 	{
-`equal { table { "a" "b" } { 1 2 3 4 } |format\tsv } "a\tb\n1\t3\n2\t4\n"
-equal { table { "name" "age" } { "Jim" 30 "Jane" 25 } |format\tsv |split "\n" |length? } 4
-`	}
+		"equal { table { \"a\" \"b\" } { 1 2 3 4 } |format\\tsv } \"a\\tb\\n1\\t3\\n2\\t4\\n\"\nequal { table { \"name\" \"age\" } { \"Jim\" 30 \"Jane\" 25 } |format\\tsv |split \"\\n\" |length? } 4"
+	}
 
 	group "parse\\xlsx"
 	"Parses an xlsx binary string or bytes into a table (first sheet)."
@@ -8959,13 +9134,14 @@ equal { table { "name" "age" } { "Jim" 30 "Jane" 25 } |format\tsv |split "\n" |l
 			1 [ String Bytes ]
 		}
 		arg `data - the string with xlsx binary data or bytes native value`
-		arg `Tags: #table #parsing #xlsx`
+		returns `Table containing the first sheet of the XLSX data.`
 	}
 
 	{
 	}
 
 	{
+		"; Parsing requires real XLSX binary data, so no runnable example is shown here."
 	}
 
 	group "format\\xlsx"
@@ -8976,20 +9152,20 @@ equal { table { "name" "age" } { "Jim" 30 "Jane" 25 } |format\tsv |split "\n" |l
 			1 [ Table ]
 		}
 		arg `table - the table to convert to XLSX bytes`
-		arg `Tags: #table #formatting #xlsx`
+		returns `XLSX bytes native value.`
 	}
 
 	{
 	}
 
 	{
-`table { "a" "b" } { 1 2 3 4 } |format\xlsx |type? ; => 'native
-`	}
+		"table { \"a\" \"b\" } { 1 2 3 4 } |format\\xlsx |type? ; => 'native"
+	}
 
 }
 }
-section "evaldo/builtins_markdown.go" "" {
-section "Markdown " "Functions for processing and converting Markdown documents" {
+section "evaldo/builtins_markdown.go" "Functions for processing and converting Markdown documents" {
+section "Markdown" "Functions for processing and converting Markdown documents" {
 	group "reader//do-markdown"
 	"Processes Markdown using a streaming approach with section handlers."
 	{
@@ -9136,8 +9312,8 @@ section "Markdown " "Functions for processing and converting Markdown documents"
 
 }
 }
-section "evaldo/builtins_validation.go" "" {
-section "Validation dialect " "validation dialect for Rye values" {
+section "evaldo/builtins_validation.go" "Validation dialect for checking Rye values." {
+section "Validation dialect" "Validation dialect for checking Rye values." {
 	group "validate"
 	"Validates and transforms data according to specified rules, returning a dictionary with converted values or an error."
 	{

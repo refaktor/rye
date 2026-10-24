@@ -21,7 +21,7 @@ import (
 var builtins_string = map[string]*env.Builtin{
 
 	//
-	// ##### Strings ##### ""
+	// ##### Strings ##### "Creating, inspecting, transforming, and splitting strings."
 	//
 	// Tests:
 	// equal { newline } "\n"
@@ -592,7 +592,7 @@ var builtins_string = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { encode-to\hex "abcd" } "61626364"
-	// equal { encode-to\hex decode\hex "Hello world" } "48656c6c6f20776f726c64"
+	// equal { encode-to\hex decode\hex "48656c6c6f20776f726c64" } "48656c6c6f20776f726c64"
 	// Args:
 	// * data: String or bytes native value to encode
 	// Returns:
@@ -1083,7 +1083,7 @@ var builtins_string = map[string]*env.Builtin{
 	},
 
 	//
-	// ##### URL Encoding ##### ""
+	// ##### URL Encoding ##### "Encoding and decoding URL components and query strings."
 	//
 	// Tests:
 	// equal { url-encode { name: "John Doe" city: "New York" } |contains "city=New+York" } 1

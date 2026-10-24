@@ -47,6 +47,8 @@ var Builtins_table_files = map[string]*env.Builtin{
 	// Args:
 	// * file-uri - location of csv file to load
 	// Tags: #table #loading #csv
+	// Returns:
+	// * Table parsed from the CSV file.
 	"file-uri//Load\\csv__OLD": {
 		// TODO 2 -- this could move to a go function so it could be called by general load that uses extension to define the loader
 		Argsn: 1,
@@ -58,7 +60,7 @@ var Builtins_table_files = map[string]*env.Builtin{
 				f, err := os.Open(file.GetPath())
 				if err != nil {
 					// log.Fatal("Unable to read input file "+filePath, err)
-					return evaldo.MakeBuiltinError(ps, "Unable to read input file '" + file.GetPath() + "': " + err.Error(), "Load\\csv")
+					return evaldo.MakeBuiltinError(ps, "Unable to read input file '"+file.GetPath()+"': "+err.Error(), "Load\\csv")
 				}
 				defer f.Close()
 
@@ -66,10 +68,10 @@ var Builtins_table_files = map[string]*env.Builtin{
 				rows, err := csvReader.ReadAll()
 				if err != nil {
 					// log.Fatal("Unable to parse file as CSV for "+filePath, err)
-					return evaldo.MakeBuiltinError(ps, "Unable to parse file '" + file.GetPath() + "' as CSV: " + err.Error(), "Load\\csv")
+					return evaldo.MakeBuiltinError(ps, "Unable to parse file '"+file.GetPath()+"' as CSV: "+err.Error(), "Load\\csv")
 				}
 				if len(rows) == 0 {
-					return evaldo.MakeBuiltinError(ps, "File '" + file.GetPath() + "' is empty", "Load\\csv")
+					return evaldo.MakeBuiltinError(ps, "File '"+file.GetPath()+"' is empty", "Load\\csv")
 				}
 				spr := env.NewTable(rows[0])
 				//				for i, row := range rows {
@@ -104,6 +106,8 @@ var Builtins_table_files = map[string]*env.Builtin{
 	// Args:
 	// * file-uri - location of csv file to load
 	// Tags: #table #loading #csv
+	// Returns:
+	// * Table parsed from the CSV file.
 	"file-uri//Load\\csv": {
 		// TODO 2 -- this could move to a go function so it could be called by general load that uses extension to define the loader
 		Argsn: 2,
@@ -117,7 +121,7 @@ var Builtins_table_files = map[string]*env.Builtin{
 					f, err := os.Open(file.GetPath())
 					if err != nil {
 						// log.Fatal("Unable to read input file "+filePath, err)
-						return evaldo.MakeBuiltinError(ps, "Unable to read input file '" + file.GetPath() + "': " + err.Error(), "Load\\csv")
+						return evaldo.MakeBuiltinError(ps, "Unable to read input file '"+file.GetPath()+"': "+err.Error(), "Load\\csv")
 					}
 					defer f.Close()
 
@@ -129,10 +133,10 @@ var Builtins_table_files = map[string]*env.Builtin{
 					rows, err := csvReader.ReadAll()
 					if err != nil {
 						// log.Fatal("Unable to parse file as CSV for "+filePath, err)
-						return evaldo.MakeBuiltinError(ps, "Unable to parse file '" + file.GetPath() + "' as CSV: " + err.Error(), "Load\\csv")
+						return evaldo.MakeBuiltinError(ps, "Unable to parse file '"+file.GetPath()+"' as CSV: "+err.Error(), "Load\\csv")
 					}
 					if len(rows) == 0 {
-						return evaldo.MakeBuiltinError(ps, "File '" + file.GetPath() + "' is empty", "Load\\csv")
+						return evaldo.MakeBuiltinError(ps, "File '"+file.GetPath()+"' is empty", "Load\\csv")
 					}
 					spr := env.NewTable(rows[0])
 					//				for i, row := range rows {
@@ -171,6 +175,8 @@ var Builtins_table_files = map[string]*env.Builtin{
 	// * file-uri - location of csv file to load
 	// * separator - single character used as column separator
 	// Tags: #table #loading #csv
+	// Returns:
+	// * Table parsed from the CSV file, skipping malformed lines.
 	"file-uri//Load\\csv\\ignore-bad": {
 		Argsn: 2,
 		Doc:   "Loads a .csv file to a table datatype, parsing it line by line and skipping lines that can't be parsed as CSV.",
@@ -240,6 +246,8 @@ var Builtins_table_files = map[string]*env.Builtin{
 	//  } true
 	// Args:
 	// * file-uri - location of csv file to load
+	// Returns:
+	// * Table parsed from the TSV file.
 	"file-uri//Load\\tsv": {
 		// TODO 2 -- this could move to a go function so it could be called by general load that uses extension to define the loader
 		Argsn: 1,
@@ -251,7 +259,7 @@ var Builtins_table_files = map[string]*env.Builtin{
 				f, err := os.Open(file.GetPath())
 				if err != nil {
 					// log.Fatal("Unable to read input file "+filePath, err)
-					return evaldo.MakeBuiltinError(ps, "Unable to read input file '" + file.GetPath() + "': " + err.Error(), "Load\\csv")
+					return evaldo.MakeBuiltinError(ps, "Unable to read input file '"+file.GetPath()+"': "+err.Error(), "Load\\csv")
 				}
 				defer f.Close()
 
@@ -260,10 +268,10 @@ var Builtins_table_files = map[string]*env.Builtin{
 				rows, err := csvReader.ReadAll()
 				if err != nil {
 					// log.Fatal("Unable to parse file as CSV for "+filePath, err)
-					return evaldo.MakeBuiltinError(ps, "Unable to parse file '" + file.GetPath() + "' as CSV: " + err.Error(), "Load\\csv")
+					return evaldo.MakeBuiltinError(ps, "Unable to parse file '"+file.GetPath()+"' as CSV: "+err.Error(), "Load\\csv")
 				}
 				if len(rows) == 0 {
-					return evaldo.MakeBuiltinError(ps, "File '" + file.GetPath() + "' is empty", "Load\\csv")
+					return evaldo.MakeBuiltinError(ps, "File '"+file.GetPath()+"' is empty", "Load\\csv")
 				}
 				spr := env.NewTable(rows[0])
 				//				for i, row := range rows {
@@ -300,6 +308,8 @@ var Builtins_table_files = map[string]*env.Builtin{
 	// * file-uri - where to save the sheet as a .csv file
 	// * table    - the table to save
 	// Tags: #table #saving #csv
+	// Returns:
+	// * the saved file URI.
 	"file-uri//Save\\csv": {
 		Argsn: 2,
 		Doc:   "Saves a table to a .csv file.",
@@ -380,6 +390,8 @@ var Builtins_table_files = map[string]*env.Builtin{
 	// * file-uri - where to save the sheet as a .tsv file
 	// * table    - the table to save
 	// Tags: #table #saving #tsv
+	// Returns:
+	// * the saved file URI.
 	"file-uri//Save\\tsv": {
 		Argsn: 2,
 		Doc:   "Saves a table to a .tsv file.",
@@ -457,6 +469,8 @@ var Builtins_table_files = map[string]*env.Builtin{
 	// Args:
 	// * file-uri - location of xlsx file to load
 	// Tags: #table #loading #xlsx
+	// Returns:
+	// * Table containing the first sheet of the XLSX file.
 	"file-uri//Load\\xlsx": {
 		Argsn: 1,
 		Doc:   "Loads the first sheet in an .xlsx file to a Table.",
@@ -523,6 +537,8 @@ var Builtins_table_files = map[string]*env.Builtin{
 	// * file-uri - where to save the table as a .xlsx file
 	// * table    - the table to save
 	// Tags: #table #saving #xlsx
+	// Returns:
+	// * the saved file URI.
 	"file-uri//Save\\xlsx": {
 		Argsn: 2,
 		Doc:   "Saves a Table to a .xlsx file.",

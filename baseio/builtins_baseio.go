@@ -35,6 +35,8 @@ import (
 // capture-stdout.  They are registered by baseio.Register.
 var builtins_baseio = map[string]*env.Builtin{
 
+	// ##### Runtime and Process Integration ##### "Saving state, loading scripts, process arguments, exit, and sandbox controls."
+
 	// -------------------------------------------------------------------------
 	// Save / persist state
 	// -------------------------------------------------------------------------
@@ -280,6 +282,11 @@ var builtins_baseio = map[string]*env.Builtin{
 
 	// Example:
 	// ; exit 0
+	// Args:
+	// * status: Integer process exit status; non-integers exit with 0.
+	//
+	// Returns:
+	// * does not return; terminates the process.
 	"exit": { // **
 		Argsn: 1,
 		Doc:   "Exits the process with the given integer status code (or 0 for any non-integer).",
@@ -333,13 +340,13 @@ var builtins_baseio = map[string]*env.Builtin{
 		},
 	},
 
-	// Rye-itself//History?
-	// Summary: Returns last N lines from REPL history.
-	// Args: rye-itself native (dot-dispatch), n: integer number of lines
-	// Returns: block of strings
-	// Notes: Requires REPL; otherwise returns an error
+	// Args:
+	// * rye-itself: Native Rye-itself object passed via dot dispatch.
+	// * count: Integer number of history lines to return.
+	// Returns:
+	// * Block of strings from REPL history; error when not running in the REPL.
 	// Example:
-	//   Rye-itself//History? _ 10
+	// Rye-itself//History? _ 10
 	"Rye-itself//History?": {
 		Argsn: 2,
 		Doc:   "Returns a block of the last N lines from REPL history.",
@@ -726,6 +733,11 @@ var builtins_baseio = map[string]*env.Builtin{
 	// Tests:
 	// equal { capture-stdout { print 1 } } "1\n"
 	// error { capture-stdout 1 }
+	// Args:
+	// * block: Block whose stdout should be captured.
+	//
+	// Returns:
+	// * String containing the captured stdout.
 	"capture-stdout": { // **
 		Argsn: 1,
 		Doc:   "Executes a block of code while capturing all output to stdout, returning the captured output as a string.",

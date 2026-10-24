@@ -156,6 +156,8 @@ func DisplayRyeValue(ps *env.ProgramState, arg0 env.Object, interactive bool) (e
 // registered by evaldo.RegisterBaseBuiltins and do not require these deps.
 var builtins_printing_extra = map[string]*env.Builtin{
 
+	// ##### Printing ##### "Interactive display and table printing helpers."
+
 	// Tests:
 	// stdout { display 42 |type? } "42\n"
 	// Args:
@@ -254,7 +256,7 @@ var builtins_printing_extra = map[string]*env.Builtin{
 	// Args:
 	// * values: Block to format as space-separated values
 	// Returns:
-	// * returns the input block after printing
+	// * the input block, unchanged
 	"print\\ssv": {
 		Argsn: 1,
 		Doc:   "Prints a block of values as space-separated values followed by a newline, returning the input block.",
@@ -274,7 +276,7 @@ var builtins_printing_extra = map[string]*env.Builtin{
 	// Args:
 	// * values: Block to format as comma-separated values
 	// Returns:
-	// * returns the input block after printing
+	// * the input block, unchanged
 	"print\\csv": {
 		Argsn: 1,
 		Doc:   "Prints a block of values as comma-separated values followed by a newline, returning the input block.",

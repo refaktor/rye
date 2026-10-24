@@ -9,7 +9,7 @@ import (
 var builtins_time = map[string]*env.Builtin{
 
 	//
-	// ##### Date and Time ##### ""
+	// ##### Date and Time ##### "Creating, formatting, comparing, and arithmetic on dates and times."
 	//
 	// Tests:
 	// equal { now |unix-micro? |type? } 'integer

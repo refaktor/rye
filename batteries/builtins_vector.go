@@ -189,7 +189,7 @@ var Builtins_vector = map[string]*env.Builtin{
 	},
 
 	//
-	// ##### Distance Functions #####
+	// ##### Distance Functions ##### "Vector distance, length, and normalization operations."
 	//
 
 	// Tests:
@@ -276,7 +276,7 @@ var Builtins_vector = map[string]*env.Builtin{
 	},
 
 	//
-	// ##### Geometric & Transformation #####
+	// ##### Geometric & Transformation ##### "Vector geometry, dot products, cross products, and transforms."
 	//
 
 	// Tests:
