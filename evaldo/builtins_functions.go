@@ -9,7 +9,7 @@ import (
 var builtins_functions = map[string]*env.Builtin{
 
 	//
-	// ##### Functions ##### "functions that create functions"
+	// ##### Functions ##### "Functions that create and inspect functions."
 	//
 	// Tests:
 	// equal { var 'x 10 x:: 20 x } 20
@@ -490,7 +490,7 @@ var builtins_functions = map[string]*env.Builtin{
 	// Tests:
 	// equal { prepend-star: partial ?concat [ "* " _ ] , prepend-star "hello" } "* hello"
 	// equal { add-5: partial ?_+ [ _ 5 ] , add-5 10 } 15
-	// equal { fn-add: fn { x y } { x + y } , add-5: partial ?fn-add [ _ 5 ] , add-5 10 } 15
+	// equal { fn-add: fn { x y } { x + y } , add-5: partial ?fn-add { _ 5 } , add-5 10 } 15
 	// Args:
 	// * func: Function or builtin to partially apply
 	// * args: Block of arguments, with _ (void) for arguments to be filled later

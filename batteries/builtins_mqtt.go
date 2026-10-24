@@ -77,7 +77,7 @@ func mqttMessageHandler(ps *env.ProgramState, handler env.Function) mqtt.Message
 var Builtins_mqtt = map[string]*env.Builtin{
 
 	//
-	// ##### MQTT Client Functions ##### ""
+	// ##### MQTT Client Functions ##### "Connecting to MQTT brokers and publishing or subscribing to topics."
 	//
 	// Example:
 	//  ; Connect to MQTT broker and subscribe to topics

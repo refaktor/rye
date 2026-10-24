@@ -362,7 +362,7 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 		case env.String:
 			v := s1.Data[s2.Value]
 			switch v1 := v.(type) {
-			case int, int64, float64, string, []any, map[string]any:
+			case bool, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64, string, []any, map[string]any:
 				return env.ToRyeValue(v1)
 			case env.Boolean:
 				return v1
@@ -399,7 +399,7 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 		case env.String:
 			v := s1.Data[s2.Value]
 			switch v1 := v.(type) {
-			case int, int64, float64, string, []any, map[string]any:
+			case bool, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64, string, []any, map[string]any:
 				return env.ToRyeValue(v1)
 			case env.Boolean:
 				return v1
@@ -1071,7 +1071,7 @@ var builtins = map[string]*env.Builtin{
 	}, */
 
 	//
-	// ##### Other ##### "..."
+	// ##### Other ##### "Assignments, word lookup, contexts, and runtime helpers."
 	//
 	// Tests:
 	// equal   { var 'x 123 , change! 234 'x , x } 234
@@ -1702,13 +1702,15 @@ var builtins = map[string]*env.Builtin{
 
 	// TODO -- refactor load variants so they use common function LoadString and LoadFile
 
+	// This is the string-only variant; the file-URI variant is
+	// load\mod\file in baseio.
+	//
 	// Tests:
 	// ; load\mod file://modifiable.rye  ; loads file with word modification allowed
 	// Args:
 	// * source: String containing Rye code or URI of file to load with modification allowed
 	// Returns:
 	// * Block containing the parsed Rye values
-	// load\mod - string-only; file URI variant moved to builtins_baseio.go as "load\\mod\\file"
 	"load\\mod": { // **
 		Argsn: 1,
 		Doc:   "Loads a string into Rye values. During load it allows modification of words.",
@@ -1724,13 +1726,15 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// This is the string-only variant; the file-URI variant is
+	// file-uri//Load\live in baseio.
+	//
 	// Tests:
 	// ; load\live file://watched.rye  ; loads and watches file for changes
 	// Args:
 	// * source: String containing Rye code to load with modification allowed and file watching
 	// Returns:
 	// * Block containing the parsed Rye values
-	// load\live - string-only; file URI variant moved to builtins_baseio.go
 	"load\\live": { // **
 		Argsn: 1,
 		Doc:   "Loads a string into Rye values. During load it allows modification of words.",
@@ -2166,6 +2170,11 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Args:
+	// * prefix: String used to filter kind names.
+	//
+	// Returns:
+	// * Void after printing the matching kinds.
 	"lk\\": {
 		Argsn: 1,
 		Doc:   "Lists available kinds with string filter",
@@ -2200,6 +2209,12 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Args:
+	// * kind: Word or value whose kind should be listed.
+	// * prefix: String used to filter method names.
+	//
+	// Returns:
+	// * Void after printing the matching methods.
 	"lg\\": {
 		Argsn: 2,
 		Doc:   "Lists generic words related to specific kind with string filter",
@@ -2224,6 +2239,11 @@ var builtins = map[string]*env.Builtin{
 	// return , error , failure functions
 	// Tests:
 	// equal { x: fn { } { return 101 202 } x } 101
+	// Args:
+	// * value: Value to return from the current function.
+	//
+	// Returns:
+	// * the provided value.
 	"return": { // **
 		Argsn: 1,
 		Doc:   "Accepts one value and returns it.",
@@ -2287,9 +2307,13 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { rye .type? } 'native
+	// Args:
+	// * none
+	// Returns:
+	// * native Rye-itself object used to access runtime properties.
 	"rye": {
 		Argsn: 0,
-		Doc:   "",
+		Doc:   "Returns the native Rye-itself object used to inspect and configure the running interpreter.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewNative(ps.Idx, BuiltinNames, "Rye-itself")
 		},
@@ -2389,6 +2413,11 @@ var builtins = map[string]*env.Builtin{
 	// equal { x:: 123 defer { x:: 345 } x } 123
 	// stdout { ff:: fn { } { var 'x 123 defer { print 234 } x } , ff } "234\n"
 	// equal { ff:: fn { } { x:: 123 defer { x:: 234 } x + 111 } , ff } 234 ; the result of defer expression is returned TODO, change this
+	// Args:
+	// * block: Block to execute when the current function exits.
+	//
+	// Returns:
+	// * Void value.
 	"defer": {
 		Argsn: 1,
 		Doc:   "Registers a block of code to be executed when the current function exits or the program terminates.",

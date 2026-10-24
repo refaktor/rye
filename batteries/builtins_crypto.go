@@ -292,6 +292,11 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// equal { cc crypto age-identity "AGE-SECRET-KEY-1UMNMNLE5ADV4V0X8LRMG4GVWM3WJ7GVH6JP3J2XSRDFENLJVVX4SDLWXML" |type? } 'native
 	// equal { cc crypto age-identity "AGE-SECRET-KEY-1UMNMNLE5ADV4V0X8LRMG4GVWM3WJ7GVH6JP3J2XSRDFENLJVVX4SDLWXML" |kind? } 'age-identity
 	// equal { cc crypto age-identity "invalid" |disarm |type? } 'error
+	// Args:
+	// * value: String or Bytes containing an AGE-SECRET-KEY.
+	//
+	// Returns:
+	// * native age-identity object.
 	"age-identity": {
 		Argsn: 1,
 		Doc:   "Creates an age identity from a string or bytes.",
@@ -323,6 +328,11 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// equal { cc crypto age-recipient "age1zwya0qq8c824n5ncxppekrm4egk6gnvfhag6dmr87xjqaeuwlsgq68mqj4" |type? } 'native
 	// equal { cc crypto age-recipient "age1zwya0qq8c824n5ncxppekrm4egk6gnvfhag6dmr87xjqaeuwlsgq68mqj4" |kind? } 'age-recipient
 	// equal { cc crypto age-recipient "invalid" |disarm |type? } 'error
+	// Args:
+	// * value: String or Bytes containing an age public key.
+	//
+	// Returns:
+	// * native age-recipient object.
 	"age-recipient": {
 		Argsn: 1,
 		Doc:   "Creates an age recipient from a string or bytes.",
@@ -356,6 +366,12 @@ var Builtins_crypto = map[string]*env.Builtin{
 	//     "SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |Read\string
 	// } "SUPER SECRET"
 	// equal { cc crypto "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |Read\string } "SUPER SECRET"
+	// Args:
+	// * reader: Reader containing plaintext.
+	// * recipient: age-recipient object or String password.
+	//
+	// Returns:
+	// * Reader that yields the encrypted data.
 	"age-encrypt": {
 		Argsn: 2,
 		Doc:   "Encrypts a reader with age for the provided age recipient or string password and returns a reader.",
