@@ -44,66 +44,123 @@ type counters struct {
 	examples         int
 }
 
-// Helper function to get comments above the map key
-func getCommentsAboveKey(fset *token.FileSet, comments []*ast.CommentGroup, keyPos token.Pos) string {
-	for _, commentGroup := range comments {
-		if fset.Position(commentGroup.End()).Line == fset.Position(keyPos).Line-1 {
-			return commentGroup.Text()
+// getCommentsAboveKey returns the comment block immediately above a map key.
+// It also picks up a section marker comment group that is separated from that
+// block by a blank line, as long as the marker appears after the previous
+// builtin key. This keeps markers from being silently attached to the wrong
+// builtin while still allowing readable spacing in the source.
+func getCommentsAboveKey(fset *token.FileSet, comments []*ast.CommentGroup, keyPos, prevKeyPos token.Pos) string {
+	keyLine := fset.Position(keyPos).Line
+	nearest := -1
+	for i, commentGroup := range comments {
+		if fset.Position(commentGroup.End()).Line == keyLine-1 {
+			nearest = i
+			break
 		}
 	}
-	return ""
+	if nearest < 0 {
+		return ""
+	}
+
+	parts := []string{comments[nearest].Text()}
+	for i := nearest - 1; i >= 0; i-- {
+		// Do not reach back past the previous builtin. Comments before that
+		// point belong to an earlier documentation block.
+		if prevKeyPos.IsValid() && comments[i].Pos() < prevKeyPos {
+			break
+		}
+		if !strings.Contains(comments[i].Text(), "#####") {
+			break
+		}
+		parts = append([]string{comments[i].Text()}, parts...)
+	}
+	return strings.Join(parts, "")
 }
 
-// Helper function to get comments above the map key
+// parseCommentsAboveKey parses the comment block above one builtin. Recognised
+// headings are normalised so that "Examples", "Example :" and "Example:" all
+// mean the same thing, and unimplemented prose headings such as "Notes" do not
+// leak into Args, Returns, or Tests.
 func parseCommentsAboveKey(input string, info *builtinInfo) (builtinInfo, *builtinSection) {
-
 	const (
 		inDoc = iota
 		inTests
 		inExamples
 		inArgs
 		inReturns
-		x
+		inTags
+		inNotes
 	)
 	position := inDoc
 
-	// info := builtinInfo{}
-
-	// Step 1: Split input into lines and trim whitespace
 	lines := strings.Split(strings.TrimSpace(input), "\n")
 
 	var section *builtinSection
 
-	// Step 2: Separate header and tests
 	var headerLines []string
-	//	var testLines []string
 
-	//	fmt.Println("!!!!!!!!!!!!!!!**************")
+	re := sectionMarkerRE
 
-	re := regexp.MustCompile(`^##### ([A-Za-z0-9 ]+)#####\s+"([^"]*)"`)
-
-	re_star := regexp.MustCompile("^\\* ")
+	re_star := regexp.MustCompile(`^\*\s+`)
 
 	for _, line := range lines {
-		line = strings.TrimSpace(line) // Remove leading and trailing whitespace
-		// fmt.Println("LLLL:" + line)
-		// fmt.Println(line)
-		match := re.FindStringSubmatch(line)
-		if match != nil {
-			section = &builtinSection{match[1], match[2], make([]builtinInfo, 0)}
+		line = strings.TrimSpace(line)
+
+		if match := re.FindStringSubmatch(line); match != nil {
+			section = &builtinSection{strings.TrimSpace(match[1]), match[2], make([]builtinInfo, 0)}
 		}
-		switch line {
-		case "Tests:":
+
+		// Accept minor spelling/spacing variations and inline values
+		// ("Tags: #file", "Examples: ...") instead of silently appending the
+		// following lines to the previous section.
+		heading := line
+		inline := ""
+		if i := strings.Index(line, ":"); i > 0 {
+			candidate := strings.TrimSpace(line[:i])
+			switch candidate {
+			case "Tests", "Example", "Examples", "Args", "Returns", "Tags",
+				"Summary", "Notes", "Usage", "Semantics", "Modes", "Todos", "Behavior":
+				heading = candidate
+				inline = strings.TrimSpace(line[i+1:])
+			}
+		}
+
+		// Blank lines have no meaning inside structured sections, but are
+		// useful for spacing in the source comment.
+		if line == "" && position != inDoc && position != inExamples {
+			continue
+		}
+
+		switch heading {
+		case "Tests":
 			position = inTests
 			continue
-		case "Example:":
+		case "Example", "Examples":
 			position = inExamples
+			if inline != "" {
+				info.examples = append(info.examples, inline)
+			}
 			continue
-		case "Args:":
+		case "Args":
 			position = inArgs
+			if inline != "" {
+				info.args = append(info.args, re_star.ReplaceAllString(inline, ""))
+			}
 			continue
-		case "Returns:":
+		case "Returns":
 			position = inReturns
+			if inline != "" {
+				info.returns += re_star.ReplaceAllString(inline, "") + "; "
+			}
+			continue
+		case "Tags":
+			position = inTags
+			if inline != "" {
+				info.tags = append(info.tags, inline)
+			}
+			continue
+		case "Summary", "Notes", "Usage", "Semantics", "Modes", "Todos", "Behavior":
+			position = inNotes
 			continue
 		}
 
@@ -113,15 +170,23 @@ func parseCommentsAboveKey(input string, info *builtinInfo) (builtinInfo, *built
 		case inDoc:
 			headerLines = append(headerLines, line)
 		case inExamples:
-			info.examples = append(info.examples, line) // TODO --- examples can be multiline, there is a name also
+			info.examples = append(info.examples, line)
 		case inArgs:
 			info.args = append(info.args, re_star.ReplaceAllString(line, ""))
 		case inReturns:
 			info.returns = info.returns + re_star.ReplaceAllString(line, "")
+			// Preserve a readable separator between multiple return lines.
+			info.returns = strings.TrimSpace(info.returns)
+			info.returns += "; "
+		case inTags:
+			info.tags = append(info.tags, re_star.ReplaceAllString(line, ""))
+		case inNotes:
+			// Notes and similar prose are intentionally not mixed into the
+			// structured fields used to generate reference documentation.
 		}
 	}
-	// Step 3: Combine the header lines into a single string
 	info.doc = strings.Join(headerLines, "\n")
+	info.returns = strings.TrimSuffix(strings.TrimSpace(info.returns), ";")
 
 	return *info, section
 }
@@ -176,13 +241,12 @@ func outputInfo(sections *[]builtinSection) {
 				}
 				fmt.Println("\t}\n")
 
-				// Examples block
+				// Examples block. Keep the whole example as one Rye string
+				// literal so embedded backticks cannot break generated source.
 				if len(info.examples) > 0 {
-					fmt.Print("\t{\n`")
-					for _, t := range info.examples {
-						fmt.Println(t)
-					}
-					fmt.Println("`\t}\n")
+					fmt.Print("\t{\n")
+					fmt.Printf("\t\t%s\n", strconv.Quote(strings.Join(info.examples, "\n")))
+					fmt.Println("\t}\n")
 				} else {
 					fmt.Println("\t{\n\t}\n")
 				}
@@ -328,6 +392,35 @@ func containsString(slice []string, item string) bool {
 	return false
 }
 
+var sectionMarkerRE = regexp.MustCompile(`^#####\s+(.+?)\s+#####\s*(?:"(.*)")?\s*$`)
+
+type sectionMarker struct {
+	pos     token.Pos
+	section builtinSection
+}
+
+// collectSectionMarkers finds section headers independently of the comment
+// block that happens to sit directly above a map key. A section can therefore
+// be separated from its first builtin by a blank line without disappearing.
+func collectSectionMarkers(comments []*ast.CommentGroup) []sectionMarker {
+	var markers []sectionMarker
+	for _, group := range comments {
+		for _, comment := range group.List {
+			line := strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(comment.Text), "//"))
+			if match := sectionMarkerRE.FindStringSubmatch(line); match != nil {
+				markers = append(markers, sectionMarker{
+					pos: comment.Pos(),
+					section: builtinSection{
+						name:      strings.TrimSpace(match[1]),
+						docstring: match[2],
+					},
+				})
+			}
+		}
+	}
+	return markers
+}
+
 func doParsing(args []string) {
 	/// ###
 
@@ -355,6 +448,9 @@ func doParsing(args []string) {
 	c := counters{0, 0, 0, 0}
 
 	var section *builtinSection
+	var prevKeyPos token.Pos
+	markers := collectSectionMarkers(node.Comments)
+	markerIndex := 0
 
 	section = &builtinSection{"Default", "", make([]builtinInfo, 0)}
 
@@ -393,6 +489,18 @@ func doParsing(args []string) {
 					info := builtinInfo{}
 					if kv, ok := elt.(*ast.KeyValueExpr); ok {
 						if key, ok := kv.Key.(*ast.BasicLit); ok {
+							// Apply any section markers that occur before this
+							// key, even when they are separated by a blank line
+							// or the builtin has no comment block.
+							for markerIndex < len(markers) && markers[markerIndex].pos < key.Pos() {
+								if len(section.builtins) > 0 {
+									*sectionList = append(*sectionList, *section)
+								}
+								next := markers[markerIndex].section
+								section = &next
+								markerIndex++
+							}
+
 							// Extract the key
 
 							c.functions = c.functions + 1
@@ -406,17 +514,11 @@ func doParsing(args []string) {
 							}
 							info.name = name
 							// Get comments above the key
-							comment := getCommentsAboveKey(fset, node.Comments, key.Pos())
+							comment := getCommentsAboveKey(fset, node.Comments, key.Pos(), prevKeyPos)
+							prevKeyPos = key.Pos()
 							if comment != "" {
 								/// fmt.Printf("Comment above key: %s\n", strings.TrimSpace(comment))
-								info, tempSection := parseCommentsAboveKey(comment, &info)
-								if tempSection != nil {
-									// fmt.Println(tempSection)
-									if len(section.builtins) > 0 {
-										*sectionList = append(*sectionList, *section)
-									}
-									section = tempSection
-								}
+								info, _ = parseCommentsAboveKey(comment, &info)
 								if len(info.tests) > 0 {
 									c.tested_functions = c.tested_functions + 1
 									c.tests = c.tests + len(info.tests)

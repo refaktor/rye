@@ -16,7 +16,7 @@ import (
 var Builtins_psql = map[string]*env.Builtin{
 
 	//
-	// ##### PostgreSQL ##### ""
+	// ##### PostgreSQL ##### "Querying PostgreSQL databases and managing connections."
 	//
 	// Tests:
 	// example { Open postgres://user:pass@localhost:5432/dbname }
