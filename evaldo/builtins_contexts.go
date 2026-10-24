@@ -515,6 +515,11 @@ var builtins_contexts = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { ct: context { p: 123 } parent\of ct |= current } true
+	// Args:
+	// * context: Context whose parent should be returned.
+	//
+	// Returns:
+	// * the parent Context.
 	"parent\\of": {
 		Argsn: 1,
 		Doc:   "Returns parent context of the current context.",

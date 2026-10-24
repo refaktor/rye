@@ -1930,7 +1930,18 @@ func CallCurriedCaller(cc env.CurriedCaller, ps *env.ProgramState, arg0_ env.Obj
 		ps.Res = bi.Fn(ps, arg0, arg1, arg2, arg3, arg4)
 	} else { // Function
 		fn := *cc.Function
-		CallFunctionArgsN(fn, ps, nil, arg0, arg1, arg2, arg3, arg4)
+		// Functions take exactly fn.Argsn arguments. Do not forward all five
+		// CurriedCaller slots: CallFunctionArgsN validates the argument count,
+		// so passing unused nil slots makes a 2-argument function look like it
+		// was called with 5 arguments.
+		args := []env.Object{arg0, arg1, arg2, arg3, arg4}
+		fnArgs := make([]env.Object, fn.Argsn)
+		for i := range fnArgs {
+			if i < len(args) {
+				fnArgs[i] = args[i]
+			}
+		}
+		CallFunctionArgsN(fn, ps, nil, fnArgs...)
 	}
 }
 
