@@ -28,6 +28,8 @@ func truncatedDivision(ps *env.ProgramState, dividend, divisor float64) env.Obje
 
 var builtins_numbers = map[string]*env.Builtin{
 
+	// ##### Numbers ##### "Integer arithmetic, sign checks, random numbers, and numeric predicates."
+
 	// Tests:
 	// equal { inc 123 } 124
 	// equal { inc 0 } 1

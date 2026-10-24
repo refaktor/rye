@@ -23,7 +23,7 @@ const maxRangeElements = 1 << 24
 var builtins_collection = map[string]*env.Builtin{
 
 	//
-	// ##### Collections ##### ""
+	// ##### Collections ##### "Working with blocks, lists, dicts, sets, and other collection values."
 	//
 	// Tests:
 	// equal { random { 1 2 3 } |type? } 'integer
@@ -2627,7 +2627,7 @@ var builtins_collection = map[string]*env.Builtin{
 				return *env.NewBoolean(s1.Value.Len() == 0)
 			default:
 				// fmt.Println(s1)
-				return MakeArgError(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.TableType, /*env.PersistentTableType,*/ env.VectorType}, "is-empty")
+				return MakeArgError(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.TableType /*env.PersistentTableType,*/, env.VectorType}, "is-empty")
 			}
 		},
 	},
@@ -2671,7 +2671,7 @@ var builtins_collection = map[string]*env.Builtin{
 			case env.Markdown:
 				return *env.NewInteger(int64(len([]rune(s1.Value))))
 			default:
-				return MakeArgError2(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.TableType, /*env.PersistentTableType,*/ env.VectorType, env.BytesType, env.MarkdownType}, "length?", arg0)
+				return MakeArgError2(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.TableType /*env.PersistentTableType,*/, env.VectorType, env.BytesType, env.MarkdownType}, "length?", arg0)
 			}
 		},
 	},
@@ -2708,7 +2708,7 @@ var builtins_collection = map[string]*env.Builtin{
 			case env.Vector:
 				return *env.NewInteger(int64(s1.Value.Len() - 1))
 			default:
-				return MakeArgError2(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.TableType, /*env.PersistentTableType,*/ env.VectorType}, "length?", arg0)
+				return MakeArgError2(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.TableType /*env.PersistentTableType,*/, env.VectorType}, "length?", arg0)
 			}
 		},
 	},
@@ -3472,6 +3472,13 @@ var builtins_collection = map[string]*env.Builtin{
 	},
 
 	// Deprecated: renamed do update\pos!
+	// Args:
+	// * collection: Block or List to update.
+	// * index: Integer 1-based position.
+	// * value: New value for the position.
+	//
+	// Returns:
+	// * the updated collection.
 	"change\\nth!": { // **
 		Argsn: 3,
 		Doc:   "Updates the value at a specific position in a block or list in-place and returns the modified collection (1-based indexing).",

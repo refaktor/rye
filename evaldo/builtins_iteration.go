@@ -1095,6 +1095,12 @@ var builtins_iteration = map[string]*env.Builtin{
 	//  equal { map "123" { .integer } } { 1 2 3 }
 	//  equal { map "123" ?integer } { 1 2 3 }
 	//  equal { map "" { + "-" } } { }
+	// Args:
+	// * collection: Block, List, or String to map over.
+	// * function: Block, function, or builtin applied to each item.
+	//
+	// Returns:
+	// * a Block or List with the mapped values.
 	"map": { // **
 		Argsn: 2,
 		Doc:   "Maps values of a block to a new block by evaluating a block of code or function.",
@@ -1159,6 +1165,13 @@ var builtins_iteration = map[string]*env.Builtin{
 	//  equal { map\pos list { } 'i { + i } } list { }
 	//  equal { map\pos "abc" 'i { ++ i } } { "a1" "b2" "c3" }
 	//  equal { map\pos "" 'i { + i } } { }
+	// Args:
+	// * collection: Block, List, or String to map over.
+	// * index-word: Word bound to the 1-based position.
+	// * function: Block applied to each item with the position bound.
+	//
+	// Returns:
+	// * a Block or List with the mapped values.
 	"map\\pos": { // *TODO -- deduplicate map\pos and map\idx
 		// TODO --- test { + i } didn't produce / report a valid error, find out why
 		Argsn: 3,
@@ -1212,6 +1225,13 @@ var builtins_iteration = map[string]*env.Builtin{
 	// equal { map\idx list { } 'i { + i } } list { }
 	// equal { map\idx "abc" 'i { ++ i } } { "a0" "b1" "c2" }
 	// equal { map\idx "" 'i { + i } } { }
+	// Args:
+	// * collection: Block, List, or String to map over.
+	// * index-word: Word bound to the 0-based index.
+	// * function: Block applied to each item with the index bound.
+	//
+	// Returns:
+	// * a Block or List with the mapped values.
 	"map\\idx": { // TODO -- deduplicate map\idx and map\idx
 		Argsn: 3,
 		Doc:   "Maps values of a block to a new block by evaluating a block of code.",
@@ -1330,6 +1350,14 @@ var builtins_iteration = map[string]*env.Builtin{
 	//  equal { fold\do list { } 'acc 1 { + acc } } 1
 	//  equal { fold\do "abc" 'acc "123" { ++ acc } } "cba123"
 	//  equal { fold\do "" 'acc "123" { + acc } } "123"
+	// Args:
+	// * collection: Block, List, or String to fold.
+	// * accumulator-word: Word bound to the accumulator.
+	// * initial: Initial accumulator value.
+	// * function: Block evaluated for each item.
+	//
+	// Returns:
+	// * the final accumulator value.
 	"fold\\do": { // **
 		Argsn: 4,
 		Doc:   "Reduces values of a block to a new block by evaluating a block of code ...",
@@ -1384,6 +1412,13 @@ var builtins_iteration = map[string]*env.Builtin{
 	//  equal { fold { } 1 fn { v acc } { + acc } } 1
 	//  equal { fold list { 1 2 3 } 1 fn { v acc } { v + acc } } 7
 	//  equal { fold { "a" "b" "c" } "" fn { v acc } { acc .concat v } } "abc"
+	// Args:
+	// * collection: Block, List, or String to fold.
+	// * initial: Initial accumulator value.
+	// * function: Function receiving (value accumulator) for each item.
+	//
+	// Returns:
+	// * the final accumulator value.
 	"fold": { // **
 		Argsn: 3,
 		Doc:   "Reduces values of a block to a new block by evaluating a block of code ...",
@@ -1784,6 +1819,12 @@ var builtins_iteration = map[string]*env.Builtin{
 	//  ; equal { filter "1234" { .integer .is-even } } { "2" "4" }
 	//  ; equal { filter "01234" ?integer } { "1" "2" "3" "4" }
 	//  ; equal { filter "" { .integer .is-even } } { }
+	// Args:
+	// * collection: Block, List, or String to filter.
+	// * predicate: Block, function, or builtin returning truthy for kept items.
+	//
+	// Returns:
+	// * a collection of the same kind containing matching items.
 	"filter": { // **
 		Argsn: 2,
 		Doc:   "Filters values from a seris based on return of a injected code block.",
@@ -1862,7 +1903,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 							return ps.Res
 						}
-						if util.IsTruthy(ps.Res) {                                 // todo -- move these to util or something
+						if util.IsTruthy(ps.Res) { // todo -- move these to util or something
 							if modeObj == 1 {
 								newll = append(newll, ll[i])
 							} else if modeObj == 2 {

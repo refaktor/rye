@@ -50,6 +50,12 @@ var ErrorCreationBuiltins = map[string]*env.Builtin{
 		},
 	},
 
+	// Args:
+	// * error: Error to re-raise.
+	// * error-info: Additional String, Integer, or Block context.
+	//
+	// Returns:
+	// * a new Error with the additional context.
 	"refail": {
 		Argsn: 2,
 		Doc:   "Re-raises an existing error with additional context. TODO -- duplicate of check",
@@ -1039,6 +1045,11 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// equal  { try { 123 + "asd" } |type? } 'error
 	// equal  { try { 123 + } |type? } 'error
 	// equal  { try { fail "oops" } |message? } "oops"
+	// Args:
+	// * block: Block to evaluate, capturing errors.
+	//
+	// Returns:
+	// * the block result, or an Error value if evaluation fails.
 	"try": {
 		Argsn: 1,
 		Doc:   "Takes a block of code and does (runs) it.",
@@ -1116,6 +1127,12 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// equal  { c: context { x:: 100 } try\in c { x:: 200 , x } } 200
 	// equal  { c: context { x:: 100 } try\in c { x:: 200 } c/x } 200
 	// equal  { c: context { x: 100 } try\in c { inc! 'y } |type? } 'error
+	// Args:
+	// * context: Context in which to evaluate the block.
+	// * block: Block to evaluate, capturing errors.
+	//
+	// Returns:
+	// * the block result, or an Error value if evaluation fails.
 	"try\\in": {
 		Argsn: 2,
 		Doc:   "Takes a Context and a Block. It Does a block inside a given Context.",

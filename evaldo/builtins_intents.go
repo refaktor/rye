@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 	"strings"
+	"time"
 
 	"github.com/refaktor/rye/env"
 )
@@ -14,18 +14,30 @@ import (
 // and validation via the validation dialect (through BatteryValidateHook).
 //
 // Usage:
-//   age: input-intent 'user-age { integer } { read-file %user.json |-> "age" }
+//
+//	age: input-intent 'user-age { integer } { read-file %user.json |-> "age" }
 //
 // Semantics:
-//   1) Determine the intent name from the first argument (word, tagword, or string).
-//   2) If a scenario override is available, use it; otherwise evaluate the provider block.
-//      Scenario sources (in order):
-//        - BatteryScenarioGetHook(ps, name)
-//        - ps.Ctx/intents (Dict or Context)
-//        - ps.Ctx/scenario/intents (Dict or Context)
-//   3) Always validate the resulting value with the validation dialect block.
-//      Requires batteries to be registered; otherwise BatteryValidateHook will return an error.
+//  1. Determine the intent name from the first argument (word, tagword, or string).
+//  2. If a scenario override is available, use it; otherwise evaluate the provider block.
+//     Scenario sources (in order):
+//     - BatteryScenarioGetHook(ps, name)
+//     - ps.Ctx/intents (Dict or Context)
+//     - ps.Ctx/scenario/intents (Dict or Context)
+//  3. Always validate the resulting value with the validation dialect block.
+//     Requires batteries to be registered; otherwise BatteryValidateHook will return an error.
 var builtins_intents = map[string]*env.Builtin{
+
+	// ##### Intents ##### "Semantic input and output points with scenario overrides and validation."
+
+	// Args:
+	// * name: Word, String, or Tagword identifying the intent.
+	// * validator: Validation-dialect block used to validate the result.
+	// * provider: Block that produces the real value outside scenario mode.
+	// Returns:
+	// * The validated value, or the configured mock value in scenario mode.
+	// Example:
+	// input-intent 'username { string? } { "real-user" }
 	"input-intent": {
 		Argsn: 3,
 		Doc:   "Declares a semantic input point: input-intent name validator-block provider-block. In scenario mode, returns the mocked value for the given intent name; otherwise evaluates the provider block. The resulting value is always validated using the validation dialect block.",
@@ -148,14 +160,14 @@ var builtins_intents = map[string]*env.Builtin{
 		},
 	},
 
-	// output-intent builtin: logs the payload and conditionally executes the side-effect block.
-	// Usage:
-	//   output-intent name-or-payload { log-fields-block } { side-effect-block }
-	// Behavior:
-	//   - Always appends a log entry to output.log with timestamp, name/payload Inspect, and inline-inspected fields from the second block (space-separated on one line).
-	//   - If scenario mode is active, it does NOT execute the side-effect block (simulation mode).
-	//   - Otherwise, evaluates the side-effect block normally.
-	//   - Returns the first argument (payload/name) so it can be captured or piped if desired.
+	// Args:
+	// * payload: Name or value to log and return.
+	// * fields: Block of additional values to include in the log entry.
+	// * side-effect: Block to execute outside scenario mode.
+	// Returns:
+	// * The first argument (payload or name), so it can be captured or piped.
+	// Example:
+	// output-intent "user-login" { "alice" } { print "logged in" }
 	"output-intent": {
 		Argsn: 3,
 		Doc:   "Logs an output with optional inline fields and executes the side-effect block unless in scenario mode. Usage: output-intent payload-or-name { fields } { side-effect }.",
@@ -182,7 +194,9 @@ var builtins_intents = map[string]*env.Builtin{
 					case env.Block:
 						var parts []string
 						for _, it := range v.Series.GetAll() {
-							if it == nil { continue }
+							if it == nil {
+								continue
+							}
 							// For each item: strings printed, others inspected
 							switch iv := it.(type) {
 							case env.String:
@@ -195,7 +209,9 @@ var builtins_intents = map[string]*env.Builtin{
 					case env.List:
 						var parts []string
 						for _, raw := range v.Data {
-							if raw == nil { continue }
+							if raw == nil {
+								continue
+							}
 							switch iv := raw.(type) {
 							case env.String:
 								parts = append(parts, iv.Value)
