@@ -110,7 +110,7 @@ var Builtins_maxmind = map[string]*env.Builtin{
                     }
                     data := map[string]any{
                         "ip":           ipS.Value,
-                        "asn":          rec.AutonomousSystemNumber,
+                        "asn":          int64(rec.AutonomousSystemNumber),
                         "organization": rec.AutonomousSystemOrganization,
                     }
                     return *env.NewDict(data)

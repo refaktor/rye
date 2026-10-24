@@ -23,7 +23,7 @@ do\in term {
 
 
 term/spin-it "loading messages" {
-	imap-client config/imap/user config/imap/pwd config/imap/uri 993 :cli
+	Open\pwd uri join { "imaps://" config/imap/user "@" config/imap/uri } config/imap/pwd :cli
 	|Select-folder "INBOX"
 	|Search-emails from-date .date .format-imap-date .embed "UNSEEN SINCE {}"
 	|Get-emails* cli

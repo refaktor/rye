@@ -362,7 +362,7 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 		case env.String:
 			v := s1.Data[s2.Value]
 			switch v1 := v.(type) {
-			case int, int64, float64, string, []any, map[string]any:
+			case bool, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64, string, []any, map[string]any:
 				return env.ToRyeValue(v1)
 			case env.Boolean:
 				return v1
@@ -399,7 +399,7 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 		case env.String:
 			v := s1.Data[s2.Value]
 			switch v1 := v.(type) {
-			case int, int64, float64, string, []any, map[string]any:
+			case bool, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64, string, []any, map[string]any:
 				return env.ToRyeValue(v1)
 			case env.Boolean:
 				return v1
