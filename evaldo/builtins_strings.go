@@ -359,7 +359,7 @@ var builtins_string = map[string]*env.Builtin{
 	// equal { contains\flag { hello yello --ho } -h|help  } false
 	// equal { contains\flag { --hello yello ho } -h|help  } false
 	// Args:
-	// * collection: block of strings to search in
+	// * collection: block of flagwords or flag strings to search in
 	// * value: Flag value to search for
 	// Returns:
 	// * true if the collection contains the flag in short or long form, false otherwise
@@ -374,12 +374,21 @@ var builtins_string = map[string]*env.Builtin{
 				switch value := arg1.(type) {
 				case env.Flagword:
 					fShort := value.GetShortName(*ps.Idx)
-					if fShort != "" && util.ContainsVal(ps, s1.Series.S, *env.NewString("-" + fShort)) {
-						return *env.NewBoolean(true)
-					}
 					fLong := value.GetLongName(*ps.Idx)
-					if fLong != "" && util.ContainsVal(ps, s1.Series.S, *env.NewString("--" + fLong)) {
-						return *env.NewBoolean(true)
+					for _, item := range s1.Series.S {
+						switch candidate := item.(type) {
+						case env.Flagword:
+							if fShort != "" && candidate.HasShort() && candidate.GetShortName(*ps.Idx) == fShort {
+								return *env.NewBoolean(true)
+							}
+							if fLong != "" && candidate.HasLong() && candidate.GetLongName(*ps.Idx) == fLong {
+								return *env.NewBoolean(true)
+							}
+						case env.String:
+							if (fShort != "" && candidate.Value == "-"+fShort) || (fLong != "" && candidate.Value == "--"+fLong) {
+								return *env.NewBoolean(true)
+							}
+						}
 					}
 					return *env.NewBoolean(false)
 
@@ -387,7 +396,7 @@ var builtins_string = map[string]*env.Builtin{
 					return MakeArgError(ps, 2, []env.Type{env.FlagwordType}, "contains\\flag")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "contains")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "contains\\flag")
 			}
 		},
 	},
@@ -1086,12 +1095,12 @@ var builtins_string = map[string]*env.Builtin{
 	// ##### URL Encoding ##### "Encoding and decoding URL components and query strings."
 	//
 	// Tests:
-	// equal { url-encode { name: "John Doe" city: "New York" } |contains "city=New+York" } 1
+	// equal { url-encode { name: "John Doe" city: "New York" } |contains "city=New+York" } true
 	// equal { url-encode { } } ""
 	// equal { url-encode { q: "hello world" } } "q=hello+world"
-	// equal { url-encode { a: "foo" b: "bar" } |contains "a=foo" } 1
-	// equal { url-encode { a: "foo" b: "bar" } |contains "b=bar" } 1
-	// equal { url-encode { "my-key" "val" } |contains "my-key=val" } 1
+	// equal { url-encode { a: "foo" b: "bar" } |contains "a=foo" } true
+	// equal { url-encode { a: "foo" b: "bar" } |contains "b=bar" } true
+	// equal { url-encode { "my-key" "val" } |contains "my-key=val" } true
 	// equal { x: "hello" url-encode { q: x } } "q=hello"
 	// error { url-encode "not-a-block" }
 	// Args:

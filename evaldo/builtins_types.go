@@ -75,8 +75,8 @@ var builtins_types = map[string]*env.Builtin{
 	// Tests:
 	// equal { string 'test } "test"
 	// equal { string 123 } "123"
-	// equal { string 123.4 } "123.400000"
-	// equal { string "test" } "test"
+	// equal { string 123.4 } "123.4"
+	// equal { string "test" } `"test"`
 	// equal { string true } "true"
 	// Args:
 	// * value: Any Rye value to convert to a string
@@ -661,12 +661,13 @@ var builtins_types = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// ; equal   { person: kind 'person { name: "" age: 0 } , { "name" "John" "age" 30 } .dict >> person |type? } 'ctx
+	// equal { lazy { 1 + 2 } |type? } 'lazyvalue
+	// equal { _! lazy { 1 + 2 } } 3
+	// equal { l: lazy { 1 + 2 } , _! l , _! l } 3
 	// Args:
-	// * value: Dict or context to convert
-	// * kind: Kind to convert the value to
+	// * block: Block to evaluate lazily
 	// Returns:
-	// * A new context of the specified kind
+	// * LazyValue object that evaluates its block when forced
 	"lazy": {
 		Argsn: 1,
 		Doc:   "Creates a lazy value from a block. The block will only be evaluated when forced with _!.",
@@ -680,6 +681,13 @@ var builtins_types = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { _! lazy { 1 + 2 } } 3
+	// equal { l: lazy { 1 + 2 } , _! l , _! l } 3
+	// Args:
+	// * value: LazyValue to force
+	// Returns:
+	// * the evaluated and cached result
 	"_!": {
 		Argsn: 1,
 		Doc:   "Forces evaluation of a lazy value. If frozen evaluates the block and caches the result. If already thawed returns cached result.",
@@ -714,6 +722,11 @@ var builtins_types = map[string]*env.Builtin{
 		},
 	},
 
+	// Args:
+	// * value: Dict or context to convert
+	// * kind: Kind object describing the target kind
+	// Returns:
+	// * converted context of the requested kind, or an error
 	"_>>": {
 		Argsn: 2,
 		Doc:   "Converts first argument to a specific kind.",

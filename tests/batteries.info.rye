@@ -826,18 +826,18 @@ section "BSON" "BSON encoding and decoding" {
 section "batteries/builtins_sxml.go" "Streaming, SAX-like XML processing" {
 section "SXML" "Streaming, SAX-like XML processing" {
 	group "reader//Do-sxml"
-	"Processes XML using a streaming SAX-like approach with tag handlers."
+	"Processes XML with streaming tag handlers. [ ] runs code, { } nests rules, and ( 'command , ... ) projects values with put, put-key, append-key, merge-key, sub-block, attach, append, and merge."
 	{
 		argsn 2
 		arg `reader: XML reader object`
-		arg `block: SXML processing block with tag handlers`
-		returns `result of processing the XML`
+		arg `block: SXML processing block with tag handlers and optional ( ) projections`
+		returns `collected structure when ( ) projections are used, otherwise true`
 	}
 
 	{
 		stdout {
-		"<scene><bot>C3PO</bot><bot>R2D2</bot><jedi>Luke</jedi></scene>" |reader |probe
-		|probe |Do-sxml { _ [ .prns ] }
+		"<scene><bot>C3PO</bot><bot>R2D2</bot><jedi>Luke</jedi></scene>" |reader
+		|Do-sxml { _ [ .prns ] }
 		} "C3PO R2D2 Luke "
 		stdout {
 		"<scene><bot>C3PO</bot><bot>R2D2</bot><jedi>Luke</jedi></scene>" |reader
@@ -851,9 +851,65 @@ section "SXML" "Streaming, SAX-like XML processing" {
 		"<scene><xwing><bot>R2D2</bot><person>Luke</person></xwing><destroyer><person>Vader</person></destroyer></scene>" |reader
 		|Do-sxml { <xwing> { <person> { _ [ .prns ] } } }
 		} "Luke "
+		equal {
+		r: `<r><i id="1"/></r>` |reader |Do-sxml {
+		<i> { 'start ( 'put-key , "id" , .Attr? "id" ) }
+		}
+		r -> "id"
+		} "1"
+		equal {
+		r: `<r><i>A</i><i>B</i></r>` |reader |Do-sxml { _ ( 'put , .trim ) }
+		r |length?
+		} 2
+		equal {
+		r: `<r><i>A</i><i>B</i></r>` |reader |Do-sxml { _ ( 'append-key , "texts" , .trim ) }
+		r -> "texts" |length?
+		} 2
+		equal {
+		r: `<r><x>A</x></r>` |reader |Do-sxml {
+		<x> { 'end ( 'put-key , "name" , .Name? ) }
+		}
+		r -> "name"
+		} "x"
+		equal {
+		r: `<r><book id="1"><title>Dune</title></book></r>` |reader |Do-sxml {
+		<book> {
+		'start ( 'sub-block , "book" , "id" , .Attr? "id" )
+		<title> { _ ( 'put-key , "title" , .trim ) }
+		}
+		}
+		r -> "book" -> "title"
+		} "Dune"
+		equal {
+		r: `<r><i id="1"/><i id="2"/></r>` |reader |Do-sxml {
+		<i> { 'start ( 'sub-block , "items" , "id" , .Attr? "id" ) }
+		}
+		r -> "items" |length?
+		} 2
+		equal {
+		r: `<r><i>A</i></r>` |reader |Do-sxml {
+		<i> {
+		'start ( 'sub-block , "tmp" )
+		_ ( 'put , .trim )
+		'end ( 'append , "items" )
+		}
+		}
+		r -> "items" |length?
+		} 1
+		equal {
+		r: `<r><head><x>1</x></head></r>` |reader |Do-sxml {
+		<head> {
+		'start ( 'sub-block , "head" )
+		<x> { _ ( 'put-key , "x" , .trim ) }
+		'end ( 'merge )
+		}
+		}
+		r -> "x"
+		} "1"
 	}
 
 	{
+		"; [ ] executes code at XML events\n`<r><i>A</i></r>` |reader |Do-sxml { _ [ .prns ] }\n\n; ( ) projects event values into a collected structure\n`<r><i id=\"1\">A</i></r>` |reader |Do-sxml {\n<i> {\n'start ( 'sub-block , \"items\" , \"id\" , .Attr? \"id\" )\n_ ( 'put-key , \"text\" , .trim )\n}\n}"
 	}
 
 	group "rye-sxml-start//Attr?"
@@ -878,6 +934,7 @@ section "SXML" "Streaming, SAX-like XML processing" {
 	}
 
 	{
+		"; inside an executable [ ] handler\n`<r><x id=\"a\"/></r>` |reader |Do-sxml { <x> [ .Attr? \"id\" |prns ] }\n\n; inside a projection ( ) handler\n`<r><x id=\"a\"/></r>` |reader |Do-sxml {\n<x> { 'start ( 'put-key , \"id\" , .Attr? \"id\" ) }\n}"
 	}
 
 	group "rye-sxml-start//Attrs?"
@@ -892,10 +949,11 @@ section "SXML" "Streaming, SAX-like XML processing" {
 	}
 
 	{
+		"; inside an executable [ ] handler\n`<r><x id=\"a\"/></r>` |reader |Do-sxml { <x> [ .Attrs? |print ] }\n\n; inside a projection ( ) handler\n`<r><x id=\"a\"/></r>` |reader |Do-sxml {\n<x> { 'start ( 'put-key , \"attrs\" , .Attrs? ) }\n}"
 	}
 
 	group "rye-sxml-start//Name?"
-	"Returns the name of an XML start element."
+	"Returns the local name of an XML start or end element."
 	{
 		argsn 1
 		arg `element: XML start element`
@@ -915,6 +973,22 @@ section "SXML" "Streaming, SAX-like XML processing" {
 	}
 
 	{
+		"; inside an executable [ ] handler\n`<r><x/></r>` |reader |Do-sxml { <x> { 'end [ .Name? |prns ] } }\n\n; inside a projection ( ) handler\n`<r><x/></r>` |reader |Do-sxml {\n<x> { 'start ( 'put-key , \"name\" , .Name? ) }\n}"
+	}
+
+	group "rye-sxml-end//Name?"
+	"Returns the local name of an XML end element."
+	{
+		argsn 1
+		arg `element: XML end element.`
+		returns `String local name of the element.`
+	}
+
+	{
+	}
+
+	{
+		"; inside an executable [ ] handler\n`<r><x/></r>` |reader |Do-sxml { <x> { 'end [ .Name? |prns ] } }\n\n; inside a projection ( ) handler\n`<r><x>A</x></r>` |reader |Do-sxml {\n<x> { 'end ( 'put-key , \"name\" , .Name? ) }\n}"
 	}
 
 }

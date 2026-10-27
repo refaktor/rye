@@ -292,8 +292,7 @@ section "Runtime and Process Integration" "Saving state, loading scripts, proces
 	{
 		pure
 		arg `none`
-		arg `none`
-		returns `boolean; boolean`
+		returns `boolean`
 	}
 
 	{
@@ -359,12 +358,39 @@ section "Runtime and Process Integration" "Saving state, loading scripts, proces
 		"cc Rye-itself Unshare-config? |print"
 	}
 
+	group "Rye-itself//Is-unshare"
+	"Returns true if current process runs inside Rye --unshare sandbox (Linux only)."
+	{
+		pure
+		arg `none`
+		returns `boolean, true when the runner set RYE_UNSHARE_CHILD=1`
+	}
+
+	{
+	}
+
+	{
+	}
+
 	group "Rye-itself//Require-unshared"
 	"Fails and exits if unshare is not active (use in CI/safety-critical runs)."
 	{
 		arg `none`
+		returns `never on failure (process exits); 'ok tagword when already unshared`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "Rye-itself//Is-dry-run"
+	"Returns true if Rye is running in dry-run/scenario mode (activated via --dry-run or scenario context)"
+	{
+		pure
 		arg `none`
-		returns `boolean; never on failure (process exits); 'ok tagword when already unshared`
+		returns `boolean, true when --dry-run is active or a scenario context is detected`
 	}
 
 	{
@@ -530,6 +556,7 @@ section "File Operations" "File system operations and file manipulation" {
 	}
 
 	{
+		equal { Split %data/file.txt } { "data" "file.txt" }
 	}
 
 	{
@@ -544,6 +571,8 @@ section "File Operations" "File system operations and file manipulation" {
 	}
 
 	{
+		equal { Is-absolute %/tmp } true
+		equal { Is-absolute %data/file.txt } false
 	}
 
 	{
@@ -595,11 +624,11 @@ section "File Operations" "File system operations and file manipulation" {
 	}
 
 	group "file//Writer"
-	"Creates a new reader from file object."
+	"Creates a new writer from a file object."
 	{
 		argsn 1
-		arg `source: file object to read from`
-		returns `native reader object`
+		arg `source: file object to write to`
+		returns `native writer object`
 	}
 
 	{
@@ -702,6 +731,7 @@ section "File Operations" "File system operations and file manipulation" {
 	}
 
 	{
+		equal { Reader %data/file.txt |Close |type? } 'string
 	}
 
 	{
@@ -1652,10 +1682,11 @@ section "Table files" "Load and save tables as CSV, TSV or XLSX files." {
 	}
 
 	{
+		equal { type? Load\csv__OLD %data/file.txt } 'table
 	}
 
 	{
-		"equal {\ncc os\nf:: mktmp ++ \"/test.csv\"\nspr1:: table { \"a\" \"b\" \"c\" } { 1 1.1 \"a\" 2 2.2 \"b\" 3 3.3 \"c\" }\nspr1 .Save\\csv* f\nspr2:: Load\\csv f |autotype 1.0\nspr1 = spr2\n} true"
+		"equal {\ncc os\nf:: mktemp ++ \"/test.csv\"\nspr1:: table { \"a\" \"b\" \"c\" } { 1 1.1 \"a\" 2 2.2 \"b\" 3 3.3 \"c\" }\nf .Save\\csv spr1\nspr2:: Load\\csv f |autotype 1.0\nspr1 = spr2\n} true"
 	}
 
 	group "file-uri//Load\\csv"
@@ -1663,14 +1694,16 @@ section "Table files" "Load and save tables as CSV, TSV or XLSX files." {
 	{
 		argsn 2
 		arg `file-uri - location of csv file to load`
+		arg `separator - single character used as the column separator`
 		returns `Table parsed from the CSV file.`
 	}
 
 	{
+		equal { type? Load\csv %data/file.txt "," } 'table
 	}
 
 	{
-		"equal {\ncc os\nf:: mktmp ++ \"/test.csv\"\nspr1:: table { \"a\" \"b\" \"c\" } { 1 1.1 \"a\" 2 2.2 \"b\" 3 3.3 \"c\" }\nspr1 .Save\\csv* f\nspr2:: Load\\csv f |autotype 1.0\nspr1 = spr2\n} true"
+		"equal {\ncc os\nf:: mktemp ++ \"/test.csv\"\nspr1:: table { \"a\" \"b\" \"c\" } { 1 1.1 \"a\" 2 2.2 \"b\" 3 3.3 \"c\" }\nf .Save\\csv spr1\nspr2:: Load\\csv f \",\" |autotype 1.0\nspr1 = spr2\n} true"
 	}
 
 	group "file-uri//Load\\csv\\ignore-bad"
@@ -1686,22 +1719,23 @@ section "Table files" "Load and save tables as CSV, TSV or XLSX files." {
 	}
 
 	{
-		"equal {\ncc os\nf:: mktmp ++ \"/test.csv\"\nf .Write \"a;b;c\\n1;1.1;a\\nbad\\\"line\\n2;2.2;b\\n3;3.3;c\\n\"\nspr:: Load\\csv\\ignore-bad f \";\"\nspr .length? 3\n} true"
+		"equal {\ncc os\nf:: mktemp ++ \"/test.csv\"\nf .Write \"a;b;c\\n1;1.1;a\\nbad\\\"line\\n2;2.2;b\\n3;3.3;c\\n\"\nspr:: Load\\csv\\ignore-bad f \";\"\nspr .length? 3\n} true"
 	}
 
 	group "file-uri//Load\\tsv"
-	"Loads a .csv file to a table datatype."
+	"Loads a .tsv file to a table datatype."
 	{
 		argsn 1
-		arg `file-uri - location of csv file to load`
+		arg `file-uri - location of tsv file to load`
 		returns `Table parsed from the TSV file.`
 	}
 
 	{
+		equal { type? Load\tsv %data/file.txt } 'table
 	}
 
 	{
-		"equal {\ncc os\nf:: mktmp ++ \"/test.tsv\"\nspr1:: table { \"a\" \"b\" \"c\" } { 1 1.1 \"a\" 2 2.2 \"b\" 3 3.3 \"c\" }\nspr1 .Save\\tsv* f\nspr2:: Load\\tsv f |autotype 1.0\nspr1 = spr2\n} true"
+		"equal {\ncc os\nf:: mktemp ++ \"/test.tsv\"\nspr1:: table { \"a\" \"b\" \"c\" } { 1 1.1 \"a\" 2 2.2 \"b\" 3 3.3 \"c\" }\nf .Save\\tsv spr1\nspr2:: Load\\tsv f |autotype 1.0\nspr1 = spr2\n} true"
 	}
 
 	group "file-uri//Save\\csv"
@@ -1710,14 +1744,15 @@ section "Table files" "Load and save tables as CSV, TSV or XLSX files." {
 		argsn 2
 		arg `file-uri - where to save the sheet as a .csv file`
 		arg `table    - the table to save`
-		returns `the saved file URI.`
+		returns `the saved Table.`
 	}
 
 	{
+		equal { type? Save\csv (os/mktemp ++ "/save.csv") table { "a" "b" } { 1 "x" } } 'table
 	}
 
 	{
-		"equal {\ncc os\nf:: mktmp ++ \"/test.csv\"\nspr1:: table { \"a\" \"b\" \"c\" } { 1 1.1 \"a\" 2 2.2 \"b\" 3 3.3 \"c\" }\nf .Save\\csv spr1\nspr2:: Load\\csv f |autotype 1.0\nspr1 = spr2\n} true"
+		"equal {\ncc os\nf:: mktemp ++ \"/test.csv\"\nspr1:: table { \"a\" \"b\" \"c\" } { 1 1.1 \"a\" 2 2.2 \"b\" 3 3.3 \"c\" }\nf .Save\\csv spr1\nspr2:: Load\\csv f \",\" |autotype 1.0\nspr1 = spr2\n} true"
 	}
 
 	group "file-uri//Save\\tsv"
@@ -1726,14 +1761,15 @@ section "Table files" "Load and save tables as CSV, TSV or XLSX files." {
 		argsn 2
 		arg `file-uri - where to save the sheet as a .tsv file`
 		arg `table    - the table to save`
-		returns `the saved file URI.`
+		returns `the saved Table.`
 	}
 
 	{
+		equal { type? Save\tsv (os/mktemp ++ "/save.tsv") table { "a" "b" } { 1 "x" } } 'table
 	}
 
 	{
-		"equal {\ncc os\nf:: mktmp ++ \"/test.tsv\"\nspr1:: table { \"a\" \"b\" \"c\" } { 1 1.1 \"a\" 2 2.2 \"b\" 3 3.3 \"c\" }\nf .Save\\tsv spr1\nspr2:: Load\\tsv f |autotype 1.0\nspr1 = spr2\n} true"
+		"equal {\ncc os\nf:: mktemp ++ \"/test.tsv\"\nspr1:: table { \"a\" \"b\" \"c\" } { 1 1.1 \"a\" 2 2.2 \"b\" 3 3.3 \"c\" }\nf .Save\\tsv spr1\nspr2:: Load\\tsv f |autotype 1.0\nspr1 = spr2\n} true"
 	}
 
 	group "file-uri//Load\\xlsx"
@@ -1745,10 +1781,11 @@ section "Table files" "Load and save tables as CSV, TSV or XLSX files." {
 	}
 
 	{
+		equal { type? Save\xlsx (os/mktemp ++ "/test.xlsx") table { "a" "b" } { 1 "x" 2 "y" } } 'table
 	}
 
 	{
-		"equal {\ncc os\nf:: mktmp ++ \"/test.xlsx\"\nspr1:: table { \"a\" \"b\" \"c\" } { 1 1.1 \"a\" 2 2.2 \"b\" 3 3.3 \"c\" }\nspr1 .Save\\xlsx* f\nspr2:: Load\\xlsx f |autotype 1.0\nspr1 = spr2\n} true"
+		"equal {\ncc os\nf:: mktemp ++ \"/test.xlsx\"\nspr1:: table { \"a\" \"b\" \"c\" } { 1 1.1 \"a\" 2 2.2 \"b\" 3 3.3 \"c\" }\nf .Save\\xlsx spr1\nspr2:: Load\\xlsx f |autotype 1.0\nspr1 = spr2\n} true"
 	}
 
 	group "file-uri//Save\\xlsx"
@@ -1757,14 +1794,15 @@ section "Table files" "Load and save tables as CSV, TSV or XLSX files." {
 		argsn 2
 		arg `file-uri - where to save the table as a .xlsx file`
 		arg `table    - the table to save`
-		returns `the saved file URI.`
+		returns `the saved Table.`
 	}
 
 	{
+		equal { type? Save\xlsx (os/mktemp ++ "/save.xlsx") table { "a" "b" } { 1 "x" } } 'table
 	}
 
 	{
-		"equal {\ncc os\nf:: mktmp ++ \"/test.xlsx\"\nspr1:: table { \"a\" \"b\" \"c\" } { 1 1.1 \"a\" 2 2.2 \"b\" 3 3.3 \"c\" }\nf .Save\\xlsx spr1\nspr2:: Load\\xlsx f |autotype 1.0\nspr1 = spr2\n} true"
+		"equal {\ncc os\nf:: mktemp ++ \"/test.xlsx\"\nspr1:: table { \"a\" \"b\" \"c\" } { 1 1.1 \"a\" 2 2.2 \"b\" 3 3.3 \"c\" }\nf .Save\\xlsx spr1\nspr2:: Load\\xlsx f |autotype 1.0\nspr1 = spr2\n} true"
 	}
 
 }
@@ -2089,7 +2127,7 @@ section "OS" "OS related functions" {
 	}
 
 	{
-		"cc os mktmp"
+		"; mktmp was removed; use mktemp instead.\ncc os mktemp"
 	}
 
 	group "rm"
@@ -2146,6 +2184,7 @@ section "OS" "OS related functions" {
 	}
 
 	{
+		equal { os/file-info? %data/file.txt |type? } 'dict
 	}
 
 	{
@@ -2161,6 +2200,8 @@ section "OS" "OS related functions" {
 	}
 
 	{
+		equal { os/is-dir %data } true
+		equal { os/is-dir %data/file.txt } false
 	}
 
 	{
@@ -2176,6 +2217,8 @@ section "OS" "OS related functions" {
 	}
 
 	{
+		equal { os/is-file %data/file.txt } true
+		equal { os/is-file %data } false
 	}
 
 	{
@@ -2408,6 +2451,7 @@ section "OS" "OS related functions" {
 	}
 
 	{
+		equal { os/dirname %data/file.txt |Name? } "data"
 	}
 
 	{
@@ -2423,6 +2467,7 @@ section "OS" "OS related functions" {
 	}
 
 	{
+		equal { os/basename %data/file.txt } "file.txt"
 	}
 
 	{
@@ -2438,6 +2483,7 @@ section "OS" "OS related functions" {
 	}
 
 	{
+		equal { os/file-ext %data/file.txt } ".txt"
 	}
 
 	{
@@ -2453,6 +2499,7 @@ section "OS" "OS related functions" {
 	}
 
 	{
+		equal { os/join-path { %data "file.txt" } |Name? } "file.txt"
 	}
 
 	{
@@ -2486,6 +2533,77 @@ section "OS" "OS related functions" {
 
 	{
 		"cc os which \"sh\""
+	}
+
+	group "pwd"
+	"Gets the current working directory (alias of cwd?)."
+	{
+		arg `none`
+		returns `uri representing the current working directory`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "realpath"
+	"Returns the absolute path for a given path. Replaces the removed abs-path builtin."
+	{
+		argsn 1
+		arg `path: uri representing the path to resolve`
+		returns `uri representing the absolute path`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "mktemp"
+	"Creates a new temporary directory. Replaces the removed mktmp builtin."
+	{
+		arg `none`
+		returns `uri representing the created temporary directory`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "setenv!"
+	"Sets an environment variable (name, value)."
+	{
+		argsn 2
+		arg `name: string environment variable name`
+		arg `value: string value to assign`
+		returns `the value string`
+	}
+
+	{
+		equal { os/setenv! "RYE_TEST_DOC_ENV" "ok" } "ok"
+	}
+
+	{
+	}
+
+	group "unsetenv!"
+	"Unsets an environment variable by name."
+	{
+		argsn 1
+		arg `name: string environment variable name`
+		returns `void`
+	}
+
+	{
+		equal { os/unsetenv! "RYE_TEST_DOC_ENV" |type? } 'void
+	}
+
+	{
 	}
 
 	group "cp-r"
@@ -2701,7 +2819,7 @@ section "Archive Functions" "Functions for creating and extracting archives" {
 		argsn 2
 		arg `source: uri representing the .tar.gz file`
 		arg `destination: uri representing the output directory`
-		returns `destination uri if successful`
+		returns `never returns successfully; raises an error directing callers to untgz`
 	}
 
 	{
@@ -2881,7 +2999,67 @@ section "Find" "File finding functions using go-find library" {
 	{
 		argsn 2
 		arg `finder: native finder object`
-		returns `block of uris representing found files/directories`
+		arg `millis: integer number of milliseconds (Rye durations such as 2 .days are in milliseconds)`
+		returns `native finder object (for chaining)`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "finder//Exclude-path"
+	"Excludes paths that match a string substring or glob pattern."
+	{
+		argsn 2
+		arg `finder: native finder object`
+		arg `pattern: string substring or glob pattern to exclude`
+		returns `native finder object (for chaining)`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "finder//Size>"
+	"Filters for entries with size greater than N bytes."
+	{
+		argsn 2
+		arg `finder: native finder object`
+		arg `bytes: integer minimum exclusive size`
+		returns `native finder object (for chaining)`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "finder//Eval"
+	"Executes the find operation and returns matching paths as uris."
+	{
+		argsn 1
+		arg `finder: native finder object`
+		returns `block of paths; uris by default, or strings according to finder//Path-mode!`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "finder//Path-mode!"
+	"Sets how finder Eval returns paths: 'full (absolute string), 'relative (to cwd, string), 'filenames (basename string), or 'uris (the default)."
+	{
+		argsn 2
+		arg `finder: native finder object`
+		arg `mode: word or string, one of 'full, 'relative, 'filenames, or 'uris`
+		returns `native finder object (for chaining)`
 	}
 
 	{

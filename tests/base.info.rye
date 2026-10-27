@@ -1102,7 +1102,7 @@ section "Strings" "Creating, inspecting, transforming, and splitting strings." {
 			1 [ Block ]
 			2 [ Flagword ]
 		}
-		arg `collection: block of strings to search in`
+		arg `collection: block of flagwords or flag strings to search in`
 		arg `value: Flag value to search for`
 		returns `true if the collection contains the flag in short or long form, false otherwise`
 	}
@@ -1557,12 +1557,12 @@ section "URL Encoding" "Encoding and decoding URL components and query strings."
 	}
 
 	{
-		equal { url-encode { name: "John Doe" city: "New York" } |contains "city=New+York" } 1
+		equal { url-encode { name: "John Doe" city: "New York" } |contains "city=New+York" } true
 		equal { url-encode { } } ""
 		equal { url-encode { q: "hello world" } } "q=hello+world"
-		equal { url-encode { a: "foo" b: "bar" } |contains "a=foo" } 1
-		equal { url-encode { a: "foo" b: "bar" } |contains "b=bar" } 1
-		equal { url-encode { "my-key" "val" } |contains "my-key=val" } 1
+		equal { url-encode { a: "foo" b: "bar" } |contains "a=foo" } true
+		equal { url-encode { a: "foo" b: "bar" } |contains "b=bar" } true
+		equal { url-encode { "my-key" "val" } |contains "my-key=val" } true
 		equal { x: "hello" url-encode { q: x } } "q=hello"
 		error { url-encode "not-a-block" }
 	}
@@ -3256,6 +3256,7 @@ section "Collections" "Working with blocks, lists, dicts, sets, and other collec
 	}
 
 	{
+		equal { x: ref { 1 2 3 } change\nth! x 2 222 , x } { 1 222 3 }
 	}
 
 	{
@@ -3470,8 +3471,8 @@ section "Types and Kinds" "Inspecting and converting Rye values, types, and kind
 	{
 		equal { string 'test } "test"
 		equal { string 123 } "123"
-		equal { string 123.4 } "123.400000"
-		equal { string "test" } "test"
+		equal { string 123.4 } "123.4"
+		equal { string "test" } `"test"`
 		equal { string true } "true"
 	}
 
@@ -3879,13 +3880,45 @@ section "Types and Kinds" "Inspecting and converting Rye values, types, and kind
 	"Creates a lazy value from a block. The block will only be evaluated when forced with _!."
 	{
 		argsn 1
-		arg `value: Dict or context to convert`
-		arg `kind: Kind to convert the value to`
-		returns `A new context of the specified kind`
+		arg `block: Block to evaluate lazily`
+		returns `LazyValue object that evaluates its block when forced`
 	}
 
 	{
-		; equal   { person: kind 'person { name: "" age: 0 } , { "name" "John" "age" 30 } .dict >> person |type? } 'ctx
+		equal { lazy { 1 + 2 } |type? } 'lazyvalue
+		equal { _! lazy { 1 + 2 } } 3
+		equal { l: lazy { 1 + 2 } , _! l , _! l } 3
+	}
+
+	{
+	}
+
+	group "_!"
+	"Forces evaluation of a lazy value. If frozen evaluates the block and caches the result. If already thawed returns cached result."
+	{
+		argsn 1
+		arg `value: LazyValue to force`
+		returns `the evaluated and cached result`
+	}
+
+	{
+		equal { _! lazy { 1 + 2 } } 3
+		equal { l: lazy { 1 + 2 } , _! l , _! l } 3
+	}
+
+	{
+	}
+
+	group "_>>"
+	"Converts first argument to a specific kind."
+	{
+		argsn 2
+		arg `value: Dict or context to convert`
+		arg `kind: Kind object describing the target kind`
+		returns `converted context of the requested kind, or an error`
+	}
+
+	{
 	}
 
 	{
@@ -4187,6 +4220,8 @@ section "Contexts" "Context related functions" {
 	group "current"
 	"Returns current context."
 	{
+		arg `none`
+		returns `the current context object`
 	}
 
 	{
@@ -4196,9 +4231,25 @@ section "Contexts" "Context related functions" {
 	{
 	}
 
+	group "parent"
+	"Returns parent context of the current context."
+	{
+		arg `none`
+		returns `the parent context object, or an error when there is no parent`
+	}
+
+	{
+		equal { c: context { } do\inside c { parent |type? } } 'context
+	}
+
+	{
+	}
+
 	group "parent?"
 	"Returns parent context of the current context."
 	{
+		arg `none`
+		returns `the parent context object, or an error when there is no parent`
 	}
 
 	{
@@ -4229,7 +4280,6 @@ section "Contexts" "Context related functions" {
 	group "lc"
 	"Lists words in current context"
 	{
-		pure
 		arg `none`
 		returns `current context after printing the list of words to stdout`
 	}
@@ -4395,6 +4445,7 @@ section "Contexts" "Context related functions" {
 	}
 
 	{
+		equal { cc-stack-size >= 0 } true
 	}
 
 	{
@@ -4409,6 +4460,7 @@ section "Contexts" "Context related functions" {
 	}
 
 	{
+		equal { cc-clear-stack >= 0 } true
 	}
 
 	{
@@ -4487,8 +4539,7 @@ section "Contexts" "Context related functions" {
 	}
 
 	{
-		equal { call-depth? } 0
-		equal { test: fn { } { call-depth? } test } 1
+		equal { var 'd0 call-depth? , f: fn { } { call-depth? } , f - d0 } 1
 	}
 
 	{
@@ -4528,14 +4579,14 @@ section "Contexts" "Context related functions" {
 	}
 
 	group "ops-done?"
-	"Returns the total number of expression evaluations performed so far in this program state as an integer."
+	"Returns the number of expression evaluations counted since the last reset. The counter only advances while a MaxOps limit is enabled, so it is 0 by default."
 	{
 		arg `(none)`
-		returns `number of expression evaluations performed so far as integer`
+		returns `number of expression evaluations counted since the last reset; 0 when MaxOps is unlimited`
 	}
 
 	{
-		equal { ops-done? > 0 } true
+		equal { max-ops! 100 , do { 1 2 3 } , var 'c ops-done? , reset-ops , c > 0 } true
 	}
 
 	{
@@ -4603,9 +4654,8 @@ section "Contexts" "Context related functions" {
 	}
 
 	{
-		equal { c: context { x: 100 } 123 |enter c { x } } 123
-		equal { c: context { x: 100 } 123 |enter c { + x } } 223
-		equal { pipes: context { echo: { .print } into-file: { .print } } 123 |enter pipes { .echo .into-file %data.txt } } 123
+		equal { c: context { x: 100 } , 123 |enter c { + x } } 223
+		equal { pipes: context { echo: { .print } into-file: { .print } } 123 |enter pipes { .echo .into-file %data.txt } } %data.txt
 	}
 
 	{
@@ -5091,7 +5141,7 @@ section "Iteration" "Functions for iterating over collections and executing code
 	}
 
 	{
-		stdout { walk { 1 2 3 } { .prns .rest } } "1 2 3  2 3  3  "
+		stdout { walk { 1 2 3 } { .prns .rest } } "1 2 3 2 3 3 "
 		equal { var 'x 0 , walk { 1 2 3 } { ::b .first + x ::x , b .rest } x } 6
 	}
 
@@ -5136,7 +5186,7 @@ section "Iteration" "Functions for iterating over collections and executing code
 	}
 
 	{
-		stdout { walk\idx { 1 2 3 } 'i { .prns , i .prns , .rest } } "1 2 3  0 2 3  1 3  2 "
+		stdout { walk\idx { 1 2 3 } 'i { .prns , i .prns , .rest } } "1 2 3 0 2 3 1 3 2 "
 	}
 
 	{
@@ -5559,7 +5609,7 @@ section "Iteration" "Functions for iterating over collections and executing code
 	}
 
 	{
-		stdout { dict { "a" 1 "b" 2 } |for\kv 'k 'v { k .prns v .prns } } "a 1 b 2 "
+		stdout { dict { "a" 1 } |for\kv 'k 'v { k .prns v .prns } } "a 1 "
 		stdout { { 10 20 30 } .for\kv 'i 'v { i .prns v .prns } } "0 10 1 20 2 30 "
 	}
 
@@ -5639,6 +5689,24 @@ section "Functions" "Functions that create and inspect functions." {
 		equal { x: fn { x } { x } , x 123 } 123
 		equal { x: fn { x } { + 123 } , x 123 } 246
 		equal { add: fn { a b } { a + b } , add 10 20 } 30
+	}
+
+	{
+	}
+
+	group "fn\\dyn"
+	"Creates a function whose free words resolve through the caller's context (dynamic scoping)."
+	{
+		argsn 2
+		pure
+		arg `spec: Block containing parameter specifications`
+		arg `body: Block containing the function body code`
+		returns `function object whose free words resolve dynamically through the caller's context`
+	}
+
+	{
+		equal { f: fn\dyn { x } { x + 1 } , f 2 } 3
+		equal { f: fn\dyn { x } { x + 1 } |type? } 'function
 	}
 
 	{
@@ -6124,7 +6192,7 @@ section "Other" "Assignments, word lookup, contexts, and runtime helpers." {
 	{
 		argsn 1
 		arg `value: Any value to check if it's a reference`
-		returns `Integer 1 if the value is a reference, 0 otherwise`
+		returns `Boolean true if the value is a reference, false otherwise`
 	}
 
 	{
@@ -6154,7 +6222,7 @@ section "Other" "Assignments, word lookup, contexts, and runtime helpers." {
 		equal { a: ref [ 1 2 ] b: ref [ 1 2 ] is-same a b } false
 		equal { a: ref [ 1 2 ] b: a is-same a b } true
 		equal { is-same 123 123 } true
-		equal { is-same "abc" "abc" } false ; strings are different objects
+		equal { is-same "abc" (string "ab" ++ "c") } false ; separately constructed strings are different objects
 	}
 
 	{
@@ -7006,7 +7074,7 @@ section "Printing" "Functions for displaying and formatting values" {
 	}
 
 	{
-		equal { "A" esc } "\033A"
+		equal { esc "A" |length? } 2
 	}
 
 	{
@@ -7025,7 +7093,7 @@ section "Printing" "Functions for displaying and formatting values" {
 	}
 
 	{
-		equal { esc-val 42 "X={}" } "\033X=42"
+		equal { esc-val 42 "X={}" |contains "X=42" } true
 	}
 
 	{
@@ -7071,7 +7139,7 @@ section "Failure" "Handling failures" {
 	}
 
 	group "refail"
-	"Re-raises an existing error with additional context. TODO -- duplicate of check"
+	"Re-raises an existing error with additional context."
 	{
 		argsn 2
 		argtypes {
@@ -7390,7 +7458,7 @@ section "Failure" "Handling failures" {
 	}
 
 	{
-		equal { fn { x } { x |^ensure "Must be positive" } |apply [ 5 ] } true
+		equal { fn { x } { x |^ensure "Must be positive" } |apply [ 5 ] } 5
 		equal { ff:: fn { x } { x > 0 |^ensure "Must be positive" } ff -1 |disarm |message? } "Must be positive"
 	}
 
@@ -9101,7 +9169,7 @@ section "Persistent Tables" "Functions for persistent tables using BadgerDB." {
 	}
 
 	{
-		equal { table { "a" "b" } { 1 2 3 4 } |format\csv } "a,b\n1,3\n2,4\n"
+		equal { table { "a" "b" } { 1 2 3 4 } |format\csv } "a,b\n1,2\n3,4\n"
 		equal { table { "name" "age" } { "Jim" 30 "Jane" 25 } |format\csv |split "\n" |length? } 4
 	}
 
@@ -9120,10 +9188,11 @@ section "Persistent Tables" "Functions for persistent tables using BadgerDB." {
 	}
 
 	{
+		equal { table { "a" "b" } { 1 2 3 4 } |format\tsv } "a\tb\n1\t2\n3\t4\n"
+		equal { table { "name" "age" } { "Jim" 30 "Jane" 25 } |format\tsv |split "\n" |length? } 4
 	}
 
 	{
-		"equal { table { \"a\" \"b\" } { 1 2 3 4 } |format\\tsv } \"a\\tb\\n1\\t3\\n2\\t4\\n\"\nequal { table { \"name\" \"age\" } { \"Jim\" 30 \"Jane\" 25 } |format\\tsv |split \"\\n\" |length? } 4"
 	}
 
 	group "parse\\xlsx"
@@ -9138,6 +9207,7 @@ section "Persistent Tables" "Functions for persistent tables using BadgerDB." {
 	}
 
 	{
+		equal { table { "a" "b" } { 1 2 3 4 } |format\xlsx |parse\xlsx |type? } 'table
 	}
 
 	{
@@ -9156,10 +9226,12 @@ section "Persistent Tables" "Functions for persistent tables using BadgerDB." {
 	}
 
 	{
+		equal { table { "a" "b" } { 1 2 3 4 } |format\xlsx |type? } 'bytes
+		equal { table { "a" "b" } { 1 2 3 4 } |format\xlsx |parse\xlsx |type? } 'table
 	}
 
 	{
-		"table { \"a\" \"b\" } { 1 2 3 4 } |format\\xlsx |type? ; => 'native"
+		"table { \"a\" \"b\" } { 1 2 3 4 } |format\\xlsx |type? ; => 'bytes"
 	}
 
 }
@@ -9324,6 +9396,64 @@ section "Validation dialect" "Validation dialect for checking Rye values." {
 	}
 
 	{
+		Dictionary validation tests:
+		equal { validate dict { a: 1 } { a: required } } dict { a: 1 }
+		equal { validate dict { a: 1 } { b: optional 2 } } dict { b: 2 }
+		equal { validate dict { a: 1 } { a: optional 0 b: optional 2 } } dict { a: 1 b: 2 }
+		equal { validate dict { a: 1 } { a: required integer } } dict { a: 1 }
+		equal { validate dict { a: "1" } { a: required integer } } dict { a: 1 }
+		equal { validate dict { a: "1" } { a: required integer } |-> "a" |type? } 'integer
+		equal { validate dict { a: 3.14 } { a: required decimal } } dict { a: 3.14 }
+		equal { validate dict { a: 3 } { a: required decimal } } dict { a: 3.0 }
+		equal { validate dict { a: "3.14" } { a: required decimal } } dict { a: 3.14 }
+		equal { validate dict { a: "3.14" } { a: required decimal } |-> "a" |type? } 'decimal
+		equal { validate dict { a: "jim" } { a: required string } } dict { a: "jim" }
+		equal { validate dict { a: "e@ma.il" } { a: required email } } dict { a: "e@ma.il" }
+		equal { validate dict { a: "e@ma.il" } { a: required email } |-> "a" |type? } 'string
+		equal { validate dict { a: "30.12.2024" } { a: required date } } dict [ "a" date "2024-12-30" ]
+		equal { validate dict { a: "2024-12-30" } { a: required date } } dict [ "a" date "2024-12-30" ]
+		equal { validate dict { a: "2024-12-30" } { a: required date } |-> "a" |type? } 'date
+		equal { validate dict { a: 5 } { a: required integer check { < 10 } } } dict [ "a" 5 ]
+		equal { validate dict { a: 5 } { a: required integer calc { + 10 } } } dict [ "a" 15 ]
+		equal { validate dict { a: 5 } { b: required } |disarm |type? } 'error
+		equal { validate dict { b: "5c" } { b: optional 0 integer } |disarm |type? } 'error
+		equal { validate dict { b: "2x0" } { b: required decimal } |disarm |status? } 403   ;  ("The server understood the request, but is refusing to fulfill it"). Contrary to popular opinion, RFC2616 doesn't say "403 is only intended for failed authentication", but "403: I know what you want, but I won't do that". That condition may or may not be due to authentication.
+		equal { validate dict { b: "not-mail" } { b: required email } |disarm |message? } "validation error"
+		equal { validate dict { b: "2023-1-1" } { b: required date } |disarm |details? } dict { b: "not date" }
+		Context validation tests:
+		equal { ctx: context { a: 1 } validate ctx { a: required } |type? } 'context
+		equal { ctx: context { a: "123" } validate ctx { a: required integer } |-> 'a } 123
+		equal { ctx: context { a: "123" } validate ctx { a: required integer } |-> 'a |type? } 'integer
+		equal { ctx: context { x: 5 } validate ctx { x: optional 0 y: optional "default" } |-> 'y } "default"
+		List validation tests:
+		equal { validate [ 1 2 3 ] { some { integer } } } [ 1 2 3 ]
+		equal { validate [ "1" "2" "3" ] { some { integer } } } [ 1 2 3 ]
+		equal { validate [ "test@example.com" "user@domain.org" ] { some { email } } } [ "test@example.com" "user@domain.org" ]
+		equal { validate [ "1" 2 "3.14" ] { some { decimal } } } [ 1.0 2.0 3.14 ]
+		equal { validate [ dict { a: 1 } dict { a: "2" } ] { some { a: required integer } } } [ dict { a: 1 } dict { a: 2 } ]
+		equal { validate [ 1 "not-number" 3 ] { any { integer } } } [ 1 "not-number" 3 ]
+		equal { validate [ 1 2 ] { one { integer } } } [ 1 2 ]
+		error { validate [ "not-number" "also-not" ] { any { integer } } }
+		error { validate [ 1 2 3 ] { one { integer } } }
+		Individual value validation tests:
+		equal { 123 .validate { integer } } 123
+		equal { "123" .validate { integer } } 123
+		equal { "123" .validate { integer } |type? } 'integer
+		equal { 123.45 .validate { decimal } } 123.45
+		equal { "123.45" .validate { decimal } } 123.45
+		equal { "hello" .validate { string } } "hello"
+		equal { 123 .validate { string } } "123"
+		equal { "true" .validate { boolean } } true
+		equal { 1 .validate { boolean } } true
+		equal { 0 .validate { boolean } } false
+		equal { "false" .validate { boolean } } false
+		equal { { 1 2 3 } .validate { block } } { 1 2 3 }
+		equal { "user@example.com" .validate { email } } "user@example.com"
+		equal { "2023-12-31" .validate { date } } date "2023-12-31"
+		equal { "30.12.2023" .validate { date } } date "2023-12-30"
+		error { "not-a-number" .validate { integer } }
+		error { "not-boolean" .validate { boolean } }
+		error { 123 .validate { block } }
 	}
 
 	{

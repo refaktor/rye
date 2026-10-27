@@ -477,9 +477,12 @@ var builtins_contexts = map[string]*env.Builtin{
 		},
 	},
 
-	// TODOC
 	// Tests:
 	// equal { c: context { var 'x 9999 , incr: fn\inside { } current { x:: inc x } } c/incr c/x } 10000
+	// Args:
+	// * none
+	// Returns:
+	// * the current context object
 	"current": { // **
 		Argsn: 0,
 		Doc:   "Returns current context.",
@@ -489,7 +492,12 @@ var builtins_contexts = map[string]*env.Builtin{
 		},
 	},
 
-	// Returns parent context of the current context.
+	// Tests:
+	// equal { c: context { } do\inside c { parent |type? } } 'context
+	// Args:
+	// * none
+	// Returns:
+	// * the parent context object, or an error when there is no parent
 	"parent": { // **
 		Argsn: 0,
 		Doc:   "Returns parent context of the current context.",
@@ -504,6 +512,10 @@ var builtins_contexts = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { var 'y 99 c: context { incr: fn\inside { } parent? { y:: inc y } } c/incr y } 100
+	// Args:
+	// * none
+	// Returns:
+	// * the parent context object, or an error when there is no parent
 	"parent?": { // **
 		Argsn: 0,
 		Doc:   "Returns parent context of the current context.",
@@ -541,7 +553,6 @@ var builtins_contexts = map[string]*env.Builtin{
 	// * current context after printing the list of words to stdout
 	"lc": {
 		Argsn: 0,
-		Pure:  true,
 		Doc:   "Lists words in current context",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fmt.Println(ps.Ctx.Preview(*ps.Idx, ""))
@@ -578,7 +589,7 @@ var builtins_contexts = map[string]*env.Builtin{
 			case *env.RyeCtx:
 				return c.GetWords(*ps.Idx)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "parent?")
+				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "lc\\data\\")
 			}
 		},
 	},
@@ -668,7 +679,7 @@ var builtins_contexts = map[string]*env.Builtin{
 				}
 				return ps.Ctx
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "lsp\\")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "lcp\\")
 			}
 		},
 	},
@@ -758,6 +769,8 @@ var builtins_contexts = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { cc-stack-size >= 0 } true
 	// Example: cc-stack-size
 	// Args:
 	// * none
@@ -771,6 +784,8 @@ var builtins_contexts = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { cc-clear-stack >= 0 } true
 	// Example: cc-clear-stack
 	// Args:
 	// * none
@@ -886,8 +901,7 @@ var builtins_contexts = map[string]*env.Builtin{
 	// ===== Execution Guard Introspection =====
 
 	// Tests:
-	// equal { call-depth? } 0
-	// equal { test: fn { } { call-depth? } test } 1
+	// equal { var 'd0 call-depth? , f: fn { } { call-depth? } , f - d0 } 1
 	// Args:
 	// (none)
 	// Returns:
@@ -937,14 +951,14 @@ var builtins_contexts = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { ops-done? > 0 } true
+	// equal { max-ops! 100 , do { 1 2 3 } , var 'c ops-done? , reset-ops , c > 0 } true
 	// Args:
 	// (none)
 	// Returns:
-	// * number of expression evaluations performed so far as integer
+	// * number of expression evaluations counted since the last reset; 0 when MaxOps is unlimited
 	"ops-done?": {
 		Argsn: 0,
-		Doc:   "Returns the total number of expression evaluations performed so far in this program state as an integer.",
+		Doc:   "Returns the number of expression evaluations counted since the last reset. The counter only advances while a MaxOps limit is enabled, so it is 0 by default.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewInteger(ps.OpsCount)
 		},
@@ -1004,9 +1018,8 @@ var builtins_contexts = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { c: context { x: 100 } 123 |enter c { x } } 123
-	// equal { c: context { x: 100 } 123 |enter c { + x } } 223
-	// equal { pipes: context { echo: { .print } into-file: { .print } } 123 |enter pipes { .echo .into-file %data.txt } } 123
+	// equal { c: context { x: 100 } , 123 |enter c { + x } } 223
+	// equal { pipes: context { echo: { .print } into-file: { .print } } 123 |enter pipes { .echo .into-file %data.txt } } %data.txt
 	// Args:
 	// * value: Value to inject into the block (like with)
 	// * context: Context to use as parent context during execution (like do\in)

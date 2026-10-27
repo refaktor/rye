@@ -3471,7 +3471,9 @@ var builtins_collection = map[string]*env.Builtin{
 		},
 	},
 
-	// Deprecated: renamed do update\pos!
+	// Deprecated: renamed to update\pos!
+	// Tests:
+	// equal { x: ref { 1 2 3 } change\nth! x 2 222 , x } { 1 222 3 }
 	// Args:
 	// * collection: Block or List to update.
 	// * index: Integer 1-based position.

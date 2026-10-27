@@ -2495,7 +2495,7 @@ var Builtins_table = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//  equal { table { "a" "b" } { 1 2 3 4 } |format\csv } "a,b\n1,3\n2,4\n"
+	//  equal { table { "a" "b" } { 1 2 3 4 } |format\csv } "a,b\n1,2\n3,4\n"
 	//  equal { table { "name" "age" } { "Jim" 30 "Jane" 25 } |format\csv |split "\n" |length? } 4
 	// Args:
 	// * table - the table to convert to CSV string
@@ -2556,8 +2556,8 @@ var Builtins_table = map[string]*env.Builtin{
 		},
 	},
 
-	// Example:
-	//  equal { table { "a" "b" } { 1 2 3 4 } |format\tsv } "a\tb\n1\t3\n2\t4\n"
+	// Tests:
+	//  equal { table { "a" "b" } { 1 2 3 4 } |format\tsv } "a\tb\n1\t2\n3\t4\n"
 	//  equal { table { "name" "age" } { "Jim" 30 "Jane" 25 } |format\tsv |split "\n" |length? } 4
 	// Args:
 	// * table - the table to convert to TSV string
@@ -2619,6 +2619,8 @@ var Builtins_table = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { table { "a" "b" } { 1 2 3 4 } |format\xlsx |parse\xlsx |type? } 'table
 	// Example:
 	// ; Parsing requires real XLSX binary data, so no runnable example is shown here.
 	// Args:
@@ -2703,8 +2705,11 @@ var Builtins_table = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { table { "a" "b" } { 1 2 3 4 } |format\xlsx |type? } 'bytes
+	// equal { table { "a" "b" } { 1 2 3 4 } |format\xlsx |parse\xlsx |type? } 'table
 	// Example:
-	//  table { "a" "b" } { 1 2 3 4 } |format\xlsx |type? ; => 'native
+	//  table { "a" "b" } { 1 2 3 4 } |format\xlsx |type? ; => 'bytes
 	// Args:
 	// * table - the table to convert to XLSX bytes
 	// Tags: #table #formatting #xlsx

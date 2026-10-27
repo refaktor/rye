@@ -251,6 +251,8 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { Split %data/file.txt } { "data" "file.txt" }
 	// Args:
 	// * path: uri representing a file path
 	// Returns:
@@ -284,6 +286,9 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { Is-absolute %/tmp } true
+	// equal { Is-absolute %data/file.txt } false
 	// Args:
 	// * path: uri representing a file path
 	// Returns:
@@ -386,12 +391,12 @@ var Builtins_io = map[string]*env.Builtin{
 	// Tests:
 	// equal { Writer Open %data/file.txt |kind? } 'writer
 	// Args:
-	// * source: file object to read from
+	// * source: file object to write to
 	// Returns:
-	// * native reader object
+	// * native writer object
 	"file//Writer": {
 		Argsn: 1,
-		Doc:   "Creates a new reader from file object.",
+		Doc:   "Creates a new writer from a file object.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 
 			switch s := arg0.(type) {
@@ -399,12 +404,12 @@ var Builtins_io = map[string]*env.Builtin{
 				file, ok := s.Value.(*os.File)
 				if !ok {
 					ps.FailureFlag = true
-					return evaldo.MakeBuiltinError(ps, "Error opening file.", "file//Reader")
+					return evaldo.MakeBuiltinError(ps, "Error opening file.", "file//Writer")
 				}
 				return *env.NewNative(ps.Idx, bufio.NewWriter(file), "writer")
 			default:
 				ps.FailureFlag = true
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "file//Reader")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "file//Writer")
 			}
 		},
 	},
@@ -523,6 +528,8 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { Reader %data/file.txt |Close |type? } 'string
 	// Args:
 	// * reader: native reader object
 	// Returns:

@@ -1505,7 +1505,7 @@ var builtins = map[string]*env.Builtin{
 	// Args:
 	// * value: Any value to check if it's a reference
 	// Returns:
-	// * Integer 1 if the value is a reference, 0 otherwise
+	// * Boolean true if the value is a reference, false otherwise
 	"is-ref": { // **
 		Argsn: 1,
 		Doc:   "Checks if a value is a mutable reference.",
@@ -1524,7 +1524,7 @@ var builtins = map[string]*env.Builtin{
 	// equal { a: ref [ 1 2 ] b: ref [ 1 2 ] is-same a b } false
 	// equal { a: ref [ 1 2 ] b: a is-same a b } true
 	// equal { is-same 123 123 } true
-	// equal { is-same "abc" "abc" } false ; strings are different objects
+	// equal { is-same "abc" (string "ab" ++ "c") } false ; separately constructed strings are different objects
 	// Args:
 	// * value1: First value to compare
 	// * value2: Second value to compare

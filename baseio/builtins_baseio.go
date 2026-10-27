@@ -593,11 +593,6 @@ var builtins_baseio = map[string]*env.Builtin{
 		},
 	},
 
-	// Rye-itself//Is-unshare
-	// Summary: Returns true if running inside Rye --unshare sandbox (Linux only).
-	// Args: none
-	// Returns: boolean
-	// Notes: Checks env var RYE_UNSHARE_CHILD set by the runner in the unshare child.
 	// Rye-itself//Is-unshare-fs
 	// Summary: Returns true if filesystem namespace isolation is enabled under --unshare.
 	// Args: none
@@ -676,6 +671,13 @@ var builtins_baseio = map[string]*env.Builtin{
 		},
 	},
 
+	// Rye-itself//Is-unshare
+	// Summary: Returns true if running inside a Rye --unshare sandbox (Linux only).
+	// Args:
+	// * none
+	// Returns:
+	// * boolean, true when the runner set RYE_UNSHARE_CHILD=1
+	// Notes: Checks env var RYE_UNSHARE_CHILD set by the runner in the unshare child.
 	"Rye-itself//Is-unshare": {
 		Argsn: 0,
 		Doc:   "Returns true if current process runs inside Rye --unshare sandbox (Linux only).",
@@ -685,11 +687,6 @@ var builtins_baseio = map[string]*env.Builtin{
 		},
 	},
 
-	// Rye-itself//Is-dry-run
-	// Summary: Returns true if Rye is in dry-run/scenario mode.
-	// Args: none
-	// Returns: boolean
-	// Notes: True when --dry-run is used or scenario is active.
 	// Rye-itself//Require-unshared
 	// Summary: Fails and exits the program if unshare is not active.
 	// Args: none
@@ -710,6 +707,13 @@ var builtins_baseio = map[string]*env.Builtin{
 		},
 	},
 
+	// Rye-itself//Is-dry-run
+	// Summary: Returns true if Rye is in dry-run/scenario mode.
+	// Args:
+	// * none
+	// Returns:
+	// * boolean, true when --dry-run is active or a scenario context is detected
+	// Notes: Checks RYE_DRY_RUN=1, then falls back to the scenario detector.
 	"Rye-itself//Is-dry-run": {
 		Argsn: 0,
 		Doc:   "Returns true if Rye is running in dry-run/scenario mode (activated via --dry-run or scenario context)",

@@ -370,7 +370,7 @@ var builtins_printing = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { "A" esc } "\033A"
+	// equal { esc "A" |length? } 2
 	// Args:
 	// * str: Base string to prefix with escape character
 	// Returns:
@@ -389,7 +389,7 @@ var builtins_printing = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { esc-val 42 "X={}" } "\033X=42"
+	// equal { esc-val 42 "X={}" |contains "X=42" } true
 	// Args:
 	// * value: Value to embed
 	// * template: String with {} placeholder

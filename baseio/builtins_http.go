@@ -136,7 +136,7 @@ var Builtins_http = map[string]*env.Builtin{
 				case env.String:
 					// Simple string handler - just write the string as response
 					http.HandleFunc(path.Value, func(w http.ResponseWriter, r *http.Request) {
-						fmt.Fprintf(w, handler.Value)
+						fmt.Fprintf(w, "%s", handler.Value)
 					})
 					return arg0
 				case env.Function:
@@ -219,7 +219,7 @@ var Builtins_http = map[string]*env.Builtin{
 				switch handler := arg1.(type) {
 				case env.String:
 					// Write the string content to the HTTP response
-					fmt.Fprintf(path.Value.(http.ResponseWriter), handler.Value)
+					fmt.Fprintf(path.Value.(http.ResponseWriter), "%s", handler.Value)
 					return arg0
 				default:
 					ps.FailureFlag = true
@@ -1080,7 +1080,7 @@ var Builtins_http = map[string]*env.Builtin{
 							env1.ErrorFlag = true
 							return env.NewError("arg1 should be string 211s")
 						}
-						// fmt.Fprintf(path.Value.(http.ResponseWriter), handler.Value)
+						// fmt.Fprintf(path.Value.(http.ResponseWriter), "%s", handler.Value)
 						return env.String{string(msg)}
 					default:
 						env1.FailureFlag = true

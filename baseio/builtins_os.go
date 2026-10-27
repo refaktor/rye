@@ -211,7 +211,8 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * uri representing the created temporary directory
 	// Example:
-	// cc os mktmp
+	// ; mktmp was removed; use mktemp instead.
+	// cc os mktemp
 	"mktmp": {
 		Argsn: 0,
 		Doc:   "Removed: use mktemp instead.",
@@ -335,6 +336,8 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { os/file-info? %data/file.txt |type? } 'dict
 	// Args:
 	// * path: uri representing the file or directory
 	// Returns:
@@ -366,6 +369,9 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { os/is-dir %data } true
+	// equal { os/is-dir %data/file.txt } false
 	// Args:
 	// * path: uri representing the path to check
 	// Returns:
@@ -391,6 +397,9 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { os/is-file %data/file.txt } true
+	// equal { os/is-file %data } false
 	// Args:
 	// * path: uri representing the path to check
 	// Returns:
@@ -991,6 +1000,8 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { os/dirname %data/file.txt |Name? } "data"
 	// Args:
 	// * path: uri representing a path
 	// Returns:
@@ -1012,6 +1023,8 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { os/basename %data/file.txt } "file.txt"
 	// Args:
 	// * path: uri representing a path
 	// Returns:
@@ -1033,6 +1046,8 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { os/file-ext %data/file.txt } ".txt"
 	// Args:
 	// * path: uri representing a file path
 	// Returns:
@@ -1054,6 +1069,8 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { os/join-path { %data "file.txt" } |Name? } "file.txt"
 	// Args:
 	// * paths: uri or block of uris to join
 	// Returns:
@@ -1137,6 +1154,13 @@ var Builtins_os = map[string]*env.Builtin{
 	},
 
 	// Aliases and additional getters
+
+	// Gets the current working directory.
+	// Args:
+	// * none
+	// Returns:
+	// * uri representing the current working directory
+	// Tags: #file #path #alias
 	"pwd": {
 		Argsn: 0,
 		Doc:   "Gets the current working directory (alias of cwd?).",
@@ -1149,9 +1173,15 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
+	// Resolves a path to an absolute path.
+	// Args:
+	// * path: uri representing the path to resolve
+	// Returns:
+	// * uri representing the absolute path
+	// Tags: #file #path
 	"realpath": {
 		Argsn: 1,
-		Doc:   "Returns the absolute path for a given path (alias of abs-path).",
+		Doc:   "Returns the absolute path for a given path. Replaces the removed abs-path builtin.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Uri:
@@ -1166,9 +1196,15 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
+	// Creates a new temporary directory.
+	// Args:
+	// * none
+	// Returns:
+	// * uri representing the created temporary directory
+	// Tags: #file #temporary
 	"mktemp": {
 		Argsn: 0,
-		Doc:   "Creates a new temporary directory (alias of mktmp).",
+		Doc:   "Creates a new temporary directory. Replaces the removed mktmp builtin.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			dir, err := os.MkdirTemp("", "rye-tmp-")
 			if err != nil {
@@ -1195,6 +1231,15 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
+	// Sets an environment variable.
+	// Tests:
+	// equal { os/setenv! "RYE_TEST_DOC_ENV" "ok" } "ok"
+	// Args:
+	// * name: string environment variable name
+	// * value: string value to assign
+	// Returns:
+	// * the value string
+	// Tags: #system #environment
 	"setenv!": {
 		Argsn: 2,
 		Doc:   "Sets an environment variable (name, value).",
@@ -1215,6 +1260,14 @@ var Builtins_os = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Unsets an environment variable.
+	// Tests:
+	// equal { os/unsetenv! "RYE_TEST_DOC_ENV" |type? } 'void
+	// Args:
+	// * name: string environment variable name
+	// Returns:
+	// * void
+	// Tags: #system #environment
 	"unsetenv!": {
 		Argsn: 1,
 		Doc:   "Unsets an environment variable by name.",
@@ -1970,13 +2023,13 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
-	// Extracts a .tar.gz archive to a directory.
+	// Removed alias retained for compatibility; use untgz.
 	// Args:
 	// * source: uri representing the .tar.gz file
 	// * destination: uri representing the output directory
 	// Returns:
-	// * destination uri if successful
-	// Tags: #archive #extract
+	// * never returns successfully; raises an error directing callers to untgz
+	// Tags: #archive #extract #removed
 	"un-tgz": {
 		Argsn: 2,
 		Doc:   "Removed: use untgz instead.",
@@ -1988,7 +2041,7 @@ var Builtins_os = map[string]*env.Builtin{
 	// Aliases for archive operations
 	"untgz": {
 		Argsn: 2,
-		Doc:   "Extracts a .tar.gz archive to a directory (alias of un-tgz).",
+		Doc:   "Extracts a .tar.gz archive to a directory. Replaces the removed un-tgz builtin.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch src := arg0.(type) {
 			case env.Uri:
@@ -2034,7 +2087,7 @@ var Builtins_os = map[string]*env.Builtin{
 
 	"untar-gz": {
 		Argsn: 2,
-		Doc:   "Extracts a .tar.gz archive to a directory (alias of un-tgz).",
+		Doc:   "Extracts a .tar.gz archive to a directory (alias of untgz).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch src := arg0.(type) {
 			case env.Uri:
@@ -2462,12 +2515,13 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
-	// Executes the find operation and returns results.
+	// Filters to files modified within the last N milliseconds.
 	// Args:
 	// * finder: native finder object
+	// * millis: integer number of milliseconds (Rye durations such as 2 .days are in milliseconds)
 	// Returns:
-	// * block of uris representing found files/directories
-	// Tags: #find #execute
+	// * native finder object (for chaining)
+	// Tags: #find #filter #time
 	"finder//Mtime-since!": {
 		Argsn: 2,
 		Doc:   "Filters for files modified within the last N milliseconds (e.g. 2 .days), truncated to whole seconds.",
@@ -2495,6 +2549,13 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
+	// Excludes paths matching a substring or glob pattern.
+	// Args:
+	// * finder: native finder object
+	// * pattern: string substring or glob pattern to exclude
+	// Returns:
+	// * native finder object (for chaining)
+	// Tags: #find #filter
 	"finder//Exclude-path": {
 		Argsn: 2,
 		Doc:   "Excludes paths that match a string substring or glob pattern.",
@@ -2525,6 +2586,13 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
+	// Filters to files larger than N bytes.
+	// Args:
+	// * finder: native finder object
+	// * bytes: integer minimum exclusive size
+	// Returns:
+	// * native finder object (for chaining)
+	// Tags: #find #filter #size
 	"finder//Size>": {
 		Argsn: 2,
 		Doc:   "Filters for entries with size greater than N bytes.",
@@ -2554,6 +2622,12 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
+	// Executes the find operation and returns matching paths.
+	// Args:
+	// * finder: native finder object
+	// Returns:
+	// * block of paths; uris by default, or strings according to finder//Path-mode!
+	// Tags: #find #execute
 	"finder//Eval": {
 		Argsn: 1,
 		Doc:   "Executes the find operation and returns matching paths as uris.",
@@ -2601,10 +2675,16 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
-	// Path-mode! for finder output: 'full, 'relative, or 'filenames (default is uris)
+	// Sets the output format used by finder//Eval.
+	// Args:
+	// * finder: native finder object
+	// * mode: word or string, one of 'full, 'relative, 'filenames, or 'uris
+	// Returns:
+	// * native finder object (for chaining)
+	// Tags: #find #output
 	"finder//Path-mode!": {
 		Argsn: 2,
-		Doc:   "Sets how finder Eval returns paths: 'full (absolute string), 'relative (to cwd, string), 'filenames (string). Default remains uris when not set.",
+		Doc:   "Sets how finder Eval returns paths: 'full (absolute string), 'relative (to cwd, string), 'filenames (basename string), or 'uris (the default).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch n := arg0.(type) {
 			case env.Native:
