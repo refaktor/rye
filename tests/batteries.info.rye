@@ -1801,11 +1801,96 @@ section "Basic Cryptographic Operations" "Hashing, encoding, and basic cryptogra
 	{
 	}
 
-	group "sha512"
-	"Calculates the SHA-512 hash of a string and returns the result as a hexadecimal string."
+	group "md5"
+	"Calculates the MD5 hash of a string or bytes and returns the result as a hexadecimal string. MD5 is not suitable for security-sensitive use."
 	{
 		argsn 1
-		arg `input: string to hash`
+		arg `input: string or bytes to hash`
+		returns `string containing the hexadecimal representation of the MD5 hash`
+	}
+
+	{
+		equal { cc crypto "Hello world" |md5 |type? } 'string
+		equal { cc crypto "Hello world" |md5 |length? } 32
+		equal { cc crypto "" |md5 } "d41d8cd98f00b204e9800998ecf8427e"
+	}
+
+	{
+	}
+
+	group "sha1"
+	"Calculates the SHA-1 hash of a string or bytes and returns the result as a hexadecimal string. SHA-1 is not suitable for security-sensitive use."
+	{
+		argsn 1
+		arg `input: string or bytes to hash`
+		returns `string containing the hexadecimal representation of the SHA-1 hash`
+	}
+
+	{
+		equal { cc crypto "Hello world" |sha1 |type? } 'string
+		equal { cc crypto "Hello world" |sha1 |length? } 40
+		equal { cc crypto "" |sha1 } "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+	}
+
+	{
+	}
+
+	group "sha224"
+	"Calculates the SHA-224 hash of a string or bytes and returns the result as a hexadecimal string."
+	{
+		argsn 1
+		arg `input: string or bytes to hash`
+		returns `string containing the hexadecimal representation of the SHA-224 hash`
+	}
+
+	{
+		equal { cc crypto "Hello world" |sha224 |type? } 'string
+		equal { cc crypto "Hello world" |sha224 |length? } 56
+		equal { cc crypto "" |sha224 } "d14a028c2a3a2bc9476102bb288234c415a2b01f828ea62ac5b3e42f"
+	}
+
+	{
+	}
+
+	group "sha256"
+	"Calculates the SHA-256 hash of a string or bytes and returns the result as a hexadecimal string."
+	{
+		argsn 1
+		arg `input: string or bytes to hash`
+		returns `string containing the hexadecimal representation of the SHA-256 hash`
+	}
+
+	{
+		equal { cc crypto "Hello world" |sha256 |type? } 'string
+		equal { cc crypto "Hello world" |sha256 |length? } 64
+		equal { cc crypto "" |sha256 } "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	}
+
+	{
+	}
+
+	group "sha384"
+	"Calculates the SHA-384 hash of a string or bytes and returns the result as a hexadecimal string."
+	{
+		argsn 1
+		arg `input: string or bytes to hash`
+		returns `string containing the hexadecimal representation of the SHA-384 hash`
+	}
+
+	{
+		equal { cc crypto "Hello world" |sha384 |type? } 'string
+		equal { cc crypto "Hello world" |sha384 |length? } 96
+		equal { cc crypto "" |sha384 } "38b060a751ac96384cd9327eb1b1e36a21fdb71114be07434c0cc7bf63f6e1da274edebfe76f65fbd51ad2f14898b95b"
+	}
+
+	{
+	}
+
+	group "sha512"
+	"Calculates the SHA-512 hash of a string or bytes and returns the result as a hexadecimal string."
+	{
+		argsn 1
+		arg `input: string or bytes to hash`
 		returns `string containing the hexadecimal representation of the SHA-512 hash`
 	}
 
@@ -1813,6 +1898,40 @@ section "Basic Cryptographic Operations" "Hashing, encoding, and basic cryptogra
 		equal { cc crypto "Hello world" |sha512 |type? } 'string
 		equal { cc crypto "Hello world" |sha512 |length? } 128
 		equal { cc crypto "" |sha512 } "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e"
+	}
+
+	{
+	}
+
+	group "crc32"
+	"Calculates the CRC-32 (IEEE) checksum of a string or bytes and returns it as a hexadecimal string."
+	{
+		argsn 1
+		arg `input: string or bytes to checksum`
+		returns `string containing the hexadecimal representation of the CRC-32 checksum`
+	}
+
+	{
+		equal { cc crypto "Hello world" |crc32 |type? } 'string
+		equal { cc crypto "Hello world" |crc32 |length? } 8
+		equal { cc crypto "" |crc32 } "00000000"
+	}
+
+	{
+	}
+
+	group "adler32"
+	"Calculates the Adler-32 checksum of a string or bytes and returns it as a hexadecimal string."
+	{
+		argsn 1
+		arg `input: string or bytes to checksum`
+		returns `string containing the hexadecimal representation of the Adler-32 checksum`
+	}
+
+	{
+		equal { cc crypto "Hello world" |adler32 |type? } 'string
+		equal { cc crypto "Hello world" |adler32 |length? } 8
+		equal { cc crypto "" |adler32 } "00000001"
 	}
 
 	{

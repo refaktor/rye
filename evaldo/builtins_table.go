@@ -775,6 +775,8 @@ var Builtins_table = map[string]*env.Builtin{
 	//  equal { table { 'name 'age } { "Jim" 30 "Jane" 25 } |where 'age { > 26 } |column? 'name } { "Jim" }
 	//  equal { table { 'a 'b } { 1 10 2 20 3 30 } |where { 'a 'b } { ( a + b ) > 25 } |length? } 1
 	//  equal { table { 'a 'b } { 1 10 2 20 3 30 } |where { 'a 'b } { all { a > 1 b > 15 } } |length? } 2
+	//  equal { table { 'a 'b } { 1 10 2 20 3 30 } |where { "a" "b" } { all { a > 1 b > 15 } } |length? } 2
+	//  equal { table { 'a 'b } { 1 10 2 20 3 30 } |where { 'a 'b } { > 1 } |length? } 2 ; first column is injected
 	// Args:
 	// * table
 	// * column - column name (word or string) or block of column names
@@ -3371,9 +3373,11 @@ func WhereBlockMultiCol(ps *env.ProgramState, s *env.Table, cols env.Block, code
 				wordIdx = w.Index
 			case env.Tagword:
 				wordIdx = w.Index
+			case env.String:
+				wordIdx = ps.Idx.IndexWord(w.Value)
 			default:
 				ps.Ser = ser
-				return MakeBuiltinError(ps, "Column names block must contain only words.", "where")
+				return MakeBuiltinError(ps, "Column names block must contain only words or strings.", "where")
 			}
 			val, err := s.GetRowValue(ps.Idx.GetWord(wordIdx), row)
 			if err != nil {

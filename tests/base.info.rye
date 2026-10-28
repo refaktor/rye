@@ -8353,6 +8353,8 @@ section "Filtering" "Select, reject, or fill rows based on column values." {
 		equal { table { 'name 'age } { "Jim" 30 "Jane" 25 } |where 'age { > 26 } |column? 'name } { "Jim" }
 		equal { table { 'a 'b } { 1 10 2 20 3 30 } |where { 'a 'b } { ( a + b ) > 25 } |length? } 1
 		equal { table { 'a 'b } { 1 10 2 20 3 30 } |where { 'a 'b } { all { a > 1 b > 15 } } |length? } 2
+		equal { table { 'a 'b } { 1 10 2 20 3 30 } |where { "a" "b" } { all { a > 1 b > 15 } } |length? } 2
+		equal { table { 'a 'b } { 1 10 2 20 3 30 } |where { 'a 'b } { > 1 } |length? } 2 ; first column is injected
 	}
 
 	{
