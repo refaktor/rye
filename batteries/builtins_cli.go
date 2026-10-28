@@ -5,6 +5,9 @@ package batteries
 
 import (
 	"fmt"
+	"os"
+	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/refaktor/rye/env"
@@ -1177,6 +1180,88 @@ func BuiParseArgs(es *env.ProgramState, args env.Object, specBlock env.Object) e
 	return *env.NewDict(resultData)
 }
 
+// BuiParseArgsFull parses arguments and on failure prints both the parse errors
+// and the generated help text. It returns the parsed Dict on success and the
+// help text on failure.
+func BuiParseArgsFull(es *env.ProgramState, args env.Object, specBlock env.Object) env.Object {
+	spec, ok := specBlock.(env.Block)
+	if !ok {
+		es.FailureFlag = true
+		return evaldo.MakeArgError(es, 2, []env.Type{env.BlockType}, "parse-args\\full")
+	}
+
+	result := BuiParseArgs(es, args, specBlock)
+	if !es.FailureFlag && result.Type() != env.ErrorType {
+		return result
+	}
+
+	// Propagate failures coming from action blocks; those are runtime errors,
+	// not argument parsing or specification errors.
+	if es.ReturnFlag || es.ErrorFlag {
+		return result
+	}
+	if errObj, ok := result.(*env.Error); ok && errObj.Values == nil && !strings.HasPrefix(errObj.Message, "spec error: ") {
+		return result
+	}
+
+	es.FailureFlag = false
+
+	switch errObj := result.(type) {
+	case *env.Error:
+		if errObj.Values != nil {
+			fmt.Println(formatParseErrors(errObj.Values))
+		} else if errObj.Message != "" {
+			fmt.Println(errObj.Message)
+		}
+	default:
+		fmt.Println(result.Print(*es.Idx))
+	}
+
+	cliSpec, err := CLI_ParseSpec(es, spec)
+	if err != nil {
+		fmt.Println("spec error: " + err.Error())
+		es.ReturnFlag = true
+		return *env.NewString("")
+	}
+	helpText := generateHelpText(es, cliSpec, nil)
+	if helpText != "" {
+		fmt.Println(helpText)
+	}
+	es.ReturnFlag = true
+	return *env.NewString(helpText)
+}
+
+func ryeItselfArgsForCLI(ps *env.ProgramState) env.Object {
+	firstArg := 2
+	if ps.Embedded {
+		firstArg = 1
+	}
+	if firstArg >= len(os.Args) {
+		return *env.NewBlock(*env.NewTSeries([]env.Object{}))
+	}
+
+	args := os.Args[firstArg:]
+	lst := make([]env.Object, len(args))
+	intRe := regexp.MustCompile("^[+-]?[0-9]+$")
+	floatRe := regexp.MustCompile("^[+-]?[0-9]*\\.[0-9]+$")
+	for i, arg := range args {
+		if intRe.MatchString(arg) {
+			if num, err := strconv.ParseInt(arg, 10, 64); err == nil {
+				lst[i] = *env.NewInteger(num)
+				continue
+			}
+		}
+		if floatRe.MatchString(arg) {
+			if num, err := strconv.ParseFloat(arg, 64); err == nil {
+				lst[i] = *env.NewDecimal(num)
+				continue
+			}
+		}
+		lst[i] = *env.NewString(arg)
+	}
+	return *env.NewBlock(*env.NewTSeries(lst))
+}
+
 var Builtins_cli = map[string]*env.Builtin{
 
 	//
@@ -1320,6 +1405,36 @@ var Builtins_cli = map[string]*env.Builtin{
 			default:
 				return result
 			}
+		},
+	},
+
+	// Tests:
+	// equal { parse-args\full { -v } { -v|verbose flag } -> "verbose" } true
+	// Args:
+	// * args: Block of Rye values representing command line arguments
+	// * spec: Block containing argument specifications
+	// Returns:
+	// * Dict with parsed values on success, or generated help text on failure
+	"parse-args\\full": {
+		Argsn: 2,
+		Doc:   "Parses command line arguments and on failure prints parse errors plus generated help, returning the parsed Dict or help text.",
+		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return BuiParseArgsFull(es, arg0, arg1)
+		},
+	},
+
+	// Tests:
+	// ; Rye-itself//Parse-args\full reads the process arguments directly.
+	// Args:
+	// * rye-itself: Native Rye-itself object passed via dot dispatch.
+	// * spec: Block containing argument specifications
+	// Returns:
+	// * Dict with parsed values on success, or generated help text on failure
+	"Rye-itself//Parse-args\\full": {
+		Argsn: 2,
+		Doc:   "Parses process arguments using a CLI specification, printing parse errors and generated help on failure. Equivalent to rye .Args? |parse-args spec with automatic error/help output.",
+		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return BuiParseArgsFull(es, ryeItselfArgsForCLI(es), arg1)
 		},
 	},
 

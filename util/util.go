@@ -264,8 +264,8 @@ func FormatCsv(val env.Object, e env.Idxs) string {
 }
 
 // FormatXlsxCell converts a table cell into a value that excelize can write.
-// Blocks are serialized as their values joined with a semicolon.
-func FormatXlsxCell(val any) (any, error) {
+// Blocks are serialized as their Rye dump so they can be loaded back later.
+func FormatXlsxCell(val any, idx *env.Idxs) (any, error) {
 	switch v := val.(type) {
 	case env.String:
 		return v.Value, nil
@@ -280,24 +280,7 @@ func FormatXlsxCell(val any) (any, error) {
 	case float64:
 		return v, nil
 	case env.Block:
-		parts := make([]string, 0, v.Series.Len())
-		for i := 0; i < v.Series.Len(); i++ {
-			cell, err := FormatXlsxCell(v.Series.Get(i))
-			if err != nil {
-				return nil, err
-			}
-			switch cv := cell.(type) {
-			case string:
-				parts = append(parts, cv)
-			case int64:
-				parts = append(parts, strconv.FormatInt(cv, 10))
-			case float64:
-				parts = append(parts, strconv.FormatFloat(cv, 'f', -1, 64))
-			default:
-				parts = append(parts, fmt.Sprint(cv))
-			}
-		}
-		return strings.Join(parts, ";"), nil
+		return v.Dump(*idx), nil
 	default:
 		return nil, fmt.Errorf("unsupported type %T", val)
 	}
