@@ -487,7 +487,7 @@ var Builtins_table_files = map[string]*env.Builtin{
 	// * Table containing the first sheet of the XLSX file.
 	"file-uri//Load\\xlsx": {
 		Argsn: 1,
-		Doc:   "Loads the first sheet in an .xlsx file to a Table.",
+		Doc:   "Loads the first sheet in an .xlsx file to a Table. Cells starting with \"{\" are loaded as Rye code.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch file := arg0.(type) {
 			case env.Uri:
@@ -523,7 +523,7 @@ var Builtins_table_files = map[string]*env.Builtin{
 					}
 					anyRow := make([]any, len(row))
 					for i, v := range row {
-						anyRow[i] = *env.NewString(v)
+						anyRow[i] = evaldo.LoadXlsxCell(ps, v)
 					}
 					// fill in any missing columns with empty strings
 					for i := len(row); i < len(spr.Cols); i++ {
@@ -540,7 +540,7 @@ var Builtins_table_files = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { type? Save\xlsx (os/mktemp ++ "/save.xlsx") table { "a" "b" } { 1 "x" } } 'table
-	// equal { f:: (os/mktemp ++ "/block.xlsx") Save\xlsx f table { "a" } { { 1 2 3 } } Load\xlsx f |first |-> "a" } "1;2;3"
+	// equal { f:: (os/mktemp ++ "/block.xlsx") Save\xlsx f table { "a" } { { 12 123 123 "asds" } } Load\xlsx f |first |-> "a" } { 12 123 123 "asds" }
 	// Example:
 	//  equal {
 	//	 cc os
@@ -558,7 +558,7 @@ var Builtins_table_files = map[string]*env.Builtin{
 	// * the saved Table.
 	"file-uri//Save\\xlsx": {
 		Argsn: 2,
-		Doc:   "Saves a Table to a .xlsx file.",
+		Doc:   "Saves a Table to a .xlsx file. Block cells are serialized with their Rye dump.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch file := arg0.(type) {
 			case env.Uri:
@@ -579,7 +579,7 @@ var Builtins_table_files = map[string]*env.Builtin{
 						rowIndex := i + 2
 						vals := make([]any, len(row.Values))
 						for j, v := range row.Values {
-							val, err := util.FormatXlsxCell(v)
+							val, err := util.FormatXlsxCell(v, ps.Idx)
 							if err != nil {
 								return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Unable to save table: %s", err), "file-uri//Save\\xlsx")
 							}

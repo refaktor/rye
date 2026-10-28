@@ -1773,7 +1773,7 @@ section "Table files" "Load and save tables as CSV, TSV or XLSX files." {
 	}
 
 	group "file-uri//Load\\xlsx"
-	"Loads the first sheet in an .xlsx file to a Table."
+	"Loads the first sheet in an .xlsx file to a Table. Cells starting with \"{\" are loaded as Rye code."
 	{
 		argsn 1
 		arg `file-uri - location of xlsx file to load`
@@ -1789,7 +1789,7 @@ section "Table files" "Load and save tables as CSV, TSV or XLSX files." {
 	}
 
 	group "file-uri//Save\\xlsx"
-	"Saves a Table to a .xlsx file."
+	"Saves a Table to a .xlsx file. Block cells are serialized with their Rye dump."
 	{
 		argsn 2
 		arg `file-uri - where to save the table as a .xlsx file`
@@ -1799,7 +1799,7 @@ section "Table files" "Load and save tables as CSV, TSV or XLSX files." {
 
 	{
 		equal { type? Save\xlsx (os/mktemp ++ "/save.xlsx") table { "a" "b" } { 1 "x" } } 'table
-		equal { f:: (os/mktemp ++ "/block.xlsx") Save\xlsx f table { "a" } { { 1 2 3 } } Load\xlsx f |first |-> "a" } "1;2;3"
+		equal { f:: (os/mktemp ++ "/block.xlsx") Save\xlsx f table { "a" } { { 12 123 123 "asds" } } Load\xlsx f |first |-> "a" } { 12 123 123 "asds" }
 	}
 
 	{

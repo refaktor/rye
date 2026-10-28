@@ -9203,7 +9203,7 @@ section "Persistent Tables" "Functions for persistent tables using BadgerDB." {
 	}
 
 	group "parse\\xlsx"
-	"Parses an xlsx binary string or bytes into a table (first sheet)."
+	"Parses an xlsx binary string or bytes into a table (first sheet). Cells starting with \"{\" are loaded as Rye code."
 	{
 		argsn 1
 		argtypes {
@@ -9222,7 +9222,7 @@ section "Persistent Tables" "Functions for persistent tables using BadgerDB." {
 	}
 
 	group "format\\xlsx"
-	"Converts a table to an XLSX as bytes native value."
+	"Converts a table to an XLSX as bytes native value. Block cells are serialized with their Rye dump."
 	{
 		argsn 1
 		argtypes {
@@ -9235,7 +9235,7 @@ section "Persistent Tables" "Functions for persistent tables using BadgerDB." {
 	{
 		equal { table { "a" "b" } { 1 2 3 4 } |format\xlsx |type? } 'bytes
 		equal { table { "a" "b" } { 1 2 3 4 } |format\xlsx |parse\xlsx |type? } 'table
-		equal { table { "a" } { { 1 2 3 } } |format\xlsx |parse\xlsx |first |-> "a" } "1;2;3"
+		equal { table { "a" } { { 1 2 3 } } |format\xlsx |parse\xlsx |first |-> "a" } { 1 2 3 }
 	}
 
 	{

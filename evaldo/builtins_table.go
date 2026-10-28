@@ -16,9 +16,30 @@ import (
 	"strings"
 
 	"github.com/refaktor/rye/env"
+	"github.com/refaktor/rye/loader"
 	"github.com/refaktor/rye/util"
 	"github.com/xuri/excelize/v2"
 )
+
+// LoadXlsxCell converts an XLSX cell string back to a Rye value. Cells that
+// start with "{" are loaded as Rye code so dumped blocks round-trip.
+func LoadXlsxCell(ps *env.ProgramState, value string) env.Object {
+	if !strings.HasPrefix(value, "{") {
+		return *env.NewString(value)
+	}
+	loaded := loader.LoadString(value, false, ps)
+	if ps.ErrorFlag || ps.FailureFlag || loaded.Type() == env.ErrorType {
+		ps.ErrorFlag = false
+		ps.FailureFlag = false
+		return *env.NewString(value)
+	}
+	if wrapper, ok := loaded.(env.Block); ok && wrapper.Series.Len() == 1 {
+		if inner, ok := wrapper.Series.Get(0).(env.Block); ok {
+			return inner
+		}
+	}
+	return *env.NewString(value)
+}
 
 var Builtins_table = map[string]*env.Builtin{
 
@@ -2632,7 +2653,7 @@ var Builtins_table = map[string]*env.Builtin{
 	// * Table containing the first sheet of the XLSX data.
 	"parse\\xlsx": {
 		Argsn: 1,
-		Doc:   "Parses an xlsx binary string or bytes into a table (first sheet).",
+		Doc:   "Parses an xlsx binary string or bytes into a table (first sheet). Cells starting with \"{\" are loaded as Rye code.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var data []byte
 
@@ -2694,7 +2715,7 @@ var Builtins_table = map[string]*env.Builtin{
 				anyRow := make([]any, len(header))
 				for i, v := range row {
 					if i < len(header) {
-						anyRow[i] = *env.NewString(v)
+						anyRow[i] = LoadXlsxCell(ps, v)
 					}
 				}
 				// fill in any missing columns with empty strings
@@ -2710,7 +2731,7 @@ var Builtins_table = map[string]*env.Builtin{
 	// Tests:
 	// equal { table { "a" "b" } { 1 2 3 4 } |format\xlsx |type? } 'bytes
 	// equal { table { "a" "b" } { 1 2 3 4 } |format\xlsx |parse\xlsx |type? } 'table
-	// equal { table { "a" } { { 1 2 3 } } |format\xlsx |parse\xlsx |first |-> "a" } "1;2;3"
+	// equal { table { "a" } { { 1 2 3 } } |format\xlsx |parse\xlsx |first |-> "a" } { 1 2 3 }
 	// Example:
 	//  table { "a" "b" } { 1 2 3 4 } |format\xlsx |type? ; => 'bytes
 	// Args:
@@ -2720,7 +2741,7 @@ var Builtins_table = map[string]*env.Builtin{
 	// * XLSX bytes native value.
 	"format\\xlsx": {
 		Argsn: 1,
-		Doc:   "Converts a table to an XLSX as bytes native value.",
+		Doc:   "Converts a table to an XLSX as bytes native value. Block cells are serialized with their Rye dump.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Table:
@@ -2739,7 +2760,7 @@ var Builtins_table = map[string]*env.Builtin{
 					rowIndex := i + 2
 					vals := make([]any, len(row.Values))
 					for j, v := range row.Values {
-						val, err := util.FormatXlsxCell(v)
+						val, err := util.FormatXlsxCell(v, ps.Idx)
 						if err != nil {
 							return MakeBuiltinError(ps, "Unable to format table: "+err.Error(), "format\\xlsx")
 						}
