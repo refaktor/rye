@@ -6229,11 +6229,14 @@ section "Other" "Assignments, word lookup, contexts, and runtime helpers." {
 	}
 
 	group "dict"
-	"Constructs a Dict from the Block of key and value pairs."
+	"Constructs a Dict from the Block of key and value pairs, or converts a TableRow to a Dict."
 	{
 		argsn 1
 		pure
-		arg `block: Block containing alternating keys and values`
+		argtypes {
+			1 [ Block TableRow ]
+		}
+		arg `value: Block containing alternating keys and values, or a TableRow to convert`
 		returns `A new Dict with the specified keys and values`
 	}
 
@@ -6245,6 +6248,8 @@ section "Other" "Assignments, word lookup, contexts, and runtime helpers." {
 		error { dict { 123 "value" } } ; integer keys should fail
 		error { dict { { } "value" } } ; block keys should fail
 		equal { dict { 'key "value" } |-> "key" } "value" ; tagwords as keys
+		equal { dict first table { 'a 'b } { 1 2 } |-> "a" } 1 ; table rows are converted to dicts
+		equal { dict first table { 'a 'b } { 1 2 } |type? } 'dict ; table rows are converted to dicts
 	}
 
 	{
@@ -9228,6 +9233,7 @@ section "Persistent Tables" "Functions for persistent tables using BadgerDB." {
 	{
 		equal { table { "a" "b" } { 1 2 3 4 } |format\xlsx |type? } 'bytes
 		equal { table { "a" "b" } { 1 2 3 4 } |format\xlsx |parse\xlsx |type? } 'table
+		equal { table { "a" } { { 1 2 3 } } |format\xlsx |parse\xlsx |first |-> "a" } "1;2;3"
 	}
 
 	{

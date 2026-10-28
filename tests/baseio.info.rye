@@ -1799,6 +1799,7 @@ section "Table files" "Load and save tables as CSV, TSV or XLSX files." {
 
 	{
 		equal { type? Save\xlsx (os/mktemp ++ "/save.xlsx") table { "a" "b" } { 1 "x" } } 'table
+		equal { f:: (os/mktemp ++ "/block.xlsx") Save\xlsx f table { "a" } { { 1 2 3 } } Load\xlsx f |first |-> "a" } "1;2;3"
 	}
 
 	{

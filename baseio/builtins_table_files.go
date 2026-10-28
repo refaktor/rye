@@ -12,6 +12,7 @@ import (
 
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
+	"github.com/refaktor/rye/util"
 	"github.com/xuri/excelize/v2"
 )
 
@@ -539,6 +540,7 @@ var Builtins_table_files = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { type? Save\xlsx (os/mktemp ++ "/save.xlsx") table { "a" "b" } { 1 "x" } } 'table
+	// equal { f:: (os/mktemp ++ "/block.xlsx") Save\xlsx f table { "a" } { { 1 2 3 } } Load\xlsx f |first |-> "a" } "1;2;3"
 	// Example:
 	//  equal {
 	//	 cc os
@@ -577,22 +579,11 @@ var Builtins_table_files = map[string]*env.Builtin{
 						rowIndex := i + 2
 						vals := make([]any, len(row.Values))
 						for j, v := range row.Values {
-							switch val := v.(type) {
-							case env.String:
-								vals[j] = val.Value
-							case string:
-								vals[j] = val
-							case env.Integer:
-								vals[j] = val.Value
-							case int64:
-								vals[j] = val
-							case env.Decimal:
-								vals[j] = val.Value
-							case float64:
-								vals[j] = val
-							default:
-								return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Unable to save table: unsupported type %T", val), "file-uri//Save\\xlsx")
+							val, err := util.FormatXlsxCell(v)
+							if err != nil {
+								return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Unable to save table: %s", err), "file-uri//Save\\xlsx")
 							}
+							vals[j] = val
 						}
 						err = f.SetSheetRow(sheetName, fmt.Sprintf("A%d", rowIndex), &vals)
 						if err != nil {

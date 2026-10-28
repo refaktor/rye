@@ -2708,6 +2708,7 @@ var Builtins_table = map[string]*env.Builtin{
 	// Tests:
 	// equal { table { "a" "b" } { 1 2 3 4 } |format\xlsx |type? } 'bytes
 	// equal { table { "a" "b" } { 1 2 3 4 } |format\xlsx |parse\xlsx |type? } 'table
+	// equal { table { "a" } { { 1 2 3 } } |format\xlsx |parse\xlsx |first |-> "a" } "1;2;3"
 	// Example:
 	//  table { "a" "b" } { 1 2 3 4 } |format\xlsx |type? ; => 'bytes
 	// Args:
@@ -2736,22 +2737,11 @@ var Builtins_table = map[string]*env.Builtin{
 					rowIndex := i + 2
 					vals := make([]any, len(row.Values))
 					for j, v := range row.Values {
-						switch val := v.(type) {
-						case env.String:
-							vals[j] = val.Value
-						case string:
-							vals[j] = val
-						case env.Integer:
-							vals[j] = val.Value
-						case int64:
-							vals[j] = val
-						case env.Decimal:
-							vals[j] = val.Value
-						case float64:
-							vals[j] = val
-						default:
-							return MakeBuiltinError(ps, "Unable to format table: unsupported type "+fmt.Sprintf("%T", val), "format\\xlsx")
+						val, err := util.FormatXlsxCell(v)
+						if err != nil {
+							return MakeBuiltinError(ps, "Unable to format table: "+err.Error(), "format\\xlsx")
 						}
+						vals[j] = val
 					}
 					err = f.SetSheetRow(sheetName, fmt.Sprintf("A%d", rowIndex), &vals)
 					if err != nil {
