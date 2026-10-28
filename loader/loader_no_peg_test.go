@@ -155,3 +155,41 @@ func TestLoaderNoPEGXwordForce(t *testing.T) {
 		t.Errorf("Expected opword force flag to be 1, got %d", opword.Force)
 	}
 }
+
+func TestLoaderNoPEGTildeOpword(t *testing.T) {
+	result, idx := LoadStringNoPEG(`~concat ~force* ~>`, false)
+	block, ok := result.(env.Block)
+	if !ok {
+		t.Fatalf("Expected result to be a Block, got %T", result)
+	}
+	if block.Series.Len() != 3 {
+		t.Fatalf("Expected 3 items in block, got %d", block.Series.Len())
+	}
+
+	opword, ok := block.Series.Get(0).(env.Opword)
+	if !ok {
+		t.Fatalf("Expected ~concat to be Opword, got %T", block.Series.Get(0))
+	}
+	if word := idx.GetWord(opword.Index); word != "concat" {
+		t.Errorf("Expected ~concat opword index 'concat', got '%s'", word)
+	}
+
+	opword, ok = block.Series.Get(1).(env.Opword)
+	if !ok {
+		t.Fatalf("Expected ~force* to be Opword, got %T", block.Series.Get(1))
+	}
+	if word := idx.GetWord(opword.Index); word != "force" {
+		t.Errorf("Expected ~force* opword index 'force', got '%s'", word)
+	}
+	if opword.Force != 1 {
+		t.Errorf("Expected ~force* force flag to be 1, got %d", opword.Force)
+	}
+
+	opword, ok = block.Series.Get(2).(env.Opword)
+	if !ok {
+		t.Fatalf("Expected ~> to remain Opword, got %T", block.Series.Get(2))
+	}
+	if word := idx.GetWord(opword.Index); word != "_~>" {
+		t.Errorf("Expected ~> opword index '_~>', got '%s'", word)
+	}
+}

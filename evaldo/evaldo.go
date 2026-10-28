@@ -1292,7 +1292,11 @@ func EvalSetword(ps *env.ProgramState, word env.Setword) {
 	} else {
 		ok := ps.Ctx.SetNew(idx, ps.Res, ps.Idx)
 		if !ok {
-			ps.Res = env.NewError("`" + ps.Idx.GetWord(idx) + "` is already set, use modword `::` to modify it.")
+			if !ps.Ctx.IsVariable(idx) {
+				ps.Res = env.NewError("`" + ps.Idx.GetWord(idx) + "` is already set and constant, you can't change it.")
+			} else {
+				ps.Res = env.NewError("`" + ps.Idx.GetWord(idx) + "` is already set, use modword `::` to modify it.")
+			}
 			ps.FailureFlag = true
 			ps.ErrorFlag = true
 		}

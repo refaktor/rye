@@ -151,6 +151,22 @@ func TestEvaldo_load_setword1_stores_val(t *testing.T) {
 	}
 }
 
+func TestEvaldo_setword_existing_constant_error(t *testing.T) {
+	input := "x: 1 x: 2"
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
+
+	Eval(es)
+
+	err, ok := es.Res.(*env.Error)
+	if !ok {
+		t.Fatalf("expected error, got %T: %v", es.Res, es.Res)
+	}
+	if err.Message != "`x` is already set and constant, you can't change it." {
+		t.Fatalf("unexpected error message: %s", err.Message)
+	}
+}
+
 //
 // builtins
 //

@@ -444,11 +444,9 @@ func (l *Lexer) NextToken() NoPEGToken {
 		} else if isTokenBoundary(pch) {
 			l.readChar()
 			return l.makeToken(NPEG_TOKEN_OPWORD, "~")
-		} else if pch == '>' {
-			// ~> is an opword
-			return l.readOpWord()
 		} else {
-			return l.readPipeWord()
+			// ~word is an op-word (same role as the older <word> x-word form).
+			return l.readOpWord()
 		}
 	case '=':
 		pch := l.peekChar()
@@ -1135,7 +1133,7 @@ func (l *Lexer) readOpWord() NoPEGToken {
 }
 
 func (l *Lexer) readPipeWord() NoPEGToken {
-	l.readChar() // Skip prefix character ('|', '~', '=', '>')
+	l.readChar() // Skip prefix character ('|', '=', '>')
 
 	cpath := false
 	slashPos := -1
@@ -1159,7 +1157,7 @@ func (l *Lexer) readPipeWord() NoPEGToken {
 	if !isTokenBoundary(l.ch) {
 		invalidChar := l.ch
 		tokenValue := l.input[l.tokenStart:l.pos]
-		errMsg := fmt.Sprintf("Missing space after pipe-word '%s'. Found '%c' immediately after. Pipe-words (starting with '|' or '~') must be followed by whitespace.", tokenValue, invalidChar)
+		errMsg := fmt.Sprintf("Missing space after pipe-word '%s'. Found '%c' immediately after. Pipe-words (starting with '|', '=', or '>') must be followed by whitespace.", tokenValue, invalidChar)
 		return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, determineLexerError(l.ch))
 	}
 
@@ -1598,6 +1596,9 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 	case NPEG_TOKEN_OPWORD:
 		// Opwords are symbolic operators like +, -, *, /, >, <, =, etc.
 		word := p.currentToken.Value
+		if strings.HasPrefix(word, "~") && len(word) > 1 && word != "~>" {
+			word = strings.TrimPrefix(word, "~")
+		}
 		var idx int
 		force := 0
 		// Single-char operators and specific multi-char operators get underscore prefix
