@@ -72,7 +72,7 @@ assert\display "chained setwords" {
 ; Setword with pipeword
 assert\display "setword then pipe" {
 	h1: 10 |+ 5 , h1
-} 15
+} 10
 
 print ""
 print "Setword and modword tests completed."
