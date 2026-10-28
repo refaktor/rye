@@ -251,6 +251,8 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { Split %data/file.txt } { "data" "file.txt" }
 	// Args:
 	// * path: uri representing a file path
 	// Returns:
@@ -284,6 +286,9 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { Is-absolute %/tmp } true
+	// equal { Is-absolute %data/file.txt } false
 	// Args:
 	// * path: uri representing a file path
 	// Returns:
@@ -386,12 +391,12 @@ var Builtins_io = map[string]*env.Builtin{
 	// Tests:
 	// equal { Writer Open %data/file.txt |kind? } 'writer
 	// Args:
-	// * source: file object to read from
+	// * source: file object to write to
 	// Returns:
-	// * native reader object
+	// * native writer object
 	"file//Writer": {
 		Argsn: 1,
-		Doc:   "Creates a new reader from file object.",
+		Doc:   "Creates a new writer from a file object.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 
 			switch s := arg0.(type) {
@@ -399,12 +404,12 @@ var Builtins_io = map[string]*env.Builtin{
 				file, ok := s.Value.(*os.File)
 				if !ok {
 					ps.FailureFlag = true
-					return evaldo.MakeBuiltinError(ps, "Error opening file.", "file//Reader")
+					return evaldo.MakeBuiltinError(ps, "Error opening file.", "file//Writer")
 				}
 				return *env.NewNative(ps.Idx, bufio.NewWriter(file), "writer")
 			default:
 				ps.FailureFlag = true
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "file//Reader")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "file//Writer")
 			}
 		},
 	},
@@ -523,6 +528,8 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { Reader %data/file.txt |Close |type? } 'string
 	// Args:
 	// * reader: native reader object
 	// Returns:
@@ -2100,6 +2107,12 @@ var Builtins_io = map[string]*env.Builtin{
 	// ; conn .Rmdir "/rye-test" |kind? |equal 'native
 	// ; conn .Close |equal 1
 	// Additional FTP operations
+	// Args:
+	// * connection: native FTP connection.
+	// * path: String directory path to list.
+	//
+	// Returns:
+	// * Block of dicts describing each directory entry.
 	"ftp-connection//List": {
 		Argsn: 2,
 		Doc:   "Lists directory entries. Returns a block of maps with full info.",
@@ -2152,6 +2165,12 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 	// Examples:
 	// ; conn .Cwd "/" |kind? |equal 'native
+	// Args:
+	// * connection: native FTP connection.
+	// * path: String directory to change to.
+	//
+	// Returns:
+	// * the FTP connection.
 	"ftp-connection//Cwd": {
 		Argsn: 2,
 		Doc:   "Changes working directory.",
@@ -2176,6 +2195,12 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 	// Examples:
 	// ; conn .Mkdir "rye-test" |kind? |equal 'native
+	// Args:
+	// * connection: native FTP connection.
+	// * path: String directory to create.
+	//
+	// Returns:
+	// * the FTP connection.
 	"ftp-connection//Mkdir": {
 		Argsn: 2,
 		Doc:   "Creates a directory.",
@@ -2200,6 +2225,12 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 	// Examples:
 	// ; conn .Rmdir "rye-test" |kind? |equal 'native
+	// Args:
+	// * connection: native FTP connection.
+	// * path: String directory to remove.
+	//
+	// Returns:
+	// * the FTP connection.
 	"ftp-connection//Rmdir": {
 		Argsn: 2,
 		Doc:   "Removes a directory.",
@@ -2224,6 +2255,12 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 	// Examples:
 	// ; conn .Delete "/rye-test/hello.txt" |kind? |equal 'native
+	// Args:
+	// * connection: native FTP connection.
+	// * path: String file to delete.
+	//
+	// Returns:
+	// * the FTP connection.
 	"ftp-connection//Delete": {
 		Argsn: 2,
 		Doc:   "Deletes a file.",
@@ -2248,6 +2285,13 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 	// Examples:
 	// ; conn .Rename "/rye-test/a.txt" "/rye-test/b.txt" |kind? |equal 'native
+	// Args:
+	// * connection: native FTP connection.
+	// * from: String current path.
+	// * to: String new path.
+	//
+	// Returns:
+	// * the FTP connection.
 	"ftp-connection//Rename": {
 		Argsn: 3,
 		Doc:   "Renames or moves a file.",
@@ -2277,6 +2321,13 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 	// Examples:
 	// ; conn .Store "/rye-test/up.txt" "content" |kind? |equal 'native
+	// Args:
+	// * connection: native FTP connection.
+	// * path: String remote destination path.
+	// * reader: Reader supplying the file contents.
+	//
+	// Returns:
+	// * the FTP connection.
 	"ftp-connection//Store": {
 		Argsn: 3,
 		Doc:   "Uploads data to a remote path. Accepts string or reader.",

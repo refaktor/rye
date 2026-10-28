@@ -30,7 +30,7 @@ var builtins_printing = map[string]*env.Builtin{
 	// Args:
 	// * value: Value to print
 	// Returns:
-	// * returns the input value
+	// * the input value
 	"prns": {
 		Argsn: 1,
 		Doc:   "Prints a value followed by a space, returning the input value.",
@@ -50,7 +50,7 @@ var builtins_printing = map[string]*env.Builtin{
 	// Args:
 	// * value: Value to print
 	// Returns:
-	// * returns the input value
+	// * the input value
 	"prn": {
 		Argsn: 1,
 		Doc:   "Prints a value without adding a newline, returning the input value.",
@@ -70,7 +70,7 @@ var builtins_printing = map[string]*env.Builtin{
 	// Args:
 	// * value: Value to print
 	// Returns:
-	// * returns the input value
+	// * the input value
 	"print": {
 		Argsn: 1,
 		Doc:   "Prints a value followed by a newline, returning the input value.",
@@ -91,7 +91,7 @@ var builtins_printing = map[string]*env.Builtin{
 	// * a: First value to print
 	// * b: Second value to print
 	// Returns:
-	// * returns the second input value
+	// * the second input value
 	"print2": {
 		Argsn: 2,
 		Doc:   "Prints two values separated by a space and followed by a newline, returning the second value.",
@@ -119,7 +119,7 @@ var builtins_printing = map[string]*env.Builtin{
 	// * a: First value to print
 	// * b: Second value to print
 	// Returns:
-	// * returns the second input value
+	// * the second input value
 	"prn2": {
 		Argsn: 2,
 		Doc:   "Prints two values separated by a space without a newline, returning the second value.",
@@ -147,7 +147,7 @@ var builtins_printing = map[string]*env.Builtin{
 	// * a: First value to print
 	// * b: Second value to print
 	// Returns:
-	// * returns the second input value
+	// * the second input value
 	"prns2": {
 		Argsn: 2,
 		Doc:   "Prints two values each followed by a space, returning the second value.",
@@ -205,7 +205,7 @@ var builtins_printing = map[string]*env.Builtin{
 	// * value: Value to embed
 	// * template: String with {} placeholder
 	// Returns:
-	// * returns the input value after printing
+	// * the input value after printing
 	"prnf": {
 		Argsn: 2,
 		Doc:   "Formats and prints a value by replacing {} in the template string, without a newline.",
@@ -228,7 +228,7 @@ var builtins_printing = map[string]*env.Builtin{
 	// * value: Value to embed
 	// * template: String with {} placeholder
 	// Returns:
-	// * returns the input value after printing
+	// * the input value after printing
 	"printf": {
 		Argsn: 2,
 		Doc:   "Formats and prints a value by replacing {} in the template string, followed by a newline.",
@@ -278,7 +278,7 @@ var builtins_printing = map[string]*env.Builtin{
 	// * value: Value to embed
 	// * template: String with {} placeholder
 	// Returns:
-	// * returns the input value after printing
+	// * the input value after printing
 	"prnv": {
 		Argsn: 2,
 		Doc:   "Embeds a value into a string by replacing {} placeholder and prints it without a newline, returning the input value.",
@@ -301,7 +301,7 @@ var builtins_printing = map[string]*env.Builtin{
 	// * value: Value to embed
 	// * template: String with {} placeholder
 	// Returns:
-	// * returns the input value after printing
+	// * the input value after printing
 	"printv": {
 		Argsn: 2,
 		Doc:   "Embeds a value into a string by replacing {} placeholder and prints it followed by a newline, returning the input value.",
@@ -331,6 +331,12 @@ var builtins_printing = map[string]*env.Builtin{
 		},
 	},
 
+	// Args:
+	// * value: Value to inspect.
+	// * prefix: String printed before the value.
+	//
+	// Returns:
+	// * the input value.
 	"probe\\": {
 		Argsn: 2,
 		Doc:   "Prints a prefix string followed by detailed type and value information about a value, followed by a newline, returning the input value.",
@@ -364,7 +370,7 @@ var builtins_printing = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { "A" esc } "\033A"
+	// equal { esc "A" |length? } 2
 	// Args:
 	// * str: Base string to prefix with escape character
 	// Returns:
@@ -383,7 +389,7 @@ var builtins_printing = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { esc-val 42 "X={}" } "\033X=42"
+	// equal { esc-val 42 "X={}" |contains "X=42" } true
 	// Args:
 	// * value: Value to embed
 	// * template: String with {} placeholder

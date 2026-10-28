@@ -6,12 +6,18 @@ package batteries
 import (
 	"bytes"
 	"crypto/ed25519"
+	"crypto/md5"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha1"
+	"crypto/sha256"
 	"crypto/sha512"
 	"crypto/x509/pkix"
 	"encoding/hex"
 	"encoding/pem"
+	"hash"
+	"hash/adler32"
+	"hash/crc32"
 	"io"
 	"math/big"
 
@@ -65,6 +71,22 @@ if a "careful" flag is set when a file is "done" the last five lines are checked
 sign buffer pk
 verify buffer pubk sigb
 */
+
+func hashToHex(ps *env.ProgramState, arg0 env.Object, newHash func() hash.Hash, name string) env.Object {
+	var data []byte
+	switch v := arg0.(type) {
+	case env.String:
+		data = []byte(v.Value)
+	case env.Bytes:
+		data = v.Value
+	default:
+		ps.FailureFlag = true
+		return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType, env.BytesType}, name)
+	}
+	h := newHash()
+	h.Write(data)
+	return *env.NewString(hex.EncodeToString(h.Sum(nil)))
+}
 
 var Builtins_crypto = map[string]*env.Builtin{
 
@@ -239,27 +261,130 @@ var Builtins_crypto = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	//  equal { cc crypto "Hello world" |md5 |type? } 'string
+	//  equal { cc crypto "Hello world" |md5 |length? } 32
+	//  equal { cc crypto "" |md5 } "d41d8cd98f00b204e9800998ecf8427e"
+	// Args:
+	// * input: string or bytes to hash
+	// Returns:
+	// * string containing the hexadecimal representation of the MD5 hash
+	"md5": {
+		Argsn: 1,
+		Doc:   "Calculates the MD5 hash of a string or bytes and returns the result as a hexadecimal string. MD5 is not suitable for security-sensitive use.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return hashToHex(ps, arg0, md5.New, "md5")
+		},
+	},
+
+	// Tests:
+	//  equal { cc crypto "Hello world" |sha1 |type? } 'string
+	//  equal { cc crypto "Hello world" |sha1 |length? } 40
+	//  equal { cc crypto "" |sha1 } "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+	// Args:
+	// * input: string or bytes to hash
+	// Returns:
+	// * string containing the hexadecimal representation of the SHA-1 hash
+	"sha1": {
+		Argsn: 1,
+		Doc:   "Calculates the SHA-1 hash of a string or bytes and returns the result as a hexadecimal string. SHA-1 is not suitable for security-sensitive use.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return hashToHex(ps, arg0, sha1.New, "sha1")
+		},
+	},
+
+	// Tests:
+	//  equal { cc crypto "Hello world" |sha224 |type? } 'string
+	//  equal { cc crypto "Hello world" |sha224 |length? } 56
+	//  equal { cc crypto "" |sha224 } "d14a028c2a3a2bc9476102bb288234c415a2b01f828ea62ac5b3e42f"
+	// Args:
+	// * input: string or bytes to hash
+	// Returns:
+	// * string containing the hexadecimal representation of the SHA-224 hash
+	"sha224": {
+		Argsn: 1,
+		Doc:   "Calculates the SHA-224 hash of a string or bytes and returns the result as a hexadecimal string.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return hashToHex(ps, arg0, sha256.New224, "sha224")
+		},
+	},
+
+	// Tests:
+	//  equal { cc crypto "Hello world" |sha256 |type? } 'string
+	//  equal { cc crypto "Hello world" |sha256 |length? } 64
+	//  equal { cc crypto "" |sha256 } "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	// Args:
+	// * input: string or bytes to hash
+	// Returns:
+	// * string containing the hexadecimal representation of the SHA-256 hash
+	"sha256": {
+		Argsn: 1,
+		Doc:   "Calculates the SHA-256 hash of a string or bytes and returns the result as a hexadecimal string.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return hashToHex(ps, arg0, sha256.New, "sha256")
+		},
+	},
+
+	// Tests:
+	//  equal { cc crypto "Hello world" |sha384 |type? } 'string
+	//  equal { cc crypto "Hello world" |sha384 |length? } 96
+	//  equal { cc crypto "" |sha384 } "38b060a751ac96384cd9327eb1b1e36a21fdb71114be07434c0cc7bf63f6e1da274edebfe76f65fbd51ad2f14898b95b"
+	// Args:
+	// * input: string or bytes to hash
+	// Returns:
+	// * string containing the hexadecimal representation of the SHA-384 hash
+	"sha384": {
+		Argsn: 1,
+		Doc:   "Calculates the SHA-384 hash of a string or bytes and returns the result as a hexadecimal string.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return hashToHex(ps, arg0, sha512.New384, "sha384")
+		},
+	},
+
+	// Tests:
 	//  equal { cc crypto "Hello world" |sha512 |type? } 'string
 	//  equal { cc crypto "Hello world" |sha512 |length? } 128
 	//  equal { cc crypto "" |sha512 } "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e"
 	// Args:
-	// * input: string to hash
+	// * input: string or bytes to hash
 	// Returns:
 	// * string containing the hexadecimal representation of the SHA-512 hash
 	"sha512": {
 		Argsn: 1,
-		Doc:   "Calculates the SHA-512 hash of a string and returns the result as a hexadecimal string.",
+		Doc:   "Calculates the SHA-512 hash of a string or bytes and returns the result as a hexadecimal string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s := arg0.(type) {
-			case env.String:
-				h := sha512.New()
-				h.Write([]byte(s.Value))
-				bs := h.Sum(nil)
-				return *env.NewString(hex.EncodeToString(bs[:]))
-			default:
-				ps.FailureFlag = true
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType}, "sha512")
-			}
+			return hashToHex(ps, arg0, sha512.New, "sha512")
+		},
+	},
+
+	// Tests:
+	//  equal { cc crypto "Hello world" |crc32 |type? } 'string
+	//  equal { cc crypto "Hello world" |crc32 |length? } 8
+	//  equal { cc crypto "" |crc32 } "00000000"
+	// Args:
+	// * input: string or bytes to checksum
+	// Returns:
+	// * string containing the hexadecimal representation of the CRC-32 checksum
+	"crc32": {
+		Argsn: 1,
+		Doc:   "Calculates the CRC-32 (IEEE) checksum of a string or bytes and returns it as a hexadecimal string.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return hashToHex(ps, arg0, func() hash.Hash { return crc32.NewIEEE() }, "crc32")
+		},
+	},
+
+	// Tests:
+	//  equal { cc crypto "Hello world" |adler32 |type? } 'string
+	//  equal { cc crypto "Hello world" |adler32 |length? } 8
+	//  equal { cc crypto "" |adler32 } "00000001"
+	// Args:
+	// * input: string or bytes to checksum
+	// Returns:
+	// * string containing the hexadecimal representation of the Adler-32 checksum
+	"adler32": {
+		Argsn: 1,
+		Doc:   "Calculates the Adler-32 checksum of a string or bytes and returns it as a hexadecimal string.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return hashToHex(ps, arg0, func() hash.Hash { return adler32.New() }, "adler32")
 		},
 	},
 

@@ -1,5 +1,5 @@
-section "batteries/builtins_email.go" "" {
-section "Email Message " "Creating and configuring email messages" {
+section "batteries/builtins_email.go" "Creating and configuring email messages" {
+section "Email Message" "Creating and configuring email messages" {
 	group "email-message"
 	"Creates a new empty email message object that can be configured with headers, body, and attachments."
 	{
@@ -11,9 +11,8 @@ section "Email Message " "Creating and configuring email messages" {
 	}
 
 	{
-`msg: email-message
-equal { msg |type? } 'native
-`	}
+		"msg: email-message\nequal { msg |type? } 'native"
+	}
 
 	group "gomail-message//Set-header"
 	"Sets a standard email header field such as Subject, To, From, Cc, or Bcc with the specified value."
@@ -29,11 +28,8 @@ equal { msg |type? } 'native
 	}
 
 	{
-`msg: email-message
-msg .Set-header "Subject" "Test Email"
-msg .Set-header 'to "user@example.com"
-error { msg .Set-header "Subject" 123 }
-`	}
+		"msg: email-message\nmsg .Set-header \"Subject\" \"Test Email\"\nmsg .Set-header 'to \"user@example.com\"\nerror { msg .Set-header \"Subject\" 123 }"
+	}
 
 	group "gomail-message//Set-address-header"
 	"Sets an email address header with both email address and display name, commonly used for From, To, Cc, and Bcc fields."
@@ -50,6 +46,7 @@ error { msg .Set-header "Subject" 123 }
 	}
 
 	{
+		"msg: email-message\nmsg .Set-address-header \"From\" \"sender@example.com\" \"John Doe\"\nmsg .Set-address-header \"To\" \"recipient@example.com\" \"Jane Smith\"\nerror { msg .Set-address-header \"From\" 123 \"Name\" }"
 	}
 
 	group "gomail-message//Set-body"
@@ -66,6 +63,7 @@ error { msg .Set-header "Subject" 123 }
 	}
 
 	{
+		"msg: email-message\nmsg .Set-body \"text/plain\" \"Hello, this is a plain text email.\"\nmsg .Set-body \"text/html\" \"<h1>Hello</h1><p>This is an HTML email.</p>\"\nerror { msg .Set-body \"text/plain\" 123 }"
 	}
 
 	group "gomail-message//Attach"
@@ -81,6 +79,7 @@ error { msg .Set-header "Subject" 123 }
 	}
 
 	{
+		"msg: email-message\nmsg .Attach %file://document.pdf\nmsg .Attach %file://image.jpg\nerror { msg .Attach \"not-a-uri\" }"
 	}
 
 	group "gomail-message//Add-alternative"
@@ -97,8 +96,12 @@ error { msg .Set-header "Subject" 123 }
 	}
 
 	{
+		"msg: email-message\nmsg .Set-body \"text/plain\" \"Plain text version\"\nmsg .Add-alternative \"text/html\" \"<p>HTML version</p>\"\nerror { msg .Add-alternative \"text/html\" 123 }"
 	}
 
+}
+
+section "Email Sending Functions" "SMTP configuration and email delivery." {
 	group "new-email-dialer"
 	"Creates a new SMTP dialer configured with server details and authentication credentials for sending emails."
 	{
@@ -114,6 +117,7 @@ error { msg .Set-header "Subject" 123 }
 	}
 
 	{
+		"dialer: new-email-dialer \"smtp.gmail.com\" 587 \"user@gmail.com\" \"password\"\nequal { dialer |type? } 'native\nerror { new-email-dialer \"smtp.gmail.com\" \"not-a-port\" \"user\" \"pass\" }"
 	}
 
 	group "gomail-dialer//Dial-and-send"
@@ -129,12 +133,13 @@ error { msg .Set-header "Subject" 123 }
 	}
 
 	{
+		"dialer: new-email-dialer \"smtp.gmail.com\" 587 \"user@gmail.com\" \"password\"\nmsg: email-message\nresult: dialer .Dial-and-send msg\nerror { \"not-dialer\" .Dial-and-send msg }"
 	}
 
 }
 }
-section "batteries/builtins_mail.go" "" {
-section "Mail " "Email parsing functions" {
+section "batteries/builtins_mail.go" "Email parsing functions" {
+section "Mail" "Email parsing functions" {
 	group "reader//Parse-email"
 	"Parses email data from a reader."
 	{
@@ -147,9 +152,8 @@ section "Mail " "Email parsing functions" {
 	}
 
 	{
-`equal { reader %email.eml |parse-email |type? } 'native
-equal { reader %email.eml |parse-email |kind? } 'parsed-email
-`	}
+		"equal { reader %email.eml |parse-email |type? } 'native\nequal { reader %email.eml |parse-email |kind? } 'parsed-email"
+	}
 
 	group "parsed-email//Subject?"
 	"Gets the subject from a parsed email."
@@ -163,8 +167,8 @@ equal { reader %email.eml |parse-email |kind? } 'parsed-email
 	}
 
 	{
-`equal { reader %email.eml |parse-email |subject? |type? } 'string
-`	}
+		"equal { reader %email.eml |parse-email |subject? |type? } 'string"
+	}
 
 	group "parsed-email//Message-id?"
 	"Gets the message ID from a parsed email."
@@ -178,8 +182,8 @@ equal { reader %email.eml |parse-email |kind? } 'parsed-email
 	}
 
 	{
-`equal { reader %email.eml |parse-email |message-id? |type? } 'string
-`	}
+		"equal { reader %email.eml |parse-email |message-id? |type? } 'string"
+	}
 
 	group "parsed-email//Html-body?"
 	"Gets the HTML body from a parsed email."
@@ -193,8 +197,8 @@ equal { reader %email.eml |parse-email |kind? } 'parsed-email
 	}
 
 	{
-`equal { reader %email.eml |parse-email |html-body? |type? } 'string
-`	}
+		"equal { reader %email.eml |parse-email |html-body? |type? } 'string"
+	}
 
 	group "parsed-email//Text-body?"
 	"Gets the plain text body from a parsed email."
@@ -208,8 +212,8 @@ equal { reader %email.eml |parse-email |kind? } 'parsed-email
 	}
 
 	{
-`equal { Reader %email.eml |parse-email |text-body? |type? } 'string
-`	}
+		"equal { Reader %email.eml |parse-email |text-body? |type? } 'string"
+	}
 
 	group "parsed-email//Attachments?"
 	"Gets the attachments from a parsed email."
@@ -241,8 +245,8 @@ equal { reader %email.eml |parse-email |kind? } 'parsed-email
 
 }
 }
-section "batteries/builtins_smtpd.go" "" {
-section "SMTP Server Functions " "Creating and running SMTP mail servers." {
+section "batteries/builtins_smtpd.go" "Creating and running SMTP mail servers." {
+section "SMTP Server Functions" "Creating and running SMTP mail servers." {
 	group "smtp-server"
 	"Creates a new SMTP server that can receive incoming email messages on the specified address."
 	{
@@ -274,21 +278,19 @@ section "SMTP Server Functions " "Creating and running SMTP mail servers." {
 	}
 
 	{
-`handler: fn { reader from to origin } { print "Got email from:" from }
-smtp-server ":2525"
-|Serve handler "TestSMTP" ""
-`	}
+		"handler: fn { reader from to origin } { print \"Got email from:\" from }\nsmtp-server \":2525\"\n|Serve handler \"TestSMTP\" \"\""
+	}
 
 }
 }
-section "batteries/builtins_mqtt.go" "" {
-section "MQTT Client Functions " "" {
+section "batteries/builtins_mqtt.go" "Connecting to MQTT brokers and publishing or subscribing to topics." {
+section "MQTT Client Functions" "Connecting to MQTT brokers and publishing or subscribing to topics." {
 	group "mqtt-uri//Open"
 	"Opens a connection to an MQTT broker."
 	{
 		argsn 1
 		arg `uri: MQTT broker URI (format: mqtt[s]://[user:pass@]host:port/client-id)`
-		returns `native MQTT client connection (type: "mqtt-client")error if connection fails`
+		returns `native MQTT client connection (type: "mqtt-client"); error if connection fails`
 	}
 
 	{
@@ -297,28 +299,15 @@ section "MQTT Client Functions " "" {
 	}
 
 	{
-`; Connect to MQTT broker and subscribe to topics
-client: Open mqtt://localhost:1883/my-client
-client .Subscribe "sensors/+" 1 fn { payload msg } {
-print "Topic: " + msg -> "topic"
-print "Data: " + payload
-}
-
-; Publish messages
-client .Publish-simple "sensors/temperature" "23.5"
-client .Publish "sensors/humidity" "65" 1 0
-
-; Clean up
-client .Disconnect
-
-`	}
+		"; Connect to MQTT broker and subscribe to topics\nclient: Open mqtt://localhost:1883/my-client\nclient .Subscribe \"sensors/+\" 1 fn { payload msg } {\nprint \"Topic: \" + msg -> \"topic\"\nprint \"Data: \" + payload\n}\n\n; Publish messages\nclient .Publish-simple \"sensors/temperature\" \"23.5\"\nclient .Publish \"sensors/humidity\" \"65\" 1 0\n\n; Clean up\nclient .Disconnect\n"
+	}
 
 	group "mqtt-client//Disconnect"
 	"Disconnects from the MQTT broker."
 	{
 		argsn 1
 		arg `client: MQTT client connection (type: "mqtt-client")`
-		returns `integer 1 for successerror if disconnection fails`
+		returns `integer 1 for success; error if disconnection fails`
 	}
 
 	{
@@ -333,7 +322,7 @@ client .Disconnect
 	{
 		argsn 1
 		arg `client: MQTT client connection (type: "mqtt-client")`
-		returns `integer 1 for successerror if close fails`
+		returns `integer 1 for success; error if close fails`
 	}
 
 	{
@@ -352,7 +341,7 @@ client .Disconnect
 		arg `payload: Message payload (string)`
 		arg `qos: Quality of Service level (integer 0, 1, or 2)`
 		arg `retain: Whether message should be retained (boolean)`
-		returns `integer 1 for successerror if publish fails`
+		returns `integer 1 for success; error if publish fails`
 	}
 
 	{
@@ -369,7 +358,7 @@ client .Disconnect
 		arg `client: MQTT client connection (type: "mqtt-client")`
 		arg `topic: Topic to publish to (string)`
 		arg `payload: Message payload (string)`
-		returns `integer 1 for success (uses QoS 0, no retain)error if publish fails`
+		returns `integer 1 for success (uses QoS 0, no retain); error if publish fails`
 	}
 
 	{
@@ -387,7 +376,7 @@ client .Disconnect
 		arg `topic: Topic pattern to subscribe to (string, can include wildcards)`
 		arg `qos: Quality of Service level (integer 0, 1, or 2)`
 		arg `handler: Callback function to handle received messages`
-		returns `integer 1 for successerror if subscription fails`
+		returns `integer 1 for success; error if subscription fails`
 	}
 
 	{
@@ -405,7 +394,7 @@ client .Disconnect
 		arg `topic: Topic pattern to subscribe to (string)`
 		arg `handler: Function receiving payload string and metadata dict (same as Subscribe).`
 		arg `Older versions passed metadata as the first argument; update handlers accordingly.`
-		returns `integer 1 for success (uses QoS 0)error if subscription fails`
+		returns `integer 1 for success (uses QoS 0); error if subscription fails`
 	}
 
 	{
@@ -421,7 +410,7 @@ client .Disconnect
 		argsn 2
 		arg `client: MQTT client connection (type: "mqtt-client")`
 		arg `topic: Topic to unsubscribe from (string)`
-		returns `integer 1 for successerror if unsubscription fails`
+		returns `integer 1 for success; error if unsubscription fails`
 	}
 
 	{
@@ -563,7 +552,7 @@ client .Disconnect
 	{
 		argsn 1
 		arg `options: MQTT options object (type: "mqtt-options")`
-		returns `native MQTT client connection (type: "mqtt-client")error if connection fails`
+		returns `native MQTT client connection (type: "mqtt-client"); error if connection fails`
 	}
 
 	{
@@ -575,8 +564,8 @@ client .Disconnect
 
 }
 }
-section "batteries/builtins_regex.go" "" {
-section "Regex " "Go like Regular expressions" {
+section "batteries/builtins_regex.go" "Go like Regular expressions" {
+section "Regex" "Go like Regular expressions" {
 	group "regex"
 	"Creates a compiled regular expression object from a pattern string."
 	{
@@ -725,8 +714,8 @@ section "Regex " "Go like Regular expressions" {
 
 }
 }
-section "batteries/builtins_json.go" "" {
-section "JSON " "Parsing and generating JSON" {
+section "batteries/builtins_json.go" "Parsing and generating JSON" {
+section "JSON" "Parsing and generating JSON" {
 	group "parse-json"
 	"Parses JSON string into Rye values."
 	{
@@ -797,8 +786,8 @@ section "JSON " "Parsing and generating JSON" {
 
 }
 }
-section "batteries/builtins_bson.go" "" {
-section "BSON " "BSON encoding and decoding" {
+section "batteries/builtins_bson.go" "BSON encoding and decoding" {
+section "BSON" "BSON encoding and decoding" {
 	group "from-bson"
 	"Decodes BSON data into Rye values."
 	{
@@ -834,21 +823,21 @@ section "BSON " "BSON encoding and decoding" {
 
 }
 }
-section "batteries/builtins_sxml.go" "" {
-section "SXML " "Streaming, SAX-like XML processing" {
+section "batteries/builtins_sxml.go" "Streaming, SAX-like XML processing" {
+section "SXML" "Streaming, SAX-like XML processing" {
 	group "reader//Do-sxml"
-	"Processes XML using a streaming SAX-like approach with tag handlers."
+	"Processes XML with streaming tag handlers. [ ] runs code, { } nests rules, and ( 'command , ... ) projects values with put, put-key, append-key, merge-key, sub-block, attach, append, and merge."
 	{
 		argsn 2
 		arg `reader: XML reader object`
-		arg `block: SXML processing block with tag handlers`
-		returns `result of processing the XML`
+		arg `block: SXML processing block with tag handlers and optional ( ) projections`
+		returns `collected structure when ( ) projections are used, otherwise true`
 	}
 
 	{
 		stdout {
-		"<scene><bot>C3PO</bot><bot>R2D2</bot><jedi>Luke</jedi></scene>" |reader |probe
-		|probe |Do-sxml { _ [ .prns ] }
+		"<scene><bot>C3PO</bot><bot>R2D2</bot><jedi>Luke</jedi></scene>" |reader
+		|Do-sxml { _ [ .prns ] }
 		} "C3PO R2D2 Luke "
 		stdout {
 		"<scene><bot>C3PO</bot><bot>R2D2</bot><jedi>Luke</jedi></scene>" |reader
@@ -862,9 +851,65 @@ section "SXML " "Streaming, SAX-like XML processing" {
 		"<scene><xwing><bot>R2D2</bot><person>Luke</person></xwing><destroyer><person>Vader</person></destroyer></scene>" |reader
 		|Do-sxml { <xwing> { <person> { _ [ .prns ] } } }
 		} "Luke "
+		equal {
+		r: `<r><i id="1"/></r>` |reader |Do-sxml {
+		<i> { 'start ( 'put-key , "id" , .Attr? "id" ) }
+		}
+		r -> "id"
+		} "1"
+		equal {
+		r: `<r><i>A</i><i>B</i></r>` |reader |Do-sxml { _ ( 'put , .trim ) }
+		r |length?
+		} 2
+		equal {
+		r: `<r><i>A</i><i>B</i></r>` |reader |Do-sxml { _ ( 'append-key , "texts" , .trim ) }
+		r -> "texts" |length?
+		} 2
+		equal {
+		r: `<r><x>A</x></r>` |reader |Do-sxml {
+		<x> { 'end ( 'put-key , "name" , .Name? ) }
+		}
+		r -> "name"
+		} "x"
+		equal {
+		r: `<r><book id="1"><title>Dune</title></book></r>` |reader |Do-sxml {
+		<book> {
+		'start ( 'sub-block , "book" , "id" , .Attr? "id" )
+		<title> { _ ( 'put-key , "title" , .trim ) }
+		}
+		}
+		r -> "book" -> "title"
+		} "Dune"
+		equal {
+		r: `<r><i id="1"/><i id="2"/></r>` |reader |Do-sxml {
+		<i> { 'start ( 'sub-block , "items" , "id" , .Attr? "id" ) }
+		}
+		r -> "items" |length?
+		} 2
+		equal {
+		r: `<r><i>A</i></r>` |reader |Do-sxml {
+		<i> {
+		'start ( 'sub-block , "tmp" )
+		_ ( 'put , .trim )
+		'end ( 'append , "items" )
+		}
+		}
+		r -> "items" |length?
+		} 1
+		equal {
+		r: `<r><head><x>1</x></head></r>` |reader |Do-sxml {
+		<head> {
+		'start ( 'sub-block , "head" )
+		<x> { _ ( 'put-key , "x" , .trim ) }
+		'end ( 'merge )
+		}
+		}
+		r -> "x"
+		} "1"
 	}
 
 	{
+		"; [ ] executes code at XML events\n`<r><i>A</i></r>` |reader |Do-sxml { _ [ .prns ] }\n\n; ( ) projects event values into a collected structure\n`<r><i id=\"1\">A</i></r>` |reader |Do-sxml {\n<i> {\n'start ( 'sub-block , \"items\" , \"id\" , .Attr? \"id\" )\n_ ( 'put-key , \"text\" , .trim )\n}\n}"
 	}
 
 	group "rye-sxml-start//Attr?"
@@ -889,6 +934,7 @@ section "SXML " "Streaming, SAX-like XML processing" {
 	}
 
 	{
+		"; inside an executable [ ] handler\n`<r><x id=\"a\"/></r>` |reader |Do-sxml { <x> [ .Attr? \"id\" |prns ] }\n\n; inside a projection ( ) handler\n`<r><x id=\"a\"/></r>` |reader |Do-sxml {\n<x> { 'start ( 'put-key , \"id\" , .Attr? \"id\" ) }\n}"
 	}
 
 	group "rye-sxml-start//Attrs?"
@@ -903,10 +949,11 @@ section "SXML " "Streaming, SAX-like XML processing" {
 	}
 
 	{
+		"; inside an executable [ ] handler\n`<r><x id=\"a\"/></r>` |reader |Do-sxml { <x> [ .Attrs? |print ] }\n\n; inside a projection ( ) handler\n`<r><x id=\"a\"/></r>` |reader |Do-sxml {\n<x> { 'start ( 'put-key , \"attrs\" , .Attrs? ) }\n}"
 	}
 
 	group "rye-sxml-start//Name?"
-	"Returns the name of an XML start element."
+	"Returns the local name of an XML start or end element."
 	{
 		argsn 1
 		arg `element: XML start element`
@@ -926,12 +973,28 @@ section "SXML " "Streaming, SAX-like XML processing" {
 	}
 
 	{
+		"; inside an executable [ ] handler\n`<r><x/></r>` |reader |Do-sxml { <x> { 'end [ .Name? |prns ] } }\n\n; inside a projection ( ) handler\n`<r><x/></r>` |reader |Do-sxml {\n<x> { 'start ( 'put-key , \"name\" , .Name? ) }\n}"
+	}
+
+	group "rye-sxml-end//Name?"
+	"Returns the local name of an XML end element."
+	{
+		argsn 1
+		arg `element: XML end element.`
+		returns `String local name of the element.`
+	}
+
+	{
+	}
+
+	{
+		"; inside an executable [ ] handler\n`<r><x/></r>` |reader |Do-sxml { <x> { 'end [ .Name? |prns ] } }\n\n; inside a projection ( ) handler\n`<r><x>A</x></r>` |reader |Do-sxml {\n<x> { 'end ( 'put-key , \"name\" , .Name? ) }\n}"
 	}
 
 }
 }
-section "batteries/builtins_html.go" "" {
-section "HTML " "HTML processing functions" {
+section "batteries/builtins_html.go" "HTML processing functions" {
+section "HTML" "HTML processing functions" {
 	group "unescape\\html"
 	"Converts HTML entities to their character equivalents."
 	{
@@ -1046,8 +1109,8 @@ section "HTML " "HTML processing functions" {
 
 }
 }
-section "batteries/builtins_conversion.go" "" {
-section "Conversion " "Functions for converting between different types and kinds" {
+section "batteries/builtins_conversion.go" "Functions for converting between different types and kinds" {
+section "Conversion" "Functions for converting between different types and kinds" {
 	group "convert"
 	"Converts value from one kind to another based on a conversion specification block."
 	{
@@ -1085,8 +1148,8 @@ section "Conversion " "Functions for converting between different types and kind
 
 }
 }
-section "batteries/builtins_encoding.go" "" {
-section "Default" "" {
+section "batteries/builtins_encoding.go" "Functions for encoding/decoding text and hex strings" {
+section "Encoding and Text Processing" "Functions for encoding/decoding text and hex strings" {
 	group "decode\\hex-string"
 	"Decodes a hexadecimal string to a UTF-8 string."
 	{
@@ -1367,8 +1430,8 @@ section "Default" "" {
 
 }
 }
-section "batteries/builtins_sqlite.go" "" {
-section "SQLite " "SQLite database functions" {
+section "batteries/builtins_sqlite.go" "SQLite database functions" {
+section "SQLite" "SQLite database functions" {
 	group "sqlite-uri//Open"
 	"Opens a connection to a SQLite database file."
 	{
@@ -1382,14 +1445,8 @@ section "SQLite " "SQLite database functions" {
 	}
 
 	{
-`db: Open sqlite://mydata.db
-db .Exec "CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, age INTEGER)"
-db .Exec { INSERT INTO users ( name , age ) VALUES ( "Alice" , 30 ) }
-db .Query { SELECT * FROM users WHERE age > 25 } |print
-name: "Bob"
-db .Exec { INSERT INTO users ( name , age ) VALUES ( ?name , 42 ) }
-
-`	}
+		"db: Open sqlite://mydata.db\ndb .Exec \"CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, age INTEGER)\"\ndb .Exec { INSERT INTO users ( name , age ) VALUES ( \"Alice\" , 30 ) }\ndb .Query { SELECT * FROM users WHERE age > 25 } |print\nname: \"Bob\"\ndb .Exec { INSERT INTO users ( name , age ) VALUES ( ?name , 42 ) }\n"
+	}
 
 	group "htmlize"
 	"Converts a table to HTML format."
@@ -1472,14 +1529,14 @@ db .Exec { INSERT INTO users ( name , age ) VALUES ( ?name , 42 ) }
 
 }
 }
-section "batteries/builtins_psql.go" "" {
-section "PostgreSQL " "" {
+section "batteries/builtins_psql.go" "Querying PostgreSQL databases and managing connections." {
+section "PostgreSQL" "Querying PostgreSQL databases and managing connections." {
 	group "postgres-uri//Open"
 	"Opens a connection to a PostgreSQL database."
 	{
 		argsn 1
 		arg `uri: PostgreSQL connection string URI (format: postgres://username:password@host:port/database)`
-		returns `native PostgreSQL database connection (type: "Rye-psql")error if connection fails`
+		returns `native PostgreSQL database connection (type: "Rye-psql"); error if connection fails`
 	}
 
 	{
@@ -1495,17 +1552,15 @@ section "PostgreSQL " "" {
 		argsn 2
 		arg `db: PostgreSQL database connection (type: "Rye-psql")`
 		arg `sql: SQL statement as string or block (for data modification: INSERT, UPDATE, DELETE)`
-		returns `integer number of rows affectederror if execution fails`
+		returns `integer number of rows affected; error if execution fails`
 	}
 
 	{
 	}
 
 	{
-`Open postgres://user:pass@localhost:5432/dbname
-|Exec { INSERT INTO test VALUES ( 1 , "test" ) }
-; mind the mandatory spacing in SQL dialect
-`	}
+		"Open postgres://user:pass@localhost:5432/dbname\n|Exec { INSERT INTO test VALUES ( 1 , \"test\" ) }\n; mind the mandatory spacing in SQL dialect"
+	}
 
 	group "Rye-psql//Query"
 	"Executes a SQL query and returns results as a table."
@@ -1513,16 +1568,15 @@ section "PostgreSQL " "" {
 		argsn 2
 		arg `db: PostgreSQL database connection (type: "Rye-psql")`
 		arg `sql: SQL query as string or block (SELECT statements)`
-		returns `table containing query results (SQL NULL values converted to Void{})error if query fails or returns no data`
+		returns `table containing query results (SQL NULL values converted to Void{}); error if query fails or returns no data`
 	}
 
 	{
 	}
 
 	{
-`db: Open postgres://user:pass@localhost:5432/dbname
-db .Query "SELECT * FROM test"
-`	}
+		"db: Open postgres://user:pass@localhost:5432/dbname\ndb .Query \"SELECT * FROM test\""
+	}
 
 	group "Rye-psql//Show-SQL"
 	"Generates and returns the SQL string without executing it."
@@ -1530,17 +1584,15 @@ db .Query "SELECT * FROM test"
 		argsn 2
 		arg `db: PostgreSQL database connection (type: "Rye-psql")`
 		arg `sql: SQL query as string or block (for debugging/inspection)`
-		returns `string containing the generated SQL with parameters (includes parameter comments if present)error if SQL is empty`
+		returns `string containing the generated SQL with parameters (includes parameter comments if present); error if SQL is empty`
 	}
 
 	{
 	}
 
 	{
-`name: "Bob"
-Open postgres://user:pass@localhost:5432/dbname
-|Show-SQL {  SELECT * FROM users WHERE first_name = ?name}
-`	}
+		"name: \"Bob\"\nOpen postgres://user:pass@localhost:5432/dbname\n|Show-SQL {  SELECT * FROM users WHERE first_name = ?name}"
+	}
 
 	group "Rye-psql//Close"
 	"Closes the PostgreSQL database connection."
@@ -1554,12 +1606,13 @@ Open postgres://user:pass@localhost:5432/dbname
 	}
 
 	{
+		"equal { db: Open postgres://user:pass@localhost:5432/dbname db .Close |type? } 'integer"
 	}
 
 }
 }
-section "batteries/builtins_mysql.go" "" {
-section "MySQL " "MySQL database functions" {
+section "batteries/builtins_mysql.go" "MySQL database functions" {
+section "MySQL" "MySQL database functions" {
 	group "mysql-uri//Open"
 	"Opens a connection to a MySQL database."
 	{
@@ -1572,8 +1625,8 @@ section "MySQL " "MySQL database functions" {
 	}
 
 	{
-`Open mysql://user:pass@tcp(localhost)/dbname
-`	}
+		"Open mysql://user:pass@tcp(localhost)/dbname"
+	}
 
 	group "mysql-uri//Open\\pwd"
 	"Opens a connection to a MySQL database with separate password parameter."
@@ -1588,8 +1641,8 @@ section "MySQL " "MySQL database functions" {
 	}
 
 	{
-`equal { Open\pwd mysql://user@tcp(localhost:3306)/dbname" "password"
-`	}
+		"equal { Open\\pwd mysql://user@tcp(localhost:3306)/dbname\" \"password\""
+	}
 
 	group "Rye-mysql//Exec"
 	"Executes a SQL statement that modifies data (INSERT, UPDATE, DELETE)."
@@ -1604,9 +1657,8 @@ section "MySQL " "MySQL database functions" {
 	}
 
 	{
-`Open mysql://user:pass@tcp(localhost:3306)/dbname" ,
-|Exec { INSERT INTO test VALUES ( 1 , "test" ) }
-`	}
+		"Open mysql://user:pass@tcp(localhost:3306)/dbname\" ,\n|Exec { INSERT INTO test VALUES ( 1 , \"test\" ) }"
+	}
 
 	group "Rye-mysql//Query"
 	"Executes a SQL query and returns results as a table."
@@ -1621,10 +1673,8 @@ section "MySQL " "MySQL database functions" {
 	}
 
 	{
-`id: 101
-db: Open mysql://user:pass@tcp(localhost:3306)/dbname
-db .Query { SELECT * FROM test where id = ?id }
-`	}
+		"id: 101\ndb: Open mysql://user:pass@tcp(localhost:3306)/dbname\ndb .Query { SELECT * FROM test where id = ?id }"
+	}
 
 	group "Rye-mysql//Close"
 	"Closes the MySQL database connection."
@@ -1638,13 +1688,13 @@ db .Query { SELECT * FROM test where id = ?id }
 	}
 
 	{
-`equal { db: Open mysql://user:pass@tcp(localhost:3306)/dbname db .Close |type? } 'integer
-`	}
+		"equal { db: Open mysql://user:pass@tcp(localhost:3306)/dbname db .Close |type? } 'integer"
+	}
 
 }
 }
-section "batteries/builtins_crypto.go" "" {
-section "Basic Cryptographic Operations " "Hashing, encoding, and basic cryptographic functions" {
+section "batteries/builtins_crypto.go" "Hashing, encoding, and basic cryptographic functions" {
+section "Basic Cryptographic Operations" "Hashing, encoding, and basic cryptographic functions" {
 	group "Ed25519-pub-key//To-string"
 	"Converts an Ed25519 public key to its hexadecimal string representation."
 	{
@@ -1751,11 +1801,96 @@ section "Basic Cryptographic Operations " "Hashing, encoding, and basic cryptogr
 	{
 	}
 
-	group "sha512"
-	"Calculates the SHA-512 hash of a string and returns the result as a hexadecimal string."
+	group "md5"
+	"Calculates the MD5 hash of a string or bytes and returns the result as a hexadecimal string. MD5 is not suitable for security-sensitive use."
 	{
 		argsn 1
-		arg `input: string to hash`
+		arg `input: string or bytes to hash`
+		returns `string containing the hexadecimal representation of the MD5 hash`
+	}
+
+	{
+		equal { cc crypto "Hello world" |md5 |type? } 'string
+		equal { cc crypto "Hello world" |md5 |length? } 32
+		equal { cc crypto "" |md5 } "d41d8cd98f00b204e9800998ecf8427e"
+	}
+
+	{
+	}
+
+	group "sha1"
+	"Calculates the SHA-1 hash of a string or bytes and returns the result as a hexadecimal string. SHA-1 is not suitable for security-sensitive use."
+	{
+		argsn 1
+		arg `input: string or bytes to hash`
+		returns `string containing the hexadecimal representation of the SHA-1 hash`
+	}
+
+	{
+		equal { cc crypto "Hello world" |sha1 |type? } 'string
+		equal { cc crypto "Hello world" |sha1 |length? } 40
+		equal { cc crypto "" |sha1 } "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+	}
+
+	{
+	}
+
+	group "sha224"
+	"Calculates the SHA-224 hash of a string or bytes and returns the result as a hexadecimal string."
+	{
+		argsn 1
+		arg `input: string or bytes to hash`
+		returns `string containing the hexadecimal representation of the SHA-224 hash`
+	}
+
+	{
+		equal { cc crypto "Hello world" |sha224 |type? } 'string
+		equal { cc crypto "Hello world" |sha224 |length? } 56
+		equal { cc crypto "" |sha224 } "d14a028c2a3a2bc9476102bb288234c415a2b01f828ea62ac5b3e42f"
+	}
+
+	{
+	}
+
+	group "sha256"
+	"Calculates the SHA-256 hash of a string or bytes and returns the result as a hexadecimal string."
+	{
+		argsn 1
+		arg `input: string or bytes to hash`
+		returns `string containing the hexadecimal representation of the SHA-256 hash`
+	}
+
+	{
+		equal { cc crypto "Hello world" |sha256 |type? } 'string
+		equal { cc crypto "Hello world" |sha256 |length? } 64
+		equal { cc crypto "" |sha256 } "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	}
+
+	{
+	}
+
+	group "sha384"
+	"Calculates the SHA-384 hash of a string or bytes and returns the result as a hexadecimal string."
+	{
+		argsn 1
+		arg `input: string or bytes to hash`
+		returns `string containing the hexadecimal representation of the SHA-384 hash`
+	}
+
+	{
+		equal { cc crypto "Hello world" |sha384 |type? } 'string
+		equal { cc crypto "Hello world" |sha384 |length? } 96
+		equal { cc crypto "" |sha384 } "38b060a751ac96384cd9327eb1b1e36a21fdb71114be07434c0cc7bf63f6e1da274edebfe76f65fbd51ad2f14898b95b"
+	}
+
+	{
+	}
+
+	group "sha512"
+	"Calculates the SHA-512 hash of a string or bytes and returns the result as a hexadecimal string."
+	{
+		argsn 1
+		arg `input: string or bytes to hash`
 		returns `string containing the hexadecimal representation of the SHA-512 hash`
 	}
 
@@ -1768,9 +1903,43 @@ section "Basic Cryptographic Operations " "Hashing, encoding, and basic cryptogr
 	{
 	}
 
+	group "crc32"
+	"Calculates the CRC-32 (IEEE) checksum of a string or bytes and returns it as a hexadecimal string."
+	{
+		argsn 1
+		arg `input: string or bytes to checksum`
+		returns `string containing the hexadecimal representation of the CRC-32 checksum`
+	}
+
+	{
+		equal { cc crypto "Hello world" |crc32 |type? } 'string
+		equal { cc crypto "Hello world" |crc32 |length? } 8
+		equal { cc crypto "" |crc32 } "00000000"
+	}
+
+	{
+	}
+
+	group "adler32"
+	"Calculates the Adler-32 checksum of a string or bytes and returns it as a hexadecimal string."
+	{
+		argsn 1
+		arg `input: string or bytes to checksum`
+		returns `string containing the hexadecimal representation of the Adler-32 checksum`
+	}
+
+	{
+		equal { cc crypto "Hello world" |adler32 |type? } 'string
+		equal { cc crypto "Hello world" |adler32 |length? } 8
+		equal { cc crypto "" |adler32 } "00000001"
+	}
+
+	{
+	}
+
 }
 
-section "Age " "Age encryption/decryption and key generation" {
+section "Age" "Age encryption/decryption and key generation" {
 	group "age-generate-keys"
 	"Generates a new age key pair (identity and recipient)."
 	{
@@ -1790,6 +1959,8 @@ section "Age " "Age encryption/decryption and key generation" {
 	"Creates an age identity from a string or bytes."
 	{
 		argsn 1
+		arg `value: String or Bytes containing an AGE-SECRET-KEY.`
+		returns `native age-identity object.`
 	}
 
 	{
@@ -1805,6 +1976,8 @@ section "Age " "Age encryption/decryption and key generation" {
 	"Creates an age recipient from a string or bytes."
 	{
 		argsn 1
+		arg `value: String or Bytes containing an age public key.`
+		returns `native age-recipient object.`
 	}
 
 	{
@@ -1820,6 +1993,9 @@ section "Age " "Age encryption/decryption and key generation" {
 	"Encrypts a reader with age for the provided age recipient or string password and returns a reader."
 	{
 		argsn 2
+		arg `reader: Reader containing plaintext.`
+		arg `recipient: age-recipient object or String password.`
+		returns `Reader that yields the encrypted data.`
 	}
 
 	{
@@ -1853,6 +2029,9 @@ section "Age " "Age encryption/decryption and key generation" {
 	{
 	}
 
+}
+
+section "PKCS#12 Operations" "PKCS#12 file format encoding and decoding" {
 	group "pkcs12-to-pem"
 	"Converts a PKCS#12 (.p12) file bytes to PEM blocks using the provided password. Returns a block of pem-block native values."
 	{
@@ -1894,7 +2073,7 @@ section "Age " "Age encryption/decryption and key generation" {
 
 }
 
-section "PEM Operations " "PEM format encoding and decoding operations" {
+section "PEM Operations" "PEM format encoding and decoding operations" {
 	group "pem-block//Block-type?"
 	"Returns the type of a PEM block as a string (e.g., 'CERTIFICATE', 'RSA PRIVATE KEY')."
 	{
@@ -1941,6 +2120,9 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	{
 	}
 
+}
+
+section "X.509 Certificate Operations" "X.509 certificate analysis and manipulation" {
 	group "x509-certificate//Not-after?"
 	"Returns the expiration date (NotAfter) of an X.509 certificate as a time value."
 	{
@@ -2247,15 +2429,15 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 
 }
 }
-section "batteries/builtins_bcrypt.go" "" {
-section "Bcrypt " "Functions for bcrypt password hashing and token generation" {
+section "batteries/builtins_bcrypt.go" "Functions for bcrypt password hashing and token generation" {
+section "Bcrypt" "Functions for bcrypt password hashing and token generation" {
 	group "bcrypt-hash"
 	"Generates a bcrypt hash from a password string."
 	{
 		argsn 1
 		arg `password: String to hash`
 		arg `password: String to hash`
-		returns `string containing the bcrypt hash of the passwordstring containing the bcrypt hash of the password`
+		returns `string containing the bcrypt hash of the password; string containing the bcrypt hash of the password`
 	}
 
 	{
@@ -2263,6 +2445,7 @@ section "Bcrypt " "Functions for bcrypt password hashing and token generation" {
 	}
 
 	{
+		"bcrypt-hash \"mypassword\""
 	}
 
 	group "bcrypt-check"
@@ -2273,7 +2456,7 @@ section "Bcrypt " "Functions for bcrypt password hashing and token generation" {
 		arg `password: Plain text password to compare`
 		arg `hash: String containing the bcrypt hash`
 		arg `password: Plain text password to compare`
-		returns `integer 1 if the password matches the hash, 0 otherwiseinteger 1 if the password matches the hash, 0 otherwise`
+		returns `integer 1 if the password matches the hash, 0 otherwise; integer 1 if the password matches the hash, 0 otherwise`
 	}
 
 	{
@@ -2282,6 +2465,7 @@ section "Bcrypt " "Functions for bcrypt password hashing and token generation" {
 	}
 
 	{
+		"bcrypt-check hashed-password \"mypassword\""
 	}
 
 	group "generate-token"
@@ -2290,7 +2474,7 @@ section "Bcrypt " "Functions for bcrypt password hashing and token generation" {
 		argsn 1
 		arg `length: Integer number of random bytes to generate`
 		arg `length: Integer number of random bytes to generate`
-		returns `string containing the hex-encoded random tokenstring containing the hex-encoded random token`
+		returns `string containing the hex-encoded random token; string containing the hex-encoded random token`
 	}
 
 	{
@@ -2299,12 +2483,13 @@ section "Bcrypt " "Functions for bcrypt password hashing and token generation" {
 	}
 
 	{
+		"generate-token 32"
 	}
 
 }
 }
-section "batteries/builtins_math.go" "" {
-section "Math context and dialect " "Mathematical context and dialect (calc)" {
+section "batteries/builtins_math.go" "Mathematical context and dialect (calc)" {
+section "Math context and dialect" "Mathematical context and dialect (calc)" {
 	group "mod"
 	"Returns the remainder of dividing x by y."
 	{
@@ -3142,8 +3327,8 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 
 }
 }
-section "batteries/builtins_match.go" "" {
-section "Match dialect " "pattern matching and deconstruction" {
+section "batteries/builtins_match.go" "pattern matching and deconstruction" {
+section "Match dialect" "pattern matching and deconstruction" {
 	group "match-block"
 	"Tries to match and deconstruct a value into multiple values, with support for literal values, type checking, get-words, code evaluation, and nested blocks. First argument can be any value. If it doesn't match, returns failure."
 	{
@@ -3166,12 +3351,10 @@ section "Match dialect " "pattern matching and deconstruction" {
 		equal { match-block { 1 2 3 } { a b c } c } 3
 		; error { match-block { 1 2 } { a b c } }
 		; error { match-block { 1 2 3 4 } { a b c } }
-
 		; Matching with literal values:
 		equal { match-block { 1 "test" 3 } { a "test" b } a } 1
 		equal { match-block { 1 "test" 3 } { a "test" b } b } 3
 		; equal { try { match-block { 1 "hi" 3 } { a "bye" b } } |failed? } 1
-
 		; Matching with nested blocks:
 		equal { match-block { 123 { "hi" 44 } 789 } { a { b c } d } a } 123
 		equal { match-block { 123 { "hi" 44 } 789 } { a { b c } d } b } "hi"
@@ -3180,7 +3363,6 @@ section "Match dialect " "pattern matching and deconstruction" {
 		equal { match-block { 1 { 2 { 3 4 } 5 } 6 } { x { y { z w } v } u } z } 3
 		equal { match-block { 1 { 2 { 3 4 } 5 } 6 } { x { y { z w } v } u } w } 4
 		; equal { try { match-block { 1 { 2 3 } 4 } { a { b "wrong" } c } } |failed? } 1
-
 		; Type checking with opwords:
 		equal { match-block { 123 } { <integer> } } true
 		equal { match-block { "hello" } { <string> } } true
@@ -3188,11 +3370,9 @@ section "Match dialect " "pattern matching and deconstruction" {
 		equal { match-block { 123.45 } { <decimal> } } true
 		; equal { try { match-block { "not an integer" } { <integer> } } |failed? } true
 		; equal { try { match-block { 123 } { <string> } } |failed? } true
-
 		;Matching with get-words (match against values in the current context):
 		equal { x: 234 match-block { 123 234 } { 123 ?x } } true
 		; equal { x: 234 try { match-block { 123 456 } { 123 ?x } } |failed? } true
-
 		; Evaluating blocks with the value injected:
 		; x: 0 , match-block { 1000 } { [ x:: . ] } , equal x 1000
 		; a: 0 , b: 0 , match-block { 100 200 300 } { [ a:: . ] [ b:: . ] c } , equal a 100 , equal b 200 , equal c 300
@@ -3217,45 +3397,36 @@ section "Match dialect " "pattern matching and deconstruction" {
 		equal { match 5 { <integer> { "got integer" } <string> { "got string" } } } "got integer"
 		equal { match "hello" { <integer> { "got integer" } <string> { "got string" } } } "got string"
 		equal { match 3.14 { <integer> { "int" } <decimal> { "decimal" } <string> { "string" } } } "decimal"
-
 		; Block deconstruction (simple):
 		equal { match { 1 2 } { { a b } { a + b } { x } { x * 2 } } } 3
 		equal { match { 101 202 } { { } { 0 } { a b } { a + b } } } 303
 		equal { match { 10 20 30 } { { x y z } { x + y + z } } } 60
-
 		; Literal value matching:
 		equal { match 100 { 50 { "fifty" } 100 { "hundred" } 200 { "two hundred" } } } "hundred"
 		equal { match { 100 } { { 50 } { "fifty" } { 100 } { "hundred" } { 200 } { "two hundred" } } } "hundred"
-
 		; Partial pattern matching:
 		equal { match { 10 20 } { { a 20 } { a * 2 } { 10 b } { b + 5 } } } 20
 		equal { match { 10 20 } { { 10 b } { b + 5 } { a 20 } { a * 2 } } } 25
-
 		; Rule blocks with arity and type patterns:
 		equal { match { } { { } { 'no-data } { a b } { 'has-data } } } 'no-data
 		equal { match { "Jim" "30" } { { <string> <string> } { 'bad-format } { <string> <integer> } { 'good-format } } } 'bad-format
 		equal { match { "Jim" 30 } { { <string> <string> } { 'bad-format } { <string> <integer> } { 'good-format } } } 'good-format
-
 		; Complex nested block patterns:
 		equal { match { 200 { "OK" 30 } } { { code { "OK" result } } { result } { code { "ERR" } } { 0 } } } 30
 		equal { match { 404 { "ERR" } } { { code { "OK" result } } { result } { code { "ERR" } } { code } } } 404
 		equal { match { "user" { "John" "Doe" 30 } } { { "user" { first last age } } { first } } } "John"
-
 		; First :: rest pattern (head and tail matching):
 		equal { match { 11 22 33 } { { a :: bb } { a } } } 11
 		equal { match { 11 22 33 } { { a :: bb } { bb } } } { 22 33 }
 		equal { match { 11 22 33 } { { a b :: cc } { a + b } } } 33
 		equal { match { 11 22 33 44 } { { a b :: cc } { cc } } } { 33 44 }
 		equal { match { { 12 23 } { 23 34 } { 34 45 } } { { { a b } :: more } { a + b } } } 35
-
 		; Mixed type patterns:
 		equal { match { 1 2 3 } { { <integer> <integer> <integer> } { 'three-ints } { <string> <string> } { 'two-strings } } } 'three-ints
 		equal { match { "hello" "world" } { { <integer> <integer> <integer> } { 'three-ints } { <string> <string> } { 'two-strings } } } 'two-strings
-
 		; Error handling:
 		; equal { try { match 5.5 { <integer> { "got integer" } <string> { "got string" } } } |failed? } true
 		; equal { try { match { 1 2 3 } { { a b } { a + b } } } |failed? } true
-
 	}
 
 	{
@@ -3263,8 +3434,8 @@ section "Match dialect " "pattern matching and deconstruction" {
 
 }
 }
-section "batteries/builtins_eyr.go" "" {
-section "EYR Dialect " "Stack based evaluator / dialect" {
+section "batteries/builtins_eyr.go" "Stack based evaluator / dialect" {
+section "EYR Dialect" "Stack based evaluator / dialect" {
 	group "eyr"
 	"Evaluates Rye block as Eyr (postfix) stack based code."
 	{
@@ -3387,8 +3558,8 @@ section "EYR Dialect " "Stack based evaluator / dialect" {
 
 }
 }
-section "batteries/builtins_ssh.go" "" {
-section "SSH " "SSH server functions" {
+section "batteries/builtins_ssh.go" "SSH server functions" {
+section "SSH" "SSH server functions" {
 	group "ssh-server"
 	"Creates a new SSH server that listens on the specified address."
 	{
@@ -3402,15 +3573,8 @@ section "SSH " "SSH server functions" {
 	}
 
 	{
-`server: ssh-server "localhost:2222"
-server |Password-auth { pass = "secret123" }
-server |Handle fn { session } {
-session .Write "Welcome to Rye SSH server!\n"
-session .Write "Type 'exit' to quit.\n"
-}
-server |Serve
-
-`	}
+		"server: ssh-server \"localhost:2222\"\nserver |Password-auth { pass = \"secret123\" }\nserver |Handle fn { session } {\nsession .Write \"Welcome to Rye SSH server!\\n\"\nsession .Write \"Type 'exit' to quit.\\n\"\n}\nserver |Serve\n"
+	}
 
 	group "ssh-server//Handle"
 	"Sets a handler function for SSH sessions on the server."
@@ -3444,6 +3608,51 @@ server |Serve
 	{
 	}
 
+	group "ssh-server//Public-key-auth"
+	"Sets a public key authentication handler for the SSH server."
+	{
+		argsn 2
+		arg `server: SSH server object`
+		arg `handler: Function that receives a public key string and returns true/false`
+		returns `the SSH server object`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "ssh-server//Host-key-file"
+	"Loads a private key file and uses it as the SSH server host key."
+	{
+		argsn 2
+		arg `server: SSH server object`
+		arg `path: String path to a PEM private key file used as host key`
+		returns `the SSH server object`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "ssh-server//Banner"
+	"Sets the banner string sent to clients before authentication."
+	{
+		argsn 2
+		arg `server: SSH server object`
+		arg `banner: String banner shown to clients before authentication`
+		returns `the SSH server object`
+	}
+
+	{
+	}
+
+	{
+	}
+
 	group "ssh-server//Serve"
 	"Starts the SSH server, listening for connections."
 	{
@@ -3454,6 +3663,34 @@ server |Serve
 
 	{
 		; equal { server: ssh-server "localhost:2222" , server |Serve |type? } 'native
+	}
+
+	{
+	}
+
+	group "ssh-server//Close"
+	"Closes all active listeners and connections on the SSH server."
+	{
+		argsn 1
+		arg `server: SSH server object`
+		returns `the SSH server object`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "ssh-server//Shutdown"
+	"Gracefully shuts down the SSH server, closing listeners without interrupting active connections."
+	{
+		argsn 1
+		arg `server: SSH server object`
+		returns `the SSH server object`
+	}
+
+	{
 	}
 
 	{
@@ -3475,10 +3712,405 @@ server |Serve
 	{
 	}
 
+	group "ssh-session//Read"
+	"Reads up to a given number of bytes from an SSH session."
+	{
+		argsn 2
+		arg `session: SSH session object`
+		arg `length: maximum number of bytes to read`
+		returns `String read from the session, or error on failure`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "ssh-session//Exit"
+	"Sends an exit status and closes the SSH session."
+	{
+		argsn 2
+		arg `session: SSH session object`
+		arg `code: integer exit status`
+		returns `the SSH session object`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "ssh-session//User"
+	"Returns the username used when establishing the SSH connection."
+	{
+		argsn 1
+		arg `session: SSH session object`
+		returns `String username used for the connection`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "ssh-session//Remote-addr"
+	"Returns the remote address of the SSH connection."
+	{
+		argsn 1
+		arg `session: SSH session object`
+		returns `String remote address of the client`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "ssh-session//Local-addr"
+	"Returns the local address of the SSH connection."
+	{
+		argsn 1
+		arg `session: SSH session object`
+		returns `String local address of the server`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "ssh-session//Command"
+	"Returns the shell-parsed command arguments provided by the user."
+	{
+		argsn 1
+		arg `session: SSH session object`
+		returns `Block of shell-parsed command arguments`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "ssh-session//Raw-command"
+	"Returns the exact raw command string provided by the user."
+	{
+		argsn 1
+		arg `session: SSH session object`
+		returns `String raw command provided by the user`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "ssh-session//Environ"
+	"Returns the environment variables set for the session as a block of key=value strings."
+	{
+		argsn 1
+		arg `session: SSH session object`
+		returns `Block of "key=value" environment strings`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "ssh-session//Subsystem"
+	"Returns the subsystem requested by the user."
+	{
+		argsn 1
+		arg `session: SSH session object`
+		returns `String subsystem requested by the user`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "ssh-session//Public-key"
+	"Returns the public key used to authenticate the session, in authorized_keys format."
+	{
+		argsn 1
+		arg `session: SSH session object`
+		returns `String authorized-keys formatted public key, or error if none used`
+	}
+
+	{
+	}
+
+	{
+	}
+
+}
+
+section "SSH client" "Connecting to remote hosts and running commands over SSH." {
+	group "ssh-uri//Open"
+	"Opens an SSH client connection. URI format: ssh://user[:pass]@host[:port]."
+	{
+		argsn 1
+		arg `uri: SSH URI in the form ssh://[user[:pass]@]host[:port]`
+		returns `native SSH client object`
+	}
+
+	{
+	}
+
+	{
+		"cli: Open ssh://me:secret@example.com:22\nrun cli \"uname -a\""
+	}
+
+	group "ssh-uri//Open\\pwd"
+	"Opens an SSH client connection with a separate password parameter. URI format: ssh://user@host[:port]."
+	{
+		argsn 2
+		arg `uri: SSH URI in the form ssh://user@host[:port]`
+		arg `password: String password for authentication`
+		returns `native SSH client object`
+	}
+
+	{
+	}
+
+	{
+		"cli: Open\\pwd ssh://me@example.com:22 \"secret\"\nrun cli \"uname -a\""
+	}
+
+	group "ssh-uri//Open\\key"
+	"Opens an SSH client connection using a private key file. URI format: ssh://user@host[:port]."
+	{
+		argsn 2
+		arg `uri: SSH URI in the form ssh://user@host[:port]`
+		arg `key: String path to a private key file`
+		returns `native SSH client object`
+	}
+
+	{
+	}
+
+	{
+		"cli: Open\\key ssh://me@example.com:22 %~/.ssh/id_rsa\nrun cli \"uname -a\""
+	}
+
+	group "run"
+	"Runs a command on a remote SSH client and returns a dict with 'stdout', 'stderr' and 'exit'."
+	{
+		argsn 2
+		arg `client: SSH client object`
+		arg `command: String command to run remotely`
+		returns `Dict with stdout, stderr and exit keys`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "ssh-client//Close"
+	"Closes the SSH client connection."
+	{
+		argsn 1
+		arg `client: SSH client object`
+		returns `the SSH client object`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "ssh-client//New-session"
+	"Creates a new SSH session on the client, with stdin/stdout/stderr prepared for use."
+	{
+		argsn 1
+		arg `client: SSH client object`
+		returns `native SSH client session object`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "ssh-client//Run"
+	"Runs a command on a remote SSH client and returns a dict with 'stdout', 'stderr' and 'exit'."
+	{
+		argsn 2
+		arg `client: SSH client object`
+		arg `command: String command to run remotely`
+		returns `Dict with stdout, stderr and exit keys`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "ssh-client-session//Start"
+	"Starts a command on the SSH session (non-blocking)."
+	{
+		argsn 2
+		arg `session: SSH client session object`
+		arg `command: String command to start remotely`
+		returns `the SSH client session object`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "ssh-client-session//Stdin"
+	"Writes a string or bytes to the session's standard input."
+	{
+		argsn 2
+		arg `session: SSH client session object`
+		arg `data: String or bytes to write to standard input`
+		returns `the SSH client session object`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "ssh-client-session//Close-stdin"
+	"Closes the session's standard input, signaling end-of-file to the remote program."
+	{
+		argsn 1
+		arg `session: SSH client session object`
+		returns `the SSH client session object`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "ssh-client-session//Wait"
+	"Waits for the command to finish and returns its exit code."
+	{
+		argsn 1
+		arg `session: SSH client session object`
+		returns `Integer exit code of the command`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "ssh-client-session//Run"
+	"Runs a command on the session and waits, returning a dict with 'stdout', 'stderr' and 'exit'."
+	{
+		argsn 2
+		arg `session: SSH client session object`
+		arg `command: String command to run remotely`
+		returns `Dict with stdout, stderr and exit keys`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "ssh-client-session//Stdout"
+	"Returns the captured standard output of the session as a string."
+	{
+		argsn 1
+		arg `session: SSH client session object`
+		returns `String captured standard output`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "ssh-client-session//Stderr"
+	"Returns the captured standard error of the session as a string."
+	{
+		argsn 1
+		arg `session: SSH client session object`
+		returns `String captured standard error`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "ssh-client-session//Shell"
+	"Starts a login shell on the SSH session."
+	{
+		argsn 1
+		arg `session: SSH client session object`
+		returns `the SSH client session object`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "ssh-client-session//Setenv"
+	"Sets an environment variable on the SSH session before starting the command."
+	{
+		argsn 3
+		arg `session: SSH client session object`
+		arg `name: String environment variable name`
+		arg `value: String environment variable value`
+		returns `the SSH client session object`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "ssh-client-session//Close"
+	"Closes the SSH client session."
+	{
+		argsn 1
+		arg `session: SSH client session object`
+		returns `the SSH client session object`
+	}
+
+	{
+	}
+
+	{
+	}
+
 }
 }
-section "batteries/builtins_goroutines.go" "" {
-section "Default" "" {
+section "batteries/builtins_goroutines.go" "Channels, wait groups, mutexes, and goroutine helpers." {
+section "Goroutines & Concurrency" "Channels, wait groups, mutexes, and goroutine helpers." {
 	group "go-with"
 	"Executes a function in a separate goroutine, passing the specified value as an argument."
 	{
@@ -3494,27 +4126,8 @@ section "Default" "" {
 	}
 
 	{
-`; Simple goroutine with channel communication
-ch: channel 1
-go fn { } { ch .Send "Hello from goroutine" }
-print ch .Read
-
-; Using waitgroup to coordinate multiple goroutines
-wg: waitgroup
-results: channel 10
-loop 5 { i |
-wg .Add 1
-go-with i fn { n } { results .Send n * 2 , wg .Done }
-}
-wg .Wait
-results .Close
-
-; Mutex for safe shared state
-counter:: 0
-mtx: mutex
-go fn { } { mtx .Lock , change! counter + 1 'counter , mtx .Unlock }
-
-`	}
+		"; Simple goroutine with channel communication\nch: channel 1\ngo fn { } { ch .Send \"Hello from goroutine\" }\nprint ch .Read\n\n; Using waitgroup to coordinate multiple goroutines\nwg: waitgroup\nresults: channel 10\nloop 5 { i |\nwg .Add 1\ngo-with i fn { n } { results .Send n * 2 , wg .Done }\n}\nwg .Wait\nresults .Close\n\n; Mutex for safe shared state\ncounter:: 0\nmtx: mutex\ngo fn { } { mtx .Lock , change! counter + 1 'counter , mtx .Unlock }\n"
+	}
 
 	group "go"
 	"Executes a function in a separate goroutine without passing any arguments."
@@ -3730,8 +4343,8 @@ go fn { } { mtx .Lock , change! counter + 1 'counter , mtx .Unlock }
 
 }
 }
-section "batteries/builtins_complex.go" "" {
-section "Complex numbers " "Functions for working with complex numbers" {
+section "batteries/builtins_complex.go" "Functions for working with complex numbers" {
+section "Complex numbers" "Functions for working with complex numbers" {
 	group "complex"
 	"Creates a complex number from real and imaginary parts."
 	{
@@ -3844,8 +4457,8 @@ section "Complex numbers " "Functions for working with complex numbers" {
 
 }
 }
-section "batteries/builtins_structures.go" "" {
-section "Structures " "Functions for converting between Rye and Go data structures" {
+section "batteries/builtins_structures.go" "Functions for converting between Rye and Go data structures" {
+section "Structures" "Functions for converting between Rye and Go data structures" {
 	group "dict->struct"
 	"Converts a Rye Dict to a Go struct using reflection. Takes a Dict and a Native containing a pointer to a struct."
 	{
@@ -3859,6 +4472,7 @@ section "Structures " "Functions for converting between Rye and Go data structur
 	}
 
 	{
+		"dict [ \"name\" \"John\" \"age\" 30 ] |dict->struct my-struct-ptr"
 	}
 
 	group "dict->new-struct"
@@ -3874,6 +4488,7 @@ section "Structures " "Functions for converting between Rye and Go data structur
 	}
 
 	{
+		"dict [ \"name\" \"John\" \"age\" 30 ] |dict->new-struct \"Person\""
 	}
 
 	group "struct->dict"
@@ -3888,12 +4503,13 @@ section "Structures " "Functions for converting between Rye and Go data structur
 	}
 
 	{
+		"my-native-struct |struct->dict"
 	}
 
 }
 }
-section "batteries/builtins_vector.go" "" {
-section "Vector " "Vector operations" {
+section "batteries/builtins_vector.go" "Vector operations" {
+section "Vector" "Vector operations" {
 	group "vector"
 	"Creates a vector from a block of numbers."
 	{
@@ -3990,6 +4606,9 @@ section "Vector " "Vector operations" {
 	{
 	}
 
+}
+
+section "Distance Functions" "Vector distance, length, and normalization operations." {
 	group "euclidean-distance"
 	"Calculates the Euclidean distance between two vectors. Useful for K-Means clustering."
 	{
@@ -4022,6 +4641,9 @@ section "Vector " "Vector operations" {
 	{
 	}
 
+}
+
+section "Geometric & Transformation" "Vector geometry, dot products, cross products, and transforms." {
 	group "unit-vector"
 	"Returns a new normalized vector (length = 1). Essential for consistent dot products and overlays."
 	{
@@ -4071,8 +4693,8 @@ section "Vector " "Vector operations" {
 
 }
 }
-section "batteries/builtins_matrix.go" "" {
-section "Matrix " "Matrix operations for 2D numerical data" {
+section "batteries/builtins_matrix.go" "Matrix operations for 2D numerical data" {
+section "Matrix" "Matrix operations for 2D numerical data" {
 	group "matrix\\zeros"
 	"Creates a new matrix with the given dimensions, initialized to zeros."
 	{
@@ -4158,6 +4780,9 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	{
 	}
 
+}
+
+section "Matrix Access" "Functions to access matrix properties and elements" {
 	group "shape?"
 	"Returns the shape of a matrix as { rows cols }."
 	{
@@ -4271,6 +4896,9 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	{
 	}
 
+}
+
+section "Matrix Operations" "Matrix transformation and arithmetic operations" {
 	group "mat-transpose"
 	"Returns the transpose of a matrix."
 	{
@@ -4368,6 +4996,9 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	{
 	}
 
+}
+
+section "Reductions" "Aggregate matrix values" {
 	group "mat-sum-rows"
 	"Returns a vector containing the sum of each row."
 	{
@@ -4428,6 +5059,9 @@ section "Matrix " "Matrix operations for 2D numerical data" {
 	{
 	}
 
+}
+
+section "Conversion" "Convert between matrix and other types" {
 	group "mat-to-block"
 	"Converts a matrix to a block of blocks (each row is a block)."
 	{

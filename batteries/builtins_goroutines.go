@@ -36,7 +36,7 @@ func (m *RyeMutex) Unlock() error {
 var Builtins_goroutines = map[string]*env.Builtin{
 
 	//
-	// ##### Goroutines & Concurrency ##### ""
+	// ##### Goroutines & Concurrency ##### "Channels, wait groups, mutexes, and goroutine helpers."
 	//
 	// Example:
 	//  ; Simple goroutine with channel communication

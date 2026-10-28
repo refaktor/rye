@@ -58,9 +58,10 @@ escape-html: fn { x } { x |replace "&" "&amp;" |replace "<" "&lt;" |replace ">" 
 ; readable title here so the initial HTML and the navigation agree immediately.
 source-title: fn { path } {
 	filename: path .split "/" |last
-	name: filename |replace "builtins_" "" |replace ".go" ""
+	name: filename |replace "builtins_" "" |replace "_not" "" |replace ".go" ""
 	either ( filename = "builtins.go" ) { "Builtins" } {
 		name |replace "_" " " |capitalize
+		|replace "Mth" "Fast Math" |replace "Baseio" "Base I/O"
 		|replace "Io" "IO" |replace "Os" "OS" |replace "Http" "HTTP"
 		|replace "Json" "JSON" |replace "Bson" "BSON" |replace "Html" "HTML"
 		|replace "Sxml" "SXML" |replace "Sqlite" "SQLite" |replace "Psql" "PostgreSQL"

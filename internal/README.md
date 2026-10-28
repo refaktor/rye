@@ -19,6 +19,7 @@ cd internal/failure_handling && rye main.rye
 cd internal/cli-parse && rye main.rye
 cd internal/structures && rye main.rye
 cd internal/observer && rye main.rye
+cd internal/sxml && rye main.rye
 ```
 
 ### Top-Level Framework (internal/main.rye)
@@ -48,7 +49,7 @@ Run with: `rye . test` or `rye . test basics`
 
 ```bash
 # Run each subfolder's main.rye
-for dir in basics parsing evaluator closures failure_handling cli-parse structures observer; do
+for dir in basics parsing evaluator closures failure_handling cli-parse structures observer sxml; do
   echo "=== $dir ==="
   cd internal/$dir && rye main.rye && cd ../..
 done

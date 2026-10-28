@@ -2,6 +2,7 @@
 package util
 
 import (
+	"fmt"
 	"math/rand"
 	"regexp"
 	"slices"
@@ -260,6 +261,29 @@ func FormatCsv(val env.Object, e env.Idxs) string {
 		}
 	}
 	return r.String()
+}
+
+// FormatXlsxCell converts a table cell into a value that excelize can write.
+// Blocks are serialized as their Rye dump so they can be loaded back later.
+func FormatXlsxCell(val any, idx *env.Idxs) (any, error) {
+	switch v := val.(type) {
+	case env.String:
+		return v.Value, nil
+	case string:
+		return v, nil
+	case env.Integer:
+		return v.Value, nil
+	case int64:
+		return v, nil
+	case env.Decimal:
+		return v.Value, nil
+	case float64:
+		return v, nil
+	case env.Block:
+		return v.Dump(*idx), nil
+	default:
+		return nil, fmt.Errorf("unsupported type %T", val)
+	}
 }
 
 func FormatSsv(val env.Object, e env.Idxs) string {

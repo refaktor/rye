@@ -28,6 +28,8 @@ print ""
 ; failure_handling/main.rye includes 07-dotword-continuation.rye (a failing
 ; generic-method dotword must reach a following cached |fix/|disarm handler
 ; inside map/filter; regression for cached Opword/Pipeword/Dotword continuation).
+; sxml/main.rye covers the streaming XML dialect, projection commands, output
+; frame attachment, event accessors, CDATA, and malformed XML errors.
 test-folders: { 
 	"basics"
 	"parsing" 
@@ -44,6 +46,7 @@ test-folders: {
 	"recursion"
 	"context_advanced"
 	"batteries"
+	"sxml"
 }
 
 ; Track results

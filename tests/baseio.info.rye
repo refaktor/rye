@@ -1,5 +1,5 @@
-section "baseio/builtins_printing.go" "" {
-section "Default" "" {
+section "baseio/builtins_printing.go" "Interactive display and table printing helpers." {
+section "Printing" "Interactive display and table printing helpers." {
 	group "display"
 	"Displays all entries without interaction or pagination and returns the original value."
 	{
@@ -13,8 +13,8 @@ section "Default" "" {
 	}
 
 	{
-`display [1 2 3]
-`	}
+		"display [1 2 3]"
+	}
 
 	group "explore"
 	"Interactively explores a value; returns the selected item or the original value when cancelled."
@@ -28,8 +28,8 @@ section "Default" "" {
 	}
 
 	{
-`[1 2 3] |explore
-`	}
+		"[1 2 3] |explore"
+	}
 
 	group "_.."
 	"Shorthand alias for explore: interactively select a value."
@@ -43,8 +43,8 @@ section "Default" "" {
 	}
 
 	{
-`_.. [1 2 3]
-`	}
+		"_.. [1 2 3]"
+	}
 
 	group "explore\\custom"
 	"Interactively displays a Table in the terminal with a custom rendering function for each row."
@@ -59,15 +59,15 @@ section "Default" "" {
 	}
 
 	{
-`table { "n" } { 1 2 3 } |explore\custom fn { row is-curr } { if is-curr > 0 { print "*" } print row }
-`	}
+		"table { \"n\" } { 1 2 3 } |explore\\custom fn { row is-curr } { if is-curr > 0 { print \"*\" } print row }"
+	}
 
 	group "print\\ssv"
 	"Prints a block of values as space-separated values followed by a newline, returning the input block."
 	{
 		argsn 1
 		arg `values: Block to format as space-separated values`
-		returns `returns the input block after printing`
+		returns `the input block, unchanged`
 	}
 
 	{
@@ -82,7 +82,7 @@ section "Default" "" {
 	{
 		argsn 1
 		arg `values: Block to format as comma-separated values`
-		returns `returns the input block after printing`
+		returns `the input block, unchanged`
 	}
 
 	{
@@ -94,8 +94,8 @@ section "Default" "" {
 
 }
 }
-section "baseio/builtins_baseio.go" "" {
-section "Default" "" {
+section "baseio/builtins_baseio.go" "Saving state, loading scripts, process arguments, exit, and sandbox controls." {
+section "Runtime and Process Integration" "Saving state, loading scripts, process arguments, exit, and sandbox controls." {
 	group "scmd"
 	"Execute a shell command and return its exit status code."
 	{
@@ -133,83 +133,278 @@ section "Default" "" {
 	"Exits the process with the given integer status code (or 0 for any non-integer)."
 	{
 		argsn 1
+		arg `status: Integer process exit status; non-integers exit with 0.`
+		returns `does not return; terminates the process.`
 	}
 
 	{
 	}
 
 	{
-`; exit 0
-`	}
+		"; exit 0"
+	}
 
 	group "Rye-itself//Args?"
 	"Returns command line arguments as a block of parsed values. Each argument is converted to appropriate type (integer, float, or string)."
 	{
+		arg `none`
+		returns `block of values (each arg parsed as integer, float, or string)`
 	}
 
 	{
 	}
 
 	{
-`Rye-itself//Args?
-`	}
+		"Rye-itself//Args?"
+	}
 
 	group "Rye-itself//Args\\raw?"
 	"Returns raw command line arguments joined as a single string."
 	{
 		argsn 1
+		arg `separator (ignored currently; kept for future parity) – pass _`
+		returns `string`
 	}
 
 	{
 	}
 
 	{
-`Rye-itself//Args\\raw? _
-`	}
+		"Rye-itself//Args\\\\raw? _"
+	}
 
 	group "Rye-itself//History?"
 	"Returns a block of the last N lines from REPL history."
 	{
 		argsn 2
+		arg `rye-itself: Native Rye-itself object passed via dot dispatch.`
+		arg `count: Integer number of history lines to return.`
+		returns `Block of strings from REPL history; error when not running in the REPL.`
 	}
 
 	{
 	}
 
 	{
-`Rye-itself//History? _ 10
-`	}
+		"Rye-itself//History? _ 10"
+	}
 
 	group "Rye-itself//Landlock"
 	"Create a landlock builder object that can be configured and then enforced."
 	{
+		arg `none`
+		returns `native 'landlock' builder`
 	}
 
 	{
 	}
 
 	{
-`ll: Rye-itself//Landlock
-ll | landlock//Limit-to-cwd | landlock//Enforce
-`	}
+		"ll: Rye-itself//Landlock\nll | landlock//Limit-to-cwd | landlock//Enforce"
+	}
+
+	group "landlock//Limit-to-cwd"
+	"Limit landlock to current working directory (configure; does not enforce yet)."
+	{
+		argsn 1
+		arg `landlock native`
+		returns `same native (builder)`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "landlock//Allow"
+	"Allow access to a specific path (file or directory)."
+	{
+		argsn 2
+		arg `landlock native, path (uri|string)`
+		returns `same native (builder)`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "landlock//Allow-exec"
+	"Allow execute access to a specific file (or RX for all files under a directory)."
+	{
+		argsn 2
+		arg `landlock native, path (uri|string)`
+		returns `same native (builder)`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "landlock//Enforce"
+	"Enforce the configured landlock ruleset exactly once."
+	{
+		argsn 1
+		arg `landlock native`
+		returns `same native (builder)`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "Rye-itself//Landlock-to-cwd"
+	"Restrict filesystem access to the current working directory and its subdirectories using Landlock (Linux only). Call early in the script."
+	{
+		arg `none`
+		returns `'ok tagword on success; error on failure`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "Rye-itself//Landlock-only"
+	"Immediately restrict filesystem access to the provided list of paths with modes r, rw, or rx. Example: Rye-itself//Landlock-only \"/proj:r,/tmp:rw,/proj/bin:rx\""
+	{
+		argsn 1
+		arg `spec (string or block of strings). Spec format examples:`
+		arg `"/proj:r,/proj/bin:rx,/tmp:rw" or block [ "/proj:r" "/proj/bin:rx" "/tmp:rw" ]`
+		returns `'ok tagword on success; error on failure`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "Rye-itself//Is-unshare-fs"
+	"Returns true if filesystem namespace isolation is enabled under --unshare."
+	{
+		pure
+		arg `none`
+		returns `boolean`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "Rye-itself//Is-unshare-net"
+	"Returns true if network namespace isolation is enabled under --unshare."
+	{
+		pure
+		arg `none`
+		returns `boolean`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "Rye-itself//Is-unshare-pid"
+	"Returns true if PID namespace isolation is enabled under --unshare."
+	{
+		pure
+		arg `none`
+		returns `boolean`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "Rye-itself//Is-unshare-uts"
+	"Returns true if UTS namespace isolation is enabled under --unshare."
+	{
+		pure
+		arg `none`
+		returns `boolean`
+	}
+
+	{
+	}
+
+	{
+	}
 
 	group "Rye-itself//Unshare-config?"
 	"Returns a dictionary with unshare isolation flags: active, fs, net, pid, uts (booleans)."
 	{
 		pure
+		arg `none`
+		returns `dict with keys: active, fs, net, pid, uts (booleans)`
 	}
 
 	{
 	}
 
 	{
-`cc Rye-itself Unshare-config? |print
-`	}
+		"cc Rye-itself Unshare-config? |print"
+	}
+
+	group "Rye-itself//Is-unshare"
+	"Returns true if current process runs inside Rye --unshare sandbox (Linux only)."
+	{
+		pure
+		arg `none`
+		returns `boolean, true when the runner set RYE_UNSHARE_CHILD=1`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "Rye-itself//Require-unshared"
+	"Fails and exits if unshare is not active (use in CI/safety-critical runs)."
+	{
+		arg `none`
+		returns `never on failure (process exits); 'ok tagword when already unshared`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "Rye-itself//Is-dry-run"
+	"Returns true if Rye is running in dry-run/scenario mode (activated via --dry-run or scenario context)"
+	{
+		pure
+		arg `none`
+		returns `boolean, true when --dry-run is active or a scenario context is detected`
+	}
+
+	{
+	}
+
+	{
+	}
 
 	group "capture-stdout"
 	"Executes a block of code while capturing all output to stdout, returning the captured output as a string."
 	{
 		argsn 1
+		arg `block: Block whose stdout should be captured.`
+		returns `String containing the captured stdout.`
 	}
 
 	{
@@ -222,8 +417,8 @@ ll | landlock//Limit-to-cwd | landlock//Enforce
 
 }
 }
-section "baseio/builtins_io.go" "" {
-section "Console IO " "Console input and output functions" {
+section "baseio/builtins_io.go" "Console input and output functions" {
+section "Console IO" "Console input and output functions" {
 	group "input"
 	"Prompts for and reads user input from the console."
 	{
@@ -236,27 +431,12 @@ section "Console IO " "Console input and output functions" {
 	}
 
 	{
-`; File operations
-file: Create %output.txt
-file .Write "Hello, World!\n"
-file .Close
-Read %output.txt |print
-
-; Reader/Writer operations
-reader: Reader %data.txt
-content: reader .Read\string
-reader .Close
-print content
-
-; HTTP requests
-Get https://api.example.com/data |print
-Post https://api.example.com/data "{\"name\":\"test\"}" 'json |print
-
-`	}
+		"; File operations\nfile: Create %output.txt\nfile .Write \"Hello, World!\\n\"\nfile .Close\nRead %output.txt |print\n\n; Reader/Writer operations\nreader: Reader %data.txt\ncontent: reader .Read\\string\nreader .Close\nprint content\n\n; HTTP requests\nGet https://api.example.com/data |print\nPost https://api.example.com/data \"{\\\"name\\\":\\\"test\\\"}\" 'json |print\n"
+	}
 
 }
 
-section "File Operations " "File system operations and file manipulation" {
+section "File Operations" "File system operations and file manipulation" {
 	group "file-uri//Open"
 	"Opens a file for reading."
 	{
@@ -376,6 +556,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
+		equal { Split %data/file.txt } { "data" "file.txt" }
 	}
 
 	{
@@ -390,6 +571,8 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
+		equal { Is-absolute %/tmp } true
+		equal { Is-absolute %data/file.txt } false
 	}
 
 	{
@@ -441,11 +624,11 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	group "file//Writer"
-	"Creates a new reader from file object."
+	"Creates a new writer from a file object."
 	{
 		argsn 1
-		arg `source: file object to read from`
-		returns `native reader object`
+		arg `source: file object to write to`
+		returns `native writer object`
 	}
 
 	{
@@ -548,6 +731,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
+		equal { Reader %data/file.txt |Close |type? } 'string
 	}
 
 	{
@@ -778,6 +962,9 @@ section "File Operations " "File system operations and file manipulation" {
 	{
 	}
 
+}
+
+section "HTTPs Operations" "Web requests and HTTP protocol functions" {
 	group "https-uri//Ext?"
 	"Gets the extension of the last path component of an HTTPS URL."
 	{
@@ -1182,7 +1369,7 @@ section "File Operations " "File system operations and file manipulation" {
 
 }
 
-section "Email Operations " "Email sending and SMTP communication" {
+section "Email Operations" "Email sending and SMTP communication" {
 	group "email//Send"
 	"Sends an email to the specified address."
 	{
@@ -1200,7 +1387,7 @@ section "Email Operations " "Email sending and SMTP communication" {
 
 }
 
-section "FTP Operations " "File Transfer Protocol operations and connections" {
+section "FTP Operations" "File Transfer Protocol operations and connections" {
 	group "ftp-uri//Open"
 	"Opens a connection to an FTP server."
 	{
@@ -1251,18 +1438,133 @@ section "FTP Operations " "File Transfer Protocol operations and connections" {
 	{
 		argsn 1
 		arg `connection: native ftp-connection object`
-		returns `integer 1 for successerror if close fails`
+		returns `integer 1 for success; error if close fails`
 	}
 
 	{
 	}
 
 	{
+		"equal { ftp: Open ftp://localhost:21\t ftp .Close |type? } 'integer"
+	}
+
+	group "ftp-connection//List"
+	"Lists directory entries. Returns a block of maps with full info."
+	{
+		argsn 2
+		arg `connection: native FTP connection.`
+		arg `path: String directory path to list.`
+		returns `Block of dicts describing each directory entry.`
+	}
+
+	{
+	}
+
+	{
+		"; Requires ftp server on localhost:21 with anonymous or test creds\n; Example smoke tests (skip in CI if no server):\n; conn: ftp-uri: Open ftp://localhost:21\n; conn: conn .Login \"anonymous\" \"anonymous\" ; or real creds\n; conn .Cwd \"/\" |kind? |equal 'native\n; conn .Mkdir \"rye-test\" |kind? |equal 'native\n; conn .List \"/\" |type? |equal 'block\n; conn .Store \"/rye-test/hello.txt\" \"hi\" |kind? |equal 'native\n; r: conn .Retrieve \"/rye-test/hello.txt\" |kind? |equal 'reader\n; r .Close |drop\n; lst: conn .List \"/rye-test\"\n; lst |length |>= 1 |assert\n; conn .Rename \"/rye-test/hello.txt\" \"/rye-test/hello2.txt\" |kind? |equal 'native\n; conn .Delete \"/rye-test/hello2.txt\" |kind? |equal 'native\n; conn .Rmdir \"/rye-test\" |kind? |equal 'native\n; conn .Close |equal 1\nAdditional FTP operations"
+	}
+
+	group "ftp-connection//Cwd"
+	"Changes working directory."
+	{
+		argsn 2
+		arg `connection: native FTP connection.`
+		arg `path: String directory to change to.`
+		returns `the FTP connection.`
+	}
+
+	{
+	}
+
+	{
+		"; conn .Cwd \"/\" |kind? |equal 'native"
+	}
+
+	group "ftp-connection//Mkdir"
+	"Creates a directory."
+	{
+		argsn 2
+		arg `connection: native FTP connection.`
+		arg `path: String directory to create.`
+		returns `the FTP connection.`
+	}
+
+	{
+	}
+
+	{
+		"; conn .Mkdir \"rye-test\" |kind? |equal 'native"
+	}
+
+	group "ftp-connection//Rmdir"
+	"Removes a directory."
+	{
+		argsn 2
+		arg `connection: native FTP connection.`
+		arg `path: String directory to remove.`
+		returns `the FTP connection.`
+	}
+
+	{
+	}
+
+	{
+		"; conn .Rmdir \"rye-test\" |kind? |equal 'native"
+	}
+
+	group "ftp-connection//Delete"
+	"Deletes a file."
+	{
+		argsn 2
+		arg `connection: native FTP connection.`
+		arg `path: String file to delete.`
+		returns `the FTP connection.`
+	}
+
+	{
+	}
+
+	{
+		"; conn .Delete \"/rye-test/hello.txt\" |kind? |equal 'native"
+	}
+
+	group "ftp-connection//Rename"
+	"Renames or moves a file."
+	{
+		argsn 3
+		arg `connection: native FTP connection.`
+		arg `from: String current path.`
+		arg `to: String new path.`
+		returns `the FTP connection.`
+	}
+
+	{
+	}
+
+	{
+		"; conn .Rename \"/rye-test/a.txt\" \"/rye-test/b.txt\" |kind? |equal 'native"
+	}
+
+	group "ftp-connection//Store"
+	"Uploads data to a remote path. Accepts string or reader."
+	{
+		argsn 3
+		arg `connection: native FTP connection.`
+		arg `path: String remote destination path.`
+		arg `reader: Reader supplying the file contents.`
+		returns `the FTP connection.`
+	}
+
+	{
+	}
+
+	{
+		"; conn .Store \"/rye-test/up.txt\" \"content\" |kind? |equal 'native"
 	}
 
 }
 
-section "File Monitoring " "File watching and tailing operations" {
+section "File Monitoring" "File watching and tailing operations" {
 	group "tail-file"
 	"Tails a file, following it for new content. Used for monitoring log files."
 	{
@@ -1309,7 +1611,7 @@ section "File Monitoring " "File watching and tailing operations" {
 
 }
 
-section "Unix Domain Socket Operations " "Unix domain socket operations for IPC" {
+section "Unix Domain Socket Operations" "Unix domain socket operations for IPC" {
 	group "unix-uri//Open"
 	"Opens a connection to a Unix domain socket."
 	{
@@ -1369,51 +1671,40 @@ section "Unix Domain Socket Operations " "Unix domain socket operations for IPC"
 
 }
 }
-section "baseio/builtins_table_files.go" "" {
-section "Table files " "Load and save tables as CSV, TSV or XLSX files." {
+section "baseio/builtins_table_files.go" "Load and save tables as CSV, TSV or XLSX files." {
+section "Table files" "Load and save tables as CSV, TSV or XLSX files." {
 	group "file-uri//Load\\csv__OLD"
 	"Loads a .csv file to a table datatype."
 	{
 		argsn 1
 		arg `file-uri - location of csv file to load`
-		arg `Tags: #table #loading #csv`
+		returns `Table parsed from the CSV file.`
 	}
 
 	{
+		equal { type? Load\csv__OLD %data/file.txt } 'table
 	}
 
 	{
-`equal {
-cc os
-f:: mktmp ++ "/test.csv"
-spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-spr1 .Save\csv* f
-spr2:: Load\csv f |autotype 1.0
-spr1 = spr2
-} true
-`	}
+		"equal {\ncc os\nf:: mktemp ++ \"/test.csv\"\nspr1:: table { \"a\" \"b\" \"c\" } { 1 1.1 \"a\" 2 2.2 \"b\" 3 3.3 \"c\" }\nf .Save\\csv spr1\nspr2:: Load\\csv f |autotype 1.0\nspr1 = spr2\n} true"
+	}
 
 	group "file-uri//Load\\csv"
 	"Loads a .csv file to a table datatype."
 	{
 		argsn 2
 		arg `file-uri - location of csv file to load`
-		arg `Tags: #table #loading #csv`
+		arg `separator - single character used as the column separator`
+		returns `Table parsed from the CSV file.`
 	}
 
 	{
+		equal { type? Load\csv %data/file.txt "," } 'table
 	}
 
 	{
-`equal {
-cc os
-f:: mktmp ++ "/test.csv"
-spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-spr1 .Save\csv* f
-spr2:: Load\csv f |autotype 1.0
-spr1 = spr2
-} true
-`	}
+		"equal {\ncc os\nf:: mktemp ++ \"/test.csv\"\nspr1:: table { \"a\" \"b\" \"c\" } { 1 1.1 \"a\" 2 2.2 \"b\" 3 3.3 \"c\" }\nf .Save\\csv spr1\nspr2:: Load\\csv f \",\" |autotype 1.0\nspr1 = spr2\n} true"
+	}
 
 	group "file-uri//Load\\csv\\ignore-bad"
 	"Loads a .csv file to a table datatype, parsing it line by line and skipping lines that can't be parsed as CSV."
@@ -1421,42 +1712,31 @@ spr1 = spr2
 		argsn 2
 		arg `file-uri - location of csv file to load`
 		arg `separator - single character used as column separator`
-		arg `Tags: #table #loading #csv`
+		returns `Table parsed from the CSV file, skipping malformed lines.`
 	}
 
 	{
 	}
 
 	{
-`equal {
-cc os
-f:: mktmp ++ "/test.csv"
-f .Write "a;b;c\n1;1.1;a\nbad\"line\n2;2.2;b\n3;3.3;c\n"
-spr:: Load\csv\ignore-bad f ";"
-spr .length? 3
-} true
-`	}
+		"equal {\ncc os\nf:: mktemp ++ \"/test.csv\"\nf .Write \"a;b;c\\n1;1.1;a\\nbad\\\"line\\n2;2.2;b\\n3;3.3;c\\n\"\nspr:: Load\\csv\\ignore-bad f \";\"\nspr .length? 3\n} true"
+	}
 
 	group "file-uri//Load\\tsv"
-	"Loads a .csv file to a table datatype."
+	"Loads a .tsv file to a table datatype."
 	{
 		argsn 1
-		arg `file-uri - location of csv file to load`
+		arg `file-uri - location of tsv file to load`
+		returns `Table parsed from the TSV file.`
 	}
 
 	{
+		equal { type? Load\tsv %data/file.txt } 'table
 	}
 
 	{
-`equal {
-cc os
-f:: mktmp ++ "/test.tsv"
-spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-spr1 .Save\tsv* f
-spr2:: Load\tsv f |autotype 1.0
-spr1 = spr2
-} true
-`	}
+		"equal {\ncc os\nf:: mktemp ++ \"/test.tsv\"\nspr1:: table { \"a\" \"b\" \"c\" } { 1 1.1 \"a\" 2 2.2 \"b\" 3 3.3 \"c\" }\nf .Save\\tsv spr1\nspr2:: Load\\tsv f |autotype 1.0\nspr1 = spr2\n} true"
+	}
 
 	group "file-uri//Save\\csv"
 	"Saves a table to a .csv file."
@@ -1464,22 +1744,16 @@ spr1 = spr2
 		argsn 2
 		arg `file-uri - where to save the sheet as a .csv file`
 		arg `table    - the table to save`
-		arg `Tags: #table #saving #csv`
+		returns `the saved Table.`
 	}
 
 	{
+		equal { type? Save\csv (os/mktemp ++ "/save.csv") table { "a" "b" } { 1 "x" } } 'table
 	}
 
 	{
-`equal {
-cc os
-f:: mktmp ++ "/test.csv"
-spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-f .Save\csv spr1
-spr2:: Load\csv f |autotype 1.0
-spr1 = spr2
-} true
-`	}
+		"equal {\ncc os\nf:: mktemp ++ \"/test.csv\"\nspr1:: table { \"a\" \"b\" \"c\" } { 1 1.1 \"a\" 2 2.2 \"b\" 3 3.3 \"c\" }\nf .Save\\csv spr1\nspr2:: Load\\csv f \",\" |autotype 1.0\nspr1 = spr2\n} true"
+	}
 
 	group "file-uri//Save\\tsv"
 	"Saves a table to a .tsv file."
@@ -1487,72 +1761,55 @@ spr1 = spr2
 		argsn 2
 		arg `file-uri - where to save the sheet as a .tsv file`
 		arg `table    - the table to save`
-		arg `Tags: #table #saving #tsv`
+		returns `the saved Table.`
 	}
 
 	{
+		equal { type? Save\tsv (os/mktemp ++ "/save.tsv") table { "a" "b" } { 1 "x" } } 'table
 	}
 
 	{
-`equal {
-cc os
-f:: mktmp ++ "/test.tsv"
-spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-f .Save\tsv spr1
-spr2:: Load\tsv f |autotype 1.0
-spr1 = spr2
-} true
-`	}
+		"equal {\ncc os\nf:: mktemp ++ \"/test.tsv\"\nspr1:: table { \"a\" \"b\" \"c\" } { 1 1.1 \"a\" 2 2.2 \"b\" 3 3.3 \"c\" }\nf .Save\\tsv spr1\nspr2:: Load\\tsv f |autotype 1.0\nspr1 = spr2\n} true"
+	}
 
 	group "file-uri//Load\\xlsx"
-	"Loads the first sheet in an .xlsx file to a Table."
+	"Loads the first sheet in an .xlsx file to a Table. Cells starting with \"{\" are loaded as Rye code."
 	{
 		argsn 1
 		arg `file-uri - location of xlsx file to load`
-		arg `Tags: #table #loading #xlsx`
+		returns `Table containing the first sheet of the XLSX file.`
 	}
 
 	{
+		equal { type? Save\xlsx (os/mktemp ++ "/test.xlsx") table { "a" "b" } { 1 "x" 2 "y" } } 'table
 	}
 
 	{
-`equal {
-cc os
-f:: mktmp ++ "/test.xlsx"
-spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-spr1 .Save\xlsx* f
-spr2:: Load\xlsx f |autotype 1.0
-spr1 = spr2
-} true
-`	}
+		"equal {\ncc os\nf:: mktemp ++ \"/test.xlsx\"\nspr1:: table { \"a\" \"b\" \"c\" } { 1 1.1 \"a\" 2 2.2 \"b\" 3 3.3 \"c\" }\nf .Save\\xlsx spr1\nspr2:: Load\\xlsx f |autotype 1.0\nspr1 = spr2\n} true"
+	}
 
 	group "file-uri//Save\\xlsx"
-	"Saves a Table to a .xlsx file."
+	"Saves a Table to a .xlsx file. Block cells are serialized with their Rye dump."
 	{
 		argsn 2
 		arg `file-uri - where to save the table as a .xlsx file`
 		arg `table    - the table to save`
-		arg `Tags: #table #saving #xlsx`
+		returns `the saved Table.`
 	}
 
 	{
+		equal { type? Save\xlsx (os/mktemp ++ "/save.xlsx") table { "a" "b" } { 1 "x" } } 'table
+		equal { f:: (os/mktemp ++ "/block.xlsx") Save\xlsx f table { "a" } { { 12 123 123 "asds" } } Load\xlsx f |first |-> "a" } { 12 123 123 "asds" }
 	}
 
 	{
-`equal {
-cc os
-f:: mktmp ++ "/test.xlsx"
-spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-f .Save\xlsx spr1
-spr2:: Load\xlsx f |autotype 1.0
-spr1 = spr2
-} true
-`	}
+		"equal {\ncc os\nf:: mktemp ++ \"/test.xlsx\"\nspr1:: table { \"a\" \"b\" \"c\" } { 1 1.1 \"a\" 2 2.2 \"b\" 3 3.3 \"c\" }\nf .Save\\xlsx spr1\nspr2:: Load\\xlsx f |autotype 1.0\nspr1 = spr2\n} true"
+	}
 
 }
 }
-section "baseio/builtins_cmd.go" "" {
-section "Command Operations " "Running other programs" {
+section "baseio/builtins_cmd.go" "Running other programs" {
+section "Command Operations" "Running other programs" {
 	group "cmd"
 	"Create a command."
 	{
@@ -1724,7 +1981,7 @@ section "Command Operations " "Running other programs" {
 	{
 		argsn 1
 		arg `command: native command object`
-		returns `for simple command: exit status integerfor pipeline: list of exit status integers`
+		returns `for simple command: exit status integer; for pipeline: list of exit status integers`
 	}
 
 	{
@@ -1780,8 +2037,8 @@ section "Command Operations " "Running other programs" {
 
 }
 }
-section "baseio/builtins_os.go" "" {
-section "OS " "OS related functions" {
+section "baseio/builtins_os.go" "OS related functions" {
+section "OS" "OS related functions" {
 	group "cwd?"
 	"Gets the current working directory."
 	{
@@ -1794,18 +2051,8 @@ section "OS " "OS related functions" {
 	}
 
 	{
-`cc os
-print cwd?
-ls |for { .print }
-ls\ 'files |for { .print }
-host-info? -> "hostname" |print
-load-avg? -> "1" |print
-virtual-memory? -> "total" |print
-disk-usage? |print
-processes? |first |print
-
-cc os cwd?
-`	}
+		"cc os\nprint cwd?\nls |for { .print }\nls\\ 'files |for { .print }\nhost-info? -> \"hostname\" |print\nload-avg? -> \"1\" |print\nvirtual-memory? -> \"total\" |print\ndisk-usage? |print\nprocesses? |first |print\n\ncc os cwd?"
+	}
 
 	group "does-exist"
 	"Checks if a file or directory exists."
@@ -1820,8 +2067,8 @@ cc os cwd?
 	}
 
 	{
-`cc os does-exist %./tests/data/file.txt
-`	}
+		"cc os does-exist %./tests/data/file.txt"
+	}
 
 	group "cd"
 	"Changes the current working directory."
@@ -1836,8 +2083,8 @@ cc os cwd?
 	}
 
 	{
-`cc os cd %.
-`	}
+		"cc os cd %."
+	}
 
 	group "env?"
 	"Gets the value of an environment variable."
@@ -1851,8 +2098,8 @@ cc os cwd?
 	}
 
 	{
-`cc os env? "PATH"
-`	}
+		"cc os env? \"PATH\""
+	}
 
 	group "mkdir"
 	"Creates a new directory."
@@ -1867,8 +2114,8 @@ cc os cwd?
 	}
 
 	{
-`cc os mkdir %./tests/delme
-`	}
+		"cc os mkdir %./tests/delme"
+	}
 
 	group "mktmp"
 	"Removed: use mktemp instead."
@@ -1881,38 +2128,38 @@ cc os cwd?
 	}
 
 	{
-`cc os mktmp
-`	}
+		"; mktmp was removed; use mktemp instead.\ncc os mktemp"
+	}
 
 	group "rm"
 	"Removes a file or empty directory."
 	{
 		argsn 1
 		arg `path: uri representing the file or empty directory to remove`
-		returns `the uri if successfulTags: #file #delete`
+		returns `the uri if successful`
 	}
 
 	{
 	}
 
 	{
-`cc os rm %./tests/delme
-`	}
+		"cc os rm %./tests/delme"
+	}
 
 	group "rmdir"
 	"Removes a directory and all its contents recursively."
 	{
 		argsn 1
 		arg `path: uri representing the directory to remove (including contents)`
-		returns `the uri if successfulTags: #file #delete`
+		returns `the uri if successful`
 	}
 
 	{
 	}
 
 	{
-`cc os rmdir %./tests/delme
-`	}
+		"cc os rmdir %./tests/delme"
+	}
 
 	group "cp"
 	"Copies a file to a new location."
@@ -1920,7 +2167,7 @@ cc os cwd?
 		argsn 2
 		arg `source: uri representing the source file`
 		arg `destination: uri representing the destination file`
-		returns `destination uri if successfulTags: #file #copy`
+		returns `destination uri if successful`
 	}
 
 	{
@@ -1934,88 +2181,93 @@ cc os cwd?
 	{
 		argsn 1
 		arg `path: uri representing the file or directory`
-		returns `dict with keys: name, size, mode, mod-time, is-dirTags: #file #info`
+		returns `dict with keys: name, size, mode, mod-time, is-dir`
 	}
 
 	{
+		equal { os/file-info? %data/file.txt |type? } 'dict
 	}
 
 	{
-`cc os file-info? %./tests/data/file.txt
-`	}
+		"cc os file-info? %./tests/data/file.txt"
+	}
 
 	group "is-dir"
 	"Checks if a path is a directory. Fails if the path does not exist."
 	{
 		argsn 1
 		arg `path: uri representing the path to check`
-		returns `boolean: true if path is a directory, false otherwise. Fails if the path does not exist.Tags: #file #check`
+		returns `boolean: true if path is a directory, false otherwise. Fails if the path does not exist.`
 	}
 
 	{
+		equal { os/is-dir %data } true
+		equal { os/is-dir %data/file.txt } false
 	}
 
 	{
-`cc os is-dir %./tests/data
-`	}
+		"cc os is-dir %./tests/data"
+	}
 
 	group "is-file"
 	"Checks if a path is a regular file (not a directory). Fails if the path does not exist."
 	{
 		argsn 1
 		arg `path: uri representing the path to check`
-		returns `boolean: true if path is a regular file, false otherwise. Fails if the path does not exist.Tags: #file #check`
+		returns `boolean: true if path is a regular file, false otherwise. Fails if the path does not exist.`
 	}
 
 	{
+		equal { os/is-file %data/file.txt } true
+		equal { os/is-file %data } false
 	}
 
 	{
-`cc os is-file %./tests/data/file.txt
-`	}
+		"cc os is-file %./tests/data/file.txt"
+	}
 
 	group "home-dir?"
 	"Gets the current user's home directory."
 	{
 		arg `none`
-		returns `uri representing the user's home directoryTags: #file #directory`
+		returns `uri representing the user's home directory`
 	}
 
 	{
 	}
 
 	{
-`cc os home-dir?
-`	}
+		"cc os home-dir?"
+	}
 
 	group "tmp-dir?"
 	"Gets the system's default temporary directory."
 	{
 		arg `none`
-		returns `uri representing the system's temporary directoryTags: #file #directory`
+		returns `uri representing the system's temporary directory`
 	}
 
 	{
 	}
 
 	{
-`cc os tmp-dir?
-`	}
+		"cc os tmp-dir?"
+	}
 
 	group "glob"
 	"Returns files matching a glob pattern."
 	{
 		argsn 1
 		arg `pattern: string containing a glob pattern (e.g., "*.txt", "data/*.csv")`
-		returns `block of uris matching the patternTags: #file #search`
+		returns `block of uris matching the pattern`
 	}
 
 	{
 	}
 
 	{
-`cc os glob "./tests/data/*.pem"
-`	}
+		"cc os glob \"./tests/data/*.pem\""
+	}
 
 	group "mv"
 	"Moves or renames a file or directory."
@@ -2043,8 +2295,8 @@ cc os cwd?
 	}
 
 	{
-`cc os ls
-`	}
+		"cc os ls"
+	}
 
 	group "ls\\"
 	"Lists files or directories with absolute paths when possible. If argument is a file-uri, lists that directory (or returns failure if not a directory). Otherwise filters current directory: 'dirs' for directories only, 'files' for files only, a string for partial name matching, or a regex to match names."
@@ -2058,8 +2310,8 @@ cc os cwd?
 	}
 
 	{
-`cc os ls\ 'files
-`	}
+		"cc os ls\\ 'files"
+	}
 
 	group "ls\\dirs"
 	"Lists only directories in the current directory."
@@ -2072,8 +2324,8 @@ cc os cwd?
 	}
 
 	{
-`cc os ls\\dirs
-`	}
+		"cc os ls\\\\dirs"
+	}
 
 	group "ls\\files"
 	"Lists only files (non-directories) in the current directory."
@@ -2086,8 +2338,8 @@ cc os cwd?
 	}
 
 	{
-`cc os ls\\files
-`	}
+		"cc os ls\\\\files"
+	}
 
 	group "ls\\dirs\\"
 	"Lists directories in the current directory with filtering. Use a string for partial name matching, or a regex to match names."
@@ -2101,8 +2353,8 @@ cc os cwd?
 	}
 
 	{
-`cc os ls\\dirs\\ "src"
-`	}
+		"cc os ls\\\\dirs\\\\ \"src\""
+	}
 
 	group "ls\\files\\"
 	"Lists files (non-directories) in the current directory with filtering. Use a string for partial name matching, or a regex to match names."
@@ -2116,8 +2368,8 @@ cc os cwd?
 	}
 
 	{
-`cc os ls\\files\\ re "\.go$"
-`	}
+		"cc os ls\\\\files\\\\ re \"\\.go$\""
+	}
 
 	group "symlink"
 	"Creates a symbolic link."
@@ -2125,7 +2377,7 @@ cc os cwd?
 		argsn 2
 		arg `path: uri representing source path`
 		arg `link: uri representing link path to create`
-		returns `link uri if successfulTags: #file #link`
+		returns `link uri if successful`
 	}
 
 	{
@@ -2139,7 +2391,7 @@ cc os cwd?
 	{
 		argsn 1
 		arg `path: uri representing a path to check`
-		returns `boolean: true if path is a symbolic linkTags: #file #check`
+		returns `boolean: true if path is a symbolic link`
 	}
 
 	{
@@ -2153,7 +2405,7 @@ cc os cwd?
 	{
 		argsn 1
 		arg `path: uri representing a symbolic link`
-		returns `uri representing the target of the symlinkTags: #file #link`
+		returns `uri representing the target of the symlink`
 	}
 
 	{
@@ -2168,7 +2420,7 @@ cc os cwd?
 		argsn 2
 		arg `path: uri representing file or directory path`
 		arg `mode: integer representing file mode (e.g., 0755)`
-		returns `path uri if successfulTags: #file #permissions`
+		returns `path uri if successful`
 	}
 
 	{
@@ -2182,7 +2434,7 @@ cc os cwd?
 	{
 		argsn 1
 		arg `path: uri representing file or directory`
-		returns `string representing the absolute pathTags: #file #path`
+		returns `string representing the absolute path`
 	}
 
 	{
@@ -2196,89 +2448,164 @@ cc os cwd?
 	{
 		argsn 1
 		arg `path: uri representing a path`
-		returns `uri representing the directory containing the pathTags: #file #path`
+		returns `uri representing the directory containing the path`
 	}
 
 	{
+		equal { os/dirname %data/file.txt |Name? } "data"
 	}
 
 	{
-`cc os dirname %./tests/data/file.txt
-`	}
+		"cc os dirname %./tests/data/file.txt"
+	}
 
 	group "basename"
 	"Returns the filename part of a path."
 	{
 		argsn 1
 		arg `path: uri representing a path`
-		returns `string representing the filename part of the pathTags: #file #path`
+		returns `string representing the filename part of the path`
 	}
 
 	{
+		equal { os/basename %data/file.txt } "file.txt"
 	}
 
 	{
-`cc os basename %./tests/data/file.txt
-`	}
+		"cc os basename %./tests/data/file.txt"
+	}
 
 	group "file-ext"
 	"Returns the file extension of a path (including the dot)."
 	{
 		argsn 1
 		arg `path: uri representing a file path`
-		returns `string representing the file extension (including the dot)Tags: #file #path`
+		returns `string representing the file extension (including the dot)`
 	}
 
 	{
+		equal { os/file-ext %data/file.txt } ".txt"
 	}
 
 	{
-`cc os file-ext %./tests/data/file.txt
-`	}
+		"cc os file-ext %./tests/data/file.txt"
+	}
 
 	group "join-path"
 	"Joins path elements into a single path."
 	{
 		argsn 1
 		arg `paths: uri or block of uris to join`
-		returns `uri representing the joined pathTags: #file #path`
+		returns `uri representing the joined path`
 	}
 
 	{
+		equal { os/join-path { %data "file.txt" } |Name? } "file.txt"
 	}
 
 	{
-`cc os join-path { %./tests "data" "file.txt" }
-`	}
+		"cc os join-path { %./tests \"data\" \"file.txt\" }"
+	}
 
 	group "whoami"
 	"Returns the current user's username."
 	{
 		arg `none`
-		returns `string representing the current user's usernameTags: #system #user`
+		returns `string representing the current user's username`
 	}
 
 	{
 	}
 
 	{
-`cc os whoami
-`	}
+		"cc os whoami"
+	}
 
 	group "which"
 	"Finds the path to an executable command."
 	{
 		argsn 1
 		arg `command: string representing the command to check`
-		returns `uri representing the path to the executable, or error if not foundTags: #system #command`
+		returns `uri representing the path to the executable, or error if not found`
 	}
 
 	{
 	}
 
 	{
-`cc os which "sh"
-`	}
+		"cc os which \"sh\""
+	}
+
+	group "pwd"
+	"Gets the current working directory (alias of cwd?)."
+	{
+		arg `none`
+		returns `uri representing the current working directory`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "realpath"
+	"Returns the absolute path for a given path. Replaces the removed abs-path builtin."
+	{
+		argsn 1
+		arg `path: uri representing the path to resolve`
+		returns `uri representing the absolute path`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "mktemp"
+	"Creates a new temporary directory. Replaces the removed mktmp builtin."
+	{
+		arg `none`
+		returns `uri representing the created temporary directory`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "setenv!"
+	"Sets an environment variable (name, value)."
+	{
+		argsn 2
+		arg `name: string environment variable name`
+		arg `value: string value to assign`
+		returns `the value string`
+	}
+
+	{
+		equal { os/setenv! "RYE_TEST_DOC_ENV" "ok" } "ok"
+	}
+
+	{
+	}
+
+	group "unsetenv!"
+	"Unsets an environment variable by name."
+	{
+		argsn 1
+		arg `name: string environment variable name`
+		returns `void`
+	}
+
+	{
+		equal { os/unsetenv! "RYE_TEST_DOC_ENV" |type? } 'void
+	}
+
+	{
+	}
 
 	group "cp-r"
 	"Recursively copies a directory and all its contents."
@@ -2286,7 +2613,7 @@ cc os cwd?
 		argsn 2
 		arg `source: uri representing source directory`
 		arg `destination: uri representing destination directory`
-		returns `destination uri if successfulTags: #file #copy #recursive`
+		returns `destination uri if successful`
 	}
 
 	{
@@ -2300,7 +2627,7 @@ cc os cwd?
 	{
 		argsn 1
 		arg `path: uri representing directory path to create`
-		returns `path uri if successfulTags: #file #directory`
+		returns `path uri if successful`
 	}
 
 	{
@@ -2469,13 +2796,16 @@ cc os cwd?
 	{
 	}
 
+}
+
+section "Archive Functions" "Functions for creating and extracting archives" {
 	group "tgz"
 	"Creates a .tar.gz archive from a file or directory."
 	{
 		argsn 2
 		arg `source: uri representing the file or directory to archive`
 		arg `destination: uri representing the output .tar.gz file`
-		returns `destination uri if successfulTags: #archive #compress`
+		returns `destination uri if successful`
 	}
 
 	{
@@ -2490,7 +2820,7 @@ cc os cwd?
 		argsn 2
 		arg `source: uri representing the .tar.gz file`
 		arg `destination: uri representing the output directory`
-		returns `destination uri if successfulTags: #archive #extract`
+		returns `never returns successfully; raises an error directing callers to untgz`
 	}
 
 	{
@@ -2505,7 +2835,7 @@ cc os cwd?
 		argsn 2
 		arg `source: uri representing the file or directory to archive, or a block of uris/strings to archive together`
 		arg `destination: uri representing the output .zip file`
-		returns `destination uri if successfulTags: #archive #compress`
+		returns `destination uri if successful`
 	}
 
 	{
@@ -2520,7 +2850,7 @@ cc os cwd?
 		argsn 2
 		arg `source: uri representing the .zip file`
 		arg `destination: uri representing the output directory`
-		returns `destination uri if successfulTags: #archive #extract`
+		returns `destination uri if successful`
 	}
 
 	{
@@ -2534,7 +2864,7 @@ cc os cwd?
 	{
 		argsn 1
 		arg `source: uri representing the .zip file, or a reader/http-response native containing .zip data`
-		returns `native reader object for the archive's only file (fails if there is more than one)Tags: #archive #extract`
+		returns `native reader object for the archive's only file (fails if there is more than one)`
 	}
 
 	{
@@ -2543,18 +2873,22 @@ cc os cwd?
 	{
 	}
 
+}
+
+section "Find" "File finding functions using go-find library" {
 	group "finder"
 	"Creates a new file finder starting from the given path(s)."
 	{
 		argsn 1
 		arg `path: uri or block of uris/strings representing starting paths`
-		returns `native finder objectTags: #find #files`
+		returns `native finder object`
 	}
 
 	{
 	}
 
 	{
+		"finder %src |Name \"*.go\" |Type 'file |Eval\nfinder %. |Max-depth! 2 |Name \"*.txt\" |Eval\nfinder %/home |Min-depth! 1 |Max-depth! 3 |Regex regex \"test.*\\.go$\" |Eval\nCreates a new finder starting from the given path(s)."
 	}
 
 	group "finder//Min-depth!"
@@ -2563,7 +2897,7 @@ cc os cwd?
 		argsn 2
 		arg `finder: native finder object`
 		arg `depth: integer minimum depth`
-		returns `native finder object (for chaining)Tags: #find #filter`
+		returns `native finder object (for chaining)`
 	}
 
 	{
@@ -2578,7 +2912,7 @@ cc os cwd?
 		argsn 2
 		arg `finder: native finder object`
 		arg `depth: integer maximum depth`
-		returns `native finder object (for chaining)Tags: #find #filter`
+		returns `native finder object (for chaining)`
 	}
 
 	{
@@ -2593,7 +2927,7 @@ cc os cwd?
 		argsn 2
 		arg `finder: native finder object`
 		arg `type: word 'file or 'dir (or string "f" or "d")`
-		returns `native finder object (for chaining)Tags: #find #filter`
+		returns `native finder object (for chaining)`
 	}
 
 	{
@@ -2608,7 +2942,7 @@ cc os cwd?
 		argsn 2
 		arg `finder: native finder object`
 		arg `pattern: string glob pattern (e.g., "*.go", "test_*")`
-		returns `native finder object (for chaining)Tags: #find #filter`
+		returns `native finder object (for chaining)`
 	}
 
 	{
@@ -2623,7 +2957,7 @@ cc os cwd?
 		argsn 2
 		arg `finder: native finder object`
 		arg `pattern: string glob pattern for the whole path`
-		returns `native finder object (for chaining)Tags: #find #filter`
+		returns `native finder object (for chaining)`
 	}
 
 	{
@@ -2638,7 +2972,7 @@ cc os cwd?
 		argsn 2
 		arg `finder: native finder object`
 		arg `regex: native regex object`
-		returns `native finder object (for chaining)Tags: #find #filter`
+		returns `native finder object (for chaining)`
 	}
 
 	{
@@ -2652,7 +2986,7 @@ cc os cwd?
 	{
 		argsn 1
 		arg `finder: native finder object`
-		returns `native finder object (for chaining)Tags: #find #filter`
+		returns `native finder object (for chaining)`
 	}
 
 	{
@@ -2666,7 +3000,8 @@ cc os cwd?
 	{
 		argsn 2
 		arg `finder: native finder object`
-		returns `block of uris representing found files/directoriesTags: #find #execute`
+		arg `millis: integer number of milliseconds (Rye durations such as 2 .days are in milliseconds)`
+		returns `native finder object (for chaining)`
 	}
 
 	{
@@ -2675,12 +3010,74 @@ cc os cwd?
 	{
 	}
 
+	group "finder//Exclude-path"
+	"Excludes paths that match a string substring or glob pattern."
+	{
+		argsn 2
+		arg `finder: native finder object`
+		arg `pattern: string substring or glob pattern to exclude`
+		returns `native finder object (for chaining)`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "finder//Size>"
+	"Filters for entries with size greater than N bytes."
+	{
+		argsn 2
+		arg `finder: native finder object`
+		arg `bytes: integer minimum exclusive size`
+		returns `native finder object (for chaining)`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "finder//Eval"
+	"Executes the find operation and returns matching paths as uris."
+	{
+		argsn 1
+		arg `finder: native finder object`
+		returns `block of paths; uris by default, or strings according to finder//Path-mode!`
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "finder//Path-mode!"
+	"Sets how finder Eval returns paths: 'full (absolute string), 'relative (to cwd, string), 'filenames (basename string), or 'uris (the default)."
+	{
+		argsn 2
+		arg `finder: native finder object`
+		arg `mode: word or string, one of 'full, 'relative, 'filenames, or 'uris`
+		returns `native finder object (for chaining)`
+	}
+
+	{
+	}
+
+	{
+	}
+
+}
+
+section "Additional OS utilities" "Common OS operations made simple" {
 	group "file-size"
 	"Gets the size of a file in bytes."
 	{
 		argsn 1
 		arg `path: uri representing the file`
-		returns `integer size in bytesTags: #file #size`
+		returns `integer size in bytes`
 	}
 
 	{
@@ -2694,7 +3091,7 @@ cc os cwd?
 	{
 		argsn 1
 		arg `path: uri representing the file to touch`
-		returns `path uri if successfulTags: #file #create`
+		returns `path uri if successful`
 	}
 
 	{
@@ -2709,7 +3106,7 @@ cc os cwd?
 		argsn 2
 		arg `source: uri representing the source file`
 		arg `link: uri representing the hard link to create`
-		returns `link uri if successfulTags: #file #link`
+		returns `link uri if successful`
 	}
 
 	{
@@ -2723,7 +3120,7 @@ cc os cwd?
 	{
 		argsn 1
 		arg `path: uri representing the directory (optional, defaults to current dir)`
-		returns `integer count of itemsTags: #file #count`
+		returns `integer count of items`
 	}
 
 	{
@@ -2736,7 +3133,7 @@ cc os cwd?
 	"Gets the current process ID."
 	{
 		arg `none`
-		returns `integer process IDTags: #system #process`
+		returns `integer process ID`
 	}
 
 	{
@@ -2749,7 +3146,7 @@ cc os cwd?
 	"Gets the parent process ID."
 	{
 		arg `none`
-		returns `integer parent process IDTags: #system #process`
+		returns `integer parent process ID`
 	}
 
 	{
@@ -2763,7 +3160,7 @@ cc os cwd?
 	{
 		argsn 1
 		arg `duration: integer seconds to sleep`
-		returns `integer seconds sleptTags: #system #time`
+		returns `integer seconds slept`
 	}
 
 	{
@@ -2772,6 +3169,9 @@ cc os cwd?
 	{
 	}
 
+}
+
+section "Network Interface Functions" "Inspecting local network interfaces." {
 	group "net-interface?"
 	"Looks up a network interface by name and returns it as a native object."
 	{
@@ -2800,25 +3200,23 @@ cc os cwd?
 	}
 
 	{
-`; iface: net-interface-by-name "lo"
-; addrs: iface .Addrs?
-`	}
+		"; iface: net-interface-by-name \"lo\"\n; addrs: iface .Addrs?"
+	}
 
 	group "net-addr//IPNet?"
 	"Type-asserts a network address to *net.IPNet (CIDR form). Returns failure if the address is not an IP network."
 	{
 		argsn 1
 		arg `addr: Native net-addr object (from net-iface//Addrs)`
-		returns `native net-ipnet object if the address is an IP network, or failure if it isa plain net.Addr (e.g., a point-to-point address not yet assigned)`
+		returns `native net-ipnet object if the address is an IP network, or failure if it is; a plain net.Addr (e.g., a point-to-point address not yet assigned)`
 	}
 
 	{
 	}
 
 	{
-`; addr: iface .Addrs? |first
-; ipnet: addr .IPNet?
-`	}
+		"; addr: iface .Addrs? |first\n; ipnet: addr .IPNet?"
+	}
 
 	group "net-ipnet//Loopback?"
 	"Reports whether the IP address in the IPNet is a loopback address."
@@ -2832,8 +3230,8 @@ cc os cwd?
 	}
 
 	{
-`; ipnet .Loopback?  ; returns true for 127.0.0.1/8
-`	}
+		"; ipnet .Loopback?  ; returns true for 127.0.0.1/8"
+	}
 
 	group "net-ipnet//IPv4?"
 	"Reports whether the IP address in the IPNet is an IPv4 address (IP.To4() != nil)."
@@ -2847,8 +3245,8 @@ cc os cwd?
 	}
 
 	{
-`; ipnet .IPv4?  ; returns true when the address is an IPv4 address
-`	}
+		"; ipnet .IPv4?  ; returns true when the address is an IPv4 address"
+	}
 
 	group "net-ipnet//IP-string?"
 	"Returns the IP address contained in the IPNet as a dotted-decimal (or colon-separated) string."
@@ -2862,13 +3260,13 @@ cc os cwd?
 	}
 
 	{
-`; ipnet .IP-string?  ; returns "100.64.0.1"
-`	}
+		"; ipnet .IP-string?  ; returns \"100.64.0.1\""
+	}
 
 }
 }
-section "baseio/builtins_http.go" "" {
-section "HTTP Server Functions " "Working with HTTP servers and requests." {
+section "baseio/builtins_http.go" "Working with HTTP servers and requests." {
+section "HTTP Server Functions" "Working with HTTP servers and requests." {
 	group "http-server"
 	"Creates a new HTTP server that listens on the specified address with a 10-second read header timeout."
 	{
@@ -2897,9 +3295,8 @@ section "HTTP Server Functions " "Working with HTTP servers and requests." {
 	}
 
 	{
-`srv: http-server ":8080"
-srv .Serve
-`	}
+		"srv: http-server \":8080\"\nsrv .Serve"
+	}
 
 	group "Go-server//Handle"
 	"Registers an HTTP handler for a specific path pattern on the server, accepting string responses, Rye functions, or native Go handlers."
@@ -2915,11 +3312,12 @@ srv .Serve
 	}
 
 	{
-`srv: http-server ":8080"
-srv .Handle "/" "Hello World!"
-srv .Handle "/api" fn { w req } { w .Write "API response" }
-`	}
+		"srv: http-server \":8080\"\nsrv .Handle \"/\" \"Hello World!\"\nsrv .Handle \"/api\" fn { w req } { w .Write \"API response\" }"
+	}
 
+}
+
+section "HTTP Response Writer Functions" "Writing HTTP responses and setting headers." {
 	group "Go-server-response-writer//Write"
 	"Writes string content to the HTTP response body, used within HTTP request handlers to send response data to clients."
 	{
@@ -2933,10 +3331,8 @@ srv .Handle "/api" fn { w req } { w .Write "API response" }
 	}
 
 	{
-`; Inside a handler function { w req }:
-; write w "Hello World!"
-; w .Write "Response content"
-`	}
+		"; Inside a handler function { w req }:\n; write w \"Hello World!\"\n; w .Write \"Response content\""
+	}
 
 	group "Go-server-response-writer//Set-content-type"
 	"Sets the Content-Type header for the HTTP response, determining how the browser interprets the response data."
@@ -2951,9 +3347,8 @@ srv .Handle "/api" fn { w req } { w .Write "API response" }
 	}
 
 	{
-`; Inside a handler: w .Set-content-type "application/json"
-; Inside a handler: w .Set-content-type "text/html"
-`	}
+		"; Inside a handler: w .Set-content-type \"application/json\"\n; Inside a handler: w .Set-content-type \"text/html\""
+	}
 
 	group "Go-server-response-writer//Set-header"
 	"Sets a custom HTTP header in the response, allowing control over caching, security, and other HTTP behaviors."
@@ -2969,9 +3364,8 @@ srv .Handle "/api" fn { w req } { w .Write "API response" }
 	}
 
 	{
-`; Inside a handler: w .Set-header 'cache-control "no-cache"
-; Inside a handler: w .Set-header 'x-custom-header "custom-value"
-`	}
+		"; Inside a handler: w .Set-header 'cache-control \"no-cache\"\n; Inside a handler: w .Set-header 'x-custom-header \"custom-value\""
+	}
 
 	group "Go-server-response-writer//Add-header"
 	"Adds a custom HTTP header value in the response, preserving existing values for multi-value headers."
@@ -2987,9 +3381,8 @@ srv .Handle "/api" fn { w req } { w .Write "API response" }
 	}
 
 	{
-`; Inside a handler: w .Add-header 'set-cookie "a=1; Path=/; HttpOnly"
-; Inside a handler: w .Add-header 'vary "Accept-Encoding"
-`	}
+		"; Inside a handler: w .Add-header 'set-cookie \"a=1; Path=/; HttpOnly\"\n; Inside a handler: w .Add-header 'vary \"Accept-Encoding\""
+	}
 
 	group "Go-server-response-writer//Write-header"
 	"Sets the HTTP status code for the response (must be called before writing response body)."
@@ -3004,10 +3397,8 @@ srv .Handle "/api" fn { w req } { w .Write "API response" }
 	}
 
 	{
-`; Inside a handler: w .Write-header 404
-; Inside a handler: w .Write-header 200
-; Inside a handler: w .Write-header 500
-`	}
+		"; Inside a handler: w .Write-header 404\n; Inside a handler: w .Write-header 200\n; Inside a handler: w .Write-header 500"
+	}
 
 	group "Go-server//Handle-ws"
 	"Registers a WebSocket handler for a specific path pattern on the server, upgrading HTTP connections to WebSocket protocol."
@@ -3023,9 +3414,8 @@ srv .Handle "/api" fn { w req } { w .Write "API response" }
 	}
 
 	{
-`; srv: http-server ":8080"
-; srv .Handle-ws "/ws" fn { conn } { forever { msg: conn .Read , conn .Write "GOT: " + msg } }
-`	}
+		"; srv: http-server \":8080\"\n; srv .Handle-ws \"/ws\" fn { conn } { forever { msg: conn .Read , conn .Write \"GOT: \" + msg } }"
+	}
 
 	group "Go-server-websocket//Read"
 	"Reads a message from a WebSocket connection, blocking until data is available or an error occurs."
@@ -3039,8 +3429,8 @@ srv .Handle "/api" fn { w req } { w .Write "API response" }
 	}
 
 	{
-`; conn .Read  ; returns the message string received from the WebSocket client
-`	}
+		"; conn .Read  ; returns the message string received from the WebSocket client"
+	}
 
 	group "Go-server-websocket//Write"
 	"Writes a message to a WebSocket connection, sending data to the connected client."
@@ -3055,9 +3445,12 @@ srv .Handle "/api" fn { w req } { w .Write "API response" }
 	}
 
 	{
-`; conn .Write "Hello from server"
-`	}
+		"; conn .Write \"Hello from server\""
+	}
 
+}
+
+section "HTTP Request Functions" "Extracting data from HTTP requests." {
 	group "Go-server-request//Query?"
 	"Retrieves a query parameter value from the HTTP request URL (e.g., from ?name=value&other=data)."
 	{
@@ -3071,11 +3464,8 @@ srv .Handle "/api" fn { w req } { w .Write "API response" }
 	}
 
 	{
-`; Inside a handler with request URL "/api?name=john&age=25":
-; equal { req .Query? "name" } "john"
-; equal { req .Query? "age" } "25"
-; error { req .Query? "missing" }
-`	}
+		"; Inside a handler with request URL \"/api?name=john&age=25\":\n; equal { req .Query? \"name\" } \"john\"\n; equal { req .Query? \"age\" } \"25\"\n; error { req .Query? \"missing\" }"
+	}
 
 	group "Go-server-request//Header?"
 	"Gets a header value from the HTTP request by name."
@@ -3090,26 +3480,23 @@ srv .Handle "/api" fn { w req } { w .Write "API response" }
 	}
 
 	{
-`; Inside a handler: req .Header? "authorization"
-; Inside a handler: req .Header? "content-type"
-`	}
+		"; Inside a handler: req .Header? \"authorization\"\n; Inside a handler: req .Header? \"content-type\""
+	}
 
 	group "Go-server-request//Basic-auth?"
 	"Gets HTTP Basic Authentication credentials from the request as [username password]."
 	{
 		argsn 1
 		arg `request: Native Go-server-request object from HTTP handler`
-		returns `block with username and password strings when Basic Auth is presenterror when Basic Auth credentials are missing`
+		returns `block with username and password strings when Basic Auth is present; error when Basic Auth credentials are missing`
 	}
 
 	{
 	}
 
 	{
-`; Inside a handler: creds: req .Basic-auth?
-; user: creds |first
-; pass: creds |second
-`	}
+		"; Inside a handler: creds: req .Basic-auth?\n; user: creds |first\n; pass: creds |second"
+	}
 
 	group "Go-server-request//Method?"
 	"Gets the HTTP request method."
@@ -3123,9 +3510,8 @@ srv .Handle "/api" fn { w req } { w .Write "API response" }
 	}
 
 	{
-`; Inside a handler: req .Method?
-; equal { req .Method? } "GET"
-`	}
+		"; Inside a handler: req .Method?\n; equal { req .Method? } \"GET\""
+	}
 
 	group "Go-server-request//Read-body"
 	"Reads the HTTP request body as a string."
@@ -3139,9 +3525,8 @@ srv .Handle "/api" fn { w req } { w .Write "API response" }
 	}
 
 	{
-`; Inside a handler: body: req .Read-body
-; Inside a handler: print body
-`	}
+		"; Inside a handler: body: req .Read-body\n; Inside a handler: print body"
+	}
 
 	group "Go-server-request//Headers?"
 	"Gets all HTTP request headers as a dictionary."
@@ -3155,9 +3540,8 @@ srv .Handle "/api" fn { w req } { w .Write "API response" }
 	}
 
 	{
-`; Inside a handler: req .Headers?
-; Inside a handler: req .Headers? |print
-`	}
+		"; Inside a handler: req .Headers?\n; Inside a handler: req .Headers? |print"
+	}
 
 	group "Go-server-request//Url?"
 	"Extracts the URL object from an HTTP request, providing access to path, query parameters, and other URL components."
@@ -3171,10 +3555,8 @@ srv .Handle "/api" fn { w req } { w .Write "API response" }
 	}
 
 	{
-`; Inside a handler: url: req .Url?
-; equal { url .type? } 'native
-; error { "not-request" .Url? }
-`	}
+		"; Inside a handler: url: req .Url?\n; equal { url .type? } 'native\n; error { \"not-request\" .Url? }"
+	}
 
 	group "Go-server-url//Path?"
 	"Extracts the path component from a URL object (the part after the domain and before query parameters)."
@@ -3188,11 +3570,8 @@ srv .Handle "/api" fn { w req } { w .Write "API response" }
 	}
 
 	{
-`; Inside a handler with request to "/api/users/123":
-; url: req .Url?
-; equal { url .Path? } "/api/users/123"
-; error { "not-url" .Path? }
-`	}
+		"; Inside a handler with request to \"/api/users/123\":\n; url: req .Url?\n; equal { url .Path? } \"/api/users/123\"\n; error { \"not-url\" .Path? }"
+	}
 
 	group "Http-handler//Strip-prefix"
 	"Wraps an HTTP handler to strip a URL prefix from requests, useful for serving static files from a subdirectory."
@@ -3207,9 +3586,8 @@ srv .Handle "/api" fn { w req } { w .Write "API response" }
 	}
 
 	{
-`; handler: new-static-handler %static/
-; stripped: handler .Strip-prefix "/static/"
-`	}
+		"; handler: new-static-handler %static/\n; stripped: handler .Strip-prefix \"/static/\""
+	}
 
 	group "https-response//Status?"
 	"Gets the HTTP status code from a response object."

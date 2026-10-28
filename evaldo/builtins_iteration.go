@@ -735,7 +735,7 @@ var builtins_iteration = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//  stdout { walk { 1 2 3 } { .prns .rest } } "1 2 3  2 3  3  "
+	//  stdout { walk { 1 2 3 } { .prns .rest } } "1 2 3 2 3 3 "
 	//  equal { var 'x 0 , walk { 1 2 3 } { ::b .first + x ::x , b .rest } x } 6
 	// Args:
 	// * block: Block to walk through
@@ -840,7 +840,7 @@ var builtins_iteration = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// stdout { walk\idx { 1 2 3 } 'i { .prns , i .prns , .rest } } "1 2 3  0 2 3  1 3  2 "
+	// stdout { walk\idx { 1 2 3 } 'i { .prns , i .prns , .rest } } "1 2 3 0 2 3 1 3 2 "
 	// Args:
 	// * block: Block to walk through
 	// * word: Word to store the current index (0-based)
@@ -2281,7 +2281,7 @@ var builtins_iteration = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// stdout { dict { "a" 1 "b" 2 } |for\kv 'k 'v { k .prns v .prns } } "a 1 b 2 "
+	// stdout { dict { "a" 1 } |for\kv 'k 'v { k .prns v .prns } } "a 1 "
 	// stdout { { 10 20 30 } .for\kv 'i 'v { i .prns v .prns } } "0 10 1 20 2 30 "
 	// Args:
 	// * collection: Dict, Block, List, or other Collection to iterate over

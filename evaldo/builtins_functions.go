@@ -147,8 +147,14 @@ var builtins_functions = map[string]*env.Builtin{
 		},
 	},
 
-	// fn\dyn retains the former fn behavior: free words resolve through the
-	// calling context, including nearer shadows introduced by callers.
+	// Tests:
+	// equal { f: fn\dyn { x } { x + 1 } , f 2 } 3
+	// equal { f: fn\dyn { x } { x + 1 } |type? } 'function
+	// Args:
+	// * spec: Block containing parameter specifications
+	// * body: Block containing the function body code
+	// Returns:
+	// * function object whose free words resolve dynamically through the caller's context
 	"fn\\dyn": {
 		Argsn: 2,
 		Doc:   "Creates a function whose free words resolve through the caller's context (dynamic scoping).",

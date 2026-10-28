@@ -1505,7 +1505,7 @@ var builtins = map[string]*env.Builtin{
 	// Args:
 	// * value: Any value to check if it's a reference
 	// Returns:
-	// * Integer 1 if the value is a reference, 0 otherwise
+	// * Boolean true if the value is a reference, false otherwise
 	"is-ref": { // **
 		Argsn: 1,
 		Doc:   "Checks if a value is a mutable reference.",
@@ -1524,7 +1524,7 @@ var builtins = map[string]*env.Builtin{
 	// equal { a: ref [ 1 2 ] b: ref [ 1 2 ] is-same a b } false
 	// equal { a: ref [ 1 2 ] b: a is-same a b } true
 	// equal { is-same 123 123 } true
-	// equal { is-same "abc" "abc" } false ; strings are different objects
+	// equal { is-same "abc" (string "ab" ++ "c") } false ; separately constructed strings are different objects
 	// Args:
 	// * value1: First value to compare
 	// * value2: Second value to compare
@@ -1582,14 +1582,16 @@ var builtins = map[string]*env.Builtin{
 	// error { dict { 123 "value" } } ; integer keys should fail
 	// error { dict { { } "value" } } ; block keys should fail
 	// equal { dict { 'key "value" } |-> "key" } "value" ; tagwords as keys
+	// equal { dict first table { 'a 'b } { 1 2 } |-> "a" } 1 ; table rows are converted to dicts
+	// equal { dict first table { 'a 'b } { 1 2 } |type? } 'dict ; table rows are converted to dicts
 	// Args:
-	// * block: Block containing alternating keys and values
+	// * value: Block containing alternating keys and values, or a TableRow to convert
 	// Returns:
 	// * A new Dict with the specified keys and values
 	"dict": {
 		Argsn: 1,
 		Pure:  true,
-		Doc:   "Constructs a Dict from the Block of key and value pairs.",
+		Doc:   "Constructs a Dict from the Block of key and value pairs, or converts a TableRow to a Dict.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -1598,8 +1600,11 @@ var builtins = map[string]*env.Builtin{
 					return MakeBuiltinError(ps, err.Error(), "dict")
 				}
 				return dict
+			case env.TableRow:
+				return bloc.ToDict()
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.TableRowType}, "dict")
 			}
-			return nil
 		},
 	},
 

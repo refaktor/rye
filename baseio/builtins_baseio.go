@@ -35,6 +35,8 @@ import (
 // capture-stdout.  They are registered by baseio.Register.
 var builtins_baseio = map[string]*env.Builtin{
 
+	// ##### Runtime and Process Integration ##### "Saving state, loading scripts, process arguments, exit, and sandbox controls."
+
 	// -------------------------------------------------------------------------
 	// Save / persist state
 	// -------------------------------------------------------------------------
@@ -280,6 +282,11 @@ var builtins_baseio = map[string]*env.Builtin{
 
 	// Example:
 	// ; exit 0
+	// Args:
+	// * status: Integer process exit status; non-integers exit with 0.
+	//
+	// Returns:
+	// * does not return; terminates the process.
 	"exit": { // **
 		Argsn: 1,
 		Doc:   "Exits the process with the given integer status code (or 0 for any non-integer).",
@@ -333,13 +340,13 @@ var builtins_baseio = map[string]*env.Builtin{
 		},
 	},
 
-	// Rye-itself//History?
-	// Summary: Returns last N lines from REPL history.
-	// Args: rye-itself native (dot-dispatch), n: integer number of lines
-	// Returns: block of strings
-	// Notes: Requires REPL; otherwise returns an error
+	// Args:
+	// * rye-itself: Native Rye-itself object passed via dot dispatch.
+	// * count: Integer number of history lines to return.
+	// Returns:
+	// * Block of strings from REPL history; error when not running in the REPL.
 	// Example:
-	//   Rye-itself//History? _ 10
+	// Rye-itself//History? _ 10
 	"Rye-itself//History?": {
 		Argsn: 2,
 		Doc:   "Returns a block of the last N lines from REPL history.",
@@ -586,11 +593,6 @@ var builtins_baseio = map[string]*env.Builtin{
 		},
 	},
 
-	// Rye-itself//Is-unshare
-	// Summary: Returns true if running inside Rye --unshare sandbox (Linux only).
-	// Args: none
-	// Returns: boolean
-	// Notes: Checks env var RYE_UNSHARE_CHILD set by the runner in the unshare child.
 	// Rye-itself//Is-unshare-fs
 	// Summary: Returns true if filesystem namespace isolation is enabled under --unshare.
 	// Args: none
@@ -669,6 +671,13 @@ var builtins_baseio = map[string]*env.Builtin{
 		},
 	},
 
+	// Rye-itself//Is-unshare
+	// Summary: Returns true if running inside a Rye --unshare sandbox (Linux only).
+	// Args:
+	// * none
+	// Returns:
+	// * boolean, true when the runner set RYE_UNSHARE_CHILD=1
+	// Notes: Checks env var RYE_UNSHARE_CHILD set by the runner in the unshare child.
 	"Rye-itself//Is-unshare": {
 		Argsn: 0,
 		Doc:   "Returns true if current process runs inside Rye --unshare sandbox (Linux only).",
@@ -678,11 +687,6 @@ var builtins_baseio = map[string]*env.Builtin{
 		},
 	},
 
-	// Rye-itself//Is-dry-run
-	// Summary: Returns true if Rye is in dry-run/scenario mode.
-	// Args: none
-	// Returns: boolean
-	// Notes: True when --dry-run is used or scenario is active.
 	// Rye-itself//Require-unshared
 	// Summary: Fails and exits the program if unshare is not active.
 	// Args: none
@@ -703,6 +707,13 @@ var builtins_baseio = map[string]*env.Builtin{
 		},
 	},
 
+	// Rye-itself//Is-dry-run
+	// Summary: Returns true if Rye is in dry-run/scenario mode.
+	// Args:
+	// * none
+	// Returns:
+	// * boolean, true when --dry-run is active or a scenario context is detected
+	// Notes: Checks RYE_DRY_RUN=1, then falls back to the scenario detector.
 	"Rye-itself//Is-dry-run": {
 		Argsn: 0,
 		Doc:   "Returns true if Rye is running in dry-run/scenario mode (activated via --dry-run or scenario context)",
@@ -726,6 +737,11 @@ var builtins_baseio = map[string]*env.Builtin{
 	// Tests:
 	// equal { capture-stdout { print 1 } } "1\n"
 	// error { capture-stdout 1 }
+	// Args:
+	// * block: Block whose stdout should be captured.
+	//
+	// Returns:
+	// * String containing the captured stdout.
 	"capture-stdout": { // **
 		Argsn: 1,
 		Doc:   "Executes a block of code while capturing all output to stdout, returning the captured output as a string.",

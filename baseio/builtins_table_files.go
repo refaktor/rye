@@ -12,6 +12,7 @@ import (
 
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
+	"github.com/refaktor/rye/util"
 	"github.com/xuri/excelize/v2"
 )
 
@@ -35,18 +36,22 @@ var Builtins_table_files = map[string]*env.Builtin{
 	//
 	// ##### Table files #####  "Load and save tables as CSV, TSV or XLSX files."
 	//
+	// Tests:
+	// equal { type? Load\csv__OLD %data/file.txt } 'table
 	// Example:
 	//  equal {
 	//	 cc os
-	//   f:: mktmp ++ "/test.csv"
+	//   f:: mktemp ++ "/test.csv"
 	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-	//   spr1 .Save\csv* f
+	//   f .Save\csv spr1
 	//   spr2:: Load\csv f |autotype 1.0
 	//   spr1 = spr2
 	//  } true
 	// Args:
 	// * file-uri - location of csv file to load
 	// Tags: #table #loading #csv
+	// Returns:
+	// * Table parsed from the CSV file.
 	"file-uri//Load\\csv__OLD": {
 		// TODO 2 -- this could move to a go function so it could be called by general load that uses extension to define the loader
 		Argsn: 1,
@@ -58,7 +63,7 @@ var Builtins_table_files = map[string]*env.Builtin{
 				f, err := os.Open(file.GetPath())
 				if err != nil {
 					// log.Fatal("Unable to read input file "+filePath, err)
-					return evaldo.MakeBuiltinError(ps, "Unable to read input file '" + file.GetPath() + "': " + err.Error(), "Load\\csv")
+					return evaldo.MakeBuiltinError(ps, "Unable to read input file '"+file.GetPath()+"': "+err.Error(), "Load\\csv")
 				}
 				defer f.Close()
 
@@ -66,10 +71,10 @@ var Builtins_table_files = map[string]*env.Builtin{
 				rows, err := csvReader.ReadAll()
 				if err != nil {
 					// log.Fatal("Unable to parse file as CSV for "+filePath, err)
-					return evaldo.MakeBuiltinError(ps, "Unable to parse file '" + file.GetPath() + "' as CSV: " + err.Error(), "Load\\csv")
+					return evaldo.MakeBuiltinError(ps, "Unable to parse file '"+file.GetPath()+"' as CSV: "+err.Error(), "Load\\csv")
 				}
 				if len(rows) == 0 {
-					return evaldo.MakeBuiltinError(ps, "File '" + file.GetPath() + "' is empty", "Load\\csv")
+					return evaldo.MakeBuiltinError(ps, "File '"+file.GetPath()+"' is empty", "Load\\csv")
 				}
 				spr := env.NewTable(rows[0])
 				//				for i, row := range rows {
@@ -92,18 +97,23 @@ var Builtins_table_files = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Tests:
+	// equal { type? Load\csv %data/file.txt "," } 'table
 	// Example:
 	//  equal {
 	//	 cc os
-	//   f:: mktmp ++ "/test.csv"
+	//   f:: mktemp ++ "/test.csv"
 	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-	//   spr1 .Save\csv* f
-	//   spr2:: Load\csv f |autotype 1.0
+	//   f .Save\csv spr1
+	//   spr2:: Load\csv f "," |autotype 1.0
 	//   spr1 = spr2
 	//  } true
 	// Args:
 	// * file-uri - location of csv file to load
+	// * separator - single character used as the column separator
 	// Tags: #table #loading #csv
+	// Returns:
+	// * Table parsed from the CSV file.
 	"file-uri//Load\\csv": {
 		// TODO 2 -- this could move to a go function so it could be called by general load that uses extension to define the loader
 		Argsn: 2,
@@ -117,7 +127,7 @@ var Builtins_table_files = map[string]*env.Builtin{
 					f, err := os.Open(file.GetPath())
 					if err != nil {
 						// log.Fatal("Unable to read input file "+filePath, err)
-						return evaldo.MakeBuiltinError(ps, "Unable to read input file '" + file.GetPath() + "': " + err.Error(), "Load\\csv")
+						return evaldo.MakeBuiltinError(ps, "Unable to read input file '"+file.GetPath()+"': "+err.Error(), "Load\\csv")
 					}
 					defer f.Close()
 
@@ -129,10 +139,10 @@ var Builtins_table_files = map[string]*env.Builtin{
 					rows, err := csvReader.ReadAll()
 					if err != nil {
 						// log.Fatal("Unable to parse file as CSV for "+filePath, err)
-						return evaldo.MakeBuiltinError(ps, "Unable to parse file '" + file.GetPath() + "' as CSV: " + err.Error(), "Load\\csv")
+						return evaldo.MakeBuiltinError(ps, "Unable to parse file '"+file.GetPath()+"' as CSV: "+err.Error(), "Load\\csv")
 					}
 					if len(rows) == 0 {
-						return evaldo.MakeBuiltinError(ps, "File '" + file.GetPath() + "' is empty", "Load\\csv")
+						return evaldo.MakeBuiltinError(ps, "File '"+file.GetPath()+"' is empty", "Load\\csv")
 					}
 					spr := env.NewTable(rows[0])
 					//				for i, row := range rows {
@@ -162,7 +172,7 @@ var Builtins_table_files = map[string]*env.Builtin{
 	// Example:
 	//  equal {
 	//	 cc os
-	//   f:: mktmp ++ "/test.csv"
+	//   f:: mktemp ++ "/test.csv"
 	//   f .Write "a;b;c\n1;1.1;a\nbad\"line\n2;2.2;b\n3;3.3;c\n"
 	//   spr:: Load\csv\ignore-bad f ";"
 	//   spr .length? 3
@@ -171,6 +181,8 @@ var Builtins_table_files = map[string]*env.Builtin{
 	// * file-uri - location of csv file to load
 	// * separator - single character used as column separator
 	// Tags: #table #loading #csv
+	// Returns:
+	// * Table parsed from the CSV file, skipping malformed lines.
 	"file-uri//Load\\csv\\ignore-bad": {
 		Argsn: 2,
 		Doc:   "Loads a .csv file to a table datatype, parsing it line by line and skipping lines that can't be parsed as CSV.",
@@ -229,21 +241,25 @@ var Builtins_table_files = map[string]*env.Builtin{
 
 	// TODO -- deduplicate with above
 
+	// Tests:
+	// equal { type? Load\tsv %data/file.txt } 'table
 	// Example:
 	//  equal {
 	//	 cc os
-	//   f:: mktmp ++ "/test.tsv"
+	//   f:: mktemp ++ "/test.tsv"
 	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-	//   spr1 .Save\tsv* f
+	//   f .Save\tsv spr1
 	//   spr2:: Load\tsv f |autotype 1.0
 	//   spr1 = spr2
 	//  } true
 	// Args:
-	// * file-uri - location of csv file to load
+	// * file-uri - location of tsv file to load
+	// Returns:
+	// * Table parsed from the TSV file.
 	"file-uri//Load\\tsv": {
 		// TODO 2 -- this could move to a go function so it could be called by general load that uses extension to define the loader
 		Argsn: 1,
-		Doc:   "Loads a .csv file to a table datatype.",
+		Doc:   "Loads a .tsv file to a table datatype.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch file := arg0.(type) {
 			case env.Uri:
@@ -251,7 +267,7 @@ var Builtins_table_files = map[string]*env.Builtin{
 				f, err := os.Open(file.GetPath())
 				if err != nil {
 					// log.Fatal("Unable to read input file "+filePath, err)
-					return evaldo.MakeBuiltinError(ps, "Unable to read input file '" + file.GetPath() + "': " + err.Error(), "Load\\csv")
+					return evaldo.MakeBuiltinError(ps, "Unable to read input file '"+file.GetPath()+"': "+err.Error(), "Load\\csv")
 				}
 				defer f.Close()
 
@@ -260,10 +276,10 @@ var Builtins_table_files = map[string]*env.Builtin{
 				rows, err := csvReader.ReadAll()
 				if err != nil {
 					// log.Fatal("Unable to parse file as CSV for "+filePath, err)
-					return evaldo.MakeBuiltinError(ps, "Unable to parse file '" + file.GetPath() + "' as CSV: " + err.Error(), "Load\\csv")
+					return evaldo.MakeBuiltinError(ps, "Unable to parse file '"+file.GetPath()+"' as CSV: "+err.Error(), "Load\\csv")
 				}
 				if len(rows) == 0 {
-					return evaldo.MakeBuiltinError(ps, "File '" + file.GetPath() + "' is empty", "Load\\csv")
+					return evaldo.MakeBuiltinError(ps, "File '"+file.GetPath()+"' is empty", "Load\\csv")
 				}
 				spr := env.NewTable(rows[0])
 				//				for i, row := range rows {
@@ -287,19 +303,23 @@ var Builtins_table_files = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { type? Save\csv (os/mktemp ++ "/save.csv") table { "a" "b" } { 1 "x" } } 'table
 	// Example:
 	//  equal {
 	//	 cc os
-	//   f:: mktmp ++ "/test.csv"
+	//   f:: mktemp ++ "/test.csv"
 	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
 	//   f .Save\csv spr1
-	//   spr2:: Load\csv f |autotype 1.0
+	//   spr2:: Load\csv f "," |autotype 1.0
 	//   spr1 = spr2
 	//  } true
 	// Args:
 	// * file-uri - where to save the sheet as a .csv file
 	// * table    - the table to save
 	// Tags: #table #saving #csv
+	// Returns:
+	// * the saved Table.
 	"file-uri//Save\\csv": {
 		Argsn: 2,
 		Doc:   "Saves a table to a .csv file.",
@@ -367,10 +387,12 @@ var Builtins_table_files = map[string]*env.Builtin{
 
 	// TODO: deduplicate with load\csv
 
+	// Tests:
+	// equal { type? Save\tsv (os/mktemp ++ "/save.tsv") table { "a" "b" } { 1 "x" } } 'table
 	// Example:
 	//  equal {
 	//	 cc os
-	//   f:: mktmp ++ "/test.tsv"
+	//   f:: mktemp ++ "/test.tsv"
 	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
 	//   f .Save\tsv spr1
 	//   spr2:: Load\tsv f |autotype 1.0
@@ -380,6 +402,8 @@ var Builtins_table_files = map[string]*env.Builtin{
 	// * file-uri - where to save the sheet as a .tsv file
 	// * table    - the table to save
 	// Tags: #table #saving #tsv
+	// Returns:
+	// * the saved Table.
 	"file-uri//Save\\tsv": {
 		Argsn: 2,
 		Doc:   "Saves a table to a .tsv file.",
@@ -445,21 +469,25 @@ var Builtins_table_files = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { type? Save\xlsx (os/mktemp ++ "/test.xlsx") table { "a" "b" } { 1 "x" 2 "y" } } 'table
 	// Example:
 	//  equal {
 	//	 cc os
-	//   f:: mktmp ++ "/test.xlsx"
+	//   f:: mktemp ++ "/test.xlsx"
 	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-	//   spr1 .Save\xlsx* f
+	//   f .Save\xlsx spr1
 	//   spr2:: Load\xlsx f |autotype 1.0
 	//   spr1 = spr2
 	//  } true
 	// Args:
 	// * file-uri - location of xlsx file to load
 	// Tags: #table #loading #xlsx
+	// Returns:
+	// * Table containing the first sheet of the XLSX file.
 	"file-uri//Load\\xlsx": {
 		Argsn: 1,
-		Doc:   "Loads the first sheet in an .xlsx file to a Table.",
+		Doc:   "Loads the first sheet in an .xlsx file to a Table. Cells starting with \"{\" are loaded as Rye code.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch file := arg0.(type) {
 			case env.Uri:
@@ -495,7 +523,7 @@ var Builtins_table_files = map[string]*env.Builtin{
 					}
 					anyRow := make([]any, len(row))
 					for i, v := range row {
-						anyRow[i] = *env.NewString(v)
+						anyRow[i] = evaldo.LoadXlsxCell(ps, v)
 					}
 					// fill in any missing columns with empty strings
 					for i := len(row); i < len(spr.Cols); i++ {
@@ -510,10 +538,13 @@ var Builtins_table_files = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { type? Save\xlsx (os/mktemp ++ "/save.xlsx") table { "a" "b" } { 1 "x" } } 'table
+	// equal { f:: (os/mktemp ++ "/block.xlsx") Save\xlsx f table { "a" } { { 12 123 123 "asds" } } Load\xlsx f |first |-> "a" } { 12 123 123 "asds" }
 	// Example:
 	//  equal {
 	//	 cc os
-	//   f:: mktmp ++ "/test.xlsx"
+	//   f:: mktemp ++ "/test.xlsx"
 	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
 	//   f .Save\xlsx spr1
 	//   spr2:: Load\xlsx f |autotype 1.0
@@ -523,9 +554,11 @@ var Builtins_table_files = map[string]*env.Builtin{
 	// * file-uri - where to save the table as a .xlsx file
 	// * table    - the table to save
 	// Tags: #table #saving #xlsx
+	// Returns:
+	// * the saved Table.
 	"file-uri//Save\\xlsx": {
 		Argsn: 2,
-		Doc:   "Saves a Table to a .xlsx file.",
+		Doc:   "Saves a Table to a .xlsx file. Block cells are serialized with their Rye dump.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch file := arg0.(type) {
 			case env.Uri:
@@ -546,22 +579,11 @@ var Builtins_table_files = map[string]*env.Builtin{
 						rowIndex := i + 2
 						vals := make([]any, len(row.Values))
 						for j, v := range row.Values {
-							switch val := v.(type) {
-							case env.String:
-								vals[j] = val.Value
-							case string:
-								vals[j] = val
-							case env.Integer:
-								vals[j] = val.Value
-							case int64:
-								vals[j] = val
-							case env.Decimal:
-								vals[j] = val.Value
-							case float64:
-								vals[j] = val
-							default:
-								return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Unable to save table: unsupported type %T", val), "file-uri//Save\\xlsx")
+							val, err := util.FormatXlsxCell(v, ps.Idx)
+							if err != nil {
+								return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Unable to save table: %s", err), "file-uri//Save\\xlsx")
 							}
+							vals[j] = val
 						}
 						err = f.SetSheetRow(sheetName, fmt.Sprintf("A%d", rowIndex), &vals)
 						if err != nil {

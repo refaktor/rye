@@ -58,14 +58,14 @@ var ErrorCreationBuiltins = map[string]*env.Builtin{
 	// * a new Error with the additional context.
 	"refail": {
 		Argsn: 2,
-		Doc:   "Re-raises an existing error with additional context. TODO -- duplicate of check",
+		Doc:   "Re-raises an existing error with additional context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch er := arg0.(type) {
 			case *env.Error:
 				ps.FailureFlag = true
 				return MakeRyeError(ps, arg1, er)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.ErrorType}, "reraise")
+				return MakeArgError(ps, 1, []env.Type{env.ErrorType}, "refail")
 			}
 		},
 	},
@@ -481,7 +481,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { fn { x } { x |^ensure "Must be positive" } |apply [ 5 ] } true
+	// equal { fn { x } { x |^ensure "Must be positive" } |apply [ 5 ] } 5
 	// equal { ff:: fn { x } { x > 0 |^ensure "Must be positive" } ff -1 |disarm |message? } "Must be positive"
 	// Args:
 	// * condition: Value to test for truthiness
