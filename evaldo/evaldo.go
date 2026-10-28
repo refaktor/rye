@@ -1276,8 +1276,9 @@ func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toL
 // Called from: EvalExpression_DispatchType
 // Purpose: Evaluates the expression to the right and binds the result to a word (creating new binding)
 func EvalSetword(ps *env.ProgramState, word env.Setword) {
-	// es1 := EvalExpression(es)
-	EvalExpressionInj(ps, nil, false)
+	// Evaluate dot-words and op-words, but stop before a pipe-word. The value is
+	// assigned first, then the pipe-word continues with the assigned value.
+	EvalExpressionInjLimited(ps, nil, false)
 	if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 		return
 	}
@@ -1301,14 +1302,18 @@ func EvalSetword(ps *env.ProgramState, word env.Setword) {
 			ps.ErrorFlag = true
 		}
 	}
+	if !ps.ErrorFlag && !ps.FailureFlag && !ps.ReturnFlag {
+		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, false, true, true)
+	}
 }
 
 // EvalModword evaluates a mod-word (word::) which modifies an existing word in the context.
 // Called from: EvalExpression_DispatchType
 // Purpose: Evaluates the expression to the right and modifies an existing word's value, triggers observers
 func EvalModword(ps *env.ProgramState, word env.Modword) {
-	// es1 := EvalExpression(es)
-	EvalExpressionInj(ps, nil, false)
+	// Evaluate dot-words and op-words, but stop before a pipe-word. The value is
+	// assigned first, then the pipe-word continues with the assigned value.
+	EvalExpressionInjLimited(ps, nil, false)
 	if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
 		return
 	}
@@ -1330,6 +1335,9 @@ func EvalModword(ps *env.ProgramState, word env.Modword) {
 			ps.Res = env.NewError("Cannot change type of variable `" + ps.Idx.GetWord(idx) + "` from `" + ps.Idx.GetWord(int(existingType)) + "` to `" + ps.Idx.GetWord(int(ps.Res.Type())) + "`.")
 			ps.FailureFlag = true
 			ps.ErrorFlag = true
+		}
+		if !ps.ErrorFlag && !ps.FailureFlag && !ps.ReturnFlag {
+			OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, false, true, true)
 		}
 		return
 	}
@@ -1355,6 +1363,9 @@ func EvalModword(ps *env.ProgramState, word env.Modword) {
 		ps.Res = env.NewError("Cannot change type of variable `" + ps.Idx.GetWord(idx) + "` from `" + ps.Idx.GetWord(int(existingType)) + "` to `" + ps.Idx.GetWord(int(ps.Res.Type())) + "`.")
 		ps.FailureFlag = true
 		ps.ErrorFlag = true
+	}
+	if !ps.ErrorFlag && !ps.FailureFlag && !ps.ReturnFlag {
+		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, false, true, true)
 	}
 }
 

@@ -151,6 +151,40 @@ func TestEvaldo_load_setword1_stores_val(t *testing.T) {
 	}
 }
 
+func TestEvaldo_setword_stops_before_pipeword(t *testing.T) {
+	input := `y: "asd" ~concat "XX" |concat "zz" y`
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
+	RegisterBuiltins(es)
+
+	Eval(es)
+
+	value, ok := es.Res.(env.String)
+	if !ok {
+		t.Fatalf("expected string, got %T: %v", es.Res, es.Res)
+	}
+	if value.Value != "asdXX" {
+		t.Fatalf("expected y to be 'asdXX', got %q", value.Value)
+	}
+}
+
+func TestEvaldo_modword_stops_before_pipeword(t *testing.T) {
+	input := `var 'y "" y:: "asd" ~concat "XX" |concat "zz" y`
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
+	RegisterBuiltins(es)
+
+	Eval(es)
+
+	value, ok := es.Res.(env.String)
+	if !ok {
+		t.Fatalf("expected string, got %T: %v", es.Res, es.Res)
+	}
+	if value.Value != "asdXX" {
+		t.Fatalf("expected y to be 'asdXX', got %q", value.Value)
+	}
+}
+
 func TestEvaldo_setword_existing_constant_error(t *testing.T) {
 	input := "x: 1 x: 2"
 	block, genv := loader.LoadStringNoPEG(input, false)
