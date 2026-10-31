@@ -152,6 +152,16 @@ func RenderValue(w io.Writer, value env.Object, idx *env.Idxs) {
 		}
 	case *env.TableRow:
 		RenderValue(w, *v, idx)
+	case *env.Error:
+		if idx.GetWord(v.Kind.Index) == "warning" {
+			ColorRed()
+		} else if idx.GetWord(v.Kind.Index) == "note" {
+			ColorMagenta()
+		} else {
+			ColorBrRed()
+		}
+		fmt.Println(v.Print2(*idx, 3, true))
+		CloseProps()
 	default:
 		fmt.Fprintln(w, DisplayValueText(value, idx, false))
 	}

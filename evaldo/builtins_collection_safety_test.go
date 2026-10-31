@@ -47,6 +47,7 @@ func TestCollectionSafety(t *testing.T) {
 		{"unique lists", "unique", []env.Object{l(l(1), l(1), l(2))}, l(l(1), l(2))},
 		{"unique raw lists", "unique", []env.Object{l([]any{1}, []any{1}, []any{2})}, l([]any{1}, []any{2})},
 		{"unique raw dicts", "unique", []env.Object{l(map[string]any{"a": []any{1}}, map[string]any{"a": []any{1}}, map[string]any{"b": []any{1}})}, l(map[string]any{"a": []any{1}}, map[string]any{"b": []any{1}})},
+		{"prepend non-block", "prepend", []env.Object{i(2), i(1)}, nil},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			ps := env.NewProgramStateOLD(*env.NewTSeries(nil), env.NewIdxs())
@@ -83,5 +84,25 @@ func TestRandomDecimalBounds(t *testing.T) {
 				t.Fatalf("bound=%v, got=%v", bound, got)
 			}
 		}
+	}
+}
+
+func TestPrependDoesNotMutateInput(t *testing.T) {
+	integer := func(v int64) env.Object { return *env.NewInteger(v) }
+	original := *env.NewBlock(*env.NewTSeries([]env.Object{integer(2), integer(3)}))
+	originalCopy := *env.NewBlock(*env.NewTSeries([]env.Object{integer(2), integer(3)}))
+	want := *env.NewBlock(*env.NewTSeries([]env.Object{integer(1), integer(2), integer(3)}))
+
+	ps := env.NewProgramStateOLD(*env.NewTSeries(nil), env.NewIdxs())
+	got := builtins_collection["prepend"].Fn(ps, original, integer(1), nil, nil, nil)
+
+	if ps.FailureFlag || ps.ErrorFlag {
+		t.Fatalf("prepend failed: failure=%v error=%v result=%v", ps.FailureFlag, ps.ErrorFlag, got)
+	}
+	if !want.Equal(got) {
+		t.Fatalf("prepend result = %v, want %v", got, want)
+	}
+	if !originalCopy.Equal(original) {
+		t.Fatalf("prepend mutated its input: got %v, want %v", original, originalCopy)
 	}
 }

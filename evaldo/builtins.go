@@ -9,9 +9,10 @@ import (
 
 	"github.com/refaktor/rye/env"
 
-	"github.com/refaktor/rye/loader"
 	"strconv"
 	"strings"
+
+	"github.com/refaktor/rye/loader"
 
 	"github.com/refaktor/rye/util"
 )
@@ -2353,7 +2354,7 @@ var builtins = map[string]*env.Builtin{
 				if len(missing) > 0 {
 					return makeError(ps, str.String())
 				} else {
-					return *env.NewInteger(1)
+					return arg0
 				}
 				// return *env.NewBlock(*env.NewTSeries(missing))
 			default:
