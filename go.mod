@@ -67,7 +67,7 @@ require (
 	golang.org/x/text v0.42.0
 	gopkg.in/headzoo/surf.v1 v1.0.1
 	gopkg.in/yaml.v3 v3.0.1
-	software.sslmate.com/src/go-pkcs12 v0.7.1
+	software.sslmate.com/src/go-pkcs12 v0.7.4
 )
 
 require (
