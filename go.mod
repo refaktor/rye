@@ -27,7 +27,7 @@ require (
 	github.com/emersion/go-sasl v0.0.0-20241020182733-b788ff22d5a6
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/fxtlabs/primes v0.0.0-20150821004651-dad82d10a449
-	github.com/gen2brain/go-mpv v0.2.3
+	github.com/gen2brain/go-mpv v0.4.0
 	github.com/glebarez/sqlite v1.11.0
 	github.com/gliderlabs/ssh v0.3.8
 	github.com/go-echarts/go-echarts/v2 v2.7.2
@@ -96,7 +96,7 @@ require (
 	github.com/coder/websocket v1.8.12 // indirect
 	github.com/dblohm7/wingoes v0.0.0-20240119213807-a09d6be7affa // indirect
 	github.com/dgraph-io/ristretto/v2 v2.2.0 // indirect
-	github.com/ebitengine/purego v0.10.0 // indirect
+	github.com/ebitengine/purego v0.10.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.0 // indirect
 	github.com/go-json-experiment/json v0.0.0-20250813024750-ebf49471dced // indirect
