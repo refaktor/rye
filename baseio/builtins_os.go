@@ -1233,25 +1233,25 @@ var Builtins_os = map[string]*env.Builtin{
 
 	// Sets an environment variable.
 	// Tests:
-	// equal { os/setenv! "RYE_TEST_DOC_ENV" "ok" } "ok"
+	// equal { os/setenv! "ok" "RYE_TEST_DOC_ENV" } "ok"
 	// Args:
-	// * name: string environment variable name
 	// * value: string value to assign
+	// * name: string environment variable name
 	// Returns:
 	// * the value string
 	// Tags: #system #environment
 	"setenv!": {
 		Argsn: 2,
-		Doc:   "Sets an environment variable (name, value).",
+		Doc:   "Sets an environment variable (value, name).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch name := arg0.(type) {
+			switch val := arg0.(type) {
 			case env.String:
-				switch val := arg1.(type) {
+				switch name := arg1.(type) {
 				case env.String:
 					if err := os.Setenv(name.Value, val.Value); err != nil {
 						return evaldo.MakeBuiltinError(ps, err.Error(), "setenv!")
 					}
-					return arg1
+					return arg0
 				default:
 					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "setenv!")
 				}

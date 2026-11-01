@@ -2577,16 +2577,16 @@ section "OS" "OS related functions" {
 	}
 
 	group "setenv!"
-	"Sets an environment variable (name, value)."
+	"Sets an environment variable (value, name)."
 	{
 		argsn 2
-		arg `name: string environment variable name`
 		arg `value: string value to assign`
+		arg `name: string environment variable name`
 		returns `the value string`
 	}
 
 	{
-		equal { os/setenv! "RYE_TEST_DOC_ENV" "ok" } "ok"
+		equal { os/setenv! "ok" "RYE_TEST_DOC_ENV" } "ok"
 	}
 
 	{

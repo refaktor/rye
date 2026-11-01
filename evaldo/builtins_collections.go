@@ -2227,6 +2227,34 @@ var builtins_collection = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	// equal { { 2 3 } |prepend 1 } { 1 2 3 }
+	// equal { { } |prepend 1 } { 1 }
+	// equal { { 2 3 } |prepend { 1 } } { { 1 } 2 3 }
+	// error { prepend 1 2 }
+	// Args:
+	// * block: Block to prepend to
+	// * value: Value to put at the beginning of the new block
+	// Returns:
+	// * a new block with value prepended; the original block is not modified
+	"prepend": {
+		Argsn: 2,
+		Doc:   "Returns a new block with the value prepended. The original block is not modified.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch block := arg0.(type) {
+			case env.Block:
+				items := block.Series.GetAll()
+				result := make([]env.Object, 0, len(items)+1)
+				result = append(result, arg1)
+				result = append(result, items...)
+				return *env.NewBlock(*env.NewTSeries(result))
+			default:
+				return MakeArgError2(ps, 1, []env.Type{env.BlockType}, "prepend", arg0)
+			}
+		},
+	},
+
+	// Tests:
 	// equal { "abcd" .concat "cde" } "abcdcde"
 	// equal { concat { 1 2 3 4 } { 2 4 5 } } { 1 2 3 4 2 4 5 }
 	// equal { 123 .concat "abc" } "123abc"

@@ -2085,22 +2085,45 @@ func (i Error) Inspect(e Idxs) string {
 }
 
 func (i Error) Print(e Idxs) string {
-	return i.Print2(e, 1)
+	return i.Print2(e, 1, false)
 }
 
-func (i Error) Print2(e Idxs, depth int) string {
-	status := ""
-	if i.Status != 0 {
-		status = "(" + strconv.Itoa(i.Status) + ")"
+func (i Error) Print2(e Idxs, depth int, humane bool) string {
+	spec := ""
+	if !humane {
+		if i.Status != 0 {
+			spec = strconv.Itoa(i.Status)
+		}
+		if i.Kind.Index != 0 {
+			if spec != "" {
+				spec = spec + "|"
+			}
+			spec = spec + e.GetWord(i.Kind.Index)
+		}
+		if i.Status != 0 || i.Kind.Index != 0  {
+			spec = "(" + spec + ")" 
+		}
+	}
+
+	prefix := "Error"
+	if humane {
+		prefix = "Error hapened"
+		if e.GetWord(i.Kind.Index) == "warning" {
+			prefix = "Warning"
+		} else if e.GetWord(i.Kind.Index) == "note" {
+			prefix = "Please note"
+		} else {
+			prefix = "Error happend"
+		}
 	}
 	var b strings.Builder
-	b.WriteString("Error" + status + ": " + i.Message + " ")
+	b.WriteString(prefix + spec + ": " + i.Message + " ")
 	if i.Parent != nil {
 		b.WriteString("\n")
 		for i := 0; i < depth; i++ {
 			b.WriteString("  ")
 		}
-		b.WriteString(i.Parent.Print2(e, depth+1))
+		b.WriteString(i.Parent.Print2(e, depth+1, humane))
 	}
 	for k, v := range i.Values {
 		switch ob := v.(type) {
