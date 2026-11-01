@@ -72,8 +72,8 @@ github.com/bahlo/generic-list-go v0.2.0 h1:5sz/EEAK+ls5wF+NeqDpk5+iNdMDXrh3z3nPn
 github.com/bahlo/generic-list-go v0.2.0/go.mod h1:2KvAjgMlE5NNynlg/5iLrrCCZ2+5xWbdbCW3pNTGyYg=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
-github.com/bitfield/script v0.24.1 h1:D4ZWu72qWL/at0rXFF+9xgs17VwyrpT6PkkBTdEz9xU=
-github.com/bitfield/script v0.24.1/go.mod h1:fv+6x4OzVsRs6qAlc7wiGq8fq1b5orhtQdtW0dwjUHI=
+github.com/bitfield/script v0.25.2 h1:omEoVNNmEYDFJU9XbI3LJJSq8v+o5tojz8IhqEiSybY=
+github.com/bitfield/script v0.25.2/go.mod h1:d/ZBty4KX3QZnd4Ee7+rdGdTDrkqPjeMuhc5e0p1jzs=
 github.com/bits-and-blooms/bitset v1.24.2 h1:M7/NzVbsytmtfHbumG+K2bremQPMJuqv1JD3vOaFxp0=
 github.com/bits-and-blooms/bitset v1.24.2/go.mod h1:7hO7Gc7Pp1vODcmWvKMRA9BNmbv6a/7QIWpPxHddWR8=
 github.com/blevesearch/bleve/v2 v2.6.1 h1:47vLskRTqxvQEtxVPYHjf5KpOgzD2msslXFjvUQCgWQ=
