@@ -32,7 +32,7 @@ require (
 	github.com/gliderlabs/ssh v0.3.8
 	github.com/go-echarts/go-echarts/v2 v2.7.2
 	github.com/go-gomail/gomail v0.0.0-20160411212932-81ebce5c23df
-	github.com/go-sql-driver/mysql v1.10.0
+	github.com/go-sql-driver/mysql v1.10.1
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/gobwas/ws v1.4.0
 	github.com/gorilla/sessions v1.4.0
@@ -61,7 +61,7 @@ require (
 	github.com/yuin/goldmark v1.8.6
 	go.mongodb.org/mongo-driver v1.17.9
 	golang.org/x/crypto v0.58.0
-	golang.org/x/net v0.60.0
+	golang.org/x/net v0.62.0
 	golang.org/x/sync v0.24.0
 	golang.org/x/term v0.47.0
 	golang.org/x/text v0.43.0

@@ -343,6 +343,7 @@ var builtins_numbers = map[string]*env.Builtin{
 	// equal { 5 .mod 2 } 1
 	// equal { 5 .mod 3 } 2
 	// equal { -5 .mod 3 } -2
+	// error { 4 .mod 0 }
 	// Args:
 	// * value: Integer dividend
 	// * divisor: Integer divisor
@@ -357,6 +358,10 @@ var builtins_numbers = map[string]*env.Builtin{
 			case env.Integer:
 				switch b := arg1.(type) {
 				case env.Integer:
+					if b.Value == 0 {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, "Can't divide by Zero.", "mod")
+					}
 					return *env.NewInteger(a.Value % b.Value)
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "mod")
@@ -1035,6 +1040,7 @@ var builtins_numbers = map[string]*env.Builtin{
 	// equal { 4 % 2 } 0
 	// equal { 5 % 2 } 1
 	// equal { 5 % 3 } 2
+	// error { 4 % 0 }
 	// Args:
 	// * value: Integer dividend
 	// * divisor: Integer divisor
@@ -1049,6 +1055,10 @@ var builtins_numbers = map[string]*env.Builtin{
 			case env.Integer:
 				switch b := arg1.(type) {
 				case env.Integer:
+					if b.Value == 0 {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, "Can't divide by Zero.", "_%")
+					}
 					return *env.NewInteger(a.Value % b.Value)
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "mod")
