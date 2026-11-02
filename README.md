@@ -164,6 +164,7 @@ Thanks to @kseistrup for Arch package and @stefanb for Homebrew.
 
 - **[ryelang.org](https://ryelang.org/)** - Official documentation, tutorials, and examples
 - **[Blog](https://ryelang.org/blog/)** - Latest updates and development news
+- **[Function reference](https://ryelang.org/info/)** - Auto generated from tests and docs above builtin definitions
 - **[Examples folder](./examples/)** - Code examples and demos
 - **[Asciinema demos](https://asciinema.org/~refaktor)** - Interactive terminal demos
 
