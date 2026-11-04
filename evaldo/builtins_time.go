@@ -3,6 +3,7 @@ package evaldo
 import (
 	"time"
 
+	timefmt "github.com/itchyny/timefmt-go"
 	"github.com/refaktor/rye/env"
 )
 
@@ -269,17 +270,74 @@ var builtins_time = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { date "2023-01-15" |format-date "2006-01-02" } "2023-01-15"
-	// equal { date "2023-01-15" |format-date "02/01/2006" } "15/01/2023"
-	// equal { datetime "2023-01-15T14:30:45" |format-date "Mon Jan 2 15:04:05 2006" } "Sun Jan 15 14:30:45 2023"
+	// equal { parse-date "2023-01-15" "%Y-%m-%d" |type? } 'time
+	// equal { parse-date "15/01/2023" "%d/%m/%Y" |day? } 15
+	// equal { parse-date "2023-01-15 14:30:45" "%Y-%m-%d %H:%M:%S" |hour? } 14
+	// Args:
+	// * datestr: String to parse
+	// * layout: String - strptime format (for example "%Y-%m-%d")
+	// Returns:
+	// * time object parsed from the string
+	"parse-date": {
+		Argsn: 2,
+		Doc:   "Parses a date/time string using a strptime format string. This is the default date/time parsing syntax; see https://man7.org/linux/man-pages/man3/strptime.3.html.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch datestr := arg0.(type) {
+			case env.String:
+				switch layout := arg1.(type) {
+				case env.String:
+					t, err := timefmt.Parse(datestr.Value, layout.Value)
+					if err != nil {
+						return MakeBuiltinError(ps, err.Error(), "parse-date")
+					}
+					return *env.NewTime(t)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "parse-date")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "parse-date")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { date "2023-01-15" |format-date "%Y-%m-%d" } "2023-01-15"
+	// equal { date "2023-01-15" |format-date "%d/%m/%Y" } "15/01/2023"
+	// equal { datetime "2023-01-15T14:30:45" |format-date "%a %b %e %H:%M:%S %Y" } "Sun Jan 15 14:30:45 2023"
+	// Args:
+	// * time: Time object to format
+	// * layout: String - strftime format (for example "%Y-%m-%d")
+	// Returns:
+	// * string representing the formatted date/time
+	"format-date": {
+		Argsn: 2,
+		Doc:   "Formats a time object using a strftime format string. This is the default date/time formatting syntax; see https://man7.org/linux/man-pages/man3/strftime.3.html.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch t := arg0.(type) {
+			case env.Time:
+				switch layout := arg1.(type) {
+				case env.String:
+					return *env.NewString(timefmt.Format(t.Value, layout.Value))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "format-date")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "format-date")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { date "2023-01-15" |format-date-go "2006-01-02" } "2023-01-15"
+	// equal { date "2023-01-15" |format-date-go "02/01/2006" } "15/01/2023"
 	// Args:
 	// * time: Time object to format
 	// * layout: String - Go time format layout (reference time: Mon Jan 2 15:04:05 MST 2006)
 	// Returns:
 	// * string representing the formatted date/time
-	"format-date": {
+	"format-date-go": {
 		Argsn: 2,
-		Doc:   "Formats a time object using a Go time format layout string. Reference time: Mon Jan 2 15:04:05 MST 2006",
+		Doc:   "Formats a time object using a Go time format layout string. Reference time: Mon Jan 2 15:04:05 MST 2006.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch t := arg0.(type) {
 			case env.Time:
@@ -287,10 +345,10 @@ var builtins_time = map[string]*env.Builtin{
 				case env.String:
 					return *env.NewString(t.Value.Format(layout.Value))
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "format-date")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "format-date-go")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "format-date")
+				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "format-date-go")
 			}
 		},
 	},
