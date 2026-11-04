@@ -2,6 +2,7 @@ package env
 
 import (
 	"fmt"
+	"io"
 	"sort"
 	"strings"
 )
@@ -996,6 +997,16 @@ func NewLocationNode(filename string, line, column int, sourceLine string) *Loca
 	}
 }
 
+// EffectMode holds the process-wide declared-effects mode for this program state.
+// It is intentionally separate from user context words such as `scenario` or
+// `intents`: binding a word in a script must not change how effects run.
+type EffectMode struct {
+	DryRun  bool      // skip output effects and log what would run
+	Ask     bool      // prompt for input-effect values after the provider runs
+	Confirm bool      // prompt before each output effect
+	Log     io.Writer // where human-facing effect messages go (defaults to stderr)
+}
+
 type ProgramState struct {
 	Ser           TSeries // current block of code
 	Res           Object  // result of expression
@@ -1023,6 +1034,7 @@ type ProgramState struct {
 	EmbeddedFS    *interface{} // embed.FS for embedded script files (interface to avoid import cycle)
 	DeferBlocks   []Block      // blocks to be executed when function exits or program terminates
 	CaptureBlock  *Block       // block to be executed with injected error if an error bubbles to the top
+	EffectMode    EffectMode   // declared-effects mode (dry-run, ask, confirm)
 	ContextStack  []*RyeCtx    // stack of previous contexts for ccb navigation
 	// LastFailedCPathInfo map[string]interface{} // stores information about the last failed context path
 	BlockFile      string

@@ -567,7 +567,6 @@ func evalWord_Individual(val any) (any, env.Object) {
 }
 
 func BuiValidate(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object) env.Object {
-	fmt.Println(arg0)
 	switch blk := arg1.(type) {
 	case env.Block:
 		switch rmap := arg0.(type) {

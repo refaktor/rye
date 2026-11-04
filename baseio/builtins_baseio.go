@@ -712,14 +712,17 @@ var builtins_baseio = map[string]*env.Builtin{
 	// Args:
 	// * none
 	// Returns:
-	// * boolean, true when --dry-run is active or a scenario context is detected
-	// Notes: Checks RYE_DRY_RUN=1, then falls back to the scenario detector.
+	// * boolean, true when -eff-dryrun is active or effect-mode hooks report scenario mode
+	// Notes: Checks the active EffectMode, then RYE_EFF_DRY_RUN/RYE_DRY_RUN, then embedded scenario hooks.
 	"Rye-itself//Is-dry-run": {
 		Argsn: 0,
-		Doc:   "Returns true if Rye is running in dry-run/scenario mode (activated via --dry-run or scenario context)",
+		Doc:   "Returns true if Rye is running with declared effects in dry-run mode (-eff-dryrun)",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, _ env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
-			if os.Getenv("RYE_DRY_RUN") == "1" {
+			if ps.EffectMode.DryRun {
+				return *env.NewBoolean(true)
+			}
+			if os.Getenv("RYE_EFF_DRY_RUN") == "1" || os.Getenv("RYE_DRY_RUN") == "1" {
 				return *env.NewBoolean(true)
 			}
 			// Fallback to evaldo's scenario detector
@@ -839,15 +842,12 @@ func ryeItselfArgsParsed(ps *env.ProgramState) env.Object {
 
 // Bridge to evaldo.isScenarioMode without export; we re-use its logic parts available:
 func evaldo_BatteryIsScenario(ps *env.ProgramState) bool {
+	if ps.EffectMode.DryRun {
+		return true
+	}
 	// If batteries expose a hook, use it
 	if evaldo.BatteryIsScenarioHook != nil && evaldo.BatteryIsScenarioHook(ps) {
 		return true
-	}
-	// Check context sentinel 'scenario'
-	if idx, found := ps.Idx.GetIndex("scenario"); found {
-		if obj, ok := ps.Ctx.Get(idx); ok && obj != nil {
-			return true
-		}
 	}
 	return false
 }
