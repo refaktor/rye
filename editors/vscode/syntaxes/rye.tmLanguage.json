@@ -90,6 +90,10 @@
       "end": "`",
       "patterns": [
         {
+          "name": "constant.character.escape.rye",
+          "match": "\\\\."
+        },
+        {
           "name": "constant.other.placeholder.rye",
           "match": "\\{\\}"
         }
@@ -339,7 +343,7 @@
     "builtins-time": {
       "comment": "Time-related builtins",
       "name": "support.function.time.rye",
-      "match": "(?<=[\\s{\\[\\(,]|^)(?:now|date|datetime|sleep|time-it|format-date|format-imap-date|year\\?|month\\?|day\\?|hour\\?|minute\\?|second\\?|weekday\\?|yearday\\?|date\\?|time\\?|days-in-month\\?|unix-micro\\?|unix-milli\\?|seconds|minutes|hours|days|weeks|thousands|millions)(?=[\\s}\\]\\),;]|$)"
+      "match": "(?<=[\\s{\\[\\(,]|^)(?:now|date|datetime|sleep|time-it|parse-date|format-date|format-date-go|format-imap-date|year\\?|month\\?|day\\?|hour\\?|minute\\?|second\\?|weekday\\?|yearday\\?|date\\?|time\\?|days-in-month\\?|unix-micro\\?|unix-milli\\?|seconds|minutes|hours|days|weeks|thousands|millions)(?=[\\s}\\]\\),;]|$)"
     },
 
     "builtins-testing": {

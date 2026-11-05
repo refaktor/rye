@@ -18,6 +18,11 @@ import (
 // OfferDebuggingOptions presents debugging options to the user when an error occurs
 // Loops to offer options repeatedly until user chooses to continue or times out
 func OfferDebuggingOptions(es *env.ProgramState, genv *env.Idxs, tag string) {
+	// Production mode never offers interactive debugging options; fail with a
+	// non-zero status instead.
+	if evaldo.ProductionMode {
+		os.Exit(1)
+	}
 	// If NoInspectMode is enabled, exit immediately without showing options
 	if evaldo.NoInspectMode {
 		os.Exit(1)
