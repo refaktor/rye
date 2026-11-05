@@ -254,6 +254,10 @@ var builtins_types = map[string]*env.Builtin{
 			switch val := arg0.(type) {
 			case env.List:
 				return env.List2Block(ps, val)
+			case env.Bunch:
+				return val.ToBlock()
+			case *env.Bunch:
+				return val.ToBlock()
 			case env.Vector:
 				items := make([]env.Object, len(val.Value))
 				for i, v := range val.Value {
@@ -267,7 +271,7 @@ var builtins_types = map[string]*env.Builtin{
 				}
 				return *env.NewBlock(*env.NewTSeries(items))
 			default:
-				return MakeArgError2(ps, 1, []env.Type{env.ListType, env.VectorType, env.TableRowType}, "block", arg0)
+				return MakeArgError2(ps, 1, []env.Type{env.ListType, env.BunchType, env.VectorType, env.TableRowType}, "block", arg0)
 			}
 		},
 	},

@@ -952,38 +952,43 @@ section "Strings" "Creating, inspecting, transforming, and splitting strings." {
 	}
 
 	group "trim\\"
-	"Removes all leading and trailing occurrences of the specified characters from a string."
+	"Removes all leading and trailing occurrences of the specified characters or regular expression from a string."
 	{
 		argsn 2
 		pure
 		argtypes {
 			1 [ String ]
-			2 [ String ]
+			2 [ String Native ]
 		}
 		arg `string: String to trim`
-		arg `cutset: String containing the characters to trim`
+		arg `cutset: String containing the characters to trim, or a compiled regex Native`
 		returns `a new string with specified characters removed from both ends`
 	}
 
 	{
 		equal { trim\ "__ASDF__" "_" } "ASDF"
 		equal { trim\ "##Hello##" "#" } "Hello"
+		equal { trim\ "---hello---" regex "-+" } "hello"
+		equal { trim\ "111hello222" regex "[0-9]+" } "hello"
+		equal { trim\ "---hello---" regex "-" } "hello"
+		equal { trim\ "hello" regex "[0-9]+" } "hello"
+		equal { trim\ "   hello   " regex " +" } "hello"
 	}
 
 	{
 	}
 
 	group "trim\\right"
-	"Removes all trailing occurrences of the specified characters from a string."
+	"Removes all trailing occurrences of the specified characters or regular expression from a string."
 	{
 		argsn 2
 		pure
 		argtypes {
 			1 [ String ]
-			2 [ String ]
+			2 [ String Native ]
 		}
 		arg `string: String to trim`
-		arg `cutset: String containing the characters to trim`
+		arg `cutset: String containing the characters to trim, or a compiled regex Native`
 		returns `a new string with specified characters removed from the right end`
 	}
 
@@ -991,22 +996,25 @@ section "Strings" "Creating, inspecting, transforming, and splitting strings." {
 		equal { trim\right "__ASDF__" "_" } "__ASDF"
 		equal { trim\right "  ASDF  " " " } "  ASDF"
 		equal { trim\right "Hello!!!" "!" } "Hello"
+		equal { trim\right "hello---" regex "-+" } "hello"
+		equal { trim\right "hello---" regex "-" } "hello"
+		equal { trim\right "hello---world" regex "-+" } "hello---world"
 	}
 
 	{
 	}
 
 	group "trim\\left"
-	"Removes all leading occurrences of the specified characters from a string."
+	"Removes all leading occurrences of the specified characters or regular expression from a string."
 	{
 		argsn 2
 		pure
 		argtypes {
 			1 [ String ]
-			2 [ String ]
+			2 [ String Native ]
 		}
 		arg `string: String to trim`
-		arg `cutset: String containing the characters to trim`
+		arg `cutset: String containing the characters to trim, or a compiled regex Native`
 		returns `a new string with specified characters removed from the left end`
 	}
 
@@ -1014,24 +1022,27 @@ section "Strings" "Creating, inspecting, transforming, and splitting strings." {
 		equal { trim\left "___ASDF__" "_" } "ASDF__"
 		equal { trim\left "  ASDF  " " " } "ASDF  "
 		equal { trim\left "###Hello" "#" } "Hello"
+		equal { trim\left "---hello" regex "-+" } "hello"
+		equal { trim\left "---hello" regex "-" } "hello"
+		equal { trim\left "hello---" regex "-+" } "hello---"
 	}
 
 	{
 	}
 
 	group "replace"
-	"Replaces all occurrences of a substring with another string."
+	"Replaces all occurrences of a substring or regular expression with another string."
 	{
 		argsn 3
 		pure
 		argtypes {
 			1 [ String ]
-			2 [ String ]
+			2 [ String Native ]
 			3 [ String ]
 		}
 		arg `string: Original string`
-		arg `old: Substring to replace`
-		arg `new: Replacement string`
+		arg `old: Substring to replace, or a compiled regex Native`
+		arg `new: Replacement string (regex replacements support $1 capture references)`
 		returns `a new string with all occurrences of old replaced by new`
 	}
 
@@ -1040,6 +1051,10 @@ section "Strings" "Creating, inspecting, transforming, and splitting strings." {
 		equal { replace "...xoxo..." "xo" "LoL" } "...LoLLoL..."
 		equal { replace "hello world" "world" "everyone" } "hello everyone"
 		equal { replace "remove--dashes" "-" "" } "removedashes"
+		equal { replace "x123y x456y" regex "[0-9]+" "N" } "xNy xNy"
+		equal { replace "a1b2" regex "([a-z])([0-9])" "$2$1" } "1a2b"
+		equal { replace "abc123def" regex "[0-9]+" "-" } "abc-def"
+		equal { replace "aaa" regex "a" "b" } "bbb"
 	}
 
 	{
@@ -1450,16 +1465,16 @@ section "Strings" "Creating, inspecting, transforming, and splitting strings." {
 	}
 
 	group "split"
-	"Splits a string into a block of strings using a separator string."
+	"Splits a string into a block of strings using a separator string or a compiled regular expression."
 	{
 		argsn 2
 		pure
 		argtypes {
 			1 [ String ]
-			2 [ String ]
+			2 [ String Native ]
 		}
 		arg `string: String to split`
-		arg `separator: String that separates values`
+		arg `separator: String that separates values, or a compiled regex Native`
 		returns `a block of strings resulting from splitting the input string`
 	}
 
@@ -1468,6 +1483,9 @@ section "Strings" "Creating, inspecting, transforming, and splitting strings." {
 		equal { split "hello world" " " } { "hello" "world" }
 		equal { split "one::two::three" "::" } { "one" "two" "three" }
 		equal { split "no-separator" "," } { "no-separator" }
+		equal { split "a1b22c" regex "[0-9]+" } { "a" "b" "c" }
+		equal { split "a,b;c" regex "[,;]" } { "a" "b" "c" }
+		equal { split "abc" regex "[0-9]+" } { "abc" }
 	}
 
 	{
@@ -1810,8 +1828,52 @@ section "Date and Time" "Creating, formatting, comparing, and arithmetic on date
 	{
 	}
 
+	group "parse-date"
+	"Parses a date/time string using a strptime format string. This is the default date/time parsing syntax; see https://man7.org/linux/man-pages/man3/strptime.3.html."
+	{
+		argsn 2
+		argtypes {
+			1 [ String ]
+			2 [ String ]
+		}
+		arg `datestr: String to parse`
+		arg `layout: String - strptime format (for example "%Y-%m-%d")`
+		returns `time object parsed from the string`
+	}
+
+	{
+		equal { parse-date "2023-01-15" "%Y-%m-%d" |type? } 'time
+		equal { parse-date "15/01/2023" "%d/%m/%Y" |day? } 15
+		equal { parse-date "2023-01-15 14:30:45" "%Y-%m-%d %H:%M:%S" |hour? } 14
+	}
+
+	{
+	}
+
 	group "format-date"
-	"Formats a time object using a Go time format layout string. Reference time: Mon Jan 2 15:04:05 MST 2006"
+	"Formats a time object using a strftime format string. This is the default date/time formatting syntax; see https://man7.org/linux/man-pages/man3/strftime.3.html."
+	{
+		argsn 2
+		argtypes {
+			1 [ Time ]
+			2 [ String ]
+		}
+		arg `time: Time object to format`
+		arg `layout: String - strftime format (for example "%Y-%m-%d")`
+		returns `string representing the formatted date/time`
+	}
+
+	{
+		equal { date "2023-01-15" |format-date "%Y-%m-%d" } "2023-01-15"
+		equal { date "2023-01-15" |format-date "%d/%m/%Y" } "15/01/2023"
+		equal { datetime "2023-01-15T14:30:45" |format-date "%a %b %e %H:%M:%S %Y" } "Sun Jan 15 14:30:45 2023"
+	}
+
+	{
+	}
+
+	group "format-date-go"
+	"Formats a time object using a Go time format layout string. Reference time: Mon Jan 2 15:04:05 MST 2006."
 	{
 		argsn 2
 		argtypes {
@@ -1824,9 +1886,8 @@ section "Date and Time" "Creating, formatting, comparing, and arithmetic on date
 	}
 
 	{
-		equal { date "2023-01-15" |format-date "2006-01-02" } "2023-01-15"
-		equal { date "2023-01-15" |format-date "02/01/2006" } "15/01/2023"
-		equal { datetime "2023-01-15T14:30:45" |format-date "Mon Jan 2 15:04:05 2006" } "Sun Jan 15 14:30:45 2023"
+		equal { date "2023-01-15" |format-date-go "2006-01-02" } "2023-01-15"
+		equal { date "2023-01-15" |format-date-go "02/01/2006" } "15/01/2023"
 	}
 
 	{
@@ -4859,7 +4920,7 @@ section "Flow control" "Functions for conditional execution and branching logic"
 	}
 
 	group "switch"
-	"Pattern matching construct that executes a block of code corresponding to the first matching case value."
+	"Pattern matching construct that executes a block of code corresponding to the first matching case value. Fails if no case matches and no default case is provided."
 	{
 		argsn 2
 		argtypes {
@@ -4867,12 +4928,14 @@ section "Flow control" "Functions for conditional execution and branching logic"
 		}
 		arg `value: Value to match against case values`
 		arg `cases: Block containing case values and corresponding handler blocks`
-		returns `result of executing the matching handler block, or the original value if no match`
+		returns `result of executing the matching handler block, or a descriptive failure if no case matches`
 	}
 
 	{
 		equal  { switch 101 { 101 { 111 } 202 { 222 } } } 111
 		equal  { switch 202 { 101 { 111 } 202 { 222 } } } 222
+		error  { switch 303 { 101 { 111 } 202 { 222 } } }
+		equal  { try { switch 303 { 101 { 111 } 202 { 222 } } } |message? |contains "303" } true
 	}
 
 	{

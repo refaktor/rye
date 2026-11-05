@@ -2795,6 +2795,7 @@ func RegisterBaseBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(builtins_printing, ps, "base")
 	RegisterBuiltins2(builtins_types, ps, "base")
 	RegisterBuiltins2(builtins_iteration, ps, "base")
+	RegisterBuiltins2(builtins_bunch, ps, "base")
 	RegisterBuiltins2(builtins_contexts, ps, "base")
 	RegisterBuiltins2(builtins_functions, ps, "base")
 	RegisterBuiltins2(builtins_effects, ps, "base")

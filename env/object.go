@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -234,6 +235,10 @@ const (
 	// the remaining segments are literal accessors (keys/indexes):
 	// words, integers, decimals or strings.
 	DataPathType Type = 55
+	// Bunch is a constructed type
+	// bunch { "a" "b" "c" }
+	// It represents an unordered collection of unique values.
+	BunchType Type = 56
 )
 
 // after adding new type here, also add string to idxs.go
@@ -316,6 +321,10 @@ func ensureSamePointerType(original, copied Object) Object {
 	case *List:
 		if listCopy, ok := copied.(List); ok {
 			return &listCopy
+		}
+	case *Bunch:
+		if bunchCopy, ok := copied.(Bunch); ok {
+			return &bunchCopy
 		}
 		// Add other pointer types as needed
 	}
@@ -3078,6 +3087,230 @@ func (l List) DeepCopy() Object {
 		}
 	}
 	return *NewList(newData)
+}
+
+//
+// SET
+//
+
+// Bunch is an unordered collection of unique values. Values are normalised to
+// strings for storage, so strings and words with the same spelling are treated
+// as the same element. Blocks, lists and dicts are not valid bunch elements.
+type Bunch struct {
+	Data map[string]struct{}
+}
+
+func NewBunch(data map[string]struct{}) *Bunch {
+	if data == nil {
+		data = make(map[string]struct{})
+	}
+	return &Bunch{data}
+}
+
+func NewBunchFromStrings(values []string) *Bunch {
+	data := make(map[string]struct{}, len(values))
+	for _, value := range values {
+		data[value] = struct{}{}
+	}
+	return &Bunch{data}
+}
+
+// BunchKey converts a scalar Rye value into the canonical string key used by Bunch.
+// Strings and word-like values share the same namespace; numbers and booleans
+// are converted to their textual form.
+func BunchKey(obj Object, idx *Idxs) (string, bool) {
+	switch v := obj.(type) {
+	case String:
+		return v.Value, true
+	case Word:
+		return idx.GetWord(v.Index), true
+	case Tagword:
+		return idx.GetWord(v.Index), true
+	case Setword:
+		return idx.GetWord(v.Index), true
+	case Integer:
+		return strconv.FormatInt(v.Value, 10), true
+	case Decimal:
+		return strconv.FormatFloat(v.Value, 'g', -1, 64), true
+	case Boolean:
+		return strconv.FormatBool(v.Value), true
+	}
+	return "", false
+}
+
+func NewBunchFromSeriesChecked(block TSeries, idx *Idxs) (Bunch, error) {
+	data := make(map[string]struct{})
+	for block.Pos() < block.Len() {
+		pos := block.Pos()
+		elem := block.Pop()
+		key, ok := BunchKey(elem, idx)
+		if !ok {
+			return Bunch{}, fmt.Errorf("invalid bunch element %s at position %d; elements must be strings, words, numbers, or booleans", elem.Inspect(*idx), pos)
+		}
+		data[key] = struct{}{}
+	}
+	return Bunch{data}, nil
+}
+
+func NewBunchFromValuesChecked(values []Object, idx *Idxs) (Bunch, error) {
+	data := make(map[string]struct{}, len(values))
+	for pos, elem := range values {
+		key, ok := BunchKey(elem, idx)
+		if !ok {
+			return Bunch{}, fmt.Errorf("invalid bunch element %s at position %d; elements must be strings, words, numbers, or booleans", elem.Inspect(*idx), pos)
+		}
+		data[key] = struct{}{}
+	}
+	return Bunch{data}, nil
+}
+
+func (i Bunch) Type() Type {
+	return BunchType
+}
+
+func (i Bunch) SortedKeys() []string {
+	keys := make([]string, 0, len(i.Data))
+	for key := range i.Data {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+func (i Bunch) Inspect(idxs Idxs) string {
+	var bu strings.Builder
+	bu.WriteString("[Bunch: ")
+	for _, key := range i.SortedKeys() {
+		bu.WriteString(strconv.Quote(key) + " ")
+	}
+	bu.WriteString("]")
+	return bu.String()
+}
+
+func (i Bunch) Print(idxs Idxs) string {
+	var bu strings.Builder
+	bu.WriteString("Bunch[ ")
+	for _, key := range i.SortedKeys() {
+		bu.WriteString(strconv.Quote(key) + " ")
+	}
+	bu.WriteString("]")
+	return bu.String()
+}
+
+func (i Bunch) Trace(msg string) {
+	fmt.Print(msg + "(Bunch): ")
+	fmt.Println(len(i.Data))
+}
+
+func (i Bunch) GetKind() int {
+	return int(BunchType)
+}
+
+func (i Bunch) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	var oBunch Bunch
+	switch v := o.(type) {
+	case Bunch:
+		oBunch = v
+	case *Bunch:
+		oBunch = *v
+	default:
+		return false
+	}
+	if len(i.Data) != len(oBunch.Data) {
+		return false
+	}
+	for key := range i.Data {
+		if _, ok := oBunch.Data[key]; !ok {
+			return false
+		}
+	}
+	return true
+}
+
+func (i Bunch) Dump(e Idxs) string {
+	var bu strings.Builder
+	bu.WriteString("bunch { ")
+	for _, key := range i.SortedKeys() {
+		bu.WriteString(strconv.Quote(key) + " ")
+	}
+	bu.WriteString("}")
+	return bu.String()
+}
+
+func (i Bunch) DeepCopy() Object {
+	data := make(map[string]struct{}, len(i.Data))
+	for key := range i.Data {
+		data[key] = struct{}{}
+	}
+	return Bunch{data}
+}
+
+func (i Bunch) Length() int {
+	return len(i.Data)
+}
+
+func (i Bunch) Contains(key string) bool {
+	_, ok := i.Data[key]
+	return ok
+}
+
+func (i Bunch) Add(key string) bool {
+	if _, ok := i.Data[key]; ok {
+		return false
+	}
+	i.Data[key] = struct{}{}
+	return true
+}
+
+func (i Bunch) Remove(key string) bool {
+	if _, ok := i.Data[key]; !ok {
+		return false
+	}
+	delete(i.Data, key)
+	return true
+}
+
+func (i Bunch) Union(other Bunch) Bunch {
+	data := make(map[string]struct{}, len(i.Data)+len(other.Data))
+	for key := range i.Data {
+		data[key] = struct{}{}
+	}
+	for key := range other.Data {
+		data[key] = struct{}{}
+	}
+	return Bunch{data}
+}
+
+func (i Bunch) Intersection(other Bunch) Bunch {
+	data := make(map[string]struct{})
+	for key := range i.Data {
+		if _, ok := other.Data[key]; ok {
+			data[key] = struct{}{}
+		}
+	}
+	return Bunch{data}
+}
+
+func (i Bunch) Difference(other Bunch) Bunch {
+	data := make(map[string]struct{})
+	for key := range i.Data {
+		if _, ok := other.Data[key]; !ok {
+			data[key] = struct{}{}
+		}
+	}
+	return Bunch{data}
+}
+
+func (i Bunch) ToBlock() Block {
+	keys := i.SortedKeys()
+	values := make([]Object, len(keys))
+	for n, key := range keys {
+		values[n] = *NewString(key)
+	}
+	return *NewBlock(*NewTSeries(values))
 }
 
 //

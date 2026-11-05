@@ -14,7 +14,7 @@ go build -o "$rbit" ../cmd/rbit
 # belong to the tree, but produce no groups; rbit handles those itself.
 base=(
   builtins_boolean.go builtins_numbers.go builtins_strings.go
-  builtins_time.go builtins_collections.go builtins_types.go
+  builtins_time.go builtins_collections.go builtins_bunches.go builtins_types.go
   builtins_contexts.go builtins_conditionals.go builtins_iteration.go
   builtins_functions.go builtins.go builtins_combinators.go
   builtins_printing_not.go builtins_error_handling.go builtins_mth.go
