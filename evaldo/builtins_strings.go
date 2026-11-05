@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"net/url"
+	"regexp"
 
 	"github.com/refaktor/rye/env"
 
@@ -17,6 +18,46 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
+
+func asRegexp(obj env.Object) (*regexp.Regexp, bool) {
+	native, ok := obj.(env.Native)
+	if !ok {
+		return nil, false
+	}
+	re, ok := native.Value.(*regexp.Regexp)
+	return re, ok
+}
+
+func trimLeftRegex(s string, re *regexp.Regexp) string {
+	end := 0
+	for _, loc := range re.FindAllStringIndex(s, -1) {
+		if loc[0] != end || loc[1] == loc[0] {
+			break
+		}
+		end = loc[1]
+	}
+	return s[end:]
+}
+
+func trimRightRegex(s string, re *regexp.Regexp) string {
+	end := len(s)
+	locs := re.FindAllStringIndex(s, -1)
+	for i := len(locs) - 1; i >= 0; i-- {
+		loc := locs[i]
+		if loc[0] == loc[1] {
+			continue
+		}
+		if loc[1] != end {
+			break
+		}
+		end = loc[0]
+	}
+	return s[:end]
+}
+
+func trimRegex(s string, re *regexp.Regexp) string {
+	return trimRightRegex(trimLeftRegex(s, re), re)
+}
 
 var builtins_string = map[string]*env.Builtin{
 
@@ -101,14 +142,19 @@ var builtins_string = map[string]*env.Builtin{
 	// Tests:
 	// equal { trim\ "__ASDF__" "_" } "ASDF"
 	// equal { trim\ "##Hello##" "#" } "Hello"
+	// equal { trim\ "---hello---" regex "-+" } "hello"
+	// equal { trim\ "111hello222" regex "[0-9]+" } "hello"
+	// equal { trim\ "---hello---" regex "-" } "hello"
+	// equal { trim\ "hello" regex "[0-9]+" } "hello"
+	// equal { trim\ "   hello   " regex " +" } "hello"
 	// Args:
 	// * string: String to trim
-	// * cutset: String containing the characters to trim
+	// * cutset: String containing the characters to trim, or a compiled regex Native
 	// Returns:
 	// * a new string with specified characters removed from both ends
 	"trim\\": {
 		Argsn: 2,
-		Doc:   "Removes all leading and trailing occurrences of the specified characters from a string.",
+		Doc:   "Removes all leading and trailing occurrences of the specified characters or regular expression from a string.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
@@ -116,18 +162,28 @@ var builtins_string = map[string]*env.Builtin{
 				switch s2 := arg1.(type) {
 				case env.String:
 					return *env.NewString(strings.Trim(s1.Value, s2.Value))
+				case env.Native:
+					if re, ok := asRegexp(s2); ok {
+						return *env.NewString(trimRegex(s1.Value, re))
+					}
+					return MakeArgError(ps, 2, []env.Type{env.StringType, env.NativeType}, "trim\\")
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "trim")
+					return MakeArgError(ps, 2, []env.Type{env.StringType, env.NativeType}, "trim\\")
 				}
 			case env.Secret:
 				switch s2 := arg1.(type) {
 				case env.String:
 					return *env.NewSecret(strings.Trim(s1.Value, s2.Value))
+				case env.Native:
+					if re, ok := asRegexp(s2); ok {
+						return *env.NewSecret(trimRegex(s1.Value, re))
+					}
+					return MakeArgError(ps, 2, []env.Type{env.StringType, env.NativeType}, "trim\\")
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "trim")
+					return MakeArgError(ps, 2, []env.Type{env.StringType, env.NativeType}, "trim\\")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "trim")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "trim\\")
 			}
 		},
 	},
@@ -136,14 +192,17 @@ var builtins_string = map[string]*env.Builtin{
 	// equal { trim\right "__ASDF__" "_" } "__ASDF"
 	// equal { trim\right "  ASDF  " " " } "  ASDF"
 	// equal { trim\right "Hello!!!" "!" } "Hello"
+	// equal { trim\right "hello---" regex "-+" } "hello"
+	// equal { trim\right "hello---" regex "-" } "hello"
+	// equal { trim\right "hello---world" regex "-+" } "hello---world"
 	// Args:
 	// * string: String to trim
-	// * cutset: String containing the characters to trim
+	// * cutset: String containing the characters to trim, or a compiled regex Native
 	// Returns:
 	// * a new string with specified characters removed from the right end
 	"trim\\right": {
 		Argsn: 2,
-		Doc:   "Removes all trailing occurrences of the specified characters from a string.",
+		Doc:   "Removes all trailing occurrences of the specified characters or regular expression from a string.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
@@ -151,15 +210,25 @@ var builtins_string = map[string]*env.Builtin{
 				switch s2 := arg1.(type) {
 				case env.String:
 					return *env.NewString(strings.TrimRight(s1.Value, s2.Value))
+				case env.Native:
+					if re, ok := asRegexp(s2); ok {
+						return *env.NewString(trimRightRegex(s1.Value, re))
+					}
+					return MakeArgError(ps, 2, []env.Type{env.StringType, env.NativeType}, "trim\\right")
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "trim\\right")
+					return MakeArgError(ps, 2, []env.Type{env.StringType, env.NativeType}, "trim\\right")
 				}
 			case env.Secret:
 				switch s2 := arg1.(type) {
 				case env.String:
 					return *env.NewSecret(strings.TrimRight(s1.Value, s2.Value))
+				case env.Native:
+					if re, ok := asRegexp(s2); ok {
+						return *env.NewSecret(trimRightRegex(s1.Value, re))
+					}
+					return MakeArgError(ps, 2, []env.Type{env.StringType, env.NativeType}, "trim\\right")
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "trim\\right")
+					return MakeArgError(ps, 2, []env.Type{env.StringType, env.NativeType}, "trim\\right")
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "trim\\right")
@@ -170,14 +239,17 @@ var builtins_string = map[string]*env.Builtin{
 	// equal { trim\left "___ASDF__" "_" } "ASDF__"
 	// equal { trim\left "  ASDF  " " " } "ASDF  "
 	// equal { trim\left "###Hello" "#" } "Hello"
+	// equal { trim\left "---hello" regex "-+" } "hello"
+	// equal { trim\left "---hello" regex "-" } "hello"
+	// equal { trim\left "hello---" regex "-+" } "hello---"
 	// Args:
 	// * string: String to trim
-	// * cutset: String containing the characters to trim
+	// * cutset: String containing the characters to trim, or a compiled regex Native
 	// Returns:
 	// * a new string with specified characters removed from the left end
 	"trim\\left": {
 		Argsn: 2,
-		Doc:   "Removes all leading occurrences of the specified characters from a string.",
+		Doc:   "Removes all leading occurrences of the specified characters or regular expression from a string.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
@@ -185,15 +257,25 @@ var builtins_string = map[string]*env.Builtin{
 				switch s2 := arg1.(type) {
 				case env.String:
 					return *env.NewString(strings.TrimLeft(s1.Value, s2.Value))
+				case env.Native:
+					if re, ok := asRegexp(s2); ok {
+						return *env.NewString(trimLeftRegex(s1.Value, re))
+					}
+					return MakeArgError(ps, 2, []env.Type{env.StringType, env.NativeType}, "trim\\left")
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "trim\\left")
+					return MakeArgError(ps, 2, []env.Type{env.StringType, env.NativeType}, "trim\\left")
 				}
 			case env.Secret:
 				switch s2 := arg1.(type) {
 				case env.String:
 					return *env.NewSecret(strings.TrimLeft(s1.Value, s2.Value))
+				case env.Native:
+					if re, ok := asRegexp(s2); ok {
+						return *env.NewSecret(trimLeftRegex(s1.Value, re))
+					}
+					return MakeArgError(ps, 2, []env.Type{env.StringType, env.NativeType}, "trim\\left")
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "trim\\left")
+					return MakeArgError(ps, 2, []env.Type{env.StringType, env.NativeType}, "trim\\left")
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "trim\\left")
@@ -205,15 +287,19 @@ var builtins_string = map[string]*env.Builtin{
 	// equal { replace "...xoxo..." "xo" "LoL" } "...LoLLoL..."
 	// equal { replace "hello world" "world" "everyone" } "hello everyone"
 	// equal { replace "remove--dashes" "-" "" } "removedashes"
+	// equal { replace "x123y x456y" regex "[0-9]+" "N" } "xNy xNy"
+	// equal { replace "a1b2" regex "([a-z])([0-9])" "$2$1" } "1a2b"
+	// equal { replace "abc123def" regex "[0-9]+" "-" } "abc-def"
+	// equal { replace "aaa" regex "a" "b" } "bbb"
 	// Args:
 	// * string: Original string
-	// * old: Substring to replace
-	// * new: Replacement string
+	// * old: Substring to replace, or a compiled regex Native
+	// * new: Replacement string (regex replacements support $1 capture references)
 	// Returns:
 	// * a new string with all occurrences of old replaced by new
 	"replace": {
 		Argsn: 3,
-		Doc:   "Replaces all occurrences of a substring with another string.",
+		Doc:   "Replaces all occurrences of a substring or regular expression with another string.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
@@ -226,8 +312,19 @@ var builtins_string = map[string]*env.Builtin{
 					default:
 						return MakeArgError(ps, 3, []env.Type{env.StringType}, "replace")
 					}
+				case env.Native:
+					re, ok := asRegexp(s2)
+					if !ok {
+						return MakeArgError(ps, 2, []env.Type{env.StringType, env.NativeType}, "replace")
+					}
+					switch s3 := arg2.(type) {
+					case env.String:
+						return *env.NewString(re.ReplaceAllString(s1.Value, s3.Value))
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.StringType}, "replace")
+					}
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "replace")
+					return MakeArgError(ps, 2, []env.Type{env.StringType, env.NativeType}, "replace")
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "replace")
@@ -950,15 +1047,18 @@ var builtins_string = map[string]*env.Builtin{
 	// equal { split "hello world" " " } { "hello" "world" }
 	// equal { split "one::two::three" "::" } { "one" "two" "three" }
 	// equal { split "no-separator" "," } { "no-separator" }
+	// equal { split "a1b22c" regex "[0-9]+" } { "a" "b" "c" }
+	// equal { split "a,b;c" regex "[,;]" } { "a" "b" "c" }
+	// equal { split "abc" regex "[0-9]+" } { "abc" }
 	// Args:
 	// * string: String to split
-	// * separator: String that separates values
+	// * separator: String that separates values, or a compiled regex Native
 	// Returns:
 	// * a block of strings resulting from splitting the input string
 	"split": { // **
 		Argsn: 2,
 		Pure:  true,
-		Doc:   "Splits a string into a block of strings using a separator string.",
+		Doc:   "Splits a string into a block of strings using a separator string or a compiled regular expression.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.String:
@@ -970,8 +1070,19 @@ var builtins_string = map[string]*env.Builtin{
 						spl2[i] = *env.NewString(val)
 					}
 					return *env.NewBlock(*env.NewTSeries(spl2))
+				case env.Native:
+					re, ok := asRegexp(sepa)
+					if !ok {
+						return MakeArgError(ps, 2, []env.Type{env.StringType, env.NativeType}, "split")
+					}
+					spl := re.Split(str.Value, -1)
+					spl2 := make([]env.Object, len(spl))
+					for i, val := range spl {
+						spl2[i] = *env.NewString(val)
+					}
+					return *env.NewBlock(*env.NewTSeries(spl2))
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "split")
+					return MakeArgError(ps, 2, []env.Type{env.StringType, env.NativeType}, "split")
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "split")
