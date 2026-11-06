@@ -85,6 +85,18 @@
     st)
   "Syntax table for `rye-mode'.")
 
+(defun rye-syntax-propertize (start end)
+  "Mark backslash escapes for quotes, backticks, and backslashes.
+
+Rye strings use backslash escapes, but backslash is also a valid word
+character (for example `trim\\`).  Marking only escape sequences avoids
+changing how backslashes in words are parsed."
+  (save-excursion
+    (goto-char (max (point-min) (1- start)))
+    (while (re-search-forward "\\\\\\(?:[\\\\\"`]\\)" (min (point-max) (1+ end)) t)
+      (put-text-property (match-beginning 0) (1+ (match-beginning 0))
+                         'syntax-table (string-to-syntax "\\")))))
+
 ;; ============================================================
 ;; Font-lock (syntax highlighting)
 ;; ============================================================
@@ -218,7 +230,7 @@
 
 (defconst rye--builtins-time
   '("now" "date" "datetime" "sleep" "time-it"
-    "format-date" "format-imap-date"
+    "parse-date" "format-date" "format-date-go" "format-imap-date"
     "year?" "month?" "day?" "hour?" "minute?" "second?"
     "weekday?" "yearday?" "date?" "time?" "days-in-month?"
     "unix-micro?" "unix-milli?"
@@ -489,6 +501,9 @@
   ;; Font lock
   (setq-local font-lock-defaults '(rye-font-lock-keywords nil nil))
   (setq-local font-lock-multiline t)
+
+  ;; String escape handling
+  (setq-local syntax-propertize-function #'rye-syntax-propertize)
 
   ;; Indentation
   (setq-local indent-line-function #'rye-indent-line)

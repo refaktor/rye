@@ -1,6 +1,8 @@
 package evaldo
 
 import (
+	"fmt"
+
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/util"
 )
@@ -433,14 +435,16 @@ var builtins_conditionals = map[string]*env.Builtin{
 	// Tests:
 	// equal  { switch 101 { 101 { 111 } 202 { 222 } } } 111
 	// equal  { switch 202 { 101 { 111 } 202 { 222 } } } 222
+	// error  { switch 303 { 101 { 111 } 202 { 222 } } }
+	// equal  { try { switch 303 { 101 { 111 } 202 { 222 } } } |message? |contains "303" } true
 	// Args:
 	// * value: Value to match against case values
 	// * cases: Block containing case values and corresponding handler blocks
 	// Returns:
-	// * result of executing the matching handler block, or the original value if no match
+	// * result of executing the matching handler block, or a descriptive failure if no case matches
 	"switch": { // **
 		Argsn:         2,
-		Doc:           "Pattern matching construct that executes a block of code corresponding to the first matching case value.",
+		Doc:           "Pattern matching construct that executes a block of code corresponding to the first matching case value. Fails if no case matches and no default case is provided.",
 		AcceptFailure: true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg1.(type) {
@@ -495,7 +499,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 						return MakeBuiltinError(ps, "Malformed switch block.", "switch")
 					}
 				}
-				return arg0
+				return MakeBuiltinError(ps, fmt.Sprintf("No case matched value %s", arg0.Inspect(*ps.Idx)), "switch")
 			default:
 				// if it's not a block we return error for now
 				ps.FailureFlag = true

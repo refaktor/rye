@@ -110,9 +110,10 @@ syn match ryeSet "\K\k*:"
 " Strings
 syn match ryeString "\a\+:\/\/[^[:space:]]*" 
 syn match ryeString "%[^[:space:]]*"
-syn region ryeString oneline start=+%\="+ skip=+^"+ end=+"+ contains=ryeSpecialCharacter
-syn region ryeString start=+`+ end=+`+ contains=ryeSpecialCharacter
-syn match ryeSpecialCharacter contained "\^[^[:space:][]"
+syn region ryeString oneline start=+"+ skip=+\\\\\|\\"+ end=+"+ contains=ryeSpecialCharacter
+syn region ryeString start=+`+ skip=+\\\\\|\\`+ end=+`+ contains=ryeSpecialCharacter
+syn match ryeSpecialCharacter contained "\\\\[nrt\\\"e]"
+syn match ryeSpecialCharacter contained "\\\\x[0-9a-fA-F]\{2}"
 syn match ryeSpecialCharacter contained "%\d\+"
 
 " Blocks

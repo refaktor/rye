@@ -2,6 +2,7 @@ package evaldo
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -18,6 +19,11 @@ func init() {
 
 // NoInspectMode controls whether to exit immediately on error without showing debugging options
 var NoInspectMode bool
+
+// ProductionMode suppresses the enhanced/interactive error display and debugging
+// options. When set, an unhandled error terminates the process with a non-zero
+// exit status instead.
+var ProductionMode bool
 
 // OfferDebuggingOptionsHook is a function variable that can be set by the console package
 // to provide interactive debugging options. It defaults to a no-op, which is the correct
@@ -2509,6 +2515,12 @@ func MaybeDisplayFailureOrError2(es *env.ProgramState, genv *env.Idxs, tag strin
 			}
 			// Capture block itself produced an error - restore captured error as Res
 			// and fall through to normal error display below
+		}
+
+		// Production mode: fail fast with a non-zero status instead of showing
+		// the enhanced error display and interactive debugging options.
+		if ProductionMode {
+			os.Exit(1)
 		}
 
 		// Use the enhanced error reporting with source location

@@ -23,9 +23,9 @@ import (
 	"golang.org/x/term"
 
 	"github.com/refaktor/rye/baseio"
-	"github.com/refaktor/rye/contrib"
 	"github.com/refaktor/rye/batteries"
 	ryeconsole "github.com/refaktor/rye/console"
+	"github.com/refaktor/rye/contrib"
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
 	"github.com/refaktor/rye/loader"
@@ -76,10 +76,15 @@ var (
 
 	// Inspect/debugging options
 	NoInspect = flag.Bool("noinspect", false, "Exit immediately on error without showing debugging options")
+	// Production mode: on error, skip the enhanced/interactive error display and
+	// debugging options, and exit with a non-zero status code instead.
+	prod = flag.Bool("prod", false, "Exit with error status on errors without interactive error display or debugging options")
 
-	// Scenario/dry-run options
-	DryRun       = flag.Bool("dry-run", false, "Activate output-intent dry-run mode: log outputs but skip side-effect blocks")
-	ScenarioFile = flag.String("scenario", "", "Path to a Rye file to preload before script; can register input-intent overrides via Rye-itself callbacks")
+	// Declared-effects options
+	EffDryRun    = flag.Bool("eff-dryrun", false, "Declared effects: log output effects as `would ...` on stderr and skip them")
+	EffAsk       = flag.Bool("eff-ask", false, "Declared effects: prompt for input-effect values after the provider runs")
+	EffConfirm   = flag.Bool("eff-confirm", false, "Declared effects: ask before running each output effect")
+	ScenarioFile = flag.String("scenario", "", "Path to a Rye file to preload before script")
 )
 
 // TODO 20251107: This is temporary experiment, to make builtins like forever respond to ctrl+d, ctrl+z, ...
@@ -202,6 +207,18 @@ func registerAllBuiltins(ps *env.ProgramState) {
 	projectbuiltins.Register(ps)
 }
 
+// applyEffectFlags configures the declared-effects mode for a program state.
+// Flags win over environment variables; the old RYE_DRY_RUN name is still
+// accepted so existing CI invocations keep working.
+func applyEffectFlags(ps *env.ProgramState) {
+	if *EffDryRun || os.Getenv("RYE_EFF_DRY_RUN") == "1" || os.Getenv("RYE_DRY_RUN") == "1" {
+		ps.EffectMode.DryRun = true
+	}
+	ps.EffectMode.Ask = *EffAsk
+	ps.EffectMode.Confirm = *EffConfirm
+	ps.EffectMode.Log = os.Stderr
+}
+
 func DoMain(regfn func(*env.ProgramState) error) {
 	// CHILD PROCESS DETECTION: Must happen before flag.Parse().
 	// If we are the sandboxed child spawned by the --unshare re-exec, set up
@@ -282,23 +299,30 @@ func DoMain(regfn func(*env.ProgramState) error) {
 		fmt.Println("\033[33m  rye -histfile hist.rye               \033[36m# append console history to specified file hist.rye")
 		fmt.Println("\033[33m  rye -http 8080                       \033[36m# start HTTP REPL mode on port 8080 (localhost only)")
 		fmt.Println("\033[33m  rye -http 8080 main.rye              \033[36m# load main.rye and expose via HTTP console on port 8080")
-		fmt.Println("\033[33m  rye --dry-run script.rye             \033[36m# simulate outputs: log payloads, skip side-effects in output-intent")
-		fmt.Println("\033[33m  rye --scenario scenario.rye file.rye \033[36m# preload scenario.rye to register input-intent value providers")
+		fmt.Println("\033[33m  rye -eff-dryrun script.rye           \033[36m# log output effects as `would ...` and skip them")
+		fmt.Println("\033[33m  rye -eff-ask script.rye              \033[36m# prompt for input-effect values after providers run")
+		fmt.Println("\033[33m  rye -eff-confirm script.rye          \033[36m# ask before running each output effect")
 		fmt.Println("\033[0m\n Thank you for trying out \033[1mRye\033[22m ...")
 		fmt.Println("")
 	}
 	// Parse flags
 	flag.Parse()
 
+	// Production mode must be applied before any code is loaded or evaluated so
+	// that errors from every execution mode take the non-interactive path.
+	evaldo.ProductionMode = *prod
+
 	// If a scenario preload file is provided, remember it in an env var for later load
 	if *ScenarioFile != "" {
 		os.Setenv("RYE_SCENARIO_FILE", *ScenarioFile)
 	}
 
-	// Record dry-run flag to env var so lower layers can pick it up
-	if *DryRun {
+	// Record dry-run flag to env vars so lower layers can pick it up.
+	if *EffDryRun {
+		os.Setenv("RYE_EFF_DRY_RUN", "1")
 		os.Setenv("RYE_DRY_RUN", "1")
 	} else {
+		os.Unsetenv("RYE_EFF_DRY_RUN")
 		os.Unsetenv("RYE_DRY_RUN")
 	}
 
@@ -709,11 +733,8 @@ func main_rye_http_repl(port string, file string, code string, lang string, regf
 			return
 		}
 
-		// Apply dry-run and scenario preload if requested
-		if *DryRun {
-			idxScenario := ps.Idx.IndexWord("scenario")
-			ps.Ctx.Set(idxScenario, *env.NewDict(map[string]interface{}{}))
-		}
+		// Apply declared-effects mode and scenario preload if requested.
+		applyEffectFlags(ps)
 		if scFile := os.Getenv("RYE_SCENARIO_FILE"); scFile != "" {
 			if content, err := os.ReadFile(scFile); err == nil {
 				blk := loader.LoadString(string(content), security.CurrentCodeSigEnabled, ps)
@@ -1087,9 +1108,11 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 		fmt.Println(err.Error())
 		return
 	}
+	applyEffectFlags(ps)
 
-	// Set the NoInspect mode from the flag
-	evaldo.NoInspectMode = *NoInspect
+	// Set the NoInspect mode from the flags. Production mode never offers
+	// interactive debugging options.
+	evaldo.NoInspectMode = *NoInspect || *prod
 
 	// Setup signal handling for interrupting operations
 	//setupGlobalSignalHandler()
@@ -1160,6 +1183,9 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 		}
 
 	case env.Error:
+		if evaldo.ProductionMode {
+			os.Exit(1)
+		}
 		fmt.Println(util.TermError(val.Message))
 	}
 }
@@ -1267,11 +1293,8 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 		fmt.Println(err.Error())
 		return
 	}
-	// Apply dry-run and scenario preload for HTTP REPL too
-	if *DryRun {
-		idxScenario := es.Idx.IndexWord("scenario")
-		es.Ctx.Set(idxScenario, *env.NewDict(map[string]interface{}{}))
-	}
+	// Apply declared-effects mode and scenario preload for the REPL too.
+	applyEffectFlags(es)
 	if scFile := os.Getenv("RYE_SCENARIO_FILE"); scFile != "" {
 		if content, err := os.ReadFile(scFile); err == nil {
 			blk := loader.LoadString(string(content), false, es)
