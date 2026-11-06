@@ -12,6 +12,8 @@
 
 ## What is Rye?
 
+Rye is programming and **interaction language**. You use it not just to program, but to interact with computers live, via rich console and other approaches.
+
 Rye is a high-level, dynamic programming language inspired by Rebol, Factor, Linux shells, and Go. It features a Go-based interpreter and interactive console, making it an excellent scripting companion for Go programs. Rye can also be embedded into Go applications as a scripting or configuration language.
 
 Key characteristics:
