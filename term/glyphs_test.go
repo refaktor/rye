@@ -12,8 +12,8 @@ var glyphCases = []struct {
 	{"ascii", "a", 1},
 	{"cjk", "私", 2},
 	{"accented letter", "é", 1},
-	{"family", "\U0001F468‍\U0001F469‍\U0001F467‍\U0001F466", 2},
-	{"rainbow flag", "\U0001F3F3️‍\U0001F308", 2},
+	{"family", "\U0001F468\u200d\U0001F469\u200d\U0001F467\u200d\U0001F466", 2},
+	{"rainbow flag", "\U0001F3F3\ufe0f\u200d\U0001F308", 2},
 	{"thumb with a skin tone", "\U0001F44D\U0001F3FD", 2},
 	{"flag", "\U0001F1EF\U0001F1F5", 2},
 }
@@ -31,7 +31,7 @@ func TestCountGlyphsWidth(t *testing.T) {
 	}{
 		{"query", 5},
 		{"hello『世界』", 13},
-		{"a\U0001F468‍\U0001F469‍\U0001F467‍\U0001F466b", 4},
+		{"a\U0001F468\u200d\U0001F469\u200d\U0001F467\u200d\U0001F466b", 4},
 	} {
 		if got := countGlyphs([]rune(c.s)); got != c.width {
 			t.Errorf("countGlyphs(%q) = %d, occupies %d", c.s, got, c.width)
