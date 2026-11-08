@@ -18,6 +18,7 @@ require (
 	github.com/bitfield/script v0.25.2
 	github.com/blevesearch/bleve/v2 v2.6.1
 	github.com/blevesearch/bleve_index_api v1.4.1
+	github.com/clipperhouse/uax29/v2 v2.7.0
 	github.com/dgraph-io/badger/v4 v4.9.1
 	// NOTE: Vulnerabilities GHSA-x744-4wpc-v9h2 and GHSA-pjbgf-vjq9-x5w7 are server-side only, client usage has limited risk
 	github.com/drewlanenga/govector v0.0.0-20220726163947-b958ac08bc93
@@ -93,7 +94,6 @@ require (
 	github.com/blevesearch/zapx/v17 v17.2.3 // indirect
 	github.com/buger/jsonparser v1.1.2 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/coder/websocket v1.8.12 // indirect
 	github.com/dblohm7/wingoes v0.0.0-20240119213807-a09d6be7affa // indirect
 	github.com/dgraph-io/ristretto/v2 v2.2.0 // indirect
