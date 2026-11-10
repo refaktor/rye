@@ -50,8 +50,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the user's input
 	"input": {
-		Argsn: 1,
-		Doc:   "Prompts for and reads user input from the console.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Prompts for and reads user input from the console.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.String:
@@ -82,8 +83,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * native file object
 	"file-uri//Open": {
-		Argsn: 1,
-		Doc:   "Opens a file for reading.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Opens a file for reading.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Uri:
@@ -106,8 +108,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * native writer object
 	"file-uri//Open\\append": {
-		Argsn: 1,
-		Doc:   "Opens a file for appending.",
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Opens a file for appending.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Check if we're in readonly mode
 			profile, exists := os.LookupEnv("RYE_SECCOMP_PROFILE")
@@ -137,8 +140,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * native file object
 	"file-uri//Create": {
-		Argsn: 1,
-		Doc:   "Creates a new file.",
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Creates a new file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Check if we're in readonly mode
 			profile, exists := os.LookupEnv("RYE_SECCOMP_PROFILE")
@@ -174,8 +178,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the file extension (including the dot)
 	"file-uri//Ext?": {
-		Argsn: 1,
-		Doc:   "Gets the extension of a file.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the extension of a file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Uri:
@@ -197,8 +202,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the filename with extension
 	"file-uri//Name?": {
-		Argsn: 1,
-		Doc:   "Gets the filename with extension from a file path.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the filename with extension from a file path.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Uri:
@@ -217,8 +223,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the filename without extension
 	"file-uri//Stem?": {
-		Argsn: 1,
-		Doc:   "Gets the filename without extension from a file path.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the filename without extension from a file path.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Uri:
@@ -238,8 +245,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the directory path
 	"file-uri//Dir?": {
-		Argsn: 1,
-		Doc:   "Gets the directory path from a file path.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the directory path from a file path.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Uri:
@@ -258,8 +266,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * block of strings containing path components
 	"file-uri//Split": {
-		Argsn: 1,
-		Doc:   "Splits a file path into its components.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Splits a file path into its components.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Uri:
@@ -294,8 +303,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * boolean indicating whether the path is absolute
 	"file-uri//Is-absolute": {
-		Argsn: 1,
-		Doc:   "Checks if a file path is absolute.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Checks if a file path is absolute.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Uri:
@@ -315,8 +325,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * boolean indicating whether the file exists
 	"file-uri//Does-exist": {
-		Argsn: 1,
-		Doc:   "Checks if a file exists.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Checks if a file exists.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Uri:
@@ -340,8 +351,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * true if the file was successfully deleted
 	"file-uri//Delete": {
-		Argsn: 1,
-		Doc:   "Deletes a file.",
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Deletes a file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Check if we're in readonly mode
 			profile, exists := os.LookupEnv("RYE_SECCOMP_PROFILE")
@@ -370,8 +382,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * native reader object
 	"file//Reader": {
-		Argsn: 1,
-		Doc:   "Creates a new reader from file object.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a new reader from file object.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 
 			switch s := arg0.(type) {
@@ -395,8 +408,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * native writer object
 	"file//Writer": {
-		Argsn: 1,
-		Doc:   "Creates a new writer from a file object.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a new writer from a file object.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 
 			switch s := arg0.(type) {
@@ -420,8 +434,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * native reader object
 	"file-uri//Reader": {
-		Argsn: 1,
-		Doc:   "Creates a new reader from a file uri/path.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Creates a new reader from a file uri/path.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Uri:
@@ -445,8 +460,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * native reader object
 	"reader": {
-		Argsn: 1,
-		Doc:   "Creates a new reader from a string.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a new reader from a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.String:
@@ -463,8 +479,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * native reader object connected to standard input
 	"stdin": {
-		Argsn: 0,
-		Doc:   "Gets a reader for standard input.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Gets a reader for standard input.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewNative(ps.Idx, os.Stdin, "reader")
 		},
@@ -475,8 +492,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * native writer object connected to standard output
 	"stdout": {
-		Argsn: 0,
-		Doc:   "Gets a writer for standard output.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Gets a writer for standard output.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewNative(env1.Idx, os.Stdout, "writer")
 		},
@@ -487,8 +505,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * native writer object connected to standard error
 	"stderr": {
-		Argsn: 0,
-		Doc:   "Gets a writer for standard error.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Gets a writer for standard error.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewNative(env1.Idx, os.Stderr, "writer")
 		},
@@ -503,8 +522,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * string containing all content from the reader
 	"reader//Read\\string": {
-		Argsn: 1,
-		Doc:   "Reads all content from a reader as a string.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Reads all content from a reader as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch r := arg0.(type) {
 			case env.Native:
@@ -535,8 +555,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * empty string if successful
 	"reader//Close": {
-		Argsn: 1,
-		Doc:   "Closes a reader if it implements io.Closer.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Closes a reader if it implements io.Closer.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch r := arg0.(type) {
 			case env.Native:
@@ -565,8 +586,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * the reader object if successful
 	"reader//Copy": {
-		Argsn: 2,
-		Doc:   "Copies all content from a reader to a writer.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Copies all content from a reader to a writer.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch r := arg0.(type) {
 			case env.Native:
@@ -599,8 +621,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * the file object if successful
 	"file//Copy": {
-		Argsn: 2,
-		Doc:   "Copies content from a file to a writer.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Copies content from a file to a writer.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch r := arg0.(type) {
 			case env.Native:
@@ -632,8 +655,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * native file-info object
 	"file//Stat": {
-		Argsn: 1,
-		Doc:   "Gets file information (stat) for a file.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Gets file information (stat) for a file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch r := arg0.(type) {
 			case env.Native:
@@ -657,8 +681,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * integer representing the file size in bytes
 	"file-info//Size?": {
-		Argsn: 1,
-		Doc:   "Gets the size of a file in bytes.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the size of a file in bytes.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Native:
@@ -677,8 +702,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the entire file content
 	"file//Read": {
-		Argsn: 1,
-		Doc:   "Reads the entire content of a file as a string.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Reads the entire content of a file as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Native:
@@ -700,8 +726,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * the same file object with position set to end of file
 	"file//Seek\\end": {
-		Argsn: 1,
-		Doc:   "Seeks to the end of a file.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Seeks to the end of a file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Native:
@@ -724,8 +751,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * the file object if successful (allows chaining)
 	"file//Write": {
-		Argsn: 2,
-		Doc:   "Writes a string directly to a file object.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Writes a string directly to a file object.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Check if we're in readonly mode
 			profile, exists := os.LookupEnv("RYE_SECCOMP_PROFILE")
@@ -767,8 +795,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * empty string if successful
 	"file//Close": {
-		Argsn: 1,
-		Doc:   "Closes an open file.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Closes an open file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Native:
@@ -793,8 +822,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the entire file content
 	"file-uri//Read": {
-		Argsn: 1,
-		Doc:   "Reads the entire content of a file as a string.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Reads the entire content of a file as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch f := arg0.(type) {
 			case env.Uri:
@@ -816,8 +846,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * native bytes object containing the file content
 	"file-uri//Read\\bytes": {
-		Argsn: 1,
-		Doc:   "Reads the entire content of a file as bytes.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Reads the entire content of a file as bytes.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch f := arg0.(type) {
 			case env.Uri:
@@ -839,8 +870,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * block of strings, each representing a line from the file
 	"file-uri//Read\\lines": {
-		Argsn: 1,
-		Doc:   "Reads a file and returns its content as a block of lines.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Reads a file and returns its content as a block of lines.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch f := arg0.(type) {
 			case env.Uri:
@@ -873,8 +905,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * the content that was written
 	"file-uri//Write": {
-		Argsn: 2,
-		Doc:   "Writes content to a file.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Writes content to a file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Check if we're in readonly mode
 			profile, exists := os.LookupEnv("RYE_SECCOMP_PROFILE")
@@ -918,8 +951,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * integer 1 if successful
 	"write\\bytes": {
-		Argsn: 2,
-		Doc:   "Writes bytes to a file.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Writes bytes to a file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bytesObj := arg0.(type) {
 			case env.Native:
@@ -952,8 +986,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * combined bytes as a native bytes object
 	"append\\bytes": {
-		Argsn: 2,
-		Doc:   "Appends two byte arrays into one.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Appends two byte arrays into one.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bytes1 := arg0.(type) {
 			case env.Bytes:
@@ -978,8 +1013,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * the writer object if successful
 	"writer//Write": {
-		Argsn: 2,
-		Doc:   "Writes a string to a writer.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Writes a string to a writer.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Check if we're in readonly mode
 			profile, exists := os.LookupEnv("RYE_SECCOMP_PROFILE")
@@ -1060,8 +1096,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the extension of the last path component
 	"https-uri//Ext?": {
-		Argsn: 1,
-		Doc:   "Gets the extension of the last path component of an HTTPS URL.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the extension of the last path component of an HTTPS URL.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Uri:
@@ -1080,8 +1117,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the last path component with extension
 	"https-uri//Name?": {
-		Argsn: 1,
-		Doc:   "Gets the last path component (filename) from an HTTPS URL.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the last path component (filename) from an HTTPS URL.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Uri:
@@ -1100,8 +1138,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the last path component without extension
 	"https-uri//Stem?": {
-		Argsn: 1,
-		Doc:   "Gets the last path component (filename) without its extension from an HTTPS URL.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the last path component (filename) without its extension from an HTTPS URL.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Uri:
@@ -1121,8 +1160,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the directory portion of the URL path (including host)
 	"https-uri//Dir?": {
-		Argsn: 1,
-		Doc:   "Gets the directory portion of an HTTPS URL path (including the host).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the directory portion of an HTTPS URL path (including the host).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Uri:
@@ -1139,8 +1179,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * native reader object for the response body
 	"https-uri//Open": {
-		Argsn: 1,
-		Doc:   "Opens a HTTPS GET request and returns a reader for the response body.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Opens a HTTPS GET request and returns a reader for the response body.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch f := arg0.(type) {
 			case env.Uri:
@@ -1182,8 +1223,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the response body
 	"https-uri//Get": {
-		Argsn: 1,
-		Doc:   "Makes a HTTPS GET request and returns the response body as a string.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Makes a HTTPS GET request and returns the response body as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch f := arg0.(type) {
 			case env.Uri:
@@ -1222,8 +1264,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the response body
 	"https-uri//Post": {
-		Argsn: 3,
-		Doc:   "Makes a HTTPS POST request and returns the response body as a string.",
+		Effect: env.EffOutput,
+		Argsn:  3,
+		Doc:    "Makes a HTTPS POST request and returns the response body as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch f := arg0.(type) {
 			case env.Uri:
@@ -1302,8 +1345,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the extension of the last path component
 	"http-uri//Ext?": {
-		Argsn: 1,
-		Doc:   "Gets the extension of the last path component of an HTTP URL.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the extension of the last path component of an HTTP URL.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Uri:
@@ -1322,8 +1366,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the last path component with extension
 	"http-uri//Name?": {
-		Argsn: 1,
-		Doc:   "Gets the last path component (filename) from an HTTP URL.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the last path component (filename) from an HTTP URL.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Uri:
@@ -1342,8 +1387,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the last path component without extension
 	"http-uri//Stem?": {
-		Argsn: 1,
-		Doc:   "Gets the last path component (filename) without its extension from an HTTP URL.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the last path component (filename) without its extension from an HTTP URL.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Uri:
@@ -1363,8 +1409,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the directory portion of the URL path (including host)
 	"http-uri//Dir?": {
-		Argsn: 1,
-		Doc:   "Gets the directory portion of an HTTP URL path (including the host).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the directory portion of an HTTP URL path (including the host).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Uri:
@@ -1381,8 +1428,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * native reader object for the response body
 	"http-uri//Open": {
-		Argsn: 1,
-		Doc:   "Opens a HTTP GET request and returns a reader for the response body.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Opens a HTTP GET request and returns a reader for the response body.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch f := arg0.(type) {
 			case env.Uri:
@@ -1417,8 +1465,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the response body
 	"http-uri//Get": {
-		Argsn: 1,
-		Doc:   "Makes a HTTP GET request and returns the response body as a string.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Makes a HTTP GET request and returns the response body as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch f := arg0.(type) {
 			case env.Uri:
@@ -1457,8 +1506,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the response body
 	"http-uri//Post": {
-		Argsn: 3,
-		Doc:   "Makes a HTTP POST request and returns the response body as a string.",
+		Effect: env.EffOutput,
+		Argsn:  3,
+		Doc:    "Makes a HTTP POST request and returns the response body as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch f := arg0.(type) {
 			case env.Uri:
@@ -1525,8 +1575,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * native http-request object
 	"http-uri//Request": {
-		Argsn: 3,
-		Doc:   "Creates a new HTTP request object.",
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Creates a new HTTP request object.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch uri := arg0.(type) {
 			case env.Uri:
@@ -1569,8 +1620,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * native https-request object
 	"https-uri//Request": {
-		Argsn: 3,
-		Doc:   "Creates a new HTTPS request object.",
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Creates a new HTTPS request object.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch uri := arg0.(type) {
 			case env.Uri:
@@ -1613,8 +1665,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * the request object if successful
 	"https-request//Header!": {
-		Argsn: 3,
-		Doc:   "Sets a header on a HTTPS request.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Sets a header on a HTTPS request.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch req := arg0.(type) {
 			case env.Native:
@@ -1644,8 +1697,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * the request object if successful
 	"https-request//Basic-auth!": {
-		Argsn: 3,
-		Doc:   "Sets Basic Authentication on a HTTPS request.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Sets Basic Authentication on a HTTPS request.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch req := arg0.(type) {
 			case env.Native:
@@ -1672,8 +1726,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * native https-response object (always returns response regardless of status code)
 	"https-request//Call": {
-		Argsn: 1,
-		Doc:   "Executes a HTTPS request and returns the response object. Always returns the response regardless of status code (200, 404, 500, etc.) - use Status? to check the code.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Executes a HTTPS request and returns the response object. Always returns the response regardless of status code (200, 404, 500, etc.) - use Status? to check the code.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch req := arg0.(type) {
 			case env.Native:
@@ -1699,8 +1754,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * the request object if successful
 	"http-request//Header!": {
-		Argsn: 3,
-		Doc:   "Sets a header on a HTTP request.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Sets a header on a HTTP request.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch req := arg0.(type) {
 			case env.Native:
@@ -1730,8 +1786,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * the request object if successful
 	"http-request//Basic-auth!": {
-		Argsn: 3,
-		Doc:   "Sets Basic Authentication on a HTTP request.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Sets Basic Authentication on a HTTP request.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch req := arg0.(type) {
 			case env.Native:
@@ -1758,8 +1815,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * native http-response object (always returns response regardless of status code)
 	"http-request//Call": {
-		Argsn: 1,
-		Doc:   "Executes a HTTP request and returns the response object. Always returns the response regardless of status code (200, 404, 500, etc.) - use Status? to check the code.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Executes a HTTP request and returns the response object. Always returns the response regardless of status code (200, 404, 500, etc.) - use Status? to check the code.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch req := arg0.(type) {
 			case env.Native:
@@ -1782,8 +1840,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * native reader object for the response body
 	"https-response//Reader": {
-		Argsn: 1,
-		Doc:   "Gets a reader for the HTTPS response body that can be used with io.Copy.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Gets a reader for the HTTPS response body that can be used with io.Copy.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch resp := arg0.(type) {
 			case env.Native:
@@ -1801,8 +1860,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the response body
 	"https-response//Read-body": {
-		Argsn: 1,
-		Doc:   "Reads the body of a HTTPS response as a string.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Reads the body of a HTTPS response as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch resp := arg0.(type) {
 			case env.Native:
@@ -1823,8 +1883,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * native reader object for the response body
 	"http-response//Reader": {
-		Argsn: 1,
-		Doc:   "Gets a reader for the HTTP response body that can be used with io.Copy.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Gets a reader for the HTTP response body that can be used with io.Copy.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch resp := arg0.(type) {
 			case env.Native:
@@ -1842,8 +1903,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the response body
 	"http-response//Read-body": {
-		Argsn: 1,
-		Doc:   "Reads the body of a HTTP response as a string.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Reads the body of a HTTP response as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch resp := arg0.(type) {
 			case env.Native:
@@ -1864,8 +1926,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * empty string if close succeeds
 	"https-response//Close-body!": {
-		Argsn: 1,
-		Doc:   "Closes the HTTPS response body to free network resources.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Closes the HTTPS response body to free network resources.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch resp := arg0.(type) {
 			case env.Native:
@@ -1891,8 +1954,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * integer 1 if successful
 	"email//Send": {
-		Argsn: 2,
-		Doc:   "Sends an email to the specified address.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Sends an email to the specified address.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch to_ := arg0.(type) {
 			case env.Email:
@@ -1963,8 +2027,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * native ftp-connection object
 	"ftp-uri//Open": {
-		Argsn: 1,
-		Doc:   "Opens a connection to an FTP server.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Opens a connection to an FTP server.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 
 			switch s := arg0.(type) {
@@ -1989,8 +2054,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * the connection object if successful
 	"ftp-connection//Login": {
-		Argsn: 3,
-		Doc:   "Logs in to an FTP server connection.",
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Logs in to an FTP server connection.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 
 			switch s := arg0.(type) {
@@ -2030,8 +2096,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * native reader object for the retrieved file
 	"ftp-connection//Retrieve": {
-		Argsn: 2,
-		Doc:   "Retrieves a file from an FTP server.",
+		Effect: env.EffInput,
+		Argsn:  2,
+		Doc:    "Retrieves a file from an FTP server.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 
 			switch s := arg0.(type) {
@@ -2065,8 +2132,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// * integer 1 for success
 	// * error if close fails
 	"ftp-connection//Close": {
-		Argsn: 1,
-		Doc:   "Closes an FTP server connection.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Closes an FTP server connection.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Native:
@@ -2114,8 +2182,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * Block of dicts describing each directory entry.
 	"ftp-connection//List": {
-		Argsn: 2,
-		Doc:   "Lists directory entries. Returns a block of maps with full info.",
+		Effect: env.EffInput,
+		Argsn:  2,
+		Doc:    "Lists directory entries. Returns a block of maps with full info.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Native:
@@ -2172,8 +2241,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * the FTP connection.
 	"ftp-connection//Cwd": {
-		Argsn: 2,
-		Doc:   "Changes working directory.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Changes working directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Native:
@@ -2202,8 +2272,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * the FTP connection.
 	"ftp-connection//Mkdir": {
-		Argsn: 2,
-		Doc:   "Creates a directory.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Creates a directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Native:
@@ -2232,8 +2303,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * the FTP connection.
 	"ftp-connection//Rmdir": {
-		Argsn: 2,
-		Doc:   "Removes a directory.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Removes a directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Native:
@@ -2262,8 +2334,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * the FTP connection.
 	"ftp-connection//Delete": {
-		Argsn: 2,
-		Doc:   "Deletes a file.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Deletes a file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Native:
@@ -2293,8 +2366,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * the FTP connection.
 	"ftp-connection//Rename": {
-		Argsn: 3,
-		Doc:   "Renames or moves a file.",
+		Effect: env.EffOutput,
+		Argsn:  3,
+		Doc:    "Renames or moves a file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Native:
@@ -2329,8 +2403,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * the FTP connection.
 	"ftp-connection//Store": {
-		Argsn: 3,
-		Doc:   "Uploads data to a remote path. Accepts string or reader.",
+		Effect: env.EffOutput,
+		Argsn:  3,
+		Doc:    "Uploads data to a remote path. Accepts string or reader.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Native:
@@ -2381,8 +2456,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * native tail-file object that can be used to read lines as they are added
 	"tail-file": {
-		Argsn: 3,
-		Doc:   "Tails a file, following it for new content. Used for monitoring log files.",
+		Effect: env.EffInput,
+		Argsn:  3,
+		Doc:    "Tails a file, following it for new content. Used for monitoring log files.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var filePath string
 
@@ -2443,8 +2519,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the next line from the file, or nil if no more lines
 	"tail-file//Read-line": {
-		Argsn: 1,
-		Doc:   "Reads the next line from a tailed file. Blocks until a line is available.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Reads the next line from a tailed file. Blocks until a line is available.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch t := arg0.(type) {
 			case env.Native:
@@ -2473,8 +2550,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * empty string if successful
 	"tail-file//Close": {
-		Argsn: 1,
-		Doc:   "Closes a tailed file, stopping the monitoring.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Closes a tailed file, stopping the monitoring.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch t := arg0.(type) {
 			case env.Native:
@@ -2505,8 +2583,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * native unix-connection object
 	"unix-uri//Open": {
-		Argsn: 1,
-		Doc:   "Opens a connection to a Unix domain socket.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Opens a connection to a Unix domain socket.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Uri:
@@ -2529,8 +2608,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * the connection object if successful (allows chaining)
 	"unix-connection//Write": {
-		Argsn: 2,
-		Doc:   "Writes data to a Unix domain socket connection.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Writes data to a Unix domain socket connection.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch conn := arg0.(type) {
 			case env.Native:
@@ -2562,8 +2642,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * string containing data read from the socket
 	"unix-connection//Read": {
-		Argsn: 1,
-		Doc:   "Reads data from a Unix domain socket connection.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Reads data from a Unix domain socket connection.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch conn := arg0.(type) {
 			case env.Native:
@@ -2590,8 +2671,9 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * empty string if successful
 	"unix-connection//Close": {
-		Argsn: 1,
-		Doc:   "Closes a Unix domain socket connection.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Closes a Unix domain socket connection.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch conn := arg0.(type) {
 			case env.Native:

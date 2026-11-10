@@ -938,6 +938,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	"execute-fast": {
+		Effect: env.EffNone,
 		Argsn: 1,
 		Doc:   "Takes a compiled program and executes it using the fast evaluator.",
 		Pure:  true,
@@ -965,6 +966,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	"compile-fast\\debug": {
+		Effect: env.EffNone,
 		Argsn: 1,
 		Doc:   "Takes a block of code and compiles it to function pointers for the fast evaluator, printing debug info.",
 		Pure:  true,
@@ -1038,6 +1040,7 @@ var builtins = map[string]*env.Builtin{
 	// ; equal  { do-fast { 12 * 23 | + 34 } } 310
 	// ; equal  { do-fast { 12 * 23 :a + 34 } } 310
 	"do-fast": {
+		Effect: env.EffNone,
 		Argsn: 1,
 		Doc:   "Takes a block of code and does (runs) it using the fast evaluator.",
 		Pure:  true,
@@ -1085,9 +1088,10 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * Boolean true if the value changed, false if the new value is the same as the old value
 	"change!": { // ***
-		Argsn: 2,
-		Doc:   "Searches for a word and changes it's value in-place. Only works on variables declared with var. If value changes returns true otherwise false",
-		Pure:  false,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Searches for a word and changes it's value in-place. Only works on variables declared with var. If value changes returns true otherwise false",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg1.(type) {
 			case env.Word:
@@ -1130,9 +1134,10 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * Boolean true if the value changed, false if the new value is the same as the old value, will replace change!
 	"modify!": { // ***
-		Argsn: 2,
-		Doc:   "Searches for a word and modifies	 it's value in-place. Only works on variables declared with var. If value changes returns true otherwise false",
-		Pure:  false,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Searches for a word and modifies	 it's value in-place. Only works on variables declared with var. If value changes returns true otherwise false",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg1.(type) {
 			case env.Word:
@@ -1172,9 +1177,10 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * The value or block of values that was assigned
 	"set": { // ***
-		Argsn: 2,
-		Doc:   "Set word to value or words by deconstructing a block. Only works on variables declared with var.",
-		Pure:  false,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Set word to value or words by deconstructing a block. Only works on variables declared with var.",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch words := arg1.(type) {
 			case env.Block:
@@ -1247,9 +1253,10 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * Void value
 	"unset!": { // ***
-		Argsn: 1,
-		Doc:   "Unset a word in current context, only meant to be used in console",
-		Pure:  false,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Unset a word in current context, only meant to be used in console",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch word := arg0.(type) {
 			case env.Word:
@@ -1268,9 +1275,10 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * The value associated with the word in the current context
 	"val": {
-		Argsn: 1,
-		Doc:   "Returns value of the word in context",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns value of the word in context",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch w := arg0.(type) {
 			case env.Word:
@@ -1301,8 +1309,9 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * A new context of the specified kind
 	"_<<": {
-		Argsn: 2,
-		Doc:   "Converts a value to specific kind (R to L)",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Converts a value to specific kind (R to L)",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spec := arg0.(type) {
 			case env.Kind:
@@ -1348,9 +1357,10 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * the original value (used in pipeline operations for explicit pass-through)
 	"_|": {
-		Argsn: 1,
-		Doc:   "Pipeline operator that passes the value through unchanged (used with 'not' and other operations).",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Pipeline operator that passes the value through unchanged (used with 'not' and other operations).",
+		Pure:   true,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return arg0
 		},
@@ -1363,9 +1373,10 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * Integer 1 on success
 	"doc!": { // ***
-		Argsn: 1,
-		Doc:   "Sets docstring of the current context.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Sets docstring of the current context.",
+		Pure:   true,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch d := arg0.(type) {
 			case env.String:
@@ -1384,9 +1395,10 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * String containing the docstring of the current context
 	"doc?": { // ***
-		Argsn: 0,
-		Doc:   "Gets docstring of the current context.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Gets docstring of the current context.",
+		Pure:   true,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(env1.Ctx.Doc)
 		},
@@ -1399,9 +1411,10 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * String containing the docstring of the provided value
 	"doc\\of?": { // **
-		Argsn: 1,
-		Doc:   "Get docstring of the passed context.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Get docstring of the passed context.",
+		Pure:   true,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch d := arg0.(type) {
 			case env.Function:
@@ -1429,9 +1442,10 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * A mutable reference to the value
 	"ref": {
-		Argsn: 1,
-		Doc:   "Makes a value mutable instead of immutable",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Makes a value mutable instead of immutable",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch sp := arg0.(type) {
 			case env.Table:
@@ -1468,9 +1482,10 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * An immutable copy of the value
 	"deref": {
-		Argsn: 1,
-		Doc:   "Makes a value again immutable",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Makes a value again immutable",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch sp := arg0.(type) {
 			case env.Table:
@@ -1508,8 +1523,9 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * Boolean true if the value is a reference, false otherwise
 	"is-ref": { // **
-		Argsn: 1,
-		Doc:   "Checks if a value is a mutable reference.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Checks if a value is a mutable reference.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// fmt.Println(arg0.Inspect(*ps.Idx))
 			if env.IsPointer(arg0) {
@@ -1532,9 +1548,10 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * Boolean true if values are the same object (identity), false otherwise
 	"is-same": {
-		Argsn: 2,
-		Doc:   "Checks if two values are the same object (identity comparison, not value comparison).",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Checks if two values are the same object (identity comparison, not value comparison).",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// For pointer types, compare pointers directly
 			switch a := arg0.(type) {
@@ -1590,9 +1607,10 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * A new Dict with the specified keys and values
 	"dict": {
-		Argsn: 1,
-		Pure:  true,
-		Doc:   "Constructs a Dict from the Block of key and value pairs, or converts a TableRow to a Dict.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Pure:   true,
+		Doc:    "Constructs a Dict from the Block of key and value pairs, or converts a TableRow to a Dict.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -1620,9 +1638,10 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * A new Dict with the key updated (original dict unchanged)
 	"change": {
-		Argsn: 3,
-		Pure:  true,
-		Doc:   "Returns a new Dict with the specified key changed to the new value. Original dict is unchanged.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Pure:   true,
+		Doc:    "Returns a new Dict with the specified key changed to the new value. Original dict is unchanged.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch d := arg0.(type) {
 			case env.Dict:
@@ -1664,9 +1683,10 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * A new List with the values from the block
 	"list": {
-		Argsn: 1,
-		Pure:  true,
-		Doc:   "Constructs a List from the Block of values.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Pure:   true,
+		Doc:    "Constructs a List from the Block of values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -1690,8 +1710,9 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * Block containing the parsed Rye values
 	"load": { // **
-		Argsn: 1,
-		Doc:   "Loads a string into Rye values.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Loads a string into Rye values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -1718,8 +1739,9 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * Block containing the parsed Rye values
 	"load\\mod": { // **
-		Argsn: 1,
-		Doc:   "Loads a string into Rye values. During load it allows modification of words.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Loads a string into Rye values. During load it allows modification of words.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -1742,8 +1764,9 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * Block containing the parsed Rye values
 	"load\\live": { // **
-		Argsn: 1,
-		Doc:   "Loads a string into Rye values. During load it allows modification of words.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Loads a string into Rye values. During load it allows modification of words.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -1763,8 +1786,9 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * Block containing the parsed Rye values if signature is valid
 	"load\\sig": {
-		Argsn: 1,
-		Doc:   "Checks the signature, if OK then loads a string into Rye values.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Checks the signature, if OK then loads a string into Rye values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -1780,6 +1804,7 @@ var builtins = map[string]*env.Builtin{
 
 	/* TEMP FOR WASM 20250116
 	"get-input": {
+		Effect: env.EffNone,
 		Argsn: 1,
 		Doc:   "Stops execution and gives you a Rye console, to test the code inside environment.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1795,6 +1820,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	"input-field": {
+		Effect: env.EffNone,
 		Argsn: 1,
 		Doc:   "Stops execution and gives you a Rye console, to test the code inside environment.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1825,9 +1851,10 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * result of executing the block
 	"do": {
-		Argsn: 1,
-		Doc:   "Takes a block of code and does (runs) it.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Takes a block of code and does (runs) it.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -1854,6 +1881,7 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * result of executing the block with the injected value
 	"with": { // **
+		Effect:        env.EffNone,
 		AcceptFailure: true,
 		Doc:           "Takes a value and a block of code. It does the code with the value injected.",
 		Argsn:         2,
@@ -1883,8 +1911,9 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * result of executing the block within the given context
 	"do\\inside": { // **
-		Argsn: 2,
-		Doc:   "Takes a Context and a Block. It Does a block inside a given Context.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Takes a Context and a Block. It Does a block inside a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch ctx := arg0.(type) {
 			case *env.RyeCtx:
@@ -1933,8 +1962,9 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * result of executing the block with the modified parent context
 	"do\\in": { // **
-		Argsn: 2,
-		Doc:   "Takes a Context and a Block. It Does a block in current context but with parent a given Context.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Takes a Context and a Block. It Does a block in current context but with parent a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch ctx := arg0.(type) {
 			case *env.RyeCtx:
@@ -1999,8 +2029,9 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * result of executing the block with the modified parent context
 	"do\\inx": { // **
-		Argsn: 2,
-		Doc:   "Takes a Context and a Block. It Does a block in current context but with parent a given Context.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Takes a Context and a Block. It Does a block in current context but with parent a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch ctx := arg0.(type) {
 			case *env.RyeCtx:
@@ -2059,9 +2090,10 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * result of evaluating the last subblock
 	"do\\each": {
-		Argsn: 1,
-		Doc:   "Evaluates each subblock of a block of subblocks, one at a time, and returns the result of the last subblock.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Evaluates each subblock of a block of subblocks, one at a time, and returns the result of the last subblock.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -2095,8 +2127,9 @@ var builtins = map[string]*env.Builtin{
 	// COLLECTION AND RETURNING  ... NOT DETERMINED IF WILL BE INCLUDED YET EXPERIMENTAL
 
 	"returns!": {
-		Argsn: 1,
-		Doc:   "Sets up a value to return at the end of function.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Sets up a value to return at the end of function.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			ps.ForcedResult = arg0
 			return arg0
@@ -2104,8 +2137,9 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	"collect!": {
-		Argsn: 1,
-		Doc:   "Collects values into an implicit block.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Collects values into an implicit block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if ps.ForcedResult == nil || ps.ForcedResult.Type() != env.BlockType {
 				ps.ForcedResult = *env.NewBlock(*env.NewTSeries(make([]env.Object, 0)))
@@ -2118,8 +2152,9 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	"collect-key!": {
-		Argsn: 2,
-		Doc:   "Collects key value pars to implicit block.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Collects key value pars to implicit block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if ps.ForcedResult == nil || ps.ForcedResult.Type() != env.BlockType {
 				ps.ForcedResult = *env.NewBlock(*env.NewTSeries(make([]env.Object, 0)))
@@ -2133,8 +2168,9 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	"collect-update-key!": {
-		Argsn: 2,
-		Doc:   "Collects key value pars to implicit block.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Collects key value pars to implicit block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if ps.ForcedResult == nil || ps.ForcedResult.Type() != env.BlockType {
 				ps.ForcedResult = *env.NewBlock(*env.NewTSeries(make([]env.Object, 0)))
@@ -2148,16 +2184,18 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	"collected": {
-		Argsn: 0,
-		Doc:   "Returns the implicit data structure that we collected.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns the implicit data structure that we collected.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return ps.ForcedResult
 		},
 	},
 
 	"pop-collected!": {
-		Argsn: 0,
-		Doc:   "Returns the implicit collected data structure and resets it.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns the implicit collected data structure and resets it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			result := ps.ForcedResult
 			ps.ForcedResult = nil
@@ -2168,8 +2206,9 @@ var builtins = map[string]*env.Builtin{
 	// END COLLECT EXPERIMENTAL
 
 	"lk": {
-		Argsn: 0,
-		Doc:   "Lists available kinds",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Lists available kinds",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fmt.Println(ps.Gen.PreviewKinds(*ps.Idx, ""))
 			return env.Void{}
@@ -2182,8 +2221,9 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * Void after printing the matching kinds.
 	"lk\\": {
-		Argsn: 1,
-		Doc:   "Lists available kinds with string filter",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Lists available kinds with string filter",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -2196,8 +2236,9 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	"lg": {
-		Argsn: 1,
-		Doc:   "Lists generic words related to specific kind, or lists all matching methods across all kinds if given a string filter",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Lists generic words related to specific kind, or lists all matching methods across all kinds if given a string filter",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -2222,8 +2263,9 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * Void after printing the matching methods.
 	"lg\\": {
-		Argsn: 2,
-		Doc:   "Lists generic words related to specific kind with string filter",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Lists generic words related to specific kind with string filter",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch filter := arg1.(type) {
 			case env.String:
@@ -2251,8 +2293,9 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * the provided value.
 	"return": { // **
-		Argsn: 1,
-		Doc:   "Accepts one value and returns it.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Accepts one value and returns it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			ps.ReturnFlag = true
 			ps.Res = arg0
@@ -2261,8 +2304,9 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	"or-return": { // **
-		Argsn: 1,
-		Doc:   "Accepts one value and returns from evaluation if true.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Accepts one value and returns from evaluation if true.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			//fmt.Println("RETURN")
 			if util.IsTruthy(arg0) {
@@ -2318,16 +2362,18 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * native Rye-itself object used to access runtime properties.
 	"rye": {
-		Argsn: 0,
-		Doc:   "Returns the native Rye-itself object used to inspect and configure the running interpreter.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns the native Rye-itself object used to inspect and configure the running interpreter.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewNative(ps.Idx, BuiltinNames, "Rye-itself")
 		},
 	},
 
 	"Rye-itself//Needs": {
-		Argsn: 2,
-		Doc:   "",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch mod := arg1.(type) {
 			case env.Block:
@@ -2364,8 +2410,9 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	"Rye-itself//Includes?": {
-		Argsn: 1,
-		Doc:   "",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			blts := make([]env.Object, 0)
 			for i, v := range BuiltinNames {
@@ -2378,8 +2425,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 	"Rye-itself//Can-include": {
-		Argsn: 1,
-		Doc:   "",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			blts := make([]env.Object, 0)
 			for i, v := range BuiltinNames {
@@ -2402,8 +2450,9 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * The rye-itself native (so the chain continues cleanly)
 	"Rye-itself//On-error": {
-		Argsn: 2,
-		Doc:   "Registers a On-error block that will be executed with the error injected if an unhandled error bubbles to the top of the program. The error value is injected as the first value (use .disarm, .print, etc.).",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Registers a On-error block that will be executed with the error injected if an unhandled error bubbles to the top of the program. The error value is injected as the first value (use .disarm, .print, etc.).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg1.(type) {
 			case env.Block:
@@ -2425,8 +2474,9 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * Void value.
 	"defer": {
-		Argsn: 1,
-		Doc:   "Registers a block of code to be executed when the current function exits or the program terminates.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Registers a block of code to be executed when the current function exits or the program terminates.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
 			case env.Block:
@@ -2448,8 +2498,9 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * Void value
 	"defer\\": {
-		Argsn: 2,
-		Doc:   "Registers a block of code with an injected value to be executed when the current function exits or the program terminates. Works like 'with' but deferred.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Registers a block of code with an injected value to be executed when the current function exits or the program terminates. Works like 'with' but deferred.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg1.(type) {
 			case env.Block:
@@ -2515,9 +2566,10 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * The result value if assertion passes, error if it fails
 	"assert": {
-		Argsn: 2,
-		Doc:   "Evaluates a block of code and asserts that its result equals the expected value. Returns the result if assertion passes, fails with error message if not.",
-		Pure:  false,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Evaluates a block of code and asserts that its result equals the expected value. Returns the result if assertion passes, fails with error message if not.",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -2564,9 +2616,10 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * The result value (displays status but continues evaluation even on failure)
 	"assert\\display": {
-		Argsn: 3,
-		Doc:   "Evaluates a block of code and displays the result. Prints the explanation in magenta followed by OK in green on success, or error message in red on failure. Does not fail - continues evaluation.",
-		Pure:  false,
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Evaluates a block of code and displays the result. Prints the explanation in magenta followed by OK in green on success, or error message in red on failure. Does not fail - continues evaluation.",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch explanation := arg0.(type) {
 			case env.String:
@@ -2626,9 +2679,10 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * nil if recursion continues, ps.Res if recursion ends
 	"recur-if": {
-		Argsn: 2,
-		Doc:   "Internal recursion control function. Resets function execution if condition > 0, otherwise returns result.",
-		Pure:  false,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Internal recursion control function. Resets function execution if condition > 0, otherwise returns result.",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
 			case env.Integer:
@@ -2651,9 +2705,10 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * nil if recursion continues, ps.Res if recursion ends
 	"recur-if\\1": {
-		Argsn: 2,
-		Doc:   "Internal recursion control function for single-argument functions. Updates first argument and resets if condition > 0.",
-		Pure:  false,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Internal recursion control function for single-argument functions. Updates first argument and resets if condition > 0.",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
 			case env.Integer:
@@ -2683,9 +2738,10 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * ps.Res (function result) regardless of condition
 	"recur-if\\2": {
-		Argsn: 3,
-		Doc:   "Internal recursion control function for two-argument functions. Updates both arguments and resets if condition > 0.",
-		Pure:  false,
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Internal recursion control function for two-argument functions. Updates both arguments and resets if condition > 0.",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
 			case env.Integer:
@@ -2722,9 +2778,10 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * ps.Res (function result) regardless of condition, nil if recursion continues
 	"recur-if\\3": {
-		Argsn: 4,
-		Doc:   "Internal recursion control function for three-argument functions. Updates all three arguments and resets if condition > 0.",
-		Pure:  false,
+		Effect: env.EffNone,
+		Argsn:  4,
+		Doc:    "Internal recursion control function for three-argument functions. Updates all three arguments and resets if condition > 0.",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
 			case env.Integer:
@@ -2795,6 +2852,7 @@ func RegisterBaseBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(builtins_printing, ps, "base")
 	RegisterBuiltins2(builtins_types, ps, "base")
 	RegisterBuiltins2(builtins_iteration, ps, "base")
+	RegisterBuiltins2(builtins_bunch, ps, "base")
 	RegisterBuiltins2(builtins_contexts, ps, "base")
 	RegisterBuiltins2(builtins_functions, ps, "base")
 	RegisterBuiltins2(builtins_effects, ps, "base")
@@ -2863,6 +2921,7 @@ func RegisterBuiltins2(builtins map[string]*env.Builtin, ps *env.ProgramState, n
 	BuiltinNames[name] = len(builtins)
 	for k, v := range builtins {
 		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc+" ("+name+")")
+		bu.Effect = v.Effect
 		registerBuiltin(ps, k, *bu)
 	}
 }
@@ -2871,6 +2930,7 @@ func RegisterVarBuiltins2(builtins map[string]*env.VarBuiltin, ps *env.ProgramSt
 	BuiltinNames[name] = len(builtins)
 	for k, v := range builtins {
 		bu := env.NewVarBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc+" ("+name+")")
+		bu.Effect = v.Effect
 		registerVarBuiltin(ps, k, *bu)
 	}
 }
@@ -2883,6 +2943,7 @@ func RegisterBuiltinsInContext(builtins map[string]*env.Builtin, ps *env.Program
 
 	for k, v := range builtins {
 		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc+" ("+name+"//"+k+")")
+		bu.Effect = v.Effect
 		registerBuiltin(ps, k, *bu)
 	}
 	newctx := ps.Ctx
@@ -2902,6 +2963,7 @@ func RegisterBuiltinsInSubContext(builtins map[string]*env.Builtin, ps *env.Prog
 
 	for k, v := range builtins {
 		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc+" ("+name+"//"+k+")")
+		bu.Effect = v.Effect
 		registerBuiltin(ps, k, *bu)
 	}
 	newctx := ps.Ctx
@@ -3061,6 +3123,7 @@ func RegisterBuiltinsFilter(ps *env.ProgramState, names []string) {
 			}
 			if !grp.inContext {
 				bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc+" ("+grp.name+")")
+				bu.Effect = v.Effect
 				registerBuiltin(ps, word, *bu)
 			} else {
 				// Get or lazily create the named child context.
@@ -3081,6 +3144,7 @@ func RegisterBuiltinsFilter(ps *env.ProgramState, names []string) {
 				// Use "group//name" format to avoid naming collisions
 				namespacedName := grp.name + "//" + word
 				bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc+" ("+namespacedName+")")
+				bu.Effect = v.Effect
 				saved := ps.Ctx
 				ps.Ctx = gCtx
 				registerBuiltin(ps, namespacedName, *bu)

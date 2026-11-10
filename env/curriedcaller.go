@@ -16,9 +16,10 @@ type CurriedCaller struct {
 	Cur2       Object
 	Cur3       Object
 	Cur4       Object
-	Argsn      int    // Total number of arguments expected
-	Pure       bool   // Whether the caller is pure
-	Doc        string // Documentation
+	Argsn      int        // Total number of arguments expected
+	Pure       bool       // Whether the caller is pure
+	Effect     EffectKind // Declared effect of a builtin caller
+	Doc        string     // Documentation
 }
 
 // NewCurriedCallerFromBuiltin creates a new CurriedCaller from a Builtin
@@ -35,6 +36,7 @@ func NewCurriedCallerFromBuiltin(bi Builtin, cur0, cur1, cur2, cur3, cur4 Object
 		Cur4:       cur4,
 		Argsn:      argsn,
 		Pure:       bi.Pure,
+		Effect:     bi.Effect,
 		Doc:        bi.Doc,
 	}
 }
@@ -111,6 +113,9 @@ func (c CurriedCaller) Equal(o Object) bool {
 	}
 
 	if c.Pure != oCurriedCaller.Pure {
+		return false
+	}
+	if c.Effect != oCurriedCaller.Effect {
 		return false
 	}
 

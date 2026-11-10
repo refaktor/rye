@@ -87,8 +87,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Example:
 	// cc os cwd?
 	"cwd?": {
-		Argsn: 0,
-		Doc:   "Gets the current working directory.",
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Gets the current working directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			path, err := os.Getwd()
 			if err != nil {
@@ -107,8 +108,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Example:
 	// cc os does-exist %./tests/data/file.txt
 	"does-exist": {
-		Argsn: 1,
-		Doc:   "Checks if a file or directory exists.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Checks if a file or directory exists.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Uri:
@@ -133,8 +135,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Example:
 	// cc os cd %.
 	"cd": {
-		Argsn: 1,
-		Doc:   "Changes the current working directory.",
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Changes the current working directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Uri:
@@ -157,8 +160,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Example:
 	// cc os env? "PATH"
 	"env?": {
-		Argsn: 1,
-		Doc:   "Gets the value of an environment variable.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Gets the value of an environment variable.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch variable_name := arg0.(type) {
 			case env.String:
@@ -183,8 +187,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Example:
 	// cc os mkdir %./tests/delme
 	"mkdir": {
-		Argsn: 1,
-		Doc:   "Creates a new directory.",
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Creates a new directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Uri:
@@ -214,8 +219,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// ; mktmp was removed; use mktemp instead.
 	// cc os mktemp
 	"mktmp": {
-		Argsn: 0,
-		Doc:   "Removed: use mktemp instead.",
+		Effect: env.EffOutput,
+		Argsn:  0,
+		Doc:    "Removed: use mktemp instead.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return evaldo.MakeBuiltinError(ps, "This function was removed. Use mktemp.", "mktmp")
 		},
@@ -229,8 +235,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Example:
 	// cc os rm %./tests/delme
 	"rm": {
-		Argsn: 1,
-		Doc:   "Removes a file or empty directory.",
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Removes a file or empty directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Uri:
@@ -248,8 +255,9 @@ var Builtins_os = map[string]*env.Builtin{
 
 	// Dangerous: recursively remove files and directories like rm -rf
 	"rm-rf": {
-		Argsn: 1,
-		Doc:   "Recursively removes a file or directory and its contents (use with care).",
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Recursively removes a file or directory and its contents (use with care).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Uri:
@@ -275,8 +283,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Example:
 	// cc os rmdir %./tests/delme
 	"rmdir": {
-		Argsn: 1,
-		Doc:   "Removes a directory and all its contents recursively.",
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Removes a directory and all its contents recursively.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Uri:
@@ -299,8 +308,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * destination uri if successful
 	// Tags: #file #copy
 	"cp": {
-		Argsn: 2,
-		Doc:   "Copies a file to a new location.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Copies a file to a new location.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch src := arg0.(type) {
 			case env.Uri:
@@ -346,8 +356,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Example:
 	// cc os file-info? %./tests/data/file.txt
 	"file-info?": {
-		Argsn: 1,
-		Doc:   "Gets detailed information about a file or directory.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Gets detailed information about a file or directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Uri:
@@ -380,8 +391,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Example:
 	// cc os is-dir %./tests/data
 	"is-dir": {
-		Argsn: 1,
-		Doc:   "Checks if a path is a directory. Fails if the path does not exist.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Checks if a path is a directory. Fails if the path does not exist.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Uri:
@@ -408,8 +420,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Example:
 	// cc os is-file %./tests/data/file.txt
 	"is-file": {
-		Argsn: 1,
-		Doc:   "Checks if a path is a regular file (not a directory). Fails if the path does not exist.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Checks if a path is a regular file (not a directory). Fails if the path does not exist.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Uri:
@@ -433,8 +446,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Example:
 	// cc os home-dir?
 	"home-dir?": {
-		Argsn: 0,
-		Doc:   "Gets the current user's home directory.",
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Gets the current user's home directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			dir, err := os.UserHomeDir()
 			if err != nil {
@@ -452,8 +466,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Example:
 	// cc os tmp-dir?
 	"tmp-dir?": {
-		Argsn: 0,
-		Doc:   "Gets the system's default temporary directory.",
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Gets the system's default temporary directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			dir := os.TempDir()
 			return *env.NewUri1(ps.Idx, "file://"+dir)
@@ -468,8 +483,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Example:
 	// cc os glob "./tests/data/*.pem"
 	"glob": {
-		Argsn: 1,
-		Doc:   "Returns files matching a glob pattern.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Returns files matching a glob pattern.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch pattern := arg0.(type) {
 			case env.String:
@@ -495,8 +511,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * destination uri if successful
 	"mv": {
-		Argsn: 2,
-		Doc:   "Moves or renames a file or directory.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Moves or renames a file or directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch src := arg0.(type) {
 			case env.Uri:
@@ -525,8 +542,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Example:
 	// cc os ls
 	"ls": {
-		Argsn: 0,
-		Doc:   "Lists files and directories in the current directory.",
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Lists files and directories in the current directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 
 			files, err := os.ReadDir(".")
@@ -552,8 +570,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Example:
 	// cc os ls\ 'files
 	"ls\\": {
-		Argsn: 1,
-		Doc:   "Lists files or directories with absolute paths when possible. If argument is a file-uri, lists that directory (or returns failure if not a directory). Otherwise filters current directory: 'dirs' for directories only, 'files' for files only, a string for partial name matching, or a regex to match names.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Lists files or directories with absolute paths when possible. If argument is a file-uri, lists that directory (or returns failure if not a directory). Otherwise filters current directory: 'dirs' for directories only, 'files' for files only, a string for partial name matching, or a regex to match names.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var targetDir string = "."
 			var doFiltering bool = true
@@ -679,8 +698,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Example:
 	// cc os ls\\dirs
 	"ls\\dirs": {
-		Argsn: 0,
-		Doc:   "Lists only directories in the current directory.",
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Lists only directories in the current directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			files, err := os.ReadDir(".")
 			if err != nil {
@@ -704,8 +724,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Example:
 	// cc os ls\\files
 	"ls\\files": {
-		Argsn: 0,
-		Doc:   "Lists only files (non-directories) in the current directory.",
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Lists only files (non-directories) in the current directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			files, err := os.ReadDir(".")
 			if err != nil {
@@ -729,8 +750,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Example:
 	// cc os ls\\dirs\\ "src"
 	"ls\\dirs\\": {
-		Argsn: 1,
-		Doc:   "Lists directories in the current directory with filtering. Use a string for partial name matching, or a regex to match names.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Lists directories in the current directory with filtering. Use a string for partial name matching, or a regex to match names.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			files, err := os.ReadDir(".")
 			if err != nil {
@@ -777,8 +799,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Example:
 	// cc os ls\\files\\ re "\.go$"
 	"ls\\files\\": {
-		Argsn: 1,
-		Doc:   "Lists files (non-directories) in the current directory with filtering. Use a string for partial name matching, or a regex to match names.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Lists files (non-directories) in the current directory with filtering. Use a string for partial name matching, or a regex to match names.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			files, err := os.ReadDir(".")
 			if err != nil {
@@ -825,8 +848,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * link uri if successful
 	// Tags: #file #link
 	"symlink": {
-		Argsn: 2,
-		Doc:   "Creates a symbolic link.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Creates a symbolic link.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch src := arg0.(type) {
 			case env.Uri:
@@ -854,8 +878,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * boolean: true if path is a symbolic link
 	// Tags: #file #check
 	"is-symlink": {
-		Argsn: 1,
-		Doc:   "Checks if a path is a symbolic link. Fails if the path does not exist.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Checks if a path is a symbolic link. Fails if the path does not exist.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Uri:
@@ -877,8 +902,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * uri representing the target of the symlink
 	// Tags: #file #link
 	"readlink": {
-		Argsn: 1,
-		Doc:   "Reads the target of a symbolic link.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Reads the target of a symbolic link.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Uri:
@@ -901,8 +927,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * path uri if successful
 	// Tags: #file #permissions
 	"chmod": {
-		Argsn: 2,
-		Doc:   "Changes file or directory permissions.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Changes file or directory permissions.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Uri:
@@ -924,8 +951,9 @@ var Builtins_os = map[string]*env.Builtin{
 	},
 
 	"chmod-r": {
-		Argsn: 2,
-		Doc:   "Recursively changes file or directory permissions.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Recursively changes file or directory permissions.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Uri:
@@ -952,8 +980,9 @@ var Builtins_os = map[string]*env.Builtin{
 	},
 
 	"chown-r": {
-		Argsn: 3,
-		Doc:   "Recursively changes owner and group (numeric uid, gid).",
+		Effect: env.EffOutput,
+		Argsn:  3,
+		Doc:    "Recursively changes owner and group (numeric uid, gid).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Uri:
@@ -993,8 +1022,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * string representing the absolute path
 	// Tags: #file #path
 	"abs-path": {
-		Argsn: 1,
-		Doc:   "Removed: use realpath instead.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Removed: use realpath instead.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return evaldo.MakeBuiltinError(ps, "This function was removed. Use realpath.", "abs-path")
 		},
@@ -1010,8 +1040,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Example:
 	// cc os dirname %./tests/data/file.txt
 	"dirname": {
-		Argsn: 1,
-		Doc:   "Returns the directory part of a path.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the directory part of a path.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Uri:
@@ -1033,8 +1064,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Example:
 	// cc os basename %./tests/data/file.txt
 	"basename": {
-		Argsn: 1,
-		Doc:   "Returns the filename part of a path.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the filename part of a path.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Uri:
@@ -1056,8 +1088,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Example:
 	// cc os file-ext %./tests/data/file.txt
 	"file-ext": {
-		Argsn: 1,
-		Doc:   "Returns the file extension of a path (including the dot).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the file extension of a path (including the dot).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Uri:
@@ -1079,8 +1112,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Example:
 	// cc os join-path { %./tests "data" "file.txt" }
 	"join-path": {
-		Argsn: 1,
-		Doc:   "Joins path elements into a single path.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Joins path elements into a single path.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch paths := arg0.(type) {
 			case env.Block:
@@ -1115,8 +1149,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Example:
 	// cc os whoami
 	"whoami": {
-		Argsn: 0,
-		Doc:   "Returns the current user's username.",
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Returns the current user's username.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			username := os.Getenv("USER")
 			if username == "" {
@@ -1137,8 +1172,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Example:
 	// cc os which "sh"
 	"which": {
-		Argsn: 1,
-		Doc:   "Finds the path to an executable command.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Finds the path to an executable command.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cmd := arg0.(type) {
 			case env.String:
@@ -1162,8 +1198,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * uri representing the current working directory
 	// Tags: #file #path #alias
 	"pwd": {
-		Argsn: 0,
-		Doc:   "Gets the current working directory (alias of cwd?).",
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Gets the current working directory (alias of cwd?).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			path, err := os.Getwd()
 			if err != nil {
@@ -1180,8 +1217,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * uri representing the absolute path
 	// Tags: #file #path
 	"realpath": {
-		Argsn: 1,
-		Doc:   "Returns the absolute path for a given path. Replaces the removed abs-path builtin.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Returns the absolute path for a given path. Replaces the removed abs-path builtin.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Uri:
@@ -1203,8 +1241,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * uri representing the created temporary directory
 	// Tags: #file #temporary
 	"mktemp": {
-		Argsn: 0,
-		Doc:   "Creates a new temporary directory. Replaces the removed mktmp builtin.",
+		Effect: env.EffOutput,
+		Argsn:  0,
+		Doc:    "Creates a new temporary directory. Replaces the removed mktmp builtin.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			dir, err := os.MkdirTemp("", "rye-tmp-")
 			if err != nil {
@@ -1215,8 +1254,9 @@ var Builtins_os = map[string]*env.Builtin{
 	},
 
 	"envs?": {
-		Argsn: 0,
-		Doc:   "Gets all environment variables as a dictionary of key -> value.",
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Gets all environment variables as a dictionary of key -> value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			vars := os.Environ()
 			d := make(map[string]any, len(vars))
@@ -1241,8 +1281,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * the value string
 	// Tags: #system #environment
 	"setenv!": {
-		Argsn: 2,
-		Doc:   "Sets an environment variable (value, name).",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Sets an environment variable (value, name).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.String:
@@ -1269,8 +1310,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * void
 	// Tags: #system #environment
 	"unsetenv!": {
-		Argsn: 1,
-		Doc:   "Unsets an environment variable by name.",
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Unsets an environment variable by name.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch name := arg0.(type) {
 			case env.String:
@@ -1285,8 +1327,9 @@ var Builtins_os = map[string]*env.Builtin{
 	},
 
 	"process?": {
-		Argsn: 1,
-		Doc:   "Gets a native process object by PID (gopsutil process).",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Gets a native process object by PID (gopsutil process).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch pid := arg0.(type) {
 			case env.Integer:
@@ -1308,8 +1351,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * destination uri if successful
 	// Tags: #file #copy #recursive
 	"cp-r": {
-		Argsn: 2,
-		Doc:   "Recursively copies a directory and all its contents.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Recursively copies a directory and all its contents.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch src := arg0.(type) {
 			case env.Uri:
@@ -1337,8 +1381,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * path uri if successful
 	// Tags: #file #directory
 	"mkdir-p": {
-		Argsn: 1,
-		Doc:   "Creates a directory and any necessary parent directories.",
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Creates a directory and any necessary parent directories.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Uri:
@@ -1359,8 +1404,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * dictionary containing information about the host system (hostname, uptime, OS, etc.)
 	"host-info?": {
-		Argsn: 0,
-		Doc:   "Gets information about the host system.",
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Gets information about the host system.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			v, err := host.Info()
 			if err != nil {
@@ -1385,8 +1431,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * table containing information about users (user, terminal, host, started)
 	"users?": {
-		Argsn: 0,
-		Doc:   "Gets information about users currently logged into the system.",
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Gets information about users currently logged into the system.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			users, err := host.Users()
 			if err != nil {
@@ -1407,8 +1454,9 @@ var Builtins_os = map[string]*env.Builtin{
 	},
 	// System users and groups (from /etc/passwd and /etc/group on Unix-like systems)
 	"system-users?": {
-		Argsn: 0,
-		Doc:   "Returns a table of system users (name, uid, gid, home, shell) using os/user (Unix-like only; limited on Windows).",
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Returns a table of system users (name, uid, gid, home, shell) using os/user (Unix-like only; limited on Windows).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// os/user has Lookup and LookupGroup, but no list-all portable API.
 			// On Unix, we can read /etc/passwd to enumerate.
@@ -1444,8 +1492,9 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 	"system-groups?": {
-		Argsn: 0,
-		Doc:   "Returns a table of system groups (name, gid, members) from /etc/group (Unix-like only).",
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Returns a table of system groups (name, gid, members) from /etc/group (Unix-like only).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			data, err := os.ReadFile("/etc/group")
 			if err != nil {
@@ -1479,8 +1528,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * dictionary with keys "1", "5", and "15" representing load averages
 	"load-avg?": {
-		Argsn: 0,
-		Doc:   "Gets the system load average over the last 1, 5, and 15 minutes.",
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Gets the system load average over the last 1, 5, and 15 minutes.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			v, err := load.Avg()
 			if err != nil {
@@ -1498,8 +1548,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * dictionary containing information about virtual memory (total, free, used-percent)
 	"virtual-memory?": {
-		Argsn: 0,
-		Doc:   "Gets information about virtual memory usage.",
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Gets information about virtual memory usage.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			v, err := mem.VirtualMemory()
 			if err != nil {
@@ -1517,8 +1568,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * table containing disk usage information for all partitions
 	"disk-usage?": {
-		Argsn: 0,
-		Doc:   "Gets disk usage information for all partitions.",
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Gets disk usage information for all partitions.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			partitions, err := disk.Partitions(true)
 			if err != nil {
@@ -1551,8 +1603,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * block of integers representing process IDs
 	"pids?": {
-		Argsn: 0,
-		Doc:   "Gets a list of all process IDs currently running.",
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Gets a list of all process IDs currently running.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			pids, err := process.Pids()
 			if err != nil {
@@ -1571,8 +1624,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * table containing detailed information about all running processes
 	"processes\\table?": {
-		Argsn: 0,
-		Doc:   "Gets detailed information about all running processes.",
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Gets detailed information about all running processes.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			processes, err := process.Processes()
 			if err != nil {
@@ -1587,8 +1641,9 @@ var Builtins_os = map[string]*env.Builtin{
 	},
 	// Returns block of native process objects for method access (.Exe?, .Name?, etc.)
 	"processes?": {
-		Argsn: 0,
-		Doc:   "Gets a block of native process objects (gopsutil process) for method access.",
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Gets a block of native process objects (gopsutil process) for method access.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			procs, err := process.Processes()
 			if err != nil {
@@ -1606,8 +1661,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * dictionary containing detailed information about the specified process
 	"process": {
-		Argsn: 1,
-		Doc:   "Gets a native process object by PID (same as process?).",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Gets a native process object by PID (same as process?).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch pid := arg0.(type) {
 			case env.Integer:
@@ -1627,8 +1683,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * block of strings containing hostnames associated with the IP
 	"lookup-address": {
-		Argsn: 1,
-		Doc:   "Performs a reverse DNS lookup to get hostnames for an IP address.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Performs a reverse DNS lookup to get hostnames for an IP address.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch ip := arg0.(type) {
 			case env.String:
@@ -1652,8 +1709,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * block of strings containing IP addresses associated with the hostname
 	"lookup-ip": {
-		Argsn: 1,
-		Doc:   "Performs a DNS lookup to get IP addresses for a hostname.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Performs a DNS lookup to get IP addresses for a hostname.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch hostname := arg0.(type) {
 			case env.String:
@@ -1674,8 +1732,9 @@ var Builtins_os = map[string]*env.Builtin{
 
 	// Native process getters
 	"process//Pid?": {
-		Argsn: 1,
-		Doc:   "Returns the PID of the native process.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the PID of the native process.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			n, ok := arg0.(env.Native)
 			if !ok || ps.Idx.GetWord(n.Kind.Index) != "process" {
@@ -1686,8 +1745,9 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 	"process//Name?": {
-		Argsn: 1,
-		Doc:   "Returns the process name (p.Name()).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the process name (p.Name()).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			n, ok := arg0.(env.Native)
 			if !ok || ps.Idx.GetWord(n.Kind.Index) != "process" {
@@ -1702,8 +1762,9 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 	"process//Ppid?": {
-		Argsn: 1,
-		Doc:   "Returns the parent PID of the native process (p.Ppid()).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the parent PID of the native process (p.Ppid()).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			n, ok := arg0.(env.Native)
 			if !ok || ps.Idx.GetWord(n.Kind.Index) != "process" {
@@ -1718,8 +1779,9 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 	"process//Username?": {
-		Argsn: 1,
-		Doc:   "Returns the username of the process owner (p.Username()).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the username of the process owner (p.Username()).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			n, ok := arg0.(env.Native)
 			if !ok || ps.Idx.GetWord(n.Kind.Index) != "process" {
@@ -1734,8 +1796,9 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 	"process//Uids?": {
-		Argsn: 1,
-		Doc:   "Returns a block of numeric UIDs for the process (p.Uids()).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns a block of numeric UIDs for the process (p.Uids()).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			n, ok := arg0.(env.Native)
 			if !ok || ps.Idx.GetWord(n.Kind.Index) != "process" {
@@ -1754,8 +1817,9 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 	"process//Gids?": {
-		Argsn: 1,
-		Doc:   "Returns a block of numeric GIDs for the process (p.Gids()).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns a block of numeric GIDs for the process (p.Gids()).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			n, ok := arg0.(env.Native)
 			if !ok || ps.Idx.GetWord(n.Kind.Index) != "process" {
@@ -1774,8 +1838,9 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 	"process//Exe?": {
-		Argsn: 1,
-		Doc:   "Returns the executable path (p.Exe()).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the executable path (p.Exe()).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			n, ok := arg0.(env.Native)
 			if !ok || ps.Idx.GetWord(n.Kind.Index) != "process" {
@@ -1790,8 +1855,9 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 	"process//Cmdline?": {
-		Argsn: 1,
-		Doc:   "Returns the full command line (p.Cmdline()).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the full command line (p.Cmdline()).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			n, ok := arg0.(env.Native)
 			if !ok || ps.Idx.GetWord(n.Kind.Index) != "process" {
@@ -1806,8 +1872,9 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 	"process//CPU-percent?": {
-		Argsn: 1,
-		Doc:   "Returns CPU usage percentage (p.CPUPercent()).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns CPU usage percentage (p.CPUPercent()).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			n, ok := arg0.(env.Native)
 			if !ok || ps.Idx.GetWord(n.Kind.Index) != "process" {
@@ -1822,8 +1889,9 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 	"process//CPU-times?": {
-		Argsn: 1,
-		Doc:   "Returns a dict of CPU times (user, system, iowait).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns a dict of CPU times (user, system, iowait).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			n, ok := arg0.(env.Native)
 			if !ok || ps.Idx.GetWord(n.Kind.Index) != "process" {
@@ -1842,8 +1910,9 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 	"process//Memory-percent?": {
-		Argsn: 1,
-		Doc:   "Returns memory usage percent (p.MemoryPercent()).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns memory usage percent (p.MemoryPercent()).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			n, ok := arg0.(env.Native)
 			if !ok || ps.Idx.GetWord(n.Kind.Index) != "process" {
@@ -1858,8 +1927,9 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 	"process//Memory-info?": {
-		Argsn: 1,
-		Doc:   "Returns a dict of memory info (rss, vms, and OS-specific fields when available).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns a dict of memory info (rss, vms, and OS-specific fields when available).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			n, ok := arg0.(env.Native)
 			if !ok || ps.Idx.GetWord(n.Kind.Index) != "process" {
@@ -1893,8 +1963,9 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 	"process//IO-counters?": {
-		Argsn: 1,
-		Doc:   "Returns IO counters (read-count, write-count, read-bytes, write-bytes).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns IO counters (read-count, write-count, read-bytes, write-bytes).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			n, ok := arg0.(env.Native)
 			if !ok || ps.Idx.GetWord(n.Kind.Index) != "process" {
@@ -1919,8 +1990,9 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 	"process//Num-FDs?": {
-		Argsn: 1,
-		Doc:   "Returns number of open file descriptors (p.NumFDs()).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns number of open file descriptors (p.NumFDs()).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			n, ok := arg0.(env.Native)
 			if !ok || ps.Idx.GetWord(n.Kind.Index) != "process" {
@@ -1935,8 +2007,9 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 	"process//Num-connections?": {
-		Argsn: 1,
-		Doc:   "Returns the number of network connections (len(p.Connections())).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the number of network connections (len(p.Connections())).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			n, ok := arg0.(env.Native)
 			if !ok || ps.Idx.GetWord(n.Kind.Index) != "process" {
@@ -1956,8 +2029,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * the same string if successful
 	"write\\clipboard": {
-		Argsn: 1,
-		Doc:   "Writes a string value to the system clipboard.",
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Writes a string value to the system clipboard.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.String:
@@ -1977,8 +2051,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the current contents of the clipboard
 	"read\\clipboard": {
-		Argsn: 0,
-		Doc:   "Reads the current contents of the system clipboard.",
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Reads the current contents of the system clipboard.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			val, err := clipboard.ReadAll()
 			if err != nil {
@@ -2000,8 +2075,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * destination uri if successful
 	// Tags: #archive #compress
 	"tgz": {
-		Argsn: 2,
-		Doc:   "Creates a .tar.gz archive from a file or directory.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Creates a .tar.gz archive from a file or directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch src := arg0.(type) {
 			case env.Uri:
@@ -2031,8 +2107,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * never returns successfully; raises an error directing callers to untgz
 	// Tags: #archive #extract #removed
 	"un-tgz": {
-		Argsn: 2,
-		Doc:   "Removed: use untgz instead.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Removed: use untgz instead.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return evaldo.MakeBuiltinError(ps, "This function was removed. Use untgz.", "un-tgz")
 		},
@@ -2040,8 +2117,9 @@ var Builtins_os = map[string]*env.Builtin{
 
 	// Aliases for archive operations
 	"untgz": {
-		Argsn: 2,
-		Doc:   "Extracts a .tar.gz archive to a directory. Replaces the removed un-tgz builtin.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Extracts a .tar.gz archive to a directory. Replaces the removed un-tgz builtin.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch src := arg0.(type) {
 			case env.Uri:
@@ -2063,8 +2141,9 @@ var Builtins_os = map[string]*env.Builtin{
 	},
 
 	"tar-gz": {
-		Argsn: 2,
-		Doc:   "Creates a .tar.gz archive from a file or directory (alias of tgz).",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Creates a .tar.gz archive from a file or directory (alias of tgz).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch src := arg0.(type) {
 			case env.Uri:
@@ -2086,8 +2165,9 @@ var Builtins_os = map[string]*env.Builtin{
 	},
 
 	"untar-gz": {
-		Argsn: 2,
-		Doc:   "Extracts a .tar.gz archive to a directory (alias of untgz).",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Extracts a .tar.gz archive to a directory (alias of untgz).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch src := arg0.(type) {
 			case env.Uri:
@@ -2116,8 +2196,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * destination uri if successful
 	// Tags: #archive #compress
 	"zip": {
-		Argsn: 2,
-		Doc:   "Creates a .zip archive from a file or directory, or from a block of files/directories.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Creates a .zip archive from a file or directory, or from a block of files/directories.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch src := arg0.(type) {
 			case env.Uri:
@@ -2170,8 +2251,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * destination uri if successful
 	// Tags: #archive #extract
 	"unzip": {
-		Argsn: 2,
-		Doc:   "Extracts a .zip archive to a directory.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Extracts a .zip archive to a directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch src := arg0.(type) {
 			case env.Uri:
@@ -2200,8 +2282,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * native reader object for the archive's only file (fails if there is more than one)
 	// Tags: #archive #extract
 	"unzip\\single": {
-		Argsn: 1,
-		Doc:   "Opens the single file in a .zip archive and returns a reader for it. Fails if the archive contains more than one file.",
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Opens the single file in a .zip archive and returns a reader for it. Fails if the archive contains more than one file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch src := arg0.(type) {
 			case env.Uri:
@@ -2263,8 +2346,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * native finder object
 	// Tags: #find #files
 	"finder": {
-		Argsn: 1,
-		Doc:   "Creates a new file finder starting from the given path(s).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a new file finder starting from the given path(s).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Uri:
@@ -2301,8 +2385,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * native finder object (for chaining)
 	// Tags: #find #filter
 	"finder//Min-depth!": {
-		Argsn: 2,
-		Doc:   "Sets the minimum depth for file traversal.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Sets the minimum depth for file traversal.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch n := arg0.(type) {
 			case env.Native:
@@ -2331,8 +2416,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * native finder object (for chaining)
 	// Tags: #find #filter
 	"finder//Max-depth!": {
-		Argsn: 2,
-		Doc:   "Sets the maximum depth for file traversal.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Sets the maximum depth for file traversal.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch n := arg0.(type) {
 			case env.Native:
@@ -2361,8 +2447,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * native finder object (for chaining)
 	// Tags: #find #filter
 	"finder//Type": {
-		Argsn: 2,
-		Doc:   "Filters results by type: 'file (or \"f\") for files, 'dir (or \"d\") for directories.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Filters results by type: 'file (or \"f\") for files, 'dir (or \"d\") for directories.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch n := arg0.(type) {
 			case env.Native:
@@ -2406,8 +2493,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * native finder object (for chaining)
 	// Tags: #find #filter
 	"finder//Name": {
-		Argsn: 2,
-		Doc:   "Filters results by file name using a glob pattern.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Filters results by file name using a glob pattern.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch n := arg0.(type) {
 			case env.Native:
@@ -2436,8 +2524,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * native finder object (for chaining)
 	// Tags: #find #filter
 	"finder//Whole-name": {
-		Argsn: 2,
-		Doc:   "Filters results by full path using a glob pattern.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Filters results by full path using a glob pattern.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch n := arg0.(type) {
 			case env.Native:
@@ -2466,8 +2555,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * native finder object (for chaining)
 	// Tags: #find #filter
 	"finder//Regex": {
-		Argsn: 2,
-		Doc:   "Filters results by regular expression on the full path.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Filters results by regular expression on the full path.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch n := arg0.(type) {
 			case env.Native:
@@ -2498,8 +2588,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * native finder object (for chaining)
 	// Tags: #find #filter
 	"finder//Empty": {
-		Argsn: 1,
-		Doc:   "Filters for empty files or directories.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Filters for empty files or directories.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch n := arg0.(type) {
 			case env.Native:
@@ -2523,8 +2614,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * native finder object (for chaining)
 	// Tags: #find #filter #time
 	"finder//Mtime-since!": {
-		Argsn: 2,
-		Doc:   "Filters for files modified within the last N milliseconds (e.g. 2 .days), truncated to whole seconds.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Filters for files modified within the last N milliseconds (e.g. 2 .days), truncated to whole seconds.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch n := arg0.(type) {
 			case env.Native:
@@ -2557,8 +2649,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * native finder object (for chaining)
 	// Tags: #find #filter
 	"finder//Exclude-path": {
-		Argsn: 2,
-		Doc:   "Excludes paths that match a string substring or glob pattern.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Excludes paths that match a string substring or glob pattern.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch n := arg0.(type) {
 			case env.Native:
@@ -2594,8 +2687,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * native finder object (for chaining)
 	// Tags: #find #filter #size
 	"finder//Size>": {
-		Argsn: 2,
-		Doc:   "Filters for entries with size greater than N bytes.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Filters for entries with size greater than N bytes.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch nn := arg0.(type) {
 			case env.Native:
@@ -2629,8 +2723,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * block of paths; uris by default, or strings according to finder//Path-mode!
 	// Tags: #find #execute
 	"finder//Eval": {
-		Argsn: 1,
-		Doc:   "Executes the find operation and returns matching paths as uris.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Executes the find operation and returns matching paths as uris.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch n := arg0.(type) {
 			case env.Native:
@@ -2683,8 +2778,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * native finder object (for chaining)
 	// Tags: #find #output
 	"finder//Path-mode!": {
-		Argsn: 2,
-		Doc:   "Sets how finder Eval returns paths: 'full (absolute string), 'relative (to cwd, string), 'filenames (basename string), or 'uris (the default).",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Sets how finder Eval returns paths: 'full (absolute string), 'relative (to cwd, string), 'filenames (basename string), or 'uris (the default).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch n := arg0.(type) {
 			case env.Native:
@@ -2725,8 +2821,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * integer size in bytes
 	// Tags: #file #size
 	"file-size": {
-		Argsn: 1,
-		Doc:   "Gets the size of a file in bytes.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Gets the size of a file in bytes.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Uri:
@@ -2749,8 +2846,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * path uri if successful
 	// Tags: #file #create
 	"touch": {
-		Argsn: 1,
-		Doc:   "Creates a file if it doesn't exist, or updates its access time if it does.",
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Creates a file if it doesn't exist, or updates its access time if it does.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Uri:
@@ -2782,8 +2880,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * link uri if successful
 	// Tags: #file #link
 	"hardlink": {
-		Argsn: 2,
-		Doc:   "Creates a hard link to a file.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Creates a hard link to a file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch src := arg0.(type) {
 			case env.Uri:
@@ -2812,8 +2911,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * integer count of items
 	// Tags: #file #count
 	"count-dir": {
-		Argsn: 1,
-		Doc:   "Counts the number of files and directories in a directory.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Counts the number of files and directories in a directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var dirPath string
 			switch path := arg0.(type) {
@@ -2838,8 +2938,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * integer process ID
 	// Tags: #system #process
 	"pid?": {
-		Argsn: 0,
-		Doc:   "Gets the current process ID.",
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Gets the current process ID.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewInteger(int64(os.Getpid()))
 		},
@@ -2852,8 +2953,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * integer parent process ID
 	// Tags: #system #process
 	"ppid?": {
-		Argsn: 0,
-		Doc:   "Gets the parent process ID.",
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Gets the parent process ID.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewInteger(int64(os.Getppid()))
 		},
@@ -2866,8 +2968,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * integer seconds slept
 	// Tags: #system #time
 	"sleep": {
-		Argsn: 1,
-		Doc:   "Sleeps for the specified number of seconds.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Sleeps for the specified number of seconds.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch seconds := arg0.(type) {
 			case env.Integer:
@@ -2894,8 +2997,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * native net-iface object representing the interface, or error if not found
 	"net-interface?": {
-		Argsn: 1,
-		Doc:   "Looks up a network interface by name and returns it as a native object.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Looks up a network interface by name and returns it as a native object.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch name := arg0.(type) {
 			case env.String:
@@ -2920,8 +3024,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * block of native net-addr objects assigned to the interface, or error
 	"net-iface//Addrs?": {
-		Argsn: 1,
-		Doc:   "Returns a block of network addresses assigned to the interface.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns a block of network addresses assigned to the interface.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch iface := arg0.(type) {
 			case env.Native:
@@ -2951,8 +3056,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// * native net-ipnet object if the address is an IP network, or failure if it is
 	//   a plain net.Addr (e.g., a point-to-point address not yet assigned)
 	"net-addr//IPNet?": {
-		Argsn: 1,
-		Doc:   "Type-asserts a network address to *net.IPNet (CIDR form). Returns failure if the address is not an IP network.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Type-asserts a network address to *net.IPNet (CIDR form). Returns failure if the address is not an IP network.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.Native:
@@ -2976,8 +3082,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * boolean – true if the IP is a loopback address, false otherwise
 	"net-ipnet//Loopback?": {
-		Argsn: 1,
-		Doc:   "Reports whether the IP address in the IPNet is a loopback address.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Reports whether the IP address in the IPNet is a loopback address.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch ipnet := arg0.(type) {
 			case env.Native:
@@ -2996,8 +3103,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * boolean – true if the IP address is IPv4, false if it is IPv6-only
 	"net-ipnet//IPv4?": {
-		Argsn: 1,
-		Doc:   "Reports whether the IP address in the IPNet is an IPv4 address (IP.To4() != nil).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Reports whether the IP address in the IPNet is an IPv4 address (IP.To4() != nil).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch ipnet := arg0.(type) {
 			case env.Native:
@@ -3016,8 +3124,9 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * string representation of the IP address (without the prefix length)
 	"net-ipnet//IP-string?": {
-		Argsn: 1,
-		Doc:   "Returns the IP address contained in the IPNet as a dotted-decimal (or colon-separated) string.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the IP address contained in the IPNet as a dotted-decimal (or colon-separated) string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch ipnet := arg0.(type) {
 			case env.Native:

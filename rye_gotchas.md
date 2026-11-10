@@ -202,7 +202,13 @@ items -> 0  ; 0-based index
 
 Wrong:
 ```
-to-block { 1 2 3 }  ; already a Block
+to-block list { 1 2 3 }  ; no such builtin
+```
+
+Right:
+```
+l: list { 1 2 3 }
+block l                  ; List -> Block
 ```
 
 ## 10) Function parameters that shadow builtins
@@ -221,12 +227,60 @@ normalize: fn { txt } { lower txt }
 
 Avoid: `lower`, `upper`, `split`, `join`, `print`, `map`, `filter`, `reduce`, `length?`, `sum`, `min`, `max`, `sort`, `reverse`, `text`, `value`, `list`, `block`, `type`, etc.
 
-## 11) Early return and “returning words” (^)
+## 11) `failure` vs `fail` vs `ensure` (error value vs failed state)
 
-- `^if` and `^check`/`^ensure`/`^fix` perform their action and return from the enclosing function.
+This is one of the easiest things to mix up.
 
-Example:
+- `failure "msg"` creates an **Error value** and sets no flags.
+- `fail "msg"` creates an Error value and sets the **failure flag**.
+- `fail` is roughly `false |ensure "msg"`.
+- `ensure` sets the failure flag when its condition is false.
+- `^fail`, `^check`, and `^ensure` also set the **return flag**, so they unwind the current function immediately.
+- `try { ... }` turns failed state into an inspectable Error value.
+- `is-error v` only checks whether `v` is an Error value.
+
+```rye
+; value: callers can inspect this with is-error
+value-error: fn { x } {
+  either x > 0 { x * 10 } { failure "bad" }
+}
+
+; failed state: aborts the surrounding map/filter/fold
+fail-fast: fn { x } {
+  x > 0 |^ensure "bad"
+  x * 10
+}
 ```
+
+This is important inside higher-order functions:
+
+```rye
+map { 2 -2 3 } { ::x , value-error x }
+; [Block: ^[Integer: 20] [Error: bad] [Integer: 30]]
+
+map { 2 -2 3 } { ::x , fail-fast x }
+; ⚠ FAILURE: Error: bad
+```
+
+If you want iteration to continue, catch the failure per item:
+
+```rye
+map { 2 -2 3 } { ::x , try { fail-fast x } }
+; [Block: ^[Integer: 20] [Error: bad] [Integer: 30]]
+
+map { 2 -2 3 } { ::x , fail-fast x |fix { failure "wrapped" } }
+; [Block: ^[Integer: 20] [Error: wrapped] [Integer: 30]]
+```
+
+Rule of thumb:
+
+- Use `failure` when the Error is **data** that callers inspect.
+- Use `fail`/`ensure`/`^ensure` when you want to **abort the current operation**.
+- If a fail-fast function is called inside `map`/`filter`/`fold` and you want per-element errors, wrap it in `try` or `|fix`.
+
+Example of fail-fast validation:
+
+```rye
 fetch: fn { id } {
   id > 0 |^ensure "ID must be positive"
   get uri |^check "HTTP failed"
@@ -235,7 +289,8 @@ fetch: fn { id } {
 ```
 
 Breaking a forever:
-```
+
+```rye
 forever {
   ^if ready? { "done" }
 }
@@ -262,13 +317,19 @@ Right:
 
 Examples:
 ```
-sum { }                  ; 0
-map { } { + 1 }          ; { }
-filter { } { > 0 }       ; { }
-first { }                ; error
-reduce { } 'a { + a }    ; error
-fold { } 'a 0 { + a }    ; 0
+sum { }                             ; 0
+map { } { + 1 }                     ; { }
+filter { } { > 0 }                  ; { }
+first { }                           ; failure
+reduce { } 'a { + a }               ; failure
+fold { } 0 fn { item acc } { item + acc }   ; 0
+fold\do { } 'acc 0 { + acc }        ; 0
 ```
+
+Note the two `fold` forms:
+
+- `fold coll initial fn { item acc } { ... }`
+- `fold\do coll 'acc initial { ... }`
 
 ## 14) Mixed chaining of .methods and |pipes
 
@@ -323,3 +384,241 @@ Better:
 ```
 "abc" .map { ::ch , index? "abc" ch ::i , i }
 ```
+
+
+## 18) `head` / `tail` / `rest\from`: keep vs drop
+
+`head` and `tail` mean “keep the first/last n”, not “drop the first/last n”.
+Negative counts drop from the other end.
+
+```
+head { 1 2 3 4 } 2       ; { 1 2 }
+tail { 1 2 3 4 } 2       ; { 3 4 }
+
+head "abcd" -1           ; "abc"  (all but the last character)
+tail "abcd" -1           ; "bcd"  (all but the first character)
+```
+
+To drop the first n elements, use `rest\from`:
+
+```
+rest\from { 1 2 3 4 } 2 ; { 3 4 }
+```
+
+But `rest\from` fails when asked to start past the end:
+
+```
+try { rest\from { 1 2 } 5 } |type?  ; 'error
+```
+
+If the skip may reach the end, guard it:
+
+```
+drop: fn { xs n } { either n >= length? xs { { } } { rest\from xs n } }
+```
+
+## 19) `sort\by` is not stable
+
+`sort\by` uses a boolean comparator, but it is not a stable sort. Do not assume
+equal elements stay in input order.
+
+```
+sort\by { 6 12 1 } fn { a b } { a < b }   ; { 1 6 12 }
+sort\by { 6 12 1 } fn { a b } { a > b }   ; { 12 6 1 }
+```
+
+If input order matters for ties, carry an index and make it an explicit tie-breaker:
+
+```
+with-index: fn { items } { map\idx items 'i { ::it , [ it i ] } }
+
+entries: with-index backups
+sorted: sort\by entries fn { a b } {
+    either ( second first a ) = ( second first b ) {
+        ( second a ) < ( second b )
+    } {
+        ( second first a ) > ( second first b )
+    }
+}
+```
+
+This matters when porting Python code that relies on `sorted(..., reverse=True)`
+or `sorted(..., key=...)` being stable.
+
+## 20) Date/time: strptime, strftime, UTC, and cgo
+
+Rye now has native strptime/strftime-style builtins:
+
+```
+parse-date "15/01/2023" "%d/%m/%Y"
+now |format-date "%Y-%m-%d %H:%M:%S"
+now |format-date-go "2006-01-02"   ; old Go layout syntax
+```
+
+Two practical traps:
+
+- A strptime parse without a timezone yields a UTC time, while `now` is local.
+- `parse-date` currently requires cgo and the BSD strptime implementation may accept
+  partial/trailing input. If exact matching matters, round-trip check it:
+
+```
+t: parse-date s fmt
+back: format-date t fmt
+back |= s |^ensure "does not match format " ++ fmt
+```
+
+For UTC “now”, parse a formatted local wall-clock string:
+
+```
+utc-now: fn { } {
+    iso: format-date now "%Y-%m-%dT%H:%M:%S"
+    parse-date iso "%Y-%m-%dT%H:%M:%S"
+}
+```
+
+## 21) CLI dialect: repeatable options are “one value per occurrence”
+
+The CLI dialect is useful, but it is not `argparse`:
+
+```
+spec: {
+  program "tool"
+  -v|verbose flag
+  -s|sources string list
+  command: string required
+  jobs: string many
+}
+
+res: parse-args { -s a -s b make one two } spec
+```
+
+- `list` collects **one value per flag occurrence**. `-s a b` does not put both
+  `a` and `b` into `sources`; the second value becomes positional.
+- `many` collects all remaining positional values.
+- There is no built-in `-` terminator for “stop this list”. If you support
+  argparse-style `--sources a b - make`, normalize the args first or require the
+  repeated form.
+- Parsed `list`/`many` values are List values, not Blocks. Use `block` before
+  calling block-oriented builtins such as `contains`:
+  ```
+  sources: block res."sources"
+  ```
+- `parse-args\ctx` returns a Context instead of a Dict, which can be nicer for
+  read-only access.
+- `generate-help spec` and `format-parse-errors err` make the dialect practical
+  for real tools.
+- As with other fail-fast helpers, `try { parse-args ... }` gives you an Error
+  value instead of a failed program state.
+
+## 22) A setword can only be defined once
+
+Setwords are constants. Re-evaluating `name:` at the same level is a runtime error:
+
+Wrong:
+```
+f: fn { } { 1 }
+f: fn { } { 2 }      ; Error: f is already set and constant
+```
+
+During a rewrite, use a distinct reference name (`old-f`, `f-OLD`) and keep only one active definition. Do not leave two definitions with the same name.
+
+## 23) `^check` / `^ensure` inside a captured expression
+
+`^`-variants set the return flag. If one appears on the right side of a setword capture and the message is concatenated, Rye can capture the message string instead of an Error object, and the concatenation may happen outside the check.
+
+Wrong:
+```
+t: parse-date s fmt |^check "bad date " ++ fmt
+```
+
+Right:
+```
+t: parse-date s fmt
+t |^check ( "bad date " ++ fmt )
+```
+
+Same for a round-trip condition:
+
+```
+back: format-date t fmt
+back |^check ( "does not match " ++ fmt )
+back |= s |^ensure ( "does not match " ++ fmt )
+```
+
+For a helper that uses `^check`, wrap the call in `try` when the caller wants an Error value or wants to keep iterating:
+
+```
+parsed: map formats { ::f , try { parse-date-fmt s f } }
+found: filter parsed { ::r , not is-error r }
+```
+
+Do not rely on `|fix` to catch the early-return flag; `try` is the explicit boundary.
+
+## 24) `seek` / `any` return the matching element, not the predicate result
+
+```
+seek { "no" "ok" } { = "ok" }      ; "ok"
+any { 1 2 3 } { > 1 }              ; 2
+```
+
+If the predicate computes something (a parsed value, a boolean), call it again, keep pairs, or map first:
+
+```
+attempts: map formats { ::f , [ f try { parse-date-fmt s f } ] }
+match: seek attempts { ::a , not is-error second a }
+either is-bool match { false } { second match }
+```
+
+When a miss is normal, guard it: `try { seek ... }` or `seek ... |fix { false }`.
+
+## 25) `.fn*` appends the injected value; `.fn` prepends it
+
+```
+f: fn { a b } { a ++ ":" ++ b }
+"L" .f "R"       ; "L:R"
+"L" .f* "R"      ; "R:L"
+```
+
+This is handy when iterating candidates and the injected value belongs in the last argument:
+
+```
+; calls parse-date-fmt s f for each candidate f
+seek formats { ::f , try { .parse-date-fmt* s } }
+```
+
+## 26) Modwords in a function do not update a top-level var
+
+`x:: value` creates or modifies a binding in the current context. Inside a `fn`, that is a local binding; it does not reach out and update a top-level `var`.
+
+```
+var 'count 0
+bump: fn { } { count:: count + 1 }
+bump
+count              ; still 0
+```
+
+Use `change!` for an existing outer/global mutable:
+
+```
+bump: fn { } { change! count + 1 'count }
+```
+
+Use `::` for locals and for variables declared in the same context.
+
+## 27) Regex splitting uses the function form
+
+`split` accepts a compiled regex as its second argument, but the method form does not inject the string into the right position:
+
+Wrong:
+```
+"a  b" .split regex "\s+"
+```
+
+Right:
+```
+split "a  b" regex "\s+"
+; or
+words-of: fn { s } { split s regex "\s+" }
+```
+
+The same method-injection rule applies to other builtins with multiple argument kinds: when dispatch fails, try the plain function form with explicit arguments.

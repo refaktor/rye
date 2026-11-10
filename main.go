@@ -78,14 +78,14 @@ func main() {
 			}
 		}
 
-		// Apply the security policy
+		// Apply the security policy. Landlock is fail-closed: if it was requested
+		// but cannot be applied, the process must not continue unconfined.
 		if err := security.ApplySecurityPolicy(policy); err != nil {
-			// For embedded/mandatory policies, failure is fatal
-			if policy.Mandatory || policy.Source == security.PolicySourceEmbedded {
-				fmt.Fprintf(os.Stderr, "FATAL: Failed to apply mandatory security policy: %v\n", err)
+			if policy.Mandatory || policy.Source == security.PolicySourceEmbedded || policy.Landlock.Enabled {
+				fmt.Fprintf(os.Stderr, "FATAL: Failed to apply security policy: %v\n", err)
 				os.Exit(1)
 			}
-			// For other policies, warn but continue
+			// For other non-landlock policies, warn but continue.
 			fmt.Fprintf(os.Stderr, "Warning: Failed to apply security policy: %v\n", err)
 		}
 

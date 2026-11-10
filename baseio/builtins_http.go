@@ -52,7 +52,8 @@ var Builtins_http = map[string]*env.Builtin{
 	// Returns:
 	// * native Go-server object that can handle HTTP requests
 	"http-server": {
-		Argsn: 1,
+		Effect: env.EffIO,
+		Argsn:  1,
 		// Example:
 		// srv: http-server ":8080"
 		// srv .Handle "/" "Hello world!"
@@ -79,8 +80,9 @@ var Builtins_http = map[string]*env.Builtin{
 	// Returns:
 	// * the server object after starting listening, or error if unable to serve
 	"Go-server//Serve": {
-		Argsn: 1,
-		Doc:   "Starts the HTTP server listening and serving requests on the configured address (blocking call).",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Starts the HTTP server listening and serving requests on the configured address (blocking call).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch server := arg0.(type) {
 			case env.Native:
@@ -127,8 +129,9 @@ var Builtins_http = map[string]*env.Builtin{
 	// Returns:
 	// * the server object to allow method chaining
 	"Go-server//Handle": {
-		Argsn: 3,
-		Doc:   "Registers an HTTP handler for a specific path pattern on the server, accepting string responses, Rye functions, or native Go handlers.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Registers an HTTP handler for a specific path pattern on the server, accepting string responses, Rye functions, or native Go handlers.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg1.(type) {
 			case env.String:
@@ -211,8 +214,9 @@ var Builtins_http = map[string]*env.Builtin{
 	// Returns:
 	// * the response writer object for method chaining
 	"Go-server-response-writer//Write": {
-		Argsn: 2,
-		Doc:   "Writes string content to the HTTP response body, used within HTTP request handlers to send response data to clients.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Writes string content to the HTTP response body, used within HTTP request handlers to send response data to clients.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Native:
@@ -241,8 +245,9 @@ var Builtins_http = map[string]*env.Builtin{
 	// Returns:
 	// * the response writer object for method chaining
 	"Go-server-response-writer//Set-content-type": {
-		Argsn: 2,
-		Doc:   "Sets the Content-Type header for the HTTP response, determining how the browser interprets the response data.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Sets the Content-Type header for the HTTP response, determining how the browser interprets the response data.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Native:
@@ -272,8 +277,9 @@ var Builtins_http = map[string]*env.Builtin{
 	// Returns:
 	// * the response writer object for method chaining
 	"Go-server-response-writer//Set-header": {
-		Argsn: 3,
-		Doc:   "Sets a custom HTTP header in the response, allowing control over caching, security, and other HTTP behaviors.",
+		Effect: env.EffOutput,
+		Argsn:  3,
+		Doc:    "Sets a custom HTTP header in the response, allowing control over caching, security, and other HTTP behaviors.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch writer := arg0.(type) {
 			case env.Native:
@@ -311,8 +317,9 @@ var Builtins_http = map[string]*env.Builtin{
 	// Returns:
 	// * the response writer object for method chaining
 	"Go-server-response-writer//Add-header": {
-		Argsn: 3,
-		Doc:   "Adds a custom HTTP header value in the response, preserving existing values for multi-value headers.",
+		Effect: env.EffOutput,
+		Argsn:  3,
+		Doc:    "Adds a custom HTTP header value in the response, preserving existing values for multi-value headers.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch writer := arg0.(type) {
 			case env.Native:
@@ -348,8 +355,9 @@ var Builtins_http = map[string]*env.Builtin{
 	// Returns:
 	// * the response writer object for method chaining
 	"Go-server-response-writer//Write-header": {
-		Argsn: 2,
-		Doc:   "Sets the HTTP status code for the response (must be called before writing response body).",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Sets the HTTP status code for the response (must be called before writing response body).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch w := arg0.(type) {
 			case env.Native:
@@ -379,8 +387,9 @@ var Builtins_http = map[string]*env.Builtin{
 	// Returns:
 	// * the server object to allow method chaining
 	"Go-server//Handle-ws": {
-		Argsn: 3,
-		Doc:   "Registers a WebSocket handler for a specific path pattern on the server, upgrading HTTP connections to WebSocket protocol.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Registers a WebSocket handler for a specific path pattern on the server, upgrading HTTP connections to WebSocket protocol.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg1.(type) {
 			case env.String:
@@ -424,8 +433,9 @@ var Builtins_http = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the message read from the WebSocket, or error if read fails
 	"Go-server-websocket//Read": {
-		Argsn: 1,
-		Doc:   "Reads a message from a WebSocket connection, blocking until data is available or an error occurs.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Reads a message from a WebSocket connection, blocking until data is available or an error occurs.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch conn := arg0.(type) {
 			case env.Native:
@@ -452,8 +462,9 @@ var Builtins_http = map[string]*env.Builtin{
 	// Returns:
 	// * the message string on success, or error if write fails
 	"Go-server-websocket//Write": {
-		Argsn: 2,
-		Doc:   "Writes a message to a WebSocket connection, sending data to the connected client.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Writes a message to a WebSocket connection, sending data to the connected client.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch sock := arg0.(type) {
 			case env.Native:
@@ -508,8 +519,9 @@ var Builtins_http = map[string]*env.Builtin{
 	// Returns:
 	// * string value of the query parameter, or error if key is missing
 	"Go-server-request//Query?": {
-		Argsn: 2,
-		Doc:   "Retrieves a query parameter value from the HTTP request URL (e.g., from ?name=value&other=data).",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Retrieves a query parameter value from the HTTP request URL (e.g., from ?name=value&other=data).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch req := arg0.(type) {
 			case env.Native:
@@ -544,8 +556,9 @@ var Builtins_http = map[string]*env.Builtin{
 	// Returns:
 	// * string header value (empty string if header is missing)
 	"Go-server-request//Header?": {
-		Argsn: 2,
-		Doc:   "Gets a header value from the HTTP request by name.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Gets a header value from the HTTP request by name.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch req := arg0.(type) {
 			case env.Native:
@@ -574,8 +587,9 @@ var Builtins_http = map[string]*env.Builtin{
 	// * block with username and password strings when Basic Auth is present
 	// * error when Basic Auth credentials are missing
 	"Go-server-request//Basic-auth?": {
-		Argsn: 1,
-		Doc:   "Gets HTTP Basic Authentication credentials from the request as [username password].",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets HTTP Basic Authentication credentials from the request as [username password].",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch req := arg0.(type) {
 			case env.Native:
@@ -603,8 +617,9 @@ var Builtins_http = map[string]*env.Builtin{
 	// Returns:
 	// * string containing HTTP method (GET, POST, PUT, DELETE, ...)
 	"Go-server-request//Method?": {
-		Argsn: 1,
-		Doc:   "Gets the HTTP request method.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the HTTP request method.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch req := arg0.(type) {
 			case env.Native:
@@ -624,8 +639,9 @@ var Builtins_http = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the request body
 	"Go-server-request//Read-body": {
-		Argsn: 1,
-		Doc:   "Reads the HTTP request body as a string.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Reads the HTTP request body as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch req := arg0.(type) {
 			case env.Native:
@@ -650,8 +666,9 @@ var Builtins_http = map[string]*env.Builtin{
 	// Returns:
 	// * dict containing all request headers
 	"Go-server-request//Headers?": {
-		Argsn: 1,
-		Doc:   "Gets all HTTP request headers as a dictionary.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets all HTTP request headers as a dictionary.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch req := arg0.(type) {
 			case env.Native:
@@ -686,8 +703,9 @@ var Builtins_http = map[string]*env.Builtin{
 	// Returns:
 	// * native Go-server-url object containing the parsed request URL
 	"Go-server-request//Url?": {
-		Argsn: 1,
-		Doc:   "Extracts the URL object from an HTTP request, providing access to path, query parameters, and other URL components.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Extracts the URL object from an HTTP request, providing access to path, query parameters, and other URL components.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch req := arg0.(type) {
 			case env.Native:
@@ -711,8 +729,9 @@ var Builtins_http = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the path portion of the URL (without query parameters)
 	"Go-server-url//Path?": {
-		Argsn: 1,
-		Doc:   "Extracts the path component from a URL object (the part after the domain and before query parameters).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Extracts the path component from a URL object (the part after the domain and before query parameters).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch req := arg0.(type) {
 			case env.Native:
@@ -727,8 +746,9 @@ var Builtins_http = map[string]*env.Builtin{
 	},
 
 	"Go-server-request//Cookie-val?": {
-		Argsn: 2,
-		Doc:   "Get cookie value from server request.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Get cookie value from server request.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch req := arg0.(type) {
 			case env.Native:
@@ -752,8 +772,9 @@ var Builtins_http = map[string]*env.Builtin{
 	},
 
 	"Go-server-request//Form?": {
-		Argsn: 2,
-		Doc:   "Get form field from server request.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Get form field from server request.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch req := arg0.(type) {
 			case env.Native:
@@ -782,8 +803,9 @@ var Builtins_http = map[string]*env.Builtin{
 	},
 
 	"Go-server-request//Full-form?": {
-		Argsn: 1,
-		Doc:   "Get full form data as Dict from server request.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Get full form data as Dict from server request.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch req := arg0.(type) {
 			case env.Native:
@@ -805,8 +827,9 @@ var Builtins_http = map[string]*env.Builtin{
 	},
 
 	"Go-server-request//Parse-multipart-form!": {
-		Argsn: 1,
-		Doc:   "Parse multipart form from server request.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Parse multipart form from server request.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch req := arg0.(type) {
 			case env.Native:
@@ -828,8 +851,9 @@ var Builtins_http = map[string]*env.Builtin{
 	// dst: create file-handler
 
 	"Go-server-request//Form-file?": {
-		Argsn: 2,
-		Doc:   "Get form file from server request as block with reader and multipart header.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Get form file from server request as block with reader and multipart header.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch req := arg0.(type) {
 			case env.Native:
@@ -857,8 +881,9 @@ var Builtins_http = map[string]*env.Builtin{
 	},
 
 	"rye-multipart-header//Filename?": {
-		Argsn: 1,
-		Doc:   "Get filename from multipart header.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Get filename from multipart header.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch req := arg0.(type) {
 			case env.Native:
@@ -872,8 +897,9 @@ var Builtins_http = map[string]*env.Builtin{
 	},
 
 	"cookie-store": {
-		Argsn: 1,
-		Doc:   "Create new cookie store.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Create new cookie store.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.String:
@@ -886,8 +912,9 @@ var Builtins_http = map[string]*env.Builtin{
 	},
 
 	"Http-cookie-store//Get": {
-		Argsn: 3,
-		Doc:   "Get http cookie store.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Get http cookie store.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			//fmt.Println("asdsad")
 			switch store := arg0.(type) {
@@ -924,8 +951,9 @@ var Builtins_http = map[string]*env.Builtin{
 	},
 
 	"Http-session//Set": {
-		Argsn: 3,
-		Doc:   "Set http session.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Set http session.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			//fmt.Println("YOYOYOYOYOYO ------------- - - -  --")
 			//return env.String{"QUERY - VAL"}
@@ -956,8 +984,9 @@ var Builtins_http = map[string]*env.Builtin{
 	},
 
 	"Http-session//Get": {
-		Argsn: 2,
-		Doc:   "Get http session.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Get http session.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			//return env.String{"QUERY - VAL"}
 			switch session := arg0.(type) {
@@ -991,8 +1020,9 @@ var Builtins_http = map[string]*env.Builtin{
 	},
 
 	"Http-session//Save": {
-		Argsn: 3,
-		Doc:   "Save http session.",
+		Effect: env.EffOutput,
+		Argsn:  3,
+		Doc:    "Save http session.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch session := arg0.(type) {
 			case env.Native:
@@ -1129,8 +1159,9 @@ var Builtins_http = map[string]*env.Builtin{
 	// Serving static files
 
 	"http-dir": {
-		Argsn: 1,
-		Doc:   "Create new http directory.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Create new http directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.Uri:
@@ -1141,8 +1172,9 @@ var Builtins_http = map[string]*env.Builtin{
 		},
 	},
 	"new-static-handler": {
-		Argsn: 1,
-		Doc:   "Create new static handler.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Create new static handler.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.Uri:
@@ -1162,8 +1194,9 @@ var Builtins_http = map[string]*env.Builtin{
 	// Returns:
 	// * new Http-handler that strips the prefix from incoming request paths
 	"Http-handler//Strip-prefix": {
-		Argsn: 2,
-		Doc:   "Wraps an HTTP handler to strip a URL prefix from requests, useful for serving static files from a subdirectory.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Wraps an HTTP handler to strip a URL prefix from requests, useful for serving static files from a subdirectory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch prefix := arg1.(type) {
 			case env.String:
@@ -1180,8 +1213,9 @@ var Builtins_http = map[string]*env.Builtin{
 	},
 
 	"https-response//Header?": {
-		Argsn: 2,
-		Doc:   "Get header value from HTTP response.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Get header value from HTTP response.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch resp := arg0.(type) {
 			case env.Native:
@@ -1206,8 +1240,9 @@ var Builtins_http = map[string]*env.Builtin{
 	// Returns:
 	// * integer containing the HTTP status code (200, 404, 500, etc.)
 	"https-response//Status?": {
-		Argsn: 1,
-		Doc:   "Gets the HTTP status code from a response object.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the HTTP status code from a response object.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch resp := arg0.(type) {
 			case env.Native:
@@ -1225,8 +1260,9 @@ var Builtins_http = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the HTTP status text (OK, Not Found, Internal Server Error, etc.)
 	"https-response//Status-text?": {
-		Argsn: 1,
-		Doc:   "Gets the HTTP status text from a response object.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the HTTP status text from a response object.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch resp := arg0.(type) {
 			case env.Native:

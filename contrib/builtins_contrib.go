@@ -75,6 +75,7 @@ func RegisterBuiltins2(builtins map[string]*env.Builtin, ps *env.ProgramState, n
 	bn[name] = len(builtins)
 	for k, v := range builtins {
 		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc)
+		bu.Effect = v.Effect
 		registerBuiltin(ps, k, *bu)
 	}
 }

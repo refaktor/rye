@@ -153,9 +153,23 @@ func ApplySecurityPolicy(policy *SecurityPolicy) error {
 		len(policy.AllowedScriptPaths) > 0
 
 	// Log policy source only if there are actual security features or policy is not from CLI
-	if policy.Source != PolicySourceNone && 
+	if policy.Source != PolicySourceNone &&
 		(hasSecurityFeatures || policy.Source != PolicySourceCLI) {
 		fmt.Fprintf(os.Stderr, "\033[2;37mSecurity policy loaded from: %s\033[0m\n", policy.Source)
+	}
+
+	// Apply landlock before seccomp. Landlock setup itself needs syscalls that
+	// a restrictive seccomp profile would otherwise block. Landlock restrictions
+	// persist after the seccomp filter is installed.
+	if policy.Landlock.Enabled {
+		landlockConfig := LandlockConfig{
+			Enabled: true,
+			Profile: policy.Landlock.Profile,
+			Paths:   policy.Landlock.Paths,
+		}
+		if err := InitLandlock(landlockConfig); err != nil {
+			return fmt.Errorf("failed to apply landlock policy: %w", err)
+		}
 	}
 
 	// Apply seccomp
@@ -167,18 +181,6 @@ func ApplySecurityPolicy(policy *SecurityPolicy) error {
 		}
 		if err := InitSeccomp(seccompConfig); err != nil {
 			return fmt.Errorf("failed to apply seccomp policy: %w", err)
-		}
-	}
-
-	// Apply landlock
-	if policy.Landlock.Enabled {
-		landlockConfig := LandlockConfig{
-			Enabled: true,
-			Profile: policy.Landlock.Profile,
-			Paths:   policy.Landlock.Paths,
-		}
-		if err := InitLandlock(landlockConfig); err != nil {
-			return fmt.Errorf("failed to apply landlock policy: %w", err)
 		}
 	}
 

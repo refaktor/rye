@@ -2575,8 +2575,26 @@ var builtins_collection = map[string]*env.Builtin{
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.ListType}, "union")
 				}
+			case env.Bunch:
+				switch s2 := arg1.(type) {
+				case env.Bunch:
+					return s1.Union(s2)
+				case *env.Bunch:
+					return s1.Union(*s2)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BunchType}, "union")
+				}
+			case *env.Bunch:
+				switch s2 := arg1.(type) {
+				case env.Bunch:
+					return s1.Union(s2)
+				case *env.Bunch:
+					return s1.Union(*s2)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BunchType}, "union")
+				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "union")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.BunchType}, "union")
 			}
 		},
 	},
@@ -2641,6 +2659,10 @@ var builtins_collection = map[string]*env.Builtin{
 				return *env.NewBoolean(len(s1.Data) == 0)
 			case env.List:
 				return *env.NewBoolean(len(s1.Data) == 0)
+			case env.Bunch:
+				return *env.NewBoolean(len(s1.Data) == 0)
+			case *env.Bunch:
+				return *env.NewBoolean(len(s1.Data) == 0)
 			case env.Block:
 				return *env.NewBoolean(s1.Series.Len() == 0)
 			case env.Table:
@@ -2655,7 +2677,7 @@ var builtins_collection = map[string]*env.Builtin{
 				return *env.NewBoolean(s1.Value.Len() == 0)
 			default:
 				// fmt.Println(s1)
-				return MakeArgError(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.TableType /*env.PersistentTableType,*/, env.VectorType}, "is-empty")
+				return MakeArgError(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BunchType, env.BlockType, env.TableType /*env.PersistentTableType,*/, env.VectorType}, "is-empty")
 			}
 		},
 	},
@@ -2682,6 +2704,10 @@ var builtins_collection = map[string]*env.Builtin{
 				return *env.NewInteger(int64(len(s1.Data)))
 			case env.List:
 				return *env.NewInteger(int64(len(s1.Data)))
+			case env.Bunch:
+				return *env.NewInteger(int64(len(s1.Data)))
+			case *env.Bunch:
+				return *env.NewInteger(int64(len(s1.Data)))
 			case env.Block:
 				return *env.NewInteger(int64(s1.Series.Len()))
 			case env.Table:
@@ -2699,7 +2725,7 @@ var builtins_collection = map[string]*env.Builtin{
 			case env.Markdown:
 				return *env.NewInteger(int64(len([]rune(s1.Value))))
 			default:
-				return MakeArgError2(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.TableType /*env.PersistentTableType,*/, env.VectorType, env.BytesType, env.MarkdownType}, "length?", arg0)
+				return MakeArgError2(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BunchType, env.BlockType, env.TableType /*env.PersistentTableType,*/, env.VectorType, env.BytesType, env.MarkdownType}, "length?", arg0)
 			}
 		},
 	},
@@ -2910,8 +2936,26 @@ var builtins_collection = map[string]*env.Builtin{
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.ListType}, "intersection")
 				}
+			case env.Bunch:
+				switch s2 := arg1.(type) {
+				case env.Bunch:
+					return s1.Intersection(s2)
+				case *env.Bunch:
+					return s1.Intersection(*s2)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BunchType}, "intersection")
+				}
+			case *env.Bunch:
+				switch s2 := arg1.(type) {
+				case env.Bunch:
+					return s1.Intersection(s2)
+				case *env.Bunch:
+					return s1.Intersection(*s2)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BunchType}, "intersection")
+				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType, env.ListType}, "intersection")
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType, env.ListType, env.BunchType}, "intersection")
 			}
 		},
 	},
@@ -3031,8 +3075,26 @@ var builtins_collection = map[string]*env.Builtin{
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.ListType}, "difference")
 				}
+			case env.Bunch:
+				switch s2 := arg1.(type) {
+				case env.Bunch:
+					return s1.Difference(s2)
+				case *env.Bunch:
+					return s1.Difference(*s2)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BunchType}, "difference")
+				}
+			case *env.Bunch:
+				switch s2 := arg1.(type) {
+				case env.Bunch:
+					return s1.Difference(s2)
+				case *env.Bunch:
+					return s1.Difference(*s2)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BunchType}, "difference")
+				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType, env.ListType}, "difference")
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType, env.ListType, env.BunchType}, "difference")
 			}
 		},
 	},

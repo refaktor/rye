@@ -445,8 +445,21 @@ var builtins_string = map[string]*env.Builtin{
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "contains")
 				}
+			// contains bunch
+			case env.Bunch:
+				key, ok := env.BunchKey(arg1, ps.Idx)
+				if !ok {
+					return MakeArgError(ps, 2, []env.Type{env.StringType, env.WordType, env.TagwordType, env.IntegerType, env.DecimalType, env.BooleanType}, "contains")
+				}
+				return *env.NewBoolean(s1.Contains(key))
+			case *env.Bunch:
+				key, ok := env.BunchKey(arg1, ps.Idx)
+				if !ok {
+					return MakeArgError(ps, 2, []env.Type{env.StringType, env.WordType, env.TagwordType, env.IntegerType, env.DecimalType, env.BooleanType}, "contains")
+				}
+				return *env.NewBoolean(s1.Contains(key))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType, env.ListType}, "contains")
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType, env.ListType, env.BunchType}, "contains")
 			}
 		},
 	},

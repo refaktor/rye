@@ -167,8 +167,9 @@ var builtins_printing_extra = map[string]*env.Builtin{
 	// Example:
 	// display [1 2 3]
 	"display": {
-		Argsn: 1,
-		Doc:   "Displays all entries without interaction or pagination and returns the original value.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Displays all entries without interaction or pagination and returns the original value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if source, ok := markdownSource(arg0); ok {
 				if items := evaldo.MarkdownDisplayItems(source); len(items) > 0 {
@@ -191,8 +192,9 @@ var builtins_printing_extra = map[string]*env.Builtin{
 	// Example:
 	// [1 2 3] |explore
 	"explore": {
-		Argsn: 1,
-		Doc:   "Interactively explores a value; returns the selected item or the original value when cancelled.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Interactively explores a value; returns the selected item or the original value when cancelled.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			result, _ := DisplayRyeValue(ps, arg0, true)
 			return result
@@ -206,8 +208,9 @@ var builtins_printing_extra = map[string]*env.Builtin{
 	// Returns:
 	// * the selected value or the original value when user exits
 	"_..": {
-		Argsn: 1,
-		Doc:   "Shorthand alias for explore: interactively select a value.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Shorthand alias for explore: interactively select a value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			result, _ := DisplayRyeValue(ps, arg0, true)
 			return result
@@ -222,8 +225,9 @@ var builtins_printing_extra = map[string]*env.Builtin{
 	// Returns:
 	// * the selected row or original table when user exits
 	"explore\\custom": {
-		Argsn: 2,
-		Doc:   "Interactively displays a Table in the terminal with a custom rendering function for each row.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Interactively displays a Table in the terminal with a custom rendering function for each row.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			term.SaveCurPos()
 			switch fnc := arg1.(type) {
@@ -258,8 +262,9 @@ var builtins_printing_extra = map[string]*env.Builtin{
 	// Returns:
 	// * the input block, unchanged
 	"print\\ssv": {
-		Argsn: 1,
-		Doc:   "Prints a block of values as space-separated values followed by a newline, returning the input block.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Prints a block of values as space-separated values followed by a newline, returning the input block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Object:
@@ -278,8 +283,9 @@ var builtins_printing_extra = map[string]*env.Builtin{
 	// Returns:
 	// * the input block, unchanged
 	"print\\csv": {
-		Argsn: 1,
-		Doc:   "Prints a block of values as comma-separated values followed by a newline, returning the input block.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Prints a block of values as comma-separated values followed by a newline, returning the input block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Object:

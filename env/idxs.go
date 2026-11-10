@@ -75,6 +75,7 @@ var NativeTypes = [...]string{
 	"Bytes",
 	"PersistentTable",
 	"DataPath",
+	"Bunch",
 }
 
 // IndexWord returns the index of a word, creating a new index if it doesn't exist.

@@ -116,6 +116,10 @@ func InitSeccomp(config SeccompConfig) error {
 
 			// Additional syscalls that might be needed with CGO_ENABLED=0
 			"rseq", "prlimit64", "statx", "newfstatat",
+
+			// Landlock setup syscalls (also needed by Rye-level landlock helpers
+			// when seccomp is already active).
+			"prctl", "landlock_create_ruleset", "landlock_add_rule", "landlock_restrict_self",
 		}
 	} else {
 		// Default to strict profile
@@ -154,6 +158,9 @@ func InitSeccomp(config SeccompConfig) error {
 
 			// --- Pipe/socketpair (used internally) ---
 			"pipe", "pipe2",
+
+			// --- Landlock setup syscalls ---
+			"prctl", "landlock_create_ruleset", "landlock_add_rule", "landlock_restrict_self",
 
 			// --- Go runtime essentials ---
 			/*	"read", "write", "open", "close", "fstat",

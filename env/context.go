@@ -1005,6 +1005,17 @@ type EffectMode struct {
 	Ask     bool      // prompt for input-effect values after the provider runs
 	Confirm bool      // prompt before each output effect
 	Log     io.Writer // where human-facing effect messages go (defaults to stderr)
+
+	AuditFile      string          // optional file for timestamped effect audit lines
+	RecordPath     string          // destination for a recording (used at exit)
+	Replay         *EffectTape     // when set, inputs come from the tape and outputs are skipped
+	ReplayFallback bool            // replay: run the provider when an input is missing
+	Record         *EffectRecorder // when set, record inputs and executed outputs
+
+	Inputs          int // input-effect calls
+	OutputsSkipped  int // outputs skipped by dry-run, confirm, or replay
+	OutputsExecuted int // outputs actually run
+	OutputsFailed   int // outputs that ran and produced a failure/error
 }
 
 type ProgramState struct {
