@@ -183,8 +183,9 @@ var Builtins_cmd = map[string]*env.Builtin{
 	// Returns:
 	// * native command object
 	"cmd": {
-		Argsn: 1,
-		Doc:   "Create a command.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Create a command.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var args []string
 			var pipe []*exec.Cmd
@@ -269,8 +270,9 @@ var Builtins_cmd = map[string]*env.Builtin{
 	// Returns:
 	// * the original command object
 	"command//Dir!": {
-		Argsn: 2,
-		Doc:   "Change the working directory of a command.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Change the working directory of a command.",
 		Fn: commandFn("Dir!", func(ps *env.ProgramState, c *command, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg1.(type) {
 			case env.Uri:
@@ -287,8 +289,9 @@ var Builtins_cmd = map[string]*env.Builtin{
 	// Returns:
 	// * the original command object
 	"command//Stdin!": {
-		Argsn: 2,
-		Doc:   "Change the standard input of a command.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Change the standard input of a command.",
 		Fn: commandFn("Stdin!", func(ps *env.ProgramState, c *command, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			out, ret := commandInputFd(ps, c, arg1)
 			if ret != nil {
@@ -304,8 +307,9 @@ var Builtins_cmd = map[string]*env.Builtin{
 	// Returns:
 	// * the original command object
 	"command//Stdout!": {
-		Argsn: 2,
-		Doc:   "Change the standard output of a command.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Change the standard output of a command.",
 		Fn: commandFn("Stdout!", func(ps *env.ProgramState, c *command, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			out, ret := commandOutputFd(ps, c, arg1)
 			if ret != nil {
@@ -321,8 +325,9 @@ var Builtins_cmd = map[string]*env.Builtin{
 	// Returns:
 	// * the original command object
 	"command//Stderr!": {
-		Argsn: 2,
-		Doc:   "Change the standard error of a command.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Change the standard error of a command.",
 		Fn: commandFn("Stderr!", func(ps *env.ProgramState, c *command, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			out, ret := commandOutputFd(ps, c, arg1)
 			if ret != nil {
@@ -340,8 +345,9 @@ var Builtins_cmd = map[string]*env.Builtin{
 	// Returns:
 	// * new native command object
 	"command//Pipe": {
-		Argsn: 2,
-		Doc:   "Pipe the output of the first command to the input of the second command.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Pipe the output of the first command to the input of the second command.",
 		Fn: commandFn("Pipe", func(ps *env.ProgramState, c *command, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch it := arg1.(type) {
 			case env.Native:
@@ -362,8 +368,9 @@ var Builtins_cmd = map[string]*env.Builtin{
 	// Tests:
 	// error { cmd { false } |Run }
 	"command//Run": {
-		Argsn: 1,
-		Doc:   "Start a command and wait for it to finish.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Start a command and wait for it to finish.",
 		Fn: commandFn("Run", func(ps *env.ProgramState, c *command, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			defer c.Close()
 			err := c.StartPipe()
@@ -384,8 +391,9 @@ var Builtins_cmd = map[string]*env.Builtin{
 	// Returns:
 	// * the same command after starting it (does not wait)
 	"command//Start": {
-		Argsn: 1,
-		Doc:   "Start a command (and any piped commands) without waiting.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Start a command (and any piped commands) without waiting.",
 		Fn: commandFn("Start", func(ps *env.ProgramState, c *command, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if c.started {
 				return arg0
@@ -407,8 +415,9 @@ var Builtins_cmd = map[string]*env.Builtin{
 	// Returns:
 	// * boolean true; kills the process (and any started piped processes)
 	"command//Kill": {
-		Argsn: 1,
-		Doc:   "Kill a started command (and any started piped commands).",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Kill a started command (and any started piped commands).",
 		Fn: commandFn("Kill", func(ps *env.ProgramState, c *command, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var firstErr error
 			if c.cmd != nil && c.cmd.Process != nil {
@@ -437,8 +446,9 @@ var Builtins_cmd = map[string]*env.Builtin{
 	// Returns:
 	// * process id of the main command or -1 if not started
 	"command//Pid": {
-		Argsn: 1,
-		Doc:   "Return the process id of the main command (or -1 if not started).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Return the process id of the main command (or -1 if not started).",
 		Fn: commandFn("Pid", func(ps *env.ProgramState, c *command, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if c.cmd == nil || c.cmd.Process == nil {
 				return *env.NewInteger(-1)
@@ -451,8 +461,9 @@ var Builtins_cmd = map[string]*env.Builtin{
 	// Returns:
 	// * exit status (or list for pipelines) after waiting
 	"command//Wait": {
-		Argsn: 1,
-		Doc:   "Wait for a started command to finish and return its exit status.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Wait for a started command to finish and return its exit status.",
 		Fn: commandFn("Wait", func(ps *env.ProgramState, c *command, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if !c.started {
 				ps.FailureFlag = true
@@ -487,8 +498,9 @@ var Builtins_cmd = map[string]*env.Builtin{
 	// equal { cmd { false } |Status } 1
 	// equal { cmd { false |true } |Status } list [ 1 0 ]
 	"command//Status": {
-		Argsn: 1,
-		Doc:   "Start a command, wait for it to finish, and return its exit status.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Start a command, wait for it to finish, and return its exit status.",
 		Fn: commandFn("Status", func(ps *env.ProgramState, c *command, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			err := c.StartPipe()
 			if err != nil {
@@ -519,8 +531,9 @@ var Builtins_cmd = map[string]*env.Builtin{
 	// Returns:
 	// * string containing data written to the command's standard output
 	"command//Output": {
-		Argsn: 1,
-		Doc:   "Start a command, wait for it to finish, and return its standard output",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Start a command, wait for it to finish, and return its standard output",
 		Fn: commandFn("Output", func(ps *env.ProgramState, c *command, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			defer c.Close()
 			err := c.StartPipe()
@@ -542,8 +555,9 @@ var Builtins_cmd = map[string]*env.Builtin{
 	// Returns:
 	// * string containing data written to the command's standard output and error
 	"command//CombinedOutput": {
-		Argsn: 1,
-		Doc:   "Start a command, wait for it to finish, and return its combined standard output and error",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Start a command, wait for it to finish, and return its combined standard output and error",
 		Fn: commandFn("CombinedOutput", func(ps *env.ProgramState, c *command, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			defer c.Close()
 			err := c.StartPipe()
@@ -566,8 +580,9 @@ var Builtins_cmd = map[string]*env.Builtin{
 	// Returns:
 	// * the original command object after redirecting stdin/stdout/stderr to /dev/null
 	"command//Detach!": {
-		Argsn: 1,
-		Doc:   "Redirect stdin, stdout, and stderr of a command to /dev/null.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Redirect stdin, stdout, and stderr of a command to /dev/null.",
 		Fn: commandFn("Detach!", func(ps *env.ProgramState, c *command, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Open /dev/null once and reuse for all three.
 			f, err := os.OpenFile("/dev/null", os.O_RDWR, 0)

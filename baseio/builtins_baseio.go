@@ -42,9 +42,10 @@ var builtins_baseio = map[string]*env.Builtin{
 	// -------------------------------------------------------------------------
 
 	"save\\current": {
-		Argsn: 0,
-		Doc:   "Saves current state of the program to a file.",
-		Pure:  true,
+		Effect: env.EffOutput,
+		Argsn:  0,
+		Doc:    "Saves current state of the program to a file.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			s := ps.Dump()
 			fileName := fmt.Sprintf("console_%s.rye", time.Now().Format("060102_150405"))
@@ -60,9 +61,10 @@ var builtins_baseio = map[string]*env.Builtin{
 	},
 
 	"save\\current\\secure": {
-		Argsn: 0,
-		Doc:   "Saves current state of the program to a file with password protection.",
-		Pure:  true,
+		Effect: env.EffOutput,
+		Argsn:  0,
+		Doc:    "Saves current state of the program to a file with password protection.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			s := ps.Dump()
 			fileName := fmt.Sprintf("console_%s.rye.enc", time.Now().Format("060102_150405"))
@@ -85,8 +87,9 @@ var builtins_baseio = map[string]*env.Builtin{
 	// -------------------------------------------------------------------------
 
 	"file-uri//Import": { // **
-		Argsn: 1,
-		Doc:   "Imports a file, loads and does it from script local path.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Imports a file, loads and does it from script local path.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Uri:
@@ -101,8 +104,9 @@ var builtins_baseio = map[string]*env.Builtin{
 	},
 
 	"file-uri//Import\\live": { // **
-		Argsn: 1,
-		Doc:   "Imports a file, loads and does it from script local path.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Imports a file, loads and does it from script local path.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Uri:
@@ -118,8 +122,9 @@ var builtins_baseio = map[string]*env.Builtin{
 	},
 
 	"file-uri//Load": { // **
-		Argsn: 1,
-		Doc:   "Loads a file URI into Rye values.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Loads a file URI into Rye values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Uri:
@@ -146,8 +151,9 @@ var builtins_baseio = map[string]*env.Builtin{
 	},
 
 	"load\\mod\\file": { // **
-		Argsn: 1,
-		Doc:   "Loads a file URI into Rye values, allowing modification of words during load.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Loads a file URI into Rye values, allowing modification of words during load.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Uri:
@@ -176,8 +182,9 @@ var builtins_baseio = map[string]*env.Builtin{
 	},
 
 	"load\\live": { // **
-		Argsn: 1,
-		Doc:   "Loads a file URI into Rye values, allows modification of words, and watches for changes.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Loads a file URI into Rye values, allows modification of words, and watches for changes.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Uri:
@@ -219,8 +226,9 @@ var builtins_baseio = map[string]*env.Builtin{
 	// Returns:
 	// * integer exit status code
 	"scmd": {
-		Argsn: 1,
-		Doc:   "Execute a shell command and return its exit status code.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Execute a shell command and return its exit status code.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s0 := arg0.(type) {
 			case env.String:
@@ -251,8 +259,9 @@ var builtins_baseio = map[string]*env.Builtin{
 	// Returns:
 	// * string containing captured stdout (stderr on error)
 	"scmd\\capture": {
-		Argsn: 1,
-		Doc:   "Execute a shell command and capture the output, return it as string",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Execute a shell command and capture the output, return it as string",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s0 := arg0.(type) {
 			case env.String:
@@ -288,8 +297,9 @@ var builtins_baseio = map[string]*env.Builtin{
 	// Returns:
 	// * does not return; terminates the process.
 	"exit": { // **
-		Argsn: 1,
-		Doc:   "Exits the process with the given integer status code (or 0 for any non-integer).",
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Exits the process with the given integer status code (or 0 for any non-integer).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			util.BeforeExit()
 			switch code := arg0.(type) {
@@ -315,8 +325,9 @@ var builtins_baseio = map[string]*env.Builtin{
 	// Example:
 	//   Rye-itself//Args?
 	"Rye-itself//Args?": {
-		Argsn: 0,
-		Doc:   "Returns command line arguments as a block of parsed values. Each argument is converted to appropriate type (integer, float, or string).",
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Returns command line arguments as a block of parsed values. Each argument is converted to appropriate type (integer, float, or string).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return ryeItselfArgsParsed(ps)
 		},
@@ -329,8 +340,9 @@ var builtins_baseio = map[string]*env.Builtin{
 	// Example:
 	//   Rye-itself//Args\\raw? _
 	"Rye-itself//Args\\raw?": {
-		Argsn: 1,
-		Doc:   "Returns raw command line arguments joined as a single string.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Returns raw command line arguments joined as a single string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			firstArg := ryeFirstArgIdx(ps)
 			if len(os.Args) > firstArg {
@@ -348,8 +360,9 @@ var builtins_baseio = map[string]*env.Builtin{
 	// Example:
 	// Rye-itself//History? _ 10
 	"Rye-itself//History?": {
-		Argsn: 2,
-		Doc:   "Returns a block of the last N lines from REPL history.",
+		Effect: env.EffInput,
+		Argsn:  2,
+		Doc:    "Returns a block of the last N lines from REPL history.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch n := arg1.(type) {
 			case env.Integer:
@@ -376,8 +389,9 @@ var builtins_baseio = map[string]*env.Builtin{
 	//   ll: Rye-itself//Landlock
 	//   ll | landlock//Limit-to-cwd | landlock//Enforce
 	"Rye-itself//Landlock": {
-		Argsn: 0,
-		Doc:   "Create a landlock builder object that can be configured and then enforced.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Create a landlock builder object that can be configured and then enforced.",
 		Fn: func(ps *env.ProgramState, _ env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
 			return *env.NewNative(ps.Idx, security.NewLandlockBuilder(), "landlock")
 		},
@@ -388,8 +402,9 @@ var builtins_baseio = map[string]*env.Builtin{
 	// Returns: same native (builder)
 	// Notes: Configure only; use landlock//Enforce to apply.
 	"landlock//Limit-to-cwd": {
-		Argsn: 1,
-		Doc:   "Limit landlock to current working directory (configure; does not enforce yet).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Limit landlock to current working directory (configure; does not enforce yet).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, _, _, _, _ env.Object) env.Object {
 			if n, ok := arg0.(env.Native); ok {
 				if b, ok2 := n.Value.(*security.LandlockBuilder); ok2 {
@@ -405,8 +420,9 @@ var builtins_baseio = map[string]*env.Builtin{
 	// Args: landlock native, path (uri|string)
 	// Returns: same native (builder)
 	"landlock//Allow": {
-		Argsn: 2,
-		Doc:   "Allow access to a specific path (file or directory).",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Allow access to a specific path (file or directory).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, _, _, _ env.Object) env.Object {
 			var p string
 			switch v := arg1.(type) {
@@ -431,8 +447,9 @@ var builtins_baseio = map[string]*env.Builtin{
 	// Args: landlock native, path (uri|string)
 	// Returns: same native (builder)
 	"landlock//Allow-exec": {
-		Argsn: 2,
-		Doc:   "Allow execute access to a specific file (or RX for all files under a directory).",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Allow execute access to a specific file (or RX for all files under a directory).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, _, _, _ env.Object) env.Object {
 			var p string
 			switch v := arg1.(type) {
@@ -457,8 +474,9 @@ var builtins_baseio = map[string]*env.Builtin{
 	// Args: landlock native
 	// Returns: same native (builder)
 	"landlock//Enforce": {
-		Argsn: 1,
-		Doc:   "Enforce the configured landlock ruleset exactly once.",
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Enforce the configured landlock ruleset exactly once.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, _, _, _, _ env.Object) env.Object {
 			if n, ok := arg0.(env.Native); ok {
 				if b, ok2 := n.Value.(*security.LandlockBuilder); ok2 {
@@ -479,9 +497,10 @@ var builtins_baseio = map[string]*env.Builtin{
 	// Returns: 'ok tagword on success; error on failure
 	// Notes: Call early in the script; applies process-wide and is irreversible for current process.
 	"Rye-itself//Landlock-to-cwd": {
-		Argsn: 0,
-		Doc:   "Restrict filesystem access to the current working directory and its subdirectories using Landlock (Linux only). Call early in the script.",
-		Pure:  false,
+		Effect: env.EffOutput,
+		Argsn:  0,
+		Doc:    "Restrict filesystem access to the current working directory and its subdirectories using Landlock (Linux only). Call early in the script.",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, _ env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
 			// Determine base dir: prefer ProgramState.WorkingPath
 			base := ps.WorkingPath
@@ -524,9 +543,10 @@ var builtins_baseio = map[string]*env.Builtin{
 	// Returns: 'ok tagword on success; error on failure
 	// Notes: Call early in the script; applies process-wide and is irreversible.
 	"Rye-itself//Landlock-only": {
-		Argsn: 1,
-		Doc:   "Immediately restrict filesystem access to the provided list of paths with modes r, rw, or rx. Example: Rye-itself//Landlock-only \"/proj:r,/tmp:rw,/proj/bin:rx\"",
-		Pure:  false,
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Immediately restrict filesystem access to the provided list of paths with modes r, rw, or rx. Example: Rye-itself//Landlock-only \"/proj:r,/tmp:rw,/proj/bin:rx\"",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
 			// Parse spec(s)
 			items := []string{}
@@ -599,9 +619,10 @@ var builtins_baseio = map[string]*env.Builtin{
 	// Returns: boolean
 	// Notes: Checks env var RYE_UNSHARE_FS set by the runner.
 	"Rye-itself//Is-unshare-fs": {
-		Argsn: 0,
-		Doc:   "Returns true if filesystem namespace isolation is enabled under --unshare.",
-		Pure:  true,
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Returns true if filesystem namespace isolation is enabled under --unshare.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, _ env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
 			return *env.NewBoolean(os.Getenv("RYE_UNSHARE_FS") == "1")
 		},
@@ -613,9 +634,10 @@ var builtins_baseio = map[string]*env.Builtin{
 	// Returns: boolean
 	// Notes: Checks env var RYE_UNSHARE_NET set by the runner.
 	"Rye-itself//Is-unshare-net": {
-		Argsn: 0,
-		Doc:   "Returns true if network namespace isolation is enabled under --unshare.",
-		Pure:  true,
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Returns true if network namespace isolation is enabled under --unshare.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, _ env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
 			return *env.NewBoolean(os.Getenv("RYE_UNSHARE_NET") == "1")
 		},
@@ -627,9 +649,10 @@ var builtins_baseio = map[string]*env.Builtin{
 	// Returns: boolean
 	// Notes: Checks env var RYE_UNSHARE_PID set by the runner.
 	"Rye-itself//Is-unshare-pid": {
-		Argsn: 0,
-		Doc:   "Returns true if PID namespace isolation is enabled under --unshare.",
-		Pure:  true,
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Returns true if PID namespace isolation is enabled under --unshare.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, _ env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
 			return *env.NewBoolean(os.Getenv("RYE_UNSHARE_PID") == "1")
 		},
@@ -641,9 +664,10 @@ var builtins_baseio = map[string]*env.Builtin{
 	// Returns: boolean
 	// Notes: Checks env var RYE_UNSHARE_UTS set by the runner.
 	"Rye-itself//Is-unshare-uts": {
-		Argsn: 0,
-		Doc:   "Returns true if UTS namespace isolation is enabled under --unshare.",
-		Pure:  true,
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Returns true if UTS namespace isolation is enabled under --unshare.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, _ env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
 			return *env.NewBoolean(os.Getenv("RYE_UNSHARE_UTS") == "1")
 		},
@@ -657,9 +681,10 @@ var builtins_baseio = map[string]*env.Builtin{
 	// Example:
 	//   cc Rye-itself Unshare-config? |print
 	"Rye-itself//Unshare-config?": {
-		Argsn: 0,
-		Doc:   "Returns a dictionary with unshare isolation flags: active, fs, net, pid, uts (booleans).",
-		Pure:  true,
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Returns a dictionary with unshare isolation flags: active, fs, net, pid, uts (booleans).",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, _ env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
 			d := make(map[string]any, 5)
 			d["active"] = *env.NewBoolean(os.Getenv("RYE_UNSHARE_CHILD") == "1")
@@ -679,9 +704,10 @@ var builtins_baseio = map[string]*env.Builtin{
 	// * boolean, true when the runner set RYE_UNSHARE_CHILD=1
 	// Notes: Checks env var RYE_UNSHARE_CHILD set by the runner in the unshare child.
 	"Rye-itself//Is-unshare": {
-		Argsn: 0,
-		Doc:   "Returns true if current process runs inside Rye --unshare sandbox (Linux only).",
-		Pure:  true,
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Returns true if current process runs inside Rye --unshare sandbox (Linux only).",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, _ env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
 			return *env.NewBoolean(os.Getenv("RYE_UNSHARE_CHILD") == "1")
 		},
@@ -693,9 +719,10 @@ var builtins_baseio = map[string]*env.Builtin{
 	// Returns: never on failure (process exits); 'ok tagword when already unshared
 	// Notes: Intended for CI or scripts that must run sandboxed. Linux-only behavior; on non-Linux it will not detect unshare and will fail unless adapted.
 	"Rye-itself//Require-unshared": {
-		Argsn: 0,
-		Doc:   "Fails and exits if unshare is not active (use in CI/safety-critical runs).",
-		Pure:  false,
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Fails and exits if unshare is not active (use in CI/safety-critical runs).",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, _ env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
 			if os.Getenv("RYE_UNSHARE_CHILD") == "1" {
 				return env.Tagword{Index: ps.Idx.IndexWord("ok")}
@@ -715,9 +742,10 @@ var builtins_baseio = map[string]*env.Builtin{
 	// * boolean, true when -eff-dry-run is active or effect-mode hooks report scenario mode
 	// Notes: Checks the active EffectMode, then embedded scenario hooks. The runner applies RYE_EFF_DRY_RUN to EffectMode.
 	"Rye-itself//Is-dry-run": {
-		Argsn: 0,
-		Doc:   "Returns true if Rye is running with declared effects in dry-run mode (-eff-dry-run)",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns true if Rye is running with declared effects in dry-run mode (-eff-dry-run)",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, _ env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
 			if ps.EffectMode.DryRun {
 				return *env.NewBoolean(true)
@@ -743,8 +771,9 @@ var builtins_baseio = map[string]*env.Builtin{
 	// Returns:
 	// * String containing the captured stdout.
 	"capture-stdout": { // **
-		Argsn: 1,
-		Doc:   "Executes a block of code while capturing all output to stdout, returning the captured output as a string.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Executes a block of code while capturing all output to stdout, returning the captured output as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:

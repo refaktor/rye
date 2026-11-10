@@ -70,6 +70,9 @@ func parseCustomAccessRights(paths []string) ([]landlock.Rule, error) {
 		// hasExec is not used directly as the landlock library doesn't expose execute permissions
 		// for individual files in the same way. The execute permission is handled at the ABI level.
 		_ = strings.Contains(perms, "x")
+		if !hasRead {
+			return nil, fmt.Errorf("invalid permissions %q for %s (write-only is not supported; use r, rw, or rx)", perms, pathSpec)
+		}
 
 		// Apply appropriate rules based on permissions and path type
 		if isDir {
@@ -163,10 +166,16 @@ func InitLandlock(config LandlockConfig) error {
 		}
 
 	case "custom":
+		if len(config.Paths) == 0 {
+			return fmt.Errorf("custom landlock profile requires at least one -landlock-paths entry")
+		}
 		// Parse custom access rights
 		customRules, err := parseCustomAccessRights(config.Paths)
 		if err != nil {
 			return fmt.Errorf("failed to parse custom access rights: %w", err)
+		}
+		if len(customRules) == 0 {
+			return fmt.Errorf("custom landlock profile produced no rules")
 		}
 		rules = append(rules, customRules...)
 	}

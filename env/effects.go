@@ -8,14 +8,19 @@ import "sync"
 type EffectKind uint8
 
 const (
-	EffNone   EffectKind = iota // no declared I/O effect
-	EffInput                    // reads from the outside world
-	EffOutput                   // writes to the outside world
-	EffIO                       // both reads and writes, or not worth splitting
+	// EffectUnspecified is the zero value: no explicit tag was provided on the
+	// builtin definition. Registration may fill it from module/method defaults.
+	EffectUnspecified EffectKind = iota
+	EffNone                      // explicitly no declared I/O effect
+	EffInput                     // reads from the outside world
+	EffOutput                    // writes to the outside world
+	EffIO                        // both reads and writes, or not worth splitting
 )
 
 func (k EffectKind) String() string {
 	switch k {
+	case EffNone:
+		return "none"
 	case EffInput:
 		return "input"
 	case EffOutput:
@@ -23,7 +28,7 @@ func (k EffectKind) String() string {
 	case EffIO:
 		return "io"
 	default:
-		return "none"
+		return "unspecified"
 	}
 }
 

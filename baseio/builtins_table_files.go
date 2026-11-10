@@ -53,6 +53,7 @@ var Builtins_table_files = map[string]*env.Builtin{
 	// Returns:
 	// * Table parsed from the CSV file.
 	"file-uri//Load\\csv__OLD": {
+		Effect: env.EffInput,
 		// TODO 2 -- this could move to a go function so it could be called by general load that uses extension to define the loader
 		Argsn: 1,
 		Doc:   "Loads a .csv file to a table datatype.",
@@ -115,6 +116,7 @@ var Builtins_table_files = map[string]*env.Builtin{
 	// Returns:
 	// * Table parsed from the CSV file.
 	"file-uri//Load\\csv": {
+		Effect: env.EffInput,
 		// TODO 2 -- this could move to a go function so it could be called by general load that uses extension to define the loader
 		Argsn: 2,
 		Doc:   "Loads a .csv file to a table datatype.",
@@ -184,8 +186,9 @@ var Builtins_table_files = map[string]*env.Builtin{
 	// Returns:
 	// * Table parsed from the CSV file, skipping malformed lines.
 	"file-uri//Load\\csv\\ignore-bad": {
-		Argsn: 2,
-		Doc:   "Loads a .csv file to a table datatype, parsing it line by line and skipping lines that can't be parsed as CSV.",
+		Effect: env.EffInput,
+		Argsn:  2,
+		Doc:    "Loads a .csv file to a table datatype, parsing it line by line and skipping lines that can't be parsed as CSV.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch file := arg0.(type) {
 			case env.Uri:
@@ -257,6 +260,7 @@ var Builtins_table_files = map[string]*env.Builtin{
 	// Returns:
 	// * Table parsed from the TSV file.
 	"file-uri//Load\\tsv": {
+		Effect: env.EffInput,
 		// TODO 2 -- this could move to a go function so it could be called by general load that uses extension to define the loader
 		Argsn: 1,
 		Doc:   "Loads a .tsv file to a table datatype.",
@@ -321,8 +325,9 @@ var Builtins_table_files = map[string]*env.Builtin{
 	// Returns:
 	// * the saved Table.
 	"file-uri//Save\\csv": {
-		Argsn: 2,
-		Doc:   "Saves a table to a .csv file.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Saves a table to a .csv file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch file := arg0.(type) {
 			case env.Uri:
@@ -405,8 +410,9 @@ var Builtins_table_files = map[string]*env.Builtin{
 	// Returns:
 	// * the saved Table.
 	"file-uri//Save\\tsv": {
-		Argsn: 2,
-		Doc:   "Saves a table to a .tsv file.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Saves a table to a .tsv file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch file := arg0.(type) {
 			case env.Uri:
@@ -486,8 +492,9 @@ var Builtins_table_files = map[string]*env.Builtin{
 	// Returns:
 	// * Table containing the first sheet of the XLSX file.
 	"file-uri//Load\\xlsx": {
-		Argsn: 1,
-		Doc:   "Loads the first sheet in an .xlsx file to a Table. Cells starting with \"{\" are loaded as Rye code.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Loads the first sheet in an .xlsx file to a Table. Cells starting with \"{\" are loaded as Rye code.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch file := arg0.(type) {
 			case env.Uri:
@@ -557,8 +564,9 @@ var Builtins_table_files = map[string]*env.Builtin{
 	// Returns:
 	// * the saved Table.
 	"file-uri//Save\\xlsx": {
-		Argsn: 2,
-		Doc:   "Saves a Table to a .xlsx file. Block cells are serialized with their Rye dump.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Saves a Table to a .xlsx file. Block cells are serialized with their Rye dump.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch file := arg0.(type) {
 			case env.Uri:
