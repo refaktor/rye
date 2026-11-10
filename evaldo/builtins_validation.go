@@ -4,7 +4,6 @@
 package evaldo
 
 import (
-	"fmt"
 	"net/mail"
 	"strconv"
 	"strings"
@@ -47,8 +46,7 @@ func Validation_EvalBlock(es *env.ProgramState, vals env.Dict) (env.Dict, map[st
 				}
 			}
 		default:
-			fmt.Println("Type is not matching - Validation_EvalBlock.")
-			//TODO-FIXME
+			//TODO-FIXME: validation of this object type is not implemented.
 		}
 	}
 	//set the last value too
@@ -94,8 +92,7 @@ func Validation_EvalBlock_Context(es *env.ProgramState, vals *env.RyeCtx) (*env.
 				}
 			}
 		default:
-			fmt.Println("Type is not matching - Validation_EvalBlock_Context.")
-			//TODO-FIXME
+			//TODO-FIXME: validation of this object type is not implemented.
 		}
 	}
 	//set the last value too
@@ -121,8 +118,7 @@ func Validation_EvalBlock_List(es *env.ProgramState, vals env.List) (env.Object,
 				notes = append(notes, verr)
 			}
 		default:
-			fmt.Println("Type is not matching - Validation_EvalBlock_List.")
-			//TODO-FIXME
+			//TODO-FIXME: validation of this object type is not implemented.
 		}
 	}
 
@@ -617,10 +613,6 @@ func BuiValidate(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object) env.O
 	default:
 		return MakeArgError(env1, 2, []env.Type{env.BlockType}, "validate")
 	}
-}
-
-func something() {
-	fmt.Print("1")
 }
 
 var Builtins_validation = map[string]*env.Builtin{

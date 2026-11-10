@@ -46,6 +46,7 @@ test-folders: {
 	"recursion"
 	"context_advanced"
 	"batteries"
+	"effects"
 	"sxml"
 }
 

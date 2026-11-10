@@ -81,10 +81,14 @@ var (
 	prod = flag.Bool("prod", false, "Exit with error status on errors without interactive error display or debugging options")
 
 	// Declared-effects options
-	EffDryRun    = flag.Bool("eff-dryrun", false, "Declared effects: log output effects as `would ...` on stderr and skip them")
-	EffAsk       = flag.Bool("eff-ask", false, "Declared effects: prompt for input-effect values after the provider runs")
-	EffConfirm   = flag.Bool("eff-confirm", false, "Declared effects: ask before running each output effect")
-	ScenarioFile = flag.String("scenario", "", "Path to a Rye file to preload before script")
+	EffDryRun         = flag.Bool("eff-dry-run", false, "Declared effects: log output effects as `would ...` on stderr and skip them")
+	EffAsk            = flag.Bool("eff-ask", false, "Declared effects: prompt for input-effect values after the provider runs")
+	EffConfirm        = flag.Bool("eff-confirm", false, "Declared effects: ask before running each output effect")
+	EffLog            = flag.String("eff-log", "", "Declared effects: append timestamped audit lines to this file")
+	EffRecord         = flag.String("eff-record", "", "Declared effects: record inputs and executed outputs to this file")
+	EffReplay         = flag.String("eff-replay", "", "Declared effects: replay inputs from this tape and skip outputs")
+	EffReplayFallback = flag.Bool("eff-replay-fallback", false, "Declared effects: run the provider when replay has no value for an input")
+	ScenarioFile      = flag.String("scenario", "", "Path to a Rye file to preload before script")
 )
 
 // TODO 20251107: This is temporary experiment, to make builtins like forever respond to ctrl+d, ctrl+z, ...
@@ -208,15 +212,46 @@ func registerAllBuiltins(ps *env.ProgramState) {
 }
 
 // applyEffectFlags configures the declared-effects mode for a program state.
-// Flags win over environment variables; the old RYE_DRY_RUN name is still
-// accepted so existing CI invocations keep working.
-func applyEffectFlags(ps *env.ProgramState) {
-	if *EffDryRun || os.Getenv("RYE_EFF_DRY_RUN") == "1" || os.Getenv("RYE_DRY_RUN") == "1" {
+// An explicitly passed flag wins over RYE_EFF_DRY_RUN.
+func applyEffectFlags(ps *env.ProgramState) error {
+	if effectFlagSet("eff-dry-run") {
+		ps.EffectMode.DryRun = *EffDryRun
+	} else if os.Getenv("RYE_EFF_DRY_RUN") == "1" {
 		ps.EffectMode.DryRun = true
 	}
 	ps.EffectMode.Ask = *EffAsk
 	ps.EffectMode.Confirm = *EffConfirm
 	ps.EffectMode.Log = os.Stderr
+	ps.EffectMode.AuditFile = *EffLog
+	ps.EffectMode.ReplayFallback = *EffReplayFallback
+
+	if *EffRecord != "" && *EffReplay != "" {
+		return fmt.Errorf("-eff-record and -eff-replay cannot be used together")
+	}
+	if *EffRecord != "" {
+		ps.EffectMode.Record = &env.EffectRecorder{}
+		ps.EffectMode.RecordPath = *EffRecord
+	}
+	if *EffReplay != "" {
+		tape, err := evaldo.LoadEffectTape(ps, *EffReplay)
+		if err != nil {
+			return err
+		}
+		ps.EffectMode.Replay = tape
+	}
+	return nil
+}
+
+func effectFlagSet(names ...string) bool {
+	found := false
+	flag.Visit(func(f *flag.Flag) {
+		for _, name := range names {
+			if f.Name == name {
+				found = true
+			}
+		}
+	})
+	return found
 }
 
 func DoMain(regfn func(*env.ProgramState) error) {
@@ -299,9 +334,12 @@ func DoMain(regfn func(*env.ProgramState) error) {
 		fmt.Println("\033[33m  rye -histfile hist.rye               \033[36m# append console history to specified file hist.rye")
 		fmt.Println("\033[33m  rye -http 8080                       \033[36m# start HTTP REPL mode on port 8080 (localhost only)")
 		fmt.Println("\033[33m  rye -http 8080 main.rye              \033[36m# load main.rye and expose via HTTP console on port 8080")
-		fmt.Println("\033[33m  rye -eff-dryrun script.rye           \033[36m# log output effects as `would ...` and skip them")
+		fmt.Println("\033[33m  rye -eff-dry-run script.rye          \033[36m# log output effects as `would ...` and skip them")
 		fmt.Println("\033[33m  rye -eff-ask script.rye              \033[36m# prompt for input-effect values after providers run")
 		fmt.Println("\033[33m  rye -eff-confirm script.rye          \033[36m# ask before running each output effect")
+		fmt.Println("\033[33m  rye -eff-record tape.eff script.rye  \033[36m# record inputs and executed outputs")
+		fmt.Println("\033[33m  rye -eff-replay tape.eff script.rye  \033[36m# replay inputs, skip and verify outputs")
+		fmt.Println("\033[33m  rye -eff-log audit.log script.rye    \033[36m# append timestamped effect audit lines")
 		fmt.Println("\033[0m\n Thank you for trying out \033[1mRye\033[22m ...")
 		fmt.Println("")
 	}
@@ -315,15 +353,6 @@ func DoMain(regfn func(*env.ProgramState) error) {
 	// If a scenario preload file is provided, remember it in an env var for later load
 	if *ScenarioFile != "" {
 		os.Setenv("RYE_SCENARIO_FILE", *ScenarioFile)
-	}
-
-	// Record dry-run flag to env vars so lower layers can pick it up.
-	if *EffDryRun {
-		os.Setenv("RYE_EFF_DRY_RUN", "1")
-		os.Setenv("RYE_DRY_RUN", "1")
-	} else {
-		os.Unsetenv("RYE_EFF_DRY_RUN")
-		os.Unsetenv("RYE_DRY_RUN")
 	}
 
 	// PARENT RE-EXEC: If --unshare is requested (via CLI flag or .ryesec policy),
@@ -734,7 +763,10 @@ func main_rye_http_repl(port string, file string, code string, lang string, regf
 		}
 
 		// Apply declared-effects mode and scenario preload if requested.
-		applyEffectFlags(ps)
+		if err := applyEffectFlags(ps); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return
+		}
 		if scFile := os.Getenv("RYE_SCENARIO_FILE"); scFile != "" {
 			if content, err := os.ReadFile(scFile); err == nil {
 				blk := loader.LoadString(string(content), security.CurrentCodeSigEnabled, ps)
@@ -1108,7 +1140,22 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 		fmt.Println(err.Error())
 		return
 	}
-	applyEffectFlags(ps)
+	if err := applyEffectFlags(ps); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return
+	}
+	if scFile := os.Getenv("RYE_SCENARIO_FILE"); scFile != "" {
+		if content, err := os.ReadFile(scFile); err == nil {
+			blk := loader.LoadString(string(content), security.CurrentCodeSigEnabled, ps)
+			if b, ok := blk.(env.Block); ok {
+				ser := ps.Ser
+				ps.Ser = b.Series
+				evaldo.EvalBlockInj(ps, nil, true)
+				evaldo.MaybeDisplayFailureOrError2(ps, ps.Idx, "scenario preload", true, true)
+				ps.Ser = ser
+			}
+		}
+	}
 
 	// Set the NoInspect mode from the flags. Production mode never offers
 	// interactive debugging options.
@@ -1173,6 +1220,10 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 		// fmt.Println("MAIN RYE FILE: Maybe display Error")
 		evaldo.MaybeDisplayFailureOrError2(ps, ps.Idx, "main rye file", true, true)
 		//		evaldo.MaybeDisplayFailureOrError(ps, ps.Idx, "main rye file #2")
+
+		if code := evaldo.FinishEffects(ps); code != 0 {
+			os.Exit(code)
+		}
 
 		if interactive {
 			ryeconsole.DoRyeRepl(ps, "rye", evaldo.ShowResults, *localhist, *histfile)
@@ -1294,7 +1345,10 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 		return
 	}
 	// Apply declared-effects mode and scenario preload for the REPL too.
-	applyEffectFlags(es)
+	if err := applyEffectFlags(es); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return
+	}
 	if scFile := os.Getenv("RYE_SCENARIO_FILE"); scFile != "" {
 		if content, err := os.ReadFile(scFile); err == nil {
 			blk := loader.LoadString(string(content), false, es)

@@ -712,17 +712,14 @@ var builtins_baseio = map[string]*env.Builtin{
 	// Args:
 	// * none
 	// Returns:
-	// * boolean, true when -eff-dryrun is active or effect-mode hooks report scenario mode
-	// Notes: Checks the active EffectMode, then RYE_EFF_DRY_RUN/RYE_DRY_RUN, then embedded scenario hooks.
+	// * boolean, true when -eff-dry-run is active or effect-mode hooks report scenario mode
+	// Notes: Checks the active EffectMode, then embedded scenario hooks. The runner applies RYE_EFF_DRY_RUN to EffectMode.
 	"Rye-itself//Is-dry-run": {
 		Argsn: 0,
-		Doc:   "Returns true if Rye is running with declared effects in dry-run mode (-eff-dryrun)",
+		Doc:   "Returns true if Rye is running with declared effects in dry-run mode (-eff-dry-run)",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, _ env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
 			if ps.EffectMode.DryRun {
-				return *env.NewBoolean(true)
-			}
-			if os.Getenv("RYE_EFF_DRY_RUN") == "1" || os.Getenv("RYE_DRY_RUN") == "1" {
 				return *env.NewBoolean(true)
 			}
 			// Fallback to evaldo's scenario detector

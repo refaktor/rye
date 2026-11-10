@@ -7994,7 +7994,7 @@ section "Fast Math" "Fast infix math evaluator" {
 section "evaldo/builtins_effects.go" "Explicit input and output points with validation, dry-run, ask and confirm." {
 section "Declared effects" "Explicit input and output points with validation, dry-run, ask and confirm." {
 	group "input-effect"
-	"Declares an input effect: input-effect name validator-block provider-block. Evaluates the provider (unless an embedded scenario hook supplies a value), then validates the value with the validation dialect. With -eff-ask, prompts after the provider and validates the typed answer."
+	"Declares an input effect: input-effect name validator-block provider-block. Evaluates the provider (unless an embedded scenario hook supplies a value), then validates the value with the validation dialect. With -eff-ask it prompts after the provider; with -eff-replay it reads the value from the tape; with -eff-record it records the validated value."
 	{
 		argsn 3
 		argtypes {
@@ -8015,7 +8015,7 @@ section "Declared effects" "Explicit input and output points with validation, dr
 	}
 
 	group "output-effect"
-	"Declares an output effect: output-effect name payload effect-block. Executes the effect block normally. With -eff-dryrun it logs `would name: payload` and skips the effect. With -eff-confirm it asks before executing."
+	"Declares an output effect: output-effect name payload effect-block. Executes the effect block normally. With -eff-dry-run it logs `would name: payload` and skips the effect. With -eff-confirm it asks before executing. With -eff-replay it skips the effect and compares the payload with the tape."
 	{
 		argsn 3
 		argtypes {
@@ -8034,43 +8034,6 @@ section "Declared effects" "Explicit input and output points with validation, dr
 		"output-effect 'user-login \"alice\" { print \"logged in\" }"
 	}
 
-	group "input-intent"
-	"Deprecated alias for input-effect. Declares an input with validation-dialect validation."
-	{
-		argsn 3
-		arg `name: Word, String, or Tagword identifying the input.`
-		arg `validator: Validation-dialect block applied to the resulting value.`
-		arg `provider: Block that produces the real value.`
-		returns `The validated value.`
-	}
-
-	{
-	}
-
-	{
-		"input-intent 'username { string } { \"real-user\" }\nDeprecated alias for input-effect. Kept so existing scripts continue to work."
-	}
-
-	group "output-intent"
-	"Deprecated alias for output-effect using the old shape: output-intent payload { fields } { side-effect }."
-	{
-		argsn 3
-		argtypes {
-			2 [ Block ]
-			3 [ Block ]
-		}
-		arg `payload: Name or value to log and return.`
-		arg `fields: Block of additional values to include in the log entry.`
-		arg `side-effect: Block to execute outside dry-run mode.`
-		returns `The payload.`
-	}
-
-	{
-	}
-
-	{
-		"output-intent \"user-login\" { \"alice\" } { print \"logged in\" }\nDeprecated alias for output-effect with the old shape:\noutput-intent payload { fields } { side-effect }."
-	}
 
 }
 }

@@ -386,11 +386,11 @@ section "Runtime and Process Integration" "Saving state, loading scripts, proces
 	}
 
 	group "Rye-itself//Is-dry-run"
-	"Returns true if Rye is running with declared effects in dry-run mode (-eff-dryrun / -dry-run)"
+	"Returns true if Rye is running with declared effects in dry-run mode (-eff-dry-run)"
 	{
 		pure
 		arg `none`
-		returns `boolean, true when --dry-run is active or a scenario context is detected`
+		returns `boolean, true when -eff-dry-run is active or effect-mode hooks report scenario mode`
 	}
 
 	{
