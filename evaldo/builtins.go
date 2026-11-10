@@ -2864,6 +2864,10 @@ func RegisterBuiltins2(builtins map[string]*env.Builtin, ps *env.ProgramState, n
 	BuiltinNames[name] = len(builtins)
 	for k, v := range builtins {
 		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc+" ("+name+")")
+		bu.Effect = v.Effect
+		if bu.Effect == env.EffNone {
+			bu.Effect = EffectTagFor(name, k)
+		}
 		registerBuiltin(ps, k, *bu)
 	}
 }
@@ -2872,6 +2876,10 @@ func RegisterVarBuiltins2(builtins map[string]*env.VarBuiltin, ps *env.ProgramSt
 	BuiltinNames[name] = len(builtins)
 	for k, v := range builtins {
 		bu := env.NewVarBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc+" ("+name+")")
+		bu.Effect = v.Effect
+		if bu.Effect == env.EffNone {
+			bu.Effect = EffectTagFor(name, k)
+		}
 		registerVarBuiltin(ps, k, *bu)
 	}
 }
@@ -2884,6 +2892,10 @@ func RegisterBuiltinsInContext(builtins map[string]*env.Builtin, ps *env.Program
 
 	for k, v := range builtins {
 		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc+" ("+name+"//"+k+")")
+		bu.Effect = v.Effect
+		if bu.Effect == env.EffNone {
+			bu.Effect = EffectTagFor(name, k)
+		}
 		registerBuiltin(ps, k, *bu)
 	}
 	newctx := ps.Ctx
@@ -2903,6 +2915,10 @@ func RegisterBuiltinsInSubContext(builtins map[string]*env.Builtin, ps *env.Prog
 
 	for k, v := range builtins {
 		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc+" ("+name+"//"+k+")")
+		bu.Effect = v.Effect
+		if bu.Effect == env.EffNone {
+			bu.Effect = EffectTagFor(name, k)
+		}
 		registerBuiltin(ps, k, *bu)
 	}
 	newctx := ps.Ctx
@@ -3062,6 +3078,10 @@ func RegisterBuiltinsFilter(ps *env.ProgramState, names []string) {
 			}
 			if !grp.inContext {
 				bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc+" ("+grp.name+")")
+				bu.Effect = v.Effect
+				if bu.Effect == env.EffNone {
+					bu.Effect = EffectTagFor(grp.name, word)
+				}
 				registerBuiltin(ps, word, *bu)
 			} else {
 				// Get or lazily create the named child context.
@@ -3082,6 +3102,10 @@ func RegisterBuiltinsFilter(ps *env.ProgramState, names []string) {
 				// Use "group//name" format to avoid naming collisions
 				namespacedName := grp.name + "//" + word
 				bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc+" ("+namespacedName+")")
+				bu.Effect = v.Effect
+				if bu.Effect == env.EffNone {
+					bu.Effect = EffectTagFor(grp.name, word)
+				}
 				saved := ps.Ctx
 				ps.Ctx = gCtx
 				registerBuiltin(ps, namespacedName, *bu)

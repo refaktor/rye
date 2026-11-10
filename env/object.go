@@ -1957,11 +1957,12 @@ type Builtin struct {
 	Argsn         int
 	AcceptFailure bool
 	Pure          bool
+	Effect        EffectKind
 	Doc           string
 }
 
 func NewBuiltin(fn BuiltinFunction, argsn int, acceptFailure bool, pure bool, doc string) *Builtin {
-	bl := Builtin{fn, argsn, acceptFailure, pure, doc}
+	bl := Builtin{Fn: fn, Argsn: argsn, AcceptFailure: acceptFailure, Pure: pure, Doc: doc}
 	return &bl
 }
 
@@ -2002,6 +2003,9 @@ func (i Builtin) Equal(o Object) bool {
 		return false
 	}
 	if i.Pure != oBuiltin.Pure {
+		return false
+	}
+	if i.Effect != oBuiltin.Effect {
 		return false
 	}
 	return true
@@ -2109,8 +2113,8 @@ func (i Error) Print2(e Idxs, depth int, humane bool) string {
 			}
 			spec = spec + e.GetWord(i.Kind.Index)
 		}
-		if i.Status != 0 || i.Kind.Index != 0  {
-			spec = "(" + spec + ")" 
+		if i.Status != 0 || i.Kind.Index != 0 {
+			spec = "(" + spec + ")"
 		}
 	}
 
@@ -3600,11 +3604,12 @@ type VarBuiltin struct {
 	Argsn         int
 	AcceptFailure bool
 	Pure          bool
+	Effect        EffectKind
 	Doc           string
 }
 
 func NewVarBuiltin(fn VarBuiltinFunction, argsn int, acceptFailure bool, pure bool, doc string) *VarBuiltin {
-	bl := VarBuiltin{fn, argsn, acceptFailure, pure, doc}
+	bl := VarBuiltin{Fn: fn, Argsn: argsn, AcceptFailure: acceptFailure, Pure: pure, Doc: doc}
 	return &bl
 }
 
@@ -3645,6 +3650,9 @@ func (i VarBuiltin) Equal(o Object) bool {
 		return false
 	}
 	if i.Pure != oVarBuiltin.Pure {
+		return false
+	}
+	if i.Effect != oVarBuiltin.Effect {
 		return false
 	}
 	return true
