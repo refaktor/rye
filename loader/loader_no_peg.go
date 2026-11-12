@@ -280,6 +280,9 @@ func (l *Lexer) skipWhitespace() {
 			l.lastNewlinePos = l.pos + 1 // Update position for next line
 		}
 		l.readChar()
+		if l.pendingLocationNode != nil {
+			return // Emit this line before scanning the next one.
+		}
 	}
 }
 
@@ -343,6 +346,11 @@ func (l *Lexer) NextToken() NoPEGToken {
 	}
 
 	l.skipWhitespace()
+	if l.pendingLocationNode != nil {
+		token := *l.pendingLocationNode
+		l.pendingLocationNode = nil
+		return token
+	}
 
 	if l.ch == 0 {
 		// Before EOF, check if we need to inject a final LocationNode for the last line
@@ -1529,6 +1537,10 @@ func (p *NoPEGParser) parseBlock(blockType int) (env.Object, error) {
 
 	}
 
+	if blockType == 8 && len(objects)%2 != 0 {
+		return nil, fmt.Errorf("passive dict D{ } has a key without a value")
+	}
+
 	// Create the block with location information
 	ser := env.NewTSeries(objects)
 	// For list blocks (type 6), return a List instead of a Block
@@ -1917,8 +1929,21 @@ func (p *NoPEGParser) Parse() (env.Object, error) {
 		return nil, fmt.Errorf("expected block start '{' at the beginning of input, but got %s", gotType)
 	}
 
-	// Parse the block
-	return p.parseBlock(0)
+	// Parse the block and reject tokens after its closing delimiter.
+	block, err := p.parseBlock(0)
+	if err != nil {
+		return nil, err
+	}
+	for p.peekToken.Type == NPEG_TOKEN_LOCATION_NODE || p.peekToken.Type == NPEG_TOKEN_COMMENT {
+		p.nextToken()
+	}
+	if p.peekToken.Type != NPEG_TOKEN_EOF {
+		if p.peekToken.Type == NPEG_TOKEN_ERROR {
+			return nil, fmt.Errorf("%s", p.peekToken.Value)
+		}
+		return nil, fmt.Errorf("unexpected token '%s' after closing block", p.peekToken.Value)
+	}
+	return block, nil
 }
 
 // formatErrorLocationNoPEG creates a visual representation of the error location
@@ -2351,7 +2376,7 @@ func LoadString(input string, sig bool, ps *env.ProgramState) env.Object {
 
 	input = removeBangLine(input)
 
-	return LoadStringNEWNoPEG(input, sig, ps)
+	return LoadStringNEWNoPEG(input, false, ps)
 }
 
 // LoadStringNoPEG loads a string using the non-PEG parser

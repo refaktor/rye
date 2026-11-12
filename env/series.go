@@ -42,7 +42,7 @@ func (ser *TSeries) Next() {
 // Pop returns the Object at the current position and advances the position.
 // Returns nil if the position is out of bounds.
 func (ser *TSeries) Pop() Object {
-	if ser.pos >= len(ser.S) {
+	if ser.pos < 0 || ser.pos >= len(ser.S) {
 		return nil
 	}
 	obj := ser.S[ser.pos]
@@ -111,7 +111,7 @@ func (ser *TSeries) GetAll() []Object {
 // Peek returns the Object at the current position without advancing the position.
 // Returns nil if the position is out of bounds.
 func (ser TSeries) Peek() Object {
-	if len(ser.S) > ser.pos {
+	if ser.pos >= 0 && ser.pos < len(ser.S) {
 		return ser.S[ser.pos]
 	}
 	return nil
