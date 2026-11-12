@@ -22,8 +22,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * context object with the values defined in the block
 	"raw-context": { // **
-		Argsn: 1,
-		Doc:   "Creates a completely isolated context with no parent, where only built-in functions are available.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Creates a completely isolated context with no parent, where only built-in functions are available.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -59,8 +60,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * context object with the values defined in the block, but isolated from parent contexts
 	"isolate": {
-		Argsn: 1,
-		Doc:   "Creates a context that can access the parent context during creation, but becomes isolated afterward.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Creates a context that can access the parent context during creation, but becomes isolated afterward.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -100,8 +102,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * context object with the values defined in the block/dict/table row and access to parent context
 	"context": {
-		Argsn: 1,
-		Doc:   "Creates a new context from a block (evaluated), dict, or table row (converted).",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Creates a new context from a block (evaluated), dict, or table row (converted).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -139,8 +142,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * context object with the values defined in the block, using Pure Context as parent
 	"context\\pure": {
-		Argsn: 1,
-		Doc:   "Creates a new context using Pure Context (PCtx) as parent, preventing access to regular context changes.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Creates a new context using Pure Context (PCtx) as parent, preventing access to regular context changes.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -175,8 +179,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * the last value from evaluating the block (not the context itself)
 	"private": { // **
-		Argsn: 1,
-		Doc:   "Creates a temporary private context for evaluating expressions, returning the last value instead of the context.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Creates a temporary private context for evaluating expressions, returning the last value instead of the context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -209,8 +214,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * the last value from evaluating the block (not the context itself)
 	"private\\": {
-		Argsn: 2,
-		Doc:   "Creates a documented private context for evaluating expressions, returning the last value instead of the context.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Creates a documented private context for evaluating expressions, returning the last value instead of the context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch doc := arg0.(type) {
 			case env.String:
@@ -249,9 +255,10 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * new context object that inherits from the parent context
 	"extends": { // ** add one with exclamation mark, which it as it is now extends/changes the source context too .. in place
-		Argsn: 2,
-		Doc:   "Creates a new context that inherits from a specified parent context.",
-		Pure:  false,
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Creates a new context that inherits from a specified parent context.",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch ctx0 := arg0.(type) {
 			case *env.RyeCtx:
@@ -291,8 +298,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * the modified child context with its parent set to the specified parent context
 	"bind!": { // **
-		Argsn: 2,
-		Doc:   "Binds a context as a parent context to first context.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Binds a context as a parent context to first context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch swCtx1 := arg0.(type) {
 			case *env.RyeCtx:
@@ -321,8 +329,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * a cloned child context with its parent set to the specified parent context
 	"bind": { // **
-		Argsn: 2,
-		Doc:   "Creates a clone of the first context and binds the second context as its parent.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates a clone of the first context and binds the second context as its parent.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch swCtx1 := arg0.(type) {
 			case *env.RyeCtx:
@@ -353,8 +362,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * a cloned context with current context set as parent
 	"anchor": { // **
-		Argsn: 1,
-		Doc:   "Creates a clone of a context and sets current context as its parent.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a clone of a context and sets current context as its parent.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch swCtx1 := arg0.(type) {
 			case *env.RyeCtx:
@@ -379,8 +389,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * the modified context with current context set as parent
 	"anchor!": { // **
-		Argsn: 1,
-		Doc:   "Sets current context as parent of the given context (modifies the context in place).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Sets current context as parent of the given context (modifies the context in place).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch swCtx1 := arg0.(type) {
 			case *env.RyeCtx:
@@ -401,8 +412,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * the modified context with no parent
 	"unbind": { // **
-		Argsn: 1,
-		Doc:   "Removes the parent relationship from a context, making it a standalone context.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Removes the parent relationship from a context, making it a standalone context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch swCtx1 := arg0.(type) {
 			case *env.RyeCtx:
@@ -423,8 +435,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * block with [ depth context ] where depth is the number of parent hops (0 = current context) and context is where the word was found
 	"whereis": {
-		Argsn: 1,
-		Doc:   "Searches for a word in current context and its parents, returns block with [ depth context ] where word was found.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Searches for a word in current context and its parents, returns block with [ depth context ] where word was found.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch word := arg0.(type) {
 			case env.Word:
@@ -461,8 +474,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * the value bound to the word (including functions without calling them)
 	"get": {
-		Argsn: 1,
-		Doc:   "Gets the value of a word from current or parent contexts without calling it (similar to get-word ?word).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the value of a word from current or parent contexts without calling it (similar to get-word ?word).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch word := arg0.(type) {
 			case env.Word:
@@ -484,8 +498,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * the current context object
 	"current": { // **
-		Argsn: 0,
-		Doc:   "Returns current context.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns current context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			ps.Ctx.Preserve()
 			return ps.Ctx
@@ -499,8 +514,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * the parent context object, or an error when there is no parent
 	"parent": { // **
-		Argsn: 0,
-		Doc:   "Returns parent context of the current context.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns parent context of the current context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if ps.Ctx.Parent == nil {
 				return MakeBuiltinError(ps, "No parent context available.", "parent")
@@ -517,8 +533,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * the parent context object, or an error when there is no parent
 	"parent?": { // **
-		Argsn: 0,
-		Doc:   "Returns parent context of the current context.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns parent context of the current context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			ps.Ctx.Parent.Preserve()
 			return ps.Ctx.Parent
@@ -533,8 +550,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * the parent Context.
 	"parent\\of": {
-		Argsn: 1,
-		Doc:   "Returns parent context of the current context.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns parent context of the current context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch c := arg0.(type) {
 			case *env.RyeCtx:
@@ -552,8 +570,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * current context after printing the list of words to stdout
 	"lc": {
-		Argsn: 0,
-		Doc:   "Lists words in current context",
+		Effect: env.EffOutput,
+		Argsn:  0,
+		Doc:    "Lists words in current context",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fmt.Println(ps.Ctx.Preview(*ps.Idx, ""))
 			ps.Ctx.Preserve()
@@ -568,8 +587,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * block of words defined in the current context
 	"lc\\data": {
-		Argsn: 0,
-		Doc:   "Returns words in current context as a block.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns words in current context as a block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return ps.Ctx.GetWords(*ps.Idx)
 		},
@@ -582,8 +602,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * block of words defined in the specified context
 	"lc\\data\\": {
-		Argsn: 1,
-		Doc:   "Returns words in specified context as a block.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns words in specified context as a block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch c := arg0.(type) {
 			case *env.RyeCtx:
@@ -600,8 +621,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * current context after printing the parent context's words to stdout
 	"lcp": {
-		Argsn: 0,
-		Doc:   "Lists words in parent context",
+		Effect: env.EffOutput,
+		Argsn:  0,
+		Doc:    "Lists words in parent context",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			ps.Ctx.Preserve()
 			if ps.Ctx.Parent != nil {
@@ -620,8 +642,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * current context after printing filtered words to stdout
 	"lc\\": {
-		Argsn: 1,
-		Doc:   "Lists words in current context with string filter, by type (word: 'function, 'builtin, 'context), or regex filter (native of kind 'regex)",
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Lists words in current context with string filter, by type (word: 'function, 'builtin, 'context), or regex filter (native of kind 'regex)",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			ps.Ctx.Preserve()
 			switch s1 := arg0.(type) {
@@ -666,8 +689,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * current context after printing filtered parent context words to stdout
 	"lcp\\": {
-		Argsn: 1,
-		Doc:   "Lists words in parent context with string filter",
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Lists words in parent context with string filter",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			ps.Ctx.Preserve()
 			switch s1 := arg0.(type) {
@@ -690,8 +714,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * the new current context
 	"cc": {
-		Argsn: 1,
-		Doc:   "Change to context (pushes current context to stack for ccb)",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Change to context (pushes current context to stack for ccb)",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case *env.RyeCtx:
@@ -711,8 +736,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * the parent context (now current)
 	"ccp": {
-		Argsn: 0,
-		Doc:   "Change to parent context (pushes current context to stack for ccb)",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Change to parent context (pushes current context to stack for ccb)",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if ps.Ctx.Parent == nil {
 				return MakeBuiltinError(ps, "No parent context available.", "ccp")
@@ -730,8 +756,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * the previous context (now current)
 	"ccb": {
-		Argsn: 0,
-		Doc:   "Change context back (pops from context stack)",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Change context back (pops from context stack)",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			prevCtx, ok := ps.PopContext()
 			if !ok {
@@ -748,8 +775,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * the new context (now current)
 	"mkcc": {
-		Argsn: 1,
-		Doc:   "Make context with current as parent and change to it (pushes current context to stack for ccb).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Make context with current as parent and change to it (pushes current context to stack for ccb).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch word := arg0.(type) {
 			case env.Word:
@@ -777,8 +805,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * Integer with the current size of the context navigation stack
 	"cc-stack-size": {
-		Argsn: 0,
-		Doc:   "Returns the current size of the context navigation stack.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns the current size of the context navigation stack.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewInteger(int64(ps.ContextStackSize()))
 		},
@@ -792,8 +821,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * Integer with the previous size of the stack before clearing
 	"cc-clear-stack": {
-		Argsn: 0,
-		Doc:   "Clears the context navigation stack (removes all stored previous contexts).",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Clears the context navigation stack (removes all stored previous contexts).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			oldSize := ps.ContextStackSize()
 			ps.ContextStack = make([]*env.RyeCtx, 0)
@@ -811,8 +841,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * a new context object that is a copy of the original context
 	"clone": {
-		Argsn: 1,
-		Doc:   "Creates a copy of a context with the same state and parent relationship.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a copy of a context with the same state and parent relationship.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch ctx := arg0.(type) {
 			case *env.RyeCtx:
@@ -838,8 +869,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * the cloned context with the block evaluated inside it
 	"clone\\": {
-		Argsn: 2,
-		Doc:   "Creates a copy of a context and evaluates a block of code inside the clone.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Creates a copy of a context and evaluates a block of code inside the clone.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch ctx := arg0.(type) {
 			case *env.RyeCtx:
@@ -882,8 +914,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * a new context object that is a deep copy of the original context (including nested objects)
 	"clone\\deep": {
-		Argsn: 1,
-		Doc:   "Creates a deep copy of a context with the same state and parent relationship, recursively copying all nested objects.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a deep copy of a context with the same state and parent relationship, recursively copying all nested objects.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch ctx := arg0.(type) {
 			case *env.RyeCtx:
@@ -907,8 +940,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * current function call depth as integer (0 = top-level, 1 = inside one function, etc.)
 	"call-depth?": {
-		Argsn: 0,
-		Doc:   "Returns the current function call depth as an integer (0 = top-level, 1 = inside one function call, etc.).",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns the current function call depth as an integer (0 = top-level, 1 = inside one function call, etc.).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewInteger(int64(ps.CallDepth))
 		},
@@ -921,8 +955,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * the previous MaxCallDepth value (0 = was unlimited)
 	"max-call-depth!": {
-		Argsn: 1,
-		Doc:   "Sets the maximum allowed function call depth (recursion limit). Use 0 for unlimited (default). Returns the previous limit. Calls that exceed this depth raise a stack-overflow error.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Sets the maximum allowed function call depth (recursion limit). Use 0 for unlimited (default). Returns the previous limit. Calls that exceed this depth raise a stack-overflow error.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch limit := arg0.(type) {
 			case env.Integer:
@@ -943,8 +978,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * current MaxCallDepth limit as integer (0 = unlimited)
 	"max-call-depth?": {
-		Argsn: 0,
-		Doc:   "Returns the current maximum call depth limit as an integer (0 = unlimited).",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns the current maximum call depth limit as an integer (0 = unlimited).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewInteger(int64(ps.MaxCallDepth))
 		},
@@ -957,8 +993,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * number of expression evaluations counted since the last reset; 0 when MaxOps is unlimited
 	"ops-done?": {
-		Argsn: 0,
-		Doc:   "Returns the number of expression evaluations counted since the last reset. The counter only advances while a MaxOps limit is enabled, so it is 0 by default.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns the number of expression evaluations counted since the last reset. The counter only advances while a MaxOps limit is enabled, so it is 0 by default.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewInteger(ps.OpsCount)
 		},
@@ -971,8 +1008,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * the previous MaxOps value (0 = was unlimited)
 	"max-ops!": {
-		Argsn: 1,
-		Doc:   "Sets the maximum number of expression evaluations allowed. Use 0 for unlimited (default). Returns the previous limit. Exceeding the limit raises an evaluation-limit error.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Sets the maximum number of expression evaluations allowed. Use 0 for unlimited (default). Returns the previous limit. Exceeding the limit raises an evaluation-limit error.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch limit := arg0.(type) {
 			case env.Integer:
@@ -993,8 +1031,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * current MaxOps limit as integer (0 = unlimited)
 	"max-ops?": {
-		Argsn: 0,
-		Doc:   "Returns the current maximum ops limit as an integer (0 = unlimited).",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns the current maximum ops limit as an integer (0 = unlimited).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewInteger(ps.MaxOps)
 		},
@@ -1007,8 +1046,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * the OpsCount value before reset
 	"reset-ops": {
-		Argsn: 0,
-		Doc:   "Resets the OpsCount counter to zero and clears the MaxOps limit. Returns the OpsCount value before reset. Useful for re-arming the budget inside a fresh computation phase.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Resets the OpsCount counter to zero and clears the MaxOps limit. Returns the OpsCount value before reset. Useful for re-arming the budget inside a fresh computation phase.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			old := ps.OpsCount
 			ps.OpsCount = 0
@@ -1027,8 +1067,9 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Returns:
 	// * result of executing the block with both the injected value and modified parent context
 	"enter": {
-		Argsn: 3,
-		Doc:   "Combines with and do\\in: takes a value to inject, a context as parent, and a block to evaluate with both.",
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Combines with and do\\in: takes a value to inject, a context as parent, and a block to evaluate with both.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			value := arg0 // First argument: value to inject (like with)
 

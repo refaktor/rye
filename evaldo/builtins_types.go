@@ -28,8 +28,9 @@ var builtins_types = map[string]*env.Builtin{
 	// Returns:
 	// * An integer value
 	"integer": {
-		Argsn: 1,
-		Doc:   "Tries to change a Rye value (like string) to integer.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Tries to change a Rye value (like string) to integer.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.String:
@@ -54,8 +55,9 @@ var builtins_types = map[string]*env.Builtin{
 	// Returns:
 	// * A decimal value
 	"decimal": {
-		Argsn: 1,
-		Doc:   "Tries to change a Rye value (like string) to decimal.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Tries to change a Rye value (like string) to decimal.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.String:
@@ -83,9 +85,10 @@ var builtins_types = map[string]*env.Builtin{
 	// Returns:
 	// * A string representation of the value
 	"string": { // ***
-		Argsn: 1,
-		Doc:   "Tries to turn a Rye value to string.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Tries to turn a Rye value to string.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Prefer Dump() to avoid display prefixes like leading "%" for file-uri
 			return *env.NewString(arg0.Dump(*ps.Idx))
@@ -106,9 +109,10 @@ var builtins_types = map[string]*env.Builtin{
 	// Returns:
 	// * A Bytes value
 	"bytes": {
-		Argsn: 1,
-		Doc:   "Creates a Bytes value. Accepts an integer (creates that many zero bytes), a hex-encoded string, or a block of integers in range 0..255.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a Bytes value. Accepts an integer (creates that many zero bytes), a hex-encoded string, or a block of integers in range 0..255.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -151,9 +155,10 @@ var builtins_types = map[string]*env.Builtin{
 	// Returns:
 	// * URI value.
 	"uri": { // ** TODO-FIXME: return possible failures
-		Argsn: 1,
-		Doc:   "Tries to change Rye value to an URI.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Tries to change Rye value to an URI.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.String:
@@ -174,9 +179,10 @@ var builtins_types = map[string]*env.Builtin{
 	// Returns:
 	// * file URI value.
 	"file": { // **  TODO-FIXME: return possible failures
-		Argsn: 1,
-		Doc:   "Tries to change Rye value to a file.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Tries to change Rye value to a file.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -197,9 +203,10 @@ var builtins_types = map[string]*env.Builtin{
 	// Returns:
 	// * A string containing the character corresponding to the ASCII code
 	"char": { // ***
-		Argsn: 1,
-		Doc:   "Tries to turn a Rye value (like integer) to ascii character.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Tries to turn a Rye value (like integer) to ascii character.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch value := arg0.(type) {
 			case env.Integer:
@@ -220,9 +227,10 @@ var builtins_types = map[string]*env.Builtin{
 	// Returns:
 	// * An integer representing the ASCII code of the character
 	"ascii": { // ***
-		Argsn: 1,
-		Doc:   "Tries to turn a single character string to its ASCII code integer.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Tries to turn a single character string to its ASCII code integer.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch value := arg0.(type) {
 			case env.String:
@@ -247,9 +255,10 @@ var builtins_types = map[string]*env.Builtin{
 	// Returns:
 	// * A block containing the same elements as the input
 	"block": { // ***
-		Argsn: 1,
-		Doc:   "Turns a List, Vector, or TableRow to a Block",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Turns a List, Vector, or TableRow to a Block",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.List:
@@ -284,9 +293,10 @@ var builtins_types = map[string]*env.Builtin{
 	// Returns:
 	// * A word with the same name as the input value
 	"word": {
-		Argsn: 1,
-		Doc:   "Tries to change a Rye value to a word with same name.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Tries to change a Rye value to a word with same name.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.String:
@@ -325,9 +335,10 @@ var builtins_types = map[string]*env.Builtin{
 	// Returns:
 	// * Boolean true if the value is a string, false otherwise
 	"is-string": { // ***
-		Argsn: 1,
-		Doc:   "Returns true if value is a string.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns true if value is a string.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if arg0.Type() == env.StringType {
 				return *env.NewBoolean(true)
@@ -346,9 +357,10 @@ var builtins_types = map[string]*env.Builtin{
 	// Returns:
 	// * Boolean true if the value is an integer, false otherwise
 	"is-integer": { // ***
-		Argsn: 1,
-		Doc:   "Returns true if value is an integer.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns true if value is an integer.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if arg0.Type() == env.IntegerType {
 				return *env.NewBoolean(true)
@@ -367,9 +379,10 @@ var builtins_types = map[string]*env.Builtin{
 	// Returns:
 	// * Boolean true if the value is a decimal, false otherwise
 	"is-decimal": { // ***
-		Argsn: 1,
-		Doc:   "Returns true if value is a decimal.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns true if value is a decimal.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if arg0.Type() == env.DecimalType {
 				return *env.NewBoolean(true)
@@ -388,9 +401,10 @@ var builtins_types = map[string]*env.Builtin{
 	// Returns:
 	// * Boolean true if the value is a number (integer or decimal), false otherwise
 	"is-number": { // ***
-		Argsn: 1,
-		Doc:   "Returns true if value is a number (integer or decimal).",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns true if value is a number (integer or decimal).",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if arg0.Type() == env.IntegerType || arg0.Type() == env.DecimalType {
 				return *env.NewBoolean(true)
@@ -408,9 +422,10 @@ var builtins_types = map[string]*env.Builtin{
 	// Returns:
 	// * A word representing the type of the value
 	"type?": { // ***
-		Argsn: 1,
-		Doc:   "Returns the type of Rye value as a word.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the type of Rye value as a word.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewWord(int(arg0.Type()))
 		},
@@ -423,9 +438,10 @@ var builtins_types = map[string]*env.Builtin{
 	// Returns:
 	// * A word representing the kind of the value
 	"kind?": { // ***
-		Argsn: 1,
-		Doc:   "Returns the kind of Rye value as a word.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the kind of Rye value as a word.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewWord(int(arg0.GetKind()))
 		},
@@ -438,9 +454,10 @@ var builtins_types = map[string]*env.Builtin{
 	// Returns:
 	// * A block of words representing the types of each value in the collection
 	"types?": { // TODO
-		Argsn: 1,
-		Doc:   "Returns the types of Rye values in a block or table row as a block of words.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the types of Rye values in a block or table row as a block of words.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch list := arg0.(type) {
 			case env.Block:
@@ -479,9 +496,10 @@ var builtins_types = map[string]*env.Builtin{
 	// Returns:
 	// * A string containing the Rye code representation of the value
 	"dump": { // *** currently a concept in testing ... for getting a code of a function, maybe same would be needed for context?
-		Argsn: 1,
-		Doc:   "Returns (dumps) Rye code representing the object.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns (dumps) Rye code representing the object.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(arg0.Dump(*ps.Idx))
 		},
@@ -495,8 +513,9 @@ var builtins_types = map[string]*env.Builtin{
 	// Returns:
 	// * A string containing the representation of the value
 	"mold": { // **
-		Argsn: 1,
-		Doc:   "Turn value to it's string representation.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Turn value to it's string representation.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// fmt.Println()
 			return *env.NewString(arg0.Dump(*env1.Idx))
@@ -512,8 +531,9 @@ var builtins_types = map[string]*env.Builtin{
 	// Returns:
 	// * A string containing the representation of the value without block wrapping
 	"mold\\nowrap": { // **
-		Argsn: 1,
-		Doc:   "Turn value to it's string representation. Doesn't wrap the blocks",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Turn value to it's string representation. Doesn't wrap the blocks",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// fmt.Println(arg0)
 			str := arg0.Dump(*env1.Idx)
@@ -536,8 +556,9 @@ var builtins_types = map[string]*env.Builtin{
 	// Returns:
 	// * A new context of the specified kind
 	"assure-kind": {
-		Argsn: 2,
-		Doc:   "Assuring kind.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Assuring kind.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spec := arg1.(type) {
 			case env.Kind:
@@ -572,8 +593,9 @@ var builtins_types = map[string]*env.Builtin{
 	// * The registered function
 	// method <integer> <add> fn [ a b ] [ a + b ] // tagwords are temporary here
 	"method": {
-		Argsn: 3,
-		Doc:   "Registers a method (generic function).",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Registers a method (generic function).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Word:
@@ -581,10 +603,6 @@ var builtins_types = map[string]*env.Builtin{
 				case env.Word:
 					switch s3 := arg2.(type) {
 					case env.Object:
-						fmt.Println(s1.Index)
-						fmt.Println(s2.Index)
-						fmt.Println("Generic")
-
 						registerGeneric(ps, s1.Index, s2.Index, s3)
 						return s3
 					}
@@ -603,8 +621,9 @@ var builtins_types = map[string]*env.Builtin{
 	// Returns:
 	// * A new kind object
 	"kind": {
-		Argsn: 2,
-		Doc:   "Creates new kind.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates new kind.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Word:
@@ -629,9 +648,10 @@ var builtins_types = map[string]*env.Builtin{
 	// Returns:
 	// * A secret value that hides the string from casual inspection
 	"secret": {
-		Argsn: 1,
-		Doc:   "Creates a secret from a string.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a secret from a string.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.String:
@@ -651,9 +671,10 @@ var builtins_types = map[string]*env.Builtin{
 	// Returns:
 	// * The string value contained in the secret
 	"reveal": {
-		Argsn: 1,
-		Doc:   "Reveals the secret value.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Reveals the secret value.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Secret:
@@ -673,8 +694,9 @@ var builtins_types = map[string]*env.Builtin{
 	// Returns:
 	// * LazyValue object that evaluates its block when forced
 	"lazy": {
-		Argsn: 1,
-		Doc:   "Creates a lazy value from a block. The block will only be evaluated when forced with _!.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a lazy value from a block. The block will only be evaluated when forced with _!.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
 			case env.Block:
@@ -693,8 +715,9 @@ var builtins_types = map[string]*env.Builtin{
 	// Returns:
 	// * the evaluated and cached result
 	"_!": {
-		Argsn: 1,
-		Doc:   "Forces evaluation of a lazy value. If frozen evaluates the block and caches the result. If already thawed returns cached result.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Forces evaluation of a lazy value. If frozen evaluates the block and caches the result. If already thawed returns cached result.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch lv := arg0.(type) {
 			case *env.LazyValue:
@@ -732,8 +755,9 @@ var builtins_types = map[string]*env.Builtin{
 	// Returns:
 	// * converted context of the requested kind, or an error
 	"_>>": {
-		Argsn: 2,
-		Doc:   "Converts first argument to a specific kind.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Converts first argument to a specific kind.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spec := arg1.(type) {
 			case env.Kind:

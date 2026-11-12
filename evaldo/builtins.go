@@ -938,7 +938,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	"execute-fast": {
-		Effect: env.EffNone,
+		Effect: env.EffIO,
 		Argsn: 1,
 		Doc:   "Takes a compiled program and executes it using the fast evaluator.",
 		Pure:  true,
@@ -966,7 +966,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	"compile-fast\\debug": {
-		Effect: env.EffNone,
+		Effect: env.EffOutput,
 		Argsn: 1,
 		Doc:   "Takes a block of code and compiles it to function pointers for the fast evaluator, printing debug info.",
 		Pure:  true,
@@ -1040,7 +1040,7 @@ var builtins = map[string]*env.Builtin{
 	// ; equal  { do-fast { 12 * 23 | + 34 } } 310
 	// ; equal  { do-fast { 12 * 23 :a + 34 } } 310
 	"do-fast": {
-		Effect: env.EffNone,
+		Effect: env.EffIO,
 		Argsn: 1,
 		Doc:   "Takes a block of code and does (runs) it using the fast evaluator.",
 		Pure:  true,
@@ -1851,10 +1851,10 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * result of executing the block
 	"do": {
-		Effect: env.EffNone,
+		Effect: env.EffIO,
 		Argsn:  1,
 		Doc:    "Takes a block of code and does (runs) it.",
-		Pure:   true,
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -1881,7 +1881,7 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * result of executing the block with the injected value
 	"with": { // **
-		Effect:        env.EffNone,
+		Effect:        env.EffIO,
 		AcceptFailure: true,
 		Doc:           "Takes a value and a block of code. It does the code with the value injected.",
 		Argsn:         2,
@@ -1911,7 +1911,7 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * result of executing the block within the given context
 	"do\\inside": { // **
-		Effect: env.EffNone,
+		Effect: env.EffIO,
 		Argsn:  2,
 		Doc:    "Takes a Context and a Block. It Does a block inside a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1962,7 +1962,7 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * result of executing the block with the modified parent context
 	"do\\in": { // **
-		Effect: env.EffNone,
+		Effect: env.EffIO,
 		Argsn:  2,
 		Doc:    "Takes a Context and a Block. It Does a block in current context but with parent a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2029,7 +2029,7 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * result of executing the block with the modified parent context
 	"do\\inx": { // **
-		Effect: env.EffNone,
+		Effect: env.EffIO,
 		Argsn:  2,
 		Doc:    "Takes a Context and a Block. It Does a block in current context but with parent a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2090,10 +2090,10 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * result of evaluating the last subblock
 	"do\\each": {
-		Effect: env.EffNone,
+		Effect: env.EffIO,
 		Argsn:  1,
 		Doc:    "Evaluates each subblock of a block of subblocks, one at a time, and returns the result of the last subblock.",
-		Pure:   true,
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -2206,7 +2206,7 @@ var builtins = map[string]*env.Builtin{
 	// END COLLECT EXPERIMENTAL
 
 	"lk": {
-		Effect: env.EffNone,
+		Effect: env.EffOutput,
 		Argsn:  0,
 		Doc:    "Lists available kinds",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2221,7 +2221,7 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * Void after printing the matching kinds.
 	"lk\\": {
-		Effect: env.EffNone,
+		Effect: env.EffOutput,
 		Argsn:  1,
 		Doc:    "Lists available kinds with string filter",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2236,7 +2236,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	"lg": {
-		Effect: env.EffNone,
+		Effect: env.EffOutput,
 		Argsn:  1,
 		Doc:    "Lists generic words related to specific kind, or lists all matching methods across all kinds if given a string filter",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2263,7 +2263,7 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * Void after printing the matching methods.
 	"lg\\": {
-		Effect: env.EffNone,
+		Effect: env.EffOutput,
 		Argsn:  2,
 		Doc:    "Lists generic words related to specific kind with string filter",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2450,7 +2450,7 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * The rye-itself native (so the chain continues cleanly)
 	"Rye-itself//On-error": {
-		Effect: env.EffNone,
+		Effect: env.EffIO,
 		Argsn:  2,
 		Doc:    "Registers a On-error block that will be executed with the error injected if an unhandled error bubbles to the top of the program. The error value is injected as the first value (use .disarm, .print, etc.).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2474,7 +2474,7 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * Void value.
 	"defer": {
-		Effect: env.EffNone,
+		Effect: env.EffIO,
 		Argsn:  1,
 		Doc:    "Registers a block of code to be executed when the current function exits or the program terminates.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2498,7 +2498,7 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * Void value
 	"defer\\": {
-		Effect: env.EffNone,
+		Effect: env.EffIO,
 		Argsn:  2,
 		Doc:    "Registers a block of code with an injected value to be executed when the current function exits or the program terminates. Works like 'with' but deferred.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2566,7 +2566,7 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * The result value if assertion passes, error if it fails
 	"assert": {
-		Effect: env.EffNone,
+		Effect: env.EffIO,
 		Argsn:  2,
 		Doc:    "Evaluates a block of code and asserts that its result equals the expected value. Returns the result if assertion passes, fails with error message if not.",
 		Pure:   false,
@@ -2616,7 +2616,7 @@ var builtins = map[string]*env.Builtin{
 	// Returns:
 	// * The result value (displays status but continues evaluation even on failure)
 	"assert\\display": {
-		Effect: env.EffNone,
+		Effect: env.EffIO,
 		Argsn:  3,
 		Doc:    "Evaluates a block of code and displays the result. Prints the explanation in magenta followed by OK in green on success, or error message in red on failure. Does not fail - continues evaluation.",
 		Pure:   false,

@@ -217,9 +217,10 @@ var builtins_effects = map[string]*env.Builtin{
 	// Example:
 	// input-effect 'username { string } { "real-user" }
 	"input-effect": {
-		Argsn: 3,
-		Doc:   "Declares an input effect: input-effect name validator-block provider-block. Evaluates the provider (unless an embedded scenario hook supplies a value), then validates the value with the validation dialect. With -eff-ask it prompts after the provider; with -eff-replay it reads the value from the tape; with -eff-record it records the validated value.",
-		Pure:  false,
+		Effect: env.EffInput,
+		Argsn:  3,
+		Doc:    "Declares an input effect: input-effect name validator-block provider-block. Evaluates the provider (unless an embedded scenario hook supplies a value), then validates the value with the validation dialect. With -eff-ask it prompts after the provider; with -eff-replay it reads the value from the tape; with -eff-record it records the validated value.",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			intentName, _, nameErr := effectName(ps, arg0, 1, "input-effect")
 			if nameErr != nil {
@@ -295,9 +296,10 @@ var builtins_effects = map[string]*env.Builtin{
 	// Example:
 	// output-effect 'user-login "alice" { print "logged in" }
 	"output-effect": {
-		Argsn: 3,
-		Doc:   "Declares an output effect: output-effect name payload effect-block. Executes the effect block normally. With -eff-dry-run it logs `would name: payload` and skips the effect. With -eff-confirm it asks before executing. With -eff-replay it skips the effect and compares the payload with the tape.",
-		Pure:  false,
+		Effect: env.EffOutput,
+		Argsn:  3,
+		Doc:    "Declares an output effect: output-effect name payload effect-block. Executes the effect block normally. With -eff-dry-run it logs `would name: payload` and skips the effect. With -eff-confirm it asks before executing. With -eff-replay it skips the effect and compares the payload with the tape.",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			name, _, nameErr := effectName(ps, arg0, 1, "output-effect")
 			if nameErr != nil {

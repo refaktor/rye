@@ -1218,6 +1218,9 @@ var builtins_string = map[string]*env.Builtin{
 			case env.String:
 				switch sepa := arg1.(type) {
 				case env.Integer:
+					if sepa.Value <= 0 || sepa.Value > int64(^uint(0)>>1) {
+						return MakeBuiltinError(ps, "Chunk size must be a positive, representable integer.", "split\\every")
+					}
 					spl := util.SplitEveryString(str.Value, int(sepa.Value))
 					spl2 := make([]env.Object, len(spl))
 					for i, val := range spl {
@@ -1230,6 +1233,9 @@ var builtins_string = map[string]*env.Builtin{
 			case env.Block:
 				switch sepa := arg1.(type) {
 				case env.Integer:
+					if sepa.Value <= 0 || sepa.Value > int64(^uint(0)>>1) {
+						return MakeBuiltinError(ps, "Chunk size must be a positive, representable integer.", "split\\every")
+					}
 					spl := util.SplitEveryList(str.Series.S, int(sepa.Value))
 					spl2 := make([]env.Object, len(spl))
 					for i, val := range spl {

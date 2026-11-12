@@ -23,8 +23,9 @@ var ErrorCreationBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * error object and sets the failure flag
 	"fail": {
-		Argsn: 1,
-		Doc:   "Creates an error and sets the failure flag, but continues execution (unlike ^fail).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates an error and sets the failure flag, but continues execution (unlike ^fail).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			ps.FailureFlag = true
 			return MakeRyeError(ps, arg0, nil)
@@ -41,8 +42,9 @@ var ErrorCreationBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * error object and sets both failure and return flags
 	"^fail": {
-		Argsn: 1,
-		Doc:   "Creates an error and immediately returns from the current function with failure state.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates an error and immediately returns from the current function with failure state.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			ps.FailureFlag = true
 			ps.ReturnFlag = true
@@ -57,8 +59,9 @@ var ErrorCreationBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * a new Error with the additional context.
 	"refail": {
-		Argsn: 2,
-		Doc:   "Re-raises an existing error with additional context.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Re-raises an existing error with additional context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch er := arg0.(type) {
 			case *env.Error:
@@ -79,8 +82,9 @@ var ErrorCreationBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * error object without setting any flags
 	"failure": {
-		Argsn: 1,
-		Doc:   "Creates an error object without setting any flags (unlike fail and ^fail).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates an error object without setting any flags (unlike fail and ^fail).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return MakeRyeError(ps, arg0, nil)
 		},
@@ -95,8 +99,9 @@ var ErrorCreationBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * error object without setting any flags
 	"empty": {
-		Argsn: 0,
-		Doc:   "Creates an 404 error object without setting any flags.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Creates an 404 error object without setting any flags.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return MakeRyeError(ps, *env.NewInteger(404), nil)
 		},
@@ -111,8 +116,9 @@ var ErrorCreationBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * new error object that wraps the provided error
 	"failure\\wrap": {
-		Argsn: 2,
-		Doc:   "Creates a new error that wraps an existing error, allowing for error chaining.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates a new error that wraps an existing error, allowing for error chaining.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch er := arg1.(type) {
 			case *env.Error:
@@ -134,6 +140,7 @@ var ErrorInspectionBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * boolean true if the value is an error, false otherwise
 	"is-error": {
+		Effect:        env.EffNone,
 		AcceptFailure: true,
 		Argsn:         1,
 		Doc:           "Returns true if the value is an error, false otherwise.",
@@ -155,6 +162,7 @@ var ErrorInspectionBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * the kind of the error as a word, or void if not an error
 	"error-kind?": {
+		Effect:        env.EffNone,
 		AcceptFailure: true,
 		Argsn:         1,
 		Doc:           "Returns the kind of an error, or void if not an error.",
@@ -179,6 +187,7 @@ var ErrorInspectionBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * boolean true if the error is of the specified kind, false otherwise
 	"is-error-of-kind": {
+		Effect:        env.EffNone,
 		AcceptFailure: true,
 		Argsn:         2,
 		Doc:           "Returns true if the value is an error of the specified kind, false otherwise.",
@@ -217,6 +226,7 @@ var ErrorInspectionBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * the root cause error from an error chain
 	"cause?": {
+		Effect:        env.EffNone,
 		AcceptFailure: true,
 		Argsn:         1,
 		Doc:           "Extracts the root cause from an error chain by traversing the Parent references.",
@@ -252,6 +262,7 @@ var ErrorInspectionBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * integer status code of the error
 	"status?": {
+		Effect:        env.EffNone,
 		AcceptFailure: true,
 		Argsn:         1,
 		Doc:           "Extracts the numeric status code from an error object.",
@@ -277,6 +288,7 @@ var ErrorInspectionBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * string message of the error
 	"message?": {
+		Effect:        env.EffNone,
 		AcceptFailure: true,
 		Argsn:         1,
 		Doc:           "Extracts the message string from an error object.",
@@ -302,6 +314,7 @@ var ErrorInspectionBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * dictionary containing any additional values stored in the error
 	"details?": {
+		Effect:        env.EffNone,
 		AcceptFailure: true,
 		Argsn:         1,
 		Doc:           "Extracts additional details from an error object as a dictionary.",
@@ -335,6 +348,7 @@ var ErrorInspectionBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * boolean true if the value is an error, false otherwise
 	"has-failed": {
+		Effect:        env.EffNone,
 		AcceptFailure: true,
 		Argsn:         1,
 		Doc:           "Tests if a value is an error object, returning true for errors and false for non-errors.",
@@ -358,8 +372,9 @@ var ErrorInspectionBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * boolean true if the value is an error type, false otherwise
 	"is-failure": {
-		Argsn: 1,
-		Doc:   "Checks if a value is a failure/error type. Unlike has-failed, this doesn't accept failures - the value must already be disarmed.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Checks if a value is a failure/error type. Unlike has-failed, this doesn't accept failures - the value must already be disarmed.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg0.(type) {
 			case env.Error, *env.Error:
@@ -380,8 +395,9 @@ var ErrorInspectionBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * boolean true if the value is not an error type, false if it is an error
 	"is-success": {
-		Argsn: 1,
-		Doc:   "Returns true for any value that is not a failure/error type. The opposite of is-failure.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns true for any value that is not a failure/error type. The opposite of is-failure.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg0.(type) {
 			case env.Error, *env.Error:
@@ -404,6 +420,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * the original error object, but clears the failure flag
 	"disarm": {
+		Effect:        env.EffNone,
 		AcceptFailure: true,
 		Argsn:         1,
 		Doc:           "Clears the failure flag while preserving the error object, allowing error inspection without propagation.",
@@ -423,6 +440,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * original value if not in failure state, or a new error wrapping the original error
 	"check": {
+		Effect:        env.EffNone,
 		AcceptFailure: true,
 		Argsn:         2,
 		Doc:           "Checks if a value is in failure state and wraps it with a new error if so, otherwise returns the original value.",
@@ -456,6 +474,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * original value if not in failure state, or immediately returns from function with a new error
 	"^check": {
+		Effect:        env.EffNone,
 		AcceptFailure: true,
 		Argsn:         2,
 		Doc:           "Like 'check' but also sets the return flag to immediately exit the current function.",
@@ -489,6 +508,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * condition value if truthy, or immediately returns from function with an error
 	"^ensure": {
+		Effect:        env.EffNone,
 		AcceptFailure: true,
 		Argsn:         2,
 		Doc:           "Checks if a value is truthy and returns it if so, otherwise creates an error and immediately returns from the function.",
@@ -516,6 +536,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * condition value if truthy, or creates an error with failure flag set
 	"ensure": {
+		Effect:        env.EffNone,
 		AcceptFailure: true,
 		Argsn:         2,
 		Doc:           "Checks if a value is truthy and returns it if so, otherwise creates an error with the failure flag set.",
@@ -545,6 +566,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * original value if it matches one of the options, or creates an error with failure flag set
 	"requires-one-of": {
+		Effect:        env.EffNone,
 		AcceptFailure: true,
 		Argsn:         2,
 		Doc:           "Validates that a value matches one of the provided options, failing with a descriptive error if not.",
@@ -602,6 +624,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * original value if it matches one of the options, or creates an error with failure flag set
 	"^requires-one-of": {
+		Effect:        env.EffNone,
 		AcceptFailure: true,
 		Argsn:         2,
 		Doc:           "Validates that a value matches one of the provided options, failing with a descriptive error if not.",
@@ -658,6 +681,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * original value if block returns truthy, or creates an error with failure flag set
 	"ensure\\with": {
+		Effect:        env.EffIO,
 		AcceptFailure: true,
 		Argsn:         3,
 		Doc:           "Injects a value into a validation block and returns the value if the block is truthy, otherwise creates an error.",
@@ -695,6 +719,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * original value if block returns truthy, or immediately returns from function with an error
 	"^ensure\\with": {
+		Effect:        env.EffIO,
 		AcceptFailure: true,
 		Argsn:         3,
 		Doc:           "Like ensure\\with but also sets the return flag to immediately exit the current function.",
@@ -735,6 +760,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * original value if not in failure state, or result of executing the handler block
 	"fix": {
+		Effect:        env.EffIO,
 		AcceptFailure: true,
 		Argsn:         2,
 		Doc:           "Handles errors by executing a block if the value is in failure state, clearing the failure flag.",
@@ -773,6 +799,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * original value if not in failure state, or immediately returns from function with handler result
 	"^fix": {
+		Effect:        env.EffIO,
 		AcceptFailure: true,
 		Argsn:         2,
 		Doc:           "Like 'fix' but also sets the return flag to immediately exit the current function with the handler result.",
@@ -809,6 +836,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * result of executing the appropriate handler block
 	"fix\\either": {
+		Effect:        env.EffIO,
 		AcceptFailure: true,
 		Argsn:         3,
 		Doc:           "Executes one of two blocks depending on whether the value is in failure state.",
@@ -854,6 +882,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * result of executing the success handler if value is not in failure state, or the original value
 	"fix\\else": {
+		Effect:        env.EffIO,
 		AcceptFailure: true,
 		Argsn:         2,
 		Doc:           "Executes a block if the value is not in failure state, otherwise returns the original value.",
@@ -889,6 +918,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * result of executing the appropriate handler block
 	"fix\\continue": {
+		Effect:        env.EffIO,
 		AcceptFailure: true,
 		Argsn:         3,
 		Doc:           "Executes one of two blocks depending on whether the value is in failure state, like an error-handling if/else.",
@@ -932,6 +962,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * result of executing the block if value is not in failure state, or the original value
 	"continue": {
+		Effect:        env.EffIO,
 		AcceptFailure: true,
 		Argsn:         2,
 		Doc:           "Executes a block only if the value is not in failure state, opposite of 'fix'.",
@@ -968,6 +999,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * result of executing the matching handler block, or the original error if no match
 	"^fix\\match": {
+		Effect:        env.EffIO,
 		Argsn:         2,
 		Doc:           "Error handling switch that matches error codes with handler blocks and sets the return flag.",
 		AcceptFailure: true,
@@ -1051,9 +1083,10 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * the block result, or an Error value if evaluation fails.
 	"try": {
-		Argsn: 1,
-		Doc:   "Takes a block of code and does (runs) it.",
-		Pure:  true,
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Takes a block of code and does (runs) it.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -1084,9 +1117,10 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * a block containing [success, result], where success is true if no error occurred
 	"try-all": {
-		Argsn: 1,
-		Doc:   "Executes a block and returns a result tuple [success, result], where success is true if no error occurred.",
-		Pure:  true,
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Executes a block and returns a result tuple [success, result], where success is true if no error occurred.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -1134,8 +1168,9 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * the block result, or an Error value if evaluation fails.
 	"try\\in": {
-		Argsn: 2,
-		Doc:   "Takes a Context and a Block. It Does a block inside a given Context.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Takes a Context and a Block. It Does a block inside a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch ctx := arg0.(type) {
 			case *env.RyeCtx:
@@ -1173,8 +1208,9 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * result of the main block, preserving any failure state
 	"finally": {
-		Argsn: 2,
-		Doc:   "Executes a block and ensures another block is executed afterward, regardless of errors.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Executes a block and ensures another block is executed afterward, regardless of errors.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch mainBlock := arg0.(type) {
 			case env.Block:
@@ -1231,6 +1267,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * result of the block if successful, or the last failure if all retries fail
 	"retry": {
+		Effect:        env.EffIO,
 		Argsn:         2,
 		Doc:           "Executes a block and retries it up to N times if it results in a failure.",
 		AcceptFailure: true,
@@ -1299,6 +1336,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * result of the block when it finally succeeds (no failure), or error if 1000 attempts exceeded
 	"persist": {
+		Effect:        env.EffIO,
 		Argsn:         1,
 		Doc:           "Executes a block repeatedly until it succeeds (no failure), then returns the successful result. Gives up after 1000 attempts.",
 		AcceptFailure: true,
@@ -1348,6 +1386,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// Returns:
 	// * result of the block if it completes within the timeout, or a timeout error
 	"timeout": {
+		Effect:        env.EffIO,
 		AcceptFailure: true,
 		Argsn:         2,
 		Doc:           "Executes a block of code with a timeout, failing if execution exceeds the specified duration in milliseconds.",
@@ -1356,6 +1395,9 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 			case env.Integer:
 				switch bloc := arg1.(type) {
 				case env.Block:
+					if ms.Value < 0 || ms.Value > int64(^uint64(0)>>1)/int64(time.Millisecond) {
+						return MakeBuiltinError(ps, "Timeout must be a non-negative number of milliseconds within the supported duration range.", "timeout")
+					}
 					// Store current series
 					ser := ps.Ser
 
@@ -1372,7 +1414,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 					// Execute the block in a goroutine
 					go func() {
 						Eval(psCopy)
-						MaybeDisplayFailureOrError(ps, ps.Idx, "timeout")
+						MaybeDisplayFailureOrError(psCopy, psCopy.Idx, "timeout")
 
 						resultChan <- psCopy.Res
 						doneChan <- psCopy.FailureFlag

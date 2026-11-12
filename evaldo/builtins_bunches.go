@@ -115,9 +115,10 @@ var builtins_bunch = map[string]*env.Builtin{
 	// Returns:
 	// * a new Bunch containing the unique values
 	"bunch": {
-		Argsn: 1,
-		Pure:  true,
-		Doc:   "Constructs a Bunch from a Block, List, or another Bunch. Values are normalised to strings; blocks, lists and dicts are not valid elements.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Pure:   true,
+		Doc:    "Constructs a Bunch from a Block, List, or another Bunch. Values are normalised to strings; blocks, lists and dicts are not valid elements.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return makeBunchFromObject(ps, arg0, "bunch")
 		},
@@ -131,9 +132,10 @@ var builtins_bunch = map[string]*env.Builtin{
 	// Returns:
 	// * a new Bunch containing the unique values
 	"to-bunch": {
-		Argsn: 1,
-		Pure:  true,
-		Doc:   "Converts a Block, List, or Bunch to a Bunch. Alias for bunch.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Pure:   true,
+		Doc:    "Converts a Block, List, or Bunch to a Bunch. Alias for bunch.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return makeBunchFromObject(ps, arg0, "to-bunch")
 		},
@@ -149,9 +151,10 @@ var builtins_bunch = map[string]*env.Builtin{
 	// Returns:
 	// * the modified Bunch
 	"add!": {
-		Argsn: 2,
-		Pure:  false,
-		Doc:   "Adds a value to a Bunch in-place. The value is ignored if it is already present.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Pure:   false,
+		Doc:    "Adds a value to a Bunch in-place. The value is ignored if it is already present.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return modifyBunchWord(ps, arg0, arg1, true, "add!")
 		},
@@ -167,9 +170,10 @@ var builtins_bunch = map[string]*env.Builtin{
 	// Returns:
 	// * the modified Bunch
 	"remove!": {
-		Argsn: 2,
-		Pure:  false,
-		Doc:   "Removes a value from a Bunch in-place. Removing a missing value is a no-op.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Pure:   false,
+		Doc:    "Removes a value from a Bunch in-place. Removing a missing value is a no-op.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return modifyBunchWord(ps, arg0, arg1, false, "remove!")
 		},

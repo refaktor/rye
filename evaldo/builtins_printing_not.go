@@ -32,8 +32,9 @@ var builtins_printing = map[string]*env.Builtin{
 	// Returns:
 	// * the input value
 	"prns": {
-		Argsn: 1,
-		Doc:   "Prints a value followed by a space, returning the input value.",
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Prints a value followed by a space, returning the input value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.String:
@@ -52,8 +53,9 @@ var builtins_printing = map[string]*env.Builtin{
 	// Returns:
 	// * the input value
 	"prn": {
-		Argsn: 1,
-		Doc:   "Prints a value without adding a newline, returning the input value.",
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Prints a value without adding a newline, returning the input value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.String:
@@ -72,8 +74,9 @@ var builtins_printing = map[string]*env.Builtin{
 	// Returns:
 	// * the input value
 	"print": {
-		Argsn: 1,
-		Doc:   "Prints a value followed by a newline, returning the input value.",
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Prints a value followed by a newline, returning the input value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.String:
@@ -93,8 +96,9 @@ var builtins_printing = map[string]*env.Builtin{
 	// Returns:
 	// * the second input value
 	"print2": {
-		Argsn: 2,
-		Doc:   "Prints two values separated by a space and followed by a newline, returning the second value.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Prints two values separated by a space and followed by a newline, returning the second value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
 			case env.String:
@@ -121,8 +125,9 @@ var builtins_printing = map[string]*env.Builtin{
 	// Returns:
 	// * the second input value
 	"prn2": {
-		Argsn: 2,
-		Doc:   "Prints two values separated by a space without a newline, returning the second value.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Prints two values separated by a space without a newline, returning the second value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
 			case env.String:
@@ -149,8 +154,9 @@ var builtins_printing = map[string]*env.Builtin{
 	// Returns:
 	// * the second input value
 	"prns2": {
-		Argsn: 2,
-		Doc:   "Prints two values each followed by a space, returning the second value.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Prints two values each followed by a space, returning the second value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
 			case env.String:
@@ -178,8 +184,9 @@ var builtins_printing = map[string]*env.Builtin{
 	// Returns:
 	// * string with placeholders replaced
 	"format": {
-		Argsn: 2,
-		Doc:   "Formats a block of values using a format string with {} placeholders, returning the resulting string.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Formats a block of values using a format string with {} placeholders, returning the resulting string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch tmpl := arg0.(type) {
 			case env.String:
@@ -207,8 +214,9 @@ var builtins_printing = map[string]*env.Builtin{
 	// Returns:
 	// * the input value after printing
 	"prnf": {
-		Argsn: 2,
-		Doc:   "Formats and prints a value by replacing {} in the template string, without a newline.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Formats and prints a value by replacing {} in the template string, without a newline.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch tmpl := arg1.(type) {
 			case env.String:
@@ -230,8 +238,9 @@ var builtins_printing = map[string]*env.Builtin{
 	// Returns:
 	// * the input value after printing
 	"printf": {
-		Argsn: 2,
-		Doc:   "Formats and prints a value by replacing {} in the template string, followed by a newline.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Formats and prints a value by replacing {} in the template string, followed by a newline.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch tmpl := arg1.(type) {
 			case env.String:
@@ -254,8 +263,9 @@ var builtins_printing = map[string]*env.Builtin{
 	// Returns:
 	// * string or URI with placeholder replaced by the value
 	"embed": {
-		Argsn: 2,
-		Doc:   "Embeds a value into a string or URI by replacing {} placeholder with the string representation of the value.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Embeds a value into a string or URI by replacing {} placeholder with the string representation of the value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg1.(type) {
 			case env.String:
@@ -280,8 +290,9 @@ var builtins_printing = map[string]*env.Builtin{
 	// Returns:
 	// * the input value after printing
 	"prnv": {
-		Argsn: 2,
-		Doc:   "Embeds a value into a string by replacing {} placeholder and prints it without a newline, returning the input value.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Embeds a value into a string by replacing {} placeholder and prints it without a newline, returning the input value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg1.(type) {
 			case env.String:
@@ -303,8 +314,9 @@ var builtins_printing = map[string]*env.Builtin{
 	// Returns:
 	// * the input value after printing
 	"printv": {
-		Argsn: 2,
-		Doc:   "Embeds a value into a string by replacing {} placeholder and prints it followed by a newline, returning the input value.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Embeds a value into a string by replacing {} placeholder and prints it followed by a newline, returning the input value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg1.(type) {
 			case env.String:
@@ -319,8 +331,9 @@ var builtins_printing = map[string]*env.Builtin{
 	},
 
 	"probe": {
-		Argsn: 1,
-		Doc:   "Prints detailed type and value information about a value, followed by a newline, returning the input value.",
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Prints detailed type and value information about a value, followed by a newline, returning the input value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			p := ""
 			if env.IsPointer(arg0) {
@@ -338,6 +351,7 @@ var builtins_printing = map[string]*env.Builtin{
 	// Returns:
 	// * the input value.
 	"probe\\": {
+		Effect: env.EffOutput,
 		Argsn: 2,
 		Doc:   "Prints a prefix string followed by detailed type and value information about a value, followed by a newline, returning the input value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -362,8 +376,9 @@ var builtins_printing = map[string]*env.Builtin{
 	// Returns:
 	// * string with diagnostic representation
 	"inspect": {
-		Argsn: 1,
-		Doc:   "Returns a string containing detailed type and value information about a value.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns a string containing detailed type and value information about a value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(arg0.Inspect(*ps.Idx))
 		},
@@ -376,8 +391,9 @@ var builtins_printing = map[string]*env.Builtin{
 	// Returns:
 	// * string starting with escape character
 	"esc": {
-		Argsn: 1,
-		Doc:   "Creates an ANSI escape sequence by prepending the escape character (\\033) to the input string.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates an ANSI escape sequence by prepending the escape character (\\033) to the input string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.String:
@@ -396,8 +412,9 @@ var builtins_printing = map[string]*env.Builtin{
 	// Returns:
 	// * string starting with escape character and embedded value
 	"esc-val": {
-		Argsn: 2,
-		Doc:   "Creates an ANSI escape sequence with an embedded value by replacing {} placeholder and prepending the escape character (\\033).",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates an ANSI escape sequence with an embedded value by replacing {} placeholder and prepending the escape character (\\033).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch base := arg1.(type) {
 			case env.String:

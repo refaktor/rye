@@ -553,11 +553,18 @@ var builtins_conditionals = map[string]*env.Builtin{
 				cumul := arg0
 
 				foundany := false
-				for {
-
+				for bloc.Series.Pos() < bloc.Series.Len() {
+					if bloc.Series.Len()-bloc.Series.Pos() < 2 {
+						ps.Ser = ser
+						return MakeBuiltinError(ps, "Each condition in cases must have an action block.", "cases")
+					}
 					doblk := false
 					cond_ := bloc.Series.Pop()
-					blk := bloc.Series.Pop().(env.Block)
+					blk, ok := bloc.Series.Pop().(env.Block)
+					if !ok {
+						ps.Ser = ser
+						return MakeBuiltinError(ps, "Each action in cases must be a block.", "cases")
+					}
 
 					switch cond := cond_.(type) {
 					case env.Block:
@@ -580,6 +587,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 							doblk = true
 						}
 					default:
+						ps.Ser = ser
 						return MakeBuiltinError(ps, "Invalid block series type.", "cases")
 					}
 					// we set ProgramStates series to series ob the block
@@ -594,9 +602,6 @@ var builtins_conditionals = map[string]*env.Builtin{
 							return ps.Res
 						}
 						cumul = ps.Res
-					}
-					if bloc.Series.AtLast() {
-						break
 					}
 				}
 				ps.Ser = ser
