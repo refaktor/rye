@@ -19,8 +19,9 @@ var builtins_time = map[string]*env.Builtin{
 	// Returns:
 	// * integer representing Unix time in microseconds
 	"unix-micro?": {
-		Argsn: 1,
-		Doc:   "Converts a time object to Unix time in microseconds (microseconds since January 1, 1970 UTC).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Converts a time object to Unix time in microseconds (microseconds since January 1, 1970 UTC).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Time:
@@ -38,8 +39,9 @@ var builtins_time = map[string]*env.Builtin{
 	// Returns:
 	// * integer representing Unix time in milliseconds
 	"unix-milli?": {
-		Argsn: 1,
-		Doc:   "Converts a time object to Unix time in milliseconds (milliseconds since January 1, 1970 UTC).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Converts a time object to Unix time in milliseconds (milliseconds since January 1, 1970 UTC).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Time:
@@ -57,8 +59,9 @@ var builtins_time = map[string]*env.Builtin{
 	// Returns:
 	// * integer representing day of week (0=Sunday, 1=Monday, ..., 6=Saturday)
 	"weekday?": {
-		Argsn: 1,
-		Doc:   "Extracts the day of the week from a time object as an integer (0=Sunday through 6=Saturday).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Extracts the day of the week from a time object as an integer (0=Sunday through 6=Saturday).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Time:
@@ -80,8 +83,9 @@ var builtins_time = map[string]*env.Builtin{
 	// Returns:
 	// * time object representing the specified date
 	"date": {
-		Argsn: 1,
-		Doc:   "Creates a time object from a date string in YYYY-MM-DD format.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a time object from a date string in YYYY-MM-DD format.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -104,8 +108,9 @@ var builtins_time = map[string]*env.Builtin{
 	// Returns:
 	// * time object representing the specified date and time
 	"datetime": {
-		Argsn: 1,
-		Doc:   "Creates a time object from a datetime string in YYYY-MM-DDThh:mm:ss format.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a time object from a datetime string in YYYY-MM-DDThh:mm:ss format.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -127,8 +132,9 @@ var builtins_time = map[string]*env.Builtin{
 	// Returns:
 	// * time object representing the current time
 	"now": {
-		Argsn: 0,
-		Doc:   "Creates a time object representing the current local time.",
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Creates a time object representing the current local time.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewTime(time.Now())
 		},
@@ -141,14 +147,15 @@ var builtins_time = map[string]*env.Builtin{
 	// Returns:
 	// * integer representing day of year (1-366)
 	"yearday?": {
-		Argsn: 1,
-		Doc:   "Extracts the day of year from a time object as an integer (1-366).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Extracts the day of year from a time object as an integer (1-366).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Time:
 				return *env.NewInteger(int64(s1.Value.YearDay()))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "hour?")
+				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "yearday?")
 			}
 		},
 	},
@@ -160,8 +167,9 @@ var builtins_time = map[string]*env.Builtin{
 	// Returns:
 	// * integer representing the year
 	"year?": {
-		Argsn: 1,
-		Doc:   "Extracts the year from a time object as an integer.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Extracts the year from a time object as an integer.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Time:
@@ -179,8 +187,9 @@ var builtins_time = map[string]*env.Builtin{
 	// Returns:
 	// * integer representing the month (1-12)
 	"month?": {
-		Argsn: 1,
-		Doc:   "Extracts the month from a time object as an integer (1-12).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Extracts the month from a time object as an integer (1-12).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Time:
@@ -199,8 +208,9 @@ var builtins_time = map[string]*env.Builtin{
 	// Returns:
 	// * integer representing the number of days in the month
 	"days-in-month?": {
-		Argsn: 1,
-		Doc:   "Calculates the number of days in the month of the given time object.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Calculates the number of days in the month of the given time object.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Time:
@@ -219,8 +229,9 @@ var builtins_time = map[string]*env.Builtin{
 	// Returns:
 	// * string representing the time in "hh:mm:ss" format
 	"time?": {
-		Argsn: 1,
-		Doc:   "Extracts the time part from a time object as a formatted string (hh:mm:ss).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Extracts the time part from a time object as a formatted string (hh:mm:ss).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Time:
@@ -238,8 +249,9 @@ var builtins_time = map[string]*env.Builtin{
 	// Returns:
 	// * string representing the date in "YYYY-MM-DD" format
 	"date?": {
-		Argsn: 1,
-		Doc:   "Extracts the date part from a time object as a formatted string (YYYY-MM-DD).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Extracts the date part from a time object as a formatted string (YYYY-MM-DD).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Time:
@@ -257,8 +269,9 @@ var builtins_time = map[string]*env.Builtin{
 	// Returns:
 	// * string representing the date in IMAP search format (DD-Mon-YYYY)
 	"format-imap-date": {
-		Argsn: 1,
-		Doc:   "Formats a time object as an IMAP search date string (DD-Mon-YYYY).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Formats a time object as an IMAP search date string (DD-Mon-YYYY).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Time:
@@ -279,8 +292,9 @@ var builtins_time = map[string]*env.Builtin{
 	// Returns:
 	// * time object parsed from the string
 	"parse-date": {
-		Argsn: 2,
-		Doc:   "Parses a date/time string using a strptime format string. This is the default date/time parsing syntax; see https://man7.org/linux/man-pages/man3/strptime.3.html.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Parses a date/time string using a strptime format string. This is the default date/time parsing syntax; see https://man7.org/linux/man-pages/man3/strptime.3.html.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch datestr := arg0.(type) {
 			case env.String:
@@ -310,8 +324,9 @@ var builtins_time = map[string]*env.Builtin{
 	// Returns:
 	// * string representing the formatted date/time
 	"format-date": {
-		Argsn: 2,
-		Doc:   "Formats a time object using a strftime format string. This is the default date/time formatting syntax; see https://man7.org/linux/man-pages/man3/strftime.3.html.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Formats a time object using a strftime format string. This is the default date/time formatting syntax; see https://man7.org/linux/man-pages/man3/strftime.3.html.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch t := arg0.(type) {
 			case env.Time:
@@ -336,8 +351,9 @@ var builtins_time = map[string]*env.Builtin{
 	// Returns:
 	// * string representing the formatted date/time
 	"format-date-go": {
-		Argsn: 2,
-		Doc:   "Formats a time object using a Go time format layout string. Reference time: Mon Jan 2 15:04:05 MST 2006.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Formats a time object using a Go time format layout string. Reference time: Mon Jan 2 15:04:05 MST 2006.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch t := arg0.(type) {
 			case env.Time:
@@ -360,8 +376,9 @@ var builtins_time = map[string]*env.Builtin{
 	// Returns:
 	// * integer representing the day of month (1-31)
 	"day?": {
-		Argsn: 1,
-		Doc:   "Extracts the day of month from a time object as an integer (1-31).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Extracts the day of month from a time object as an integer (1-31).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Time:
@@ -379,8 +396,9 @@ var builtins_time = map[string]*env.Builtin{
 	// Returns:
 	// * integer representing the hour (0-23)
 	"hour?": {
-		Argsn: 1,
-		Doc:   "Extracts the hour from a time object as an integer (0-23).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Extracts the hour from a time object as an integer (0-23).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Time:
@@ -398,8 +416,9 @@ var builtins_time = map[string]*env.Builtin{
 	// Returns:
 	// * integer representing the minute (0-59)
 	"minute?": {
-		Argsn: 1,
-		Doc:   "Extracts the minute from a time object as an integer (0-59).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Extracts the minute from a time object as an integer (0-59).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Time:
@@ -417,8 +436,9 @@ var builtins_time = map[string]*env.Builtin{
 	// Returns:
 	// * integer representing the second (0-59)
 	"second?": {
-		Argsn: 1,
-		Doc:   "Extracts the second from a time object as an integer (0-59).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Extracts the second from a time object as an integer (0-59).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Time:
@@ -438,8 +458,9 @@ var builtins_time = map[string]*env.Builtin{
 	// Returns:
 	// * the original milliseconds value
 	"sleep": {
-		Argsn: 1,
-		Doc:   "Pauses execution for the specified number of milliseconds.",
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Pauses execution for the specified number of milliseconds.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
@@ -458,8 +479,9 @@ var builtins_time = map[string]*env.Builtin{
 	// Returns:
 	// * integer multiplied by 1000
 	"thousands": {
-		Argsn: 1,
-		Doc:   "Multiplies the input by 1000 (useful for unit conversion).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Multiplies the input by 1000 (useful for unit conversion).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
@@ -476,8 +498,9 @@ var builtins_time = map[string]*env.Builtin{
 	// Returns:
 	// * integer multiplied by 1000000
 	"millions": {
-		Argsn: 1,
-		Doc:   "Multiplies the input by 1000000 (useful for unit conversion).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Multiplies the input by 1000000 (useful for unit conversion).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
@@ -494,8 +517,9 @@ var builtins_time = map[string]*env.Builtin{
 	// Returns:
 	// * integer representing the equivalent number of milliseconds
 	"seconds": {
-		Argsn: 1,
-		Doc:   "Converts seconds to milliseconds (multiplies by 1000).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Converts seconds to milliseconds (multiplies by 1000).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
@@ -512,8 +536,9 @@ var builtins_time = map[string]*env.Builtin{
 	// Returns:
 	// * integer representing the equivalent number of milliseconds
 	"minutes": {
-		Argsn: 1,
-		Doc:   "Converts minutes to milliseconds (multiplies by 60000).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Converts minutes to milliseconds (multiplies by 60000).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
@@ -531,8 +556,9 @@ var builtins_time = map[string]*env.Builtin{
 	// Returns:
 	// * integer representing the equivalent number of milliseconds
 	"hours": {
-		Argsn: 1,
-		Doc:   "Converts hours to milliseconds (multiplies by 3600000).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Converts hours to milliseconds (multiplies by 3600000).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
@@ -550,8 +576,9 @@ var builtins_time = map[string]*env.Builtin{
 	// Returns:
 	// * integer representing the equivalent number of milliseconds
 	"days": {
-		Argsn: 1,
-		Doc:   "Converts days to milliseconds (multiplies by 86400000).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Converts days to milliseconds (multiplies by 86400000).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
@@ -568,8 +595,9 @@ var builtins_time = map[string]*env.Builtin{
 	// Returns:
 	// * integer representing the equivalent number of milliseconds
 	"weeks": {
-		Argsn: 1,
-		Doc:   "Converts weeks to milliseconds (multiplies by 604800000).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Converts weeks to milliseconds (multiplies by 604800000).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
@@ -587,8 +615,9 @@ var builtins_time = map[string]*env.Builtin{
 	// Returns:
 	// * integer representing execution time in milliseconds
 	"time-it": { // **
-		Argsn: 1,
-		Doc:   "Accepts a block, does it and times it's execution time.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Accepts a block, does it and times it's execution time.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:

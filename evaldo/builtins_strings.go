@@ -71,9 +71,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * a string containing a single newline character
 	"newline": {
-		Argsn: 0,
-		Doc:   "Returns a string containing a single newline character.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns a string containing a single newline character.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString("\n")
 		},
@@ -86,9 +87,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * a string containing a single tab character
 	"tab": {
-		Argsn: 0,
-		Doc:   "Returns a string containing a single tab character.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns a string containing a single tab character.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString("\t")
 		},
@@ -102,9 +104,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * a new string with a newline character appended
 	"ln": {
-		Argsn: 1,
-		Doc:   "Appends a newline character to the end of a string.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Appends a newline character to the end of a string.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -124,9 +127,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * a new string with leading and trailing whitespace removed
 	"trim": {
-		Argsn: 1,
-		Doc:   "Removes all leading and trailing whitespace characters from a string.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Removes all leading and trailing whitespace characters from a string.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -153,9 +157,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * a new string with specified characters removed from both ends
 	"trim\\": {
-		Argsn: 2,
-		Doc:   "Removes all leading and trailing occurrences of the specified characters or regular expression from a string.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Removes all leading and trailing occurrences of the specified characters or regular expression from a string.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -201,9 +206,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * a new string with specified characters removed from the right end
 	"trim\\right": {
-		Argsn: 2,
-		Doc:   "Removes all trailing occurrences of the specified characters or regular expression from a string.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Removes all trailing occurrences of the specified characters or regular expression from a string.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -248,9 +254,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * a new string with specified characters removed from the left end
 	"trim\\left": {
-		Argsn: 2,
-		Doc:   "Removes all leading occurrences of the specified characters or regular expression from a string.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Removes all leading occurrences of the specified characters or regular expression from a string.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -298,9 +305,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * a new string with all occurrences of old replaced by new
 	"replace": {
-		Argsn: 3,
-		Doc:   "Replaces all occurrences of a substring or regular expression with another string.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Replaces all occurrences of a substring or regular expression with another string.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -343,9 +351,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * a new string containing the specified substring
 	"substring": {
-		Argsn: 3,
-		Doc:   "Extracts a portion of a string or secret between zero-based character positions (start inclusive, end exclusive).",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Extracts a portion of a string or secret between zero-based character positions (start inclusive, end exclusive).",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -397,9 +406,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * true if the collection contains the value, false otherwise
 	"contains": {
-		Argsn: 2,
-		Doc:   "Checks if a string, block or list contains a specific value, returning true if found or false if not found.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Checks if a string, block or list contains a specific value, returning true if found or false if not found.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			//contains with string
@@ -474,9 +484,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * true if the collection contains the flag in short or long form, false otherwise
 	"contains\\flag": {
-		Argsn: 2,
-		Doc:   "Checks if a block contains a specific flag (long or short), returning true if found or false if not found.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Checks if a block contains a specific flag (long or short), returning true if found or false if not found.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			//contains block
@@ -520,9 +531,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * true if the string ends with the suffix, false otherwise
 	"has-suffix": {
-		Argsn: 2,
-		Doc:   "Checks if a string ends with a specific suffix, returning true if it does or false if it doesn't.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Checks if a string ends with a specific suffix, returning true if it does or false if it doesn't.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -551,9 +563,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * true if the string starts with the prefix, false otherwise
 	"has-prefix": {
-		Argsn: 2,
-		Doc:   "Checks if a string starts with a specific prefix, returning true if it does or false if it doesn't.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Checks if a string starts with a specific prefix, returning true if it does or false if it doesn't.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -586,9 +599,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * integer index (0-based) of the first occurrence of the value, or -1 if not found
 	"index?": {
-		Argsn: 2,
-		Doc:   "Finds the 0-based index of the first occurrence of a value in a string or block.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Finds the 0-based index of the first occurrence of a value in a string or block.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -623,9 +637,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * integer position (1-based) of the first occurrence of the value, or error if not found
 	"position?": {
-		Argsn: 2,
-		Doc:   "Finds the 1-based position of the first occurrence of a value in a string or block.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Finds the 1-based position of the first occurrence of a value in a string or block.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -656,9 +671,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * base64-encoded string
 	"encode-to\\base64": {
-		Argsn: 1,
-		Doc:   "Encodes a string or binary data as a base64 string.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Encodes a string or binary data as a base64 string.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Bytes:
@@ -692,9 +708,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * decoded string
 	"decode\\base64": {
-		Argsn: 1,
-		Doc:   "Decodes a base64-encoded string back to its original form.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Decodes a base64-encoded string back to its original form.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -717,9 +734,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * hexadecimal-encoded string
 	"encode-to\\hex": {
-		Argsn: 1,
-		Doc:   "Encodes a string or bytes value as a hexadecimal string.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Encodes a string or bytes value as a hexadecimal string.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Bytes:
@@ -741,9 +759,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * bytes native value containing the decoded data
 	"decode\\hex": {
-		Argsn: 1,
-		Doc:   "Decodes a hexadecimal string to a bytes native value.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Decodes a hexadecimal string to a bytes native value.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -766,9 +785,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * a new string with a space character appended
 	"space": {
-		Argsn: 1,
-		Doc:   "Appends a space character to the end of a string.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Appends a space character to the end of a string.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -788,9 +808,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * a new string with the first character converted to uppercase
 	"capitalize": { // **
-		Argsn: 1,
-		Pure:  true,
-		Doc:   "Converts the first character of a string to uppercase, leaving the rest unchanged.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Pure:   true,
+		Doc:    "Converts the first character of a string to uppercase, leaving the rest unchanged.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -814,9 +835,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * a new string with all characters converted to lowercase
 	"lower": { // **
-		Argsn: 1,
-		Pure:  true,
-		Doc:   "Converts all characters in a string to lowercase.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Pure:   true,
+		Doc:    "Converts all characters in a string to lowercase.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -838,9 +860,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * a new string with all characters converted to uppercase
 	"upper": { // **
-		Argsn: 1,
-		Pure:  true,
-		Doc:   "Converts all characters in a string to uppercase.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Pure:   true,
+		Doc:    "Converts all characters in a string to uppercase.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case *env.String:
@@ -865,9 +888,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * a new string containing all three strings concatenated together
 	"concat3": {
-		Argsn: 3,
-		Pure:  true,
-		Doc:   "Concatenates three strings together into a single string.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Pure:   true,
+		Doc:    "Concatenates three strings together into a single string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -900,9 +924,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * a single string with all values concatenated together, or a URI if first element is a URI
 	"join": { // **
-		Argsn: 1,
-		Pure:  true,
-		Doc:   "Concatenates all strings, numbers (integers and decimals) or URIs in a block or list into a single string with no separator. If the first element is a URI, returns a URI.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Pure:   true,
+		Doc:    "Concatenates all strings, numbers (integers and decimals) or URIs in a block or list into a single string with no separator. If the first element is a URI, returns a URI.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.List:
@@ -994,9 +1019,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * a single string with all values concatenated with the delimiter between them
 	"join\\with": { // **
-		Argsn: 2,
-		Pure:  true,
-		Doc:   "Concatenates all strings, integers or decimals in a block or list into a single string with a specified delimiter between values.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Pure:   true,
+		Doc:    "Concatenates all strings, integers or decimals in a block or list into a single string with a specified delimiter between values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.List:
@@ -1069,9 +1095,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * a block of strings resulting from splitting the input string
 	"split": { // **
-		Argsn: 2,
-		Pure:  true,
-		Doc:   "Splits a string into a block of strings using a separator string or a compiled regular expression.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Pure:   true,
+		Doc:    "Splits a string into a block of strings using a separator string or a compiled regular expression.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.String:
@@ -1113,9 +1140,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * a block of strings resulting from splitting the input string, preserving quoted sections
 	"split\\quoted": { // **
-		Argsn: 3,
-		Pure:  true,
-		Doc:   "Splits a string into a block of strings using a separator, while respecting quoted sections that should remain intact.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Pure:   true,
+		Doc:    "Splits a string into a block of strings using a separator, while respecting quoted sections that should remain intact.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.String:
@@ -1146,9 +1174,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * a block of strings resulting from splitting the input string at any of the separator characters
 	"split\\many": {
-		Argsn: 2,
-		Pure:  true,
-		Doc:   "Splits a string into a block of strings using any character in the separators string as a delimiter.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Pure:   true,
+		Doc:    "Splits a string into a block of strings using any character in the separators string as a delimiter.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.String:
@@ -1180,9 +1209,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * a block of strings or blocks, each containing at most 'size' elements
 	"split\\every": { // **
-		Argsn: 2,
-		Pure:  true,
-		Doc:   "Splits a string or block into chunks of the specified size, with any remaining elements in the last chunk.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Pure:   true,
+		Doc:    "Splits a string or block into chunks of the specified size, with any remaining elements in the last chunk.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.String:
@@ -1232,9 +1262,10 @@ var builtins_string = map[string]*env.Builtin{
 	// Returns:
 	// * URL query string with pairs joined with '&', all special characters percent-encoded (no leading '?')
 	"url-encode": {
-		Argsn: 1,
-		Doc:   "Encodes a block of name: value pairs as a URL query string (e.g. name=John+Doe&city=New+York), percent-encoding all special characters. Keys can be set-words (name:) or strings (\"name\"), values can be strings, integers, decimals, or words (looked up in context).",
-		Pure:  false,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Encodes a block of name: value pairs as a URL query string (e.g. name=John+Doe&city=New+York), percent-encoding all special characters. Keys can be set-words (name:) or strings (\"name\"), values can be strings, integers, decimals, or words (looked up in context).",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch blk := arg0.(type) {
 			case env.Block:

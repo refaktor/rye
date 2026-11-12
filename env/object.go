@@ -2956,7 +2956,9 @@ func NewBlockFromList(list List) TSeries {
 		case bool:
 			data[i] = *NewBoolean(k)
 		case List:
-			data[i] = *NewString("not handeled 3") // TODO -- just temp result
+			data[i] = k
+		case Dict:
+			data[i] = k
 		}
 	}
 	return *NewTSeries(data)
