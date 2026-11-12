@@ -83,8 +83,9 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Returns:
 	// * result of the last block execution
 	"loop": {
-		Argsn: 2,
-		Doc:   "Executes a block of code, builtin, or function a specified number of times, injecting the current iteration number (starting from 1).",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Executes a block of code, builtin, or function a specified number of times, injecting the current iteration number (starting from 1).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Type checking for arguments
 			count, ok := arg0.(env.Integer)
@@ -163,8 +164,9 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Returns:
 	// * result of the last block execution
 	"produce": {
-		Argsn: 3,
-		Doc:   "Executes a block of code a specified number of times, passing the result of each execution to the next iteration.",
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Executes a block of code a specified number of times, passing the result of each execution to the next iteration.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
 			case env.Integer:
@@ -207,13 +209,17 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Returns:
 	// * Block containing the results of each execution
 	"replicate": {
-		Argsn: 2,
-		Doc:   "Executes a block of code a specified number of times and collects all results into a block.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Executes a block of code a specified number of times and collects all results into a block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
 			case env.Integer:
 				switch bloc := arg1.(type) {
 				case env.Block:
+					if cond.Value < 0 {
+						return MakeBuiltinError(ps, "Replication count must be non-negative.", "replicate")
+					}
 					// Pre-resolve builtins in the block for faster execution
 					resolveBuiltinsInBlock(ps, &bloc)
 					results := make([]env.Object, 0, cond.Value)
@@ -250,13 +256,17 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Returns:
 	// * Block containing the results of each execution
 	"replicate\\idx": {
-		Argsn: 2,
-		Doc:   "Executes a block of code a specified number of times, injecting the current index (0-based), and collects all results into a block.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Executes a block of code a specified number of times, injecting the current index (0-based), and collects all results into a block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
 			case env.Integer:
 				switch bloc := arg1.(type) {
 				case env.Block:
+					if cond.Value < 0 {
+						return MakeBuiltinError(ps, "Replication count must be non-negative.", "replicate\\idx")
+					}
 					// Pre-resolve builtins in the block for faster execution
 					resolveBuiltinsInBlock(ps, &bloc)
 					results := make([]env.Object, 0, cond.Value)
@@ -293,8 +303,9 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Returns:
 	// * result of the last block execution before the condition became false
 	"produce\\while": {
-		Argsn: 3,
-		Doc:   "Executes a block of code repeatedly while a condition is true, passing the result of each execution to the next iteration.",
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Executes a block of code repeatedly while a condition is true, passing the result of each execution to the next iteration.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
 			case env.Block:
@@ -352,8 +363,9 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Returns:
 	// * final value of the accumulator word after all iterations
 	"produce\\": {
-		Argsn: 4,
-		Doc:   "Executes a block of code a specified number of times, updating an accumulator word with each iteration result.",
+		Effect: env.EffIO,
+		Argsn:  4,
+		Doc:    "Executes a block of code a specified number of times, updating an accumulator word with each iteration result.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
 			case env.Integer:
@@ -400,8 +412,9 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Returns:
 	// * result of the block when .return is called
 	"forever": { // **
-		Argsn: 1,
-		Doc:   "Executes a block of code repeatedly until .return is called within the block.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Executes a block of code repeatedly until .return is called within the block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -450,8 +463,9 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Returns:
 	// * result of the block when .return is called
 	"forever\\with": { // **
-		Argsn: 2,
-		Doc:   "Accepts a value and a block, and executes the block repeatedly with the value until .return is called.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Accepts a value and a block, and executes the block repeatedly with the value until .return is called.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg1.(type) {
 			case env.Block:
@@ -583,8 +597,9 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Returns:
 	// * result of the last code execution
 	"for": { // **
-		Argsn: 2,
-		Doc:   "Accepts a block of values and a block of code, builtin, or function, does the code for each of the values, injecting them.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Accepts a block of values and a block of code, builtin, or function, does the code for each of the values, injecting them.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
 			case env.Collection:
@@ -640,10 +655,11 @@ var builtins_iteration = map[string]*env.Builtin{
 	// * code: Block of code to execute for each value
 	// Returns:
 	// * result of the last block execution
-	"for\\pos": { // *TODO -- deduplicate map\pos and map\idx
-		Argsn: 3,
-		Doc:   "Iterates over a collection with position tracking (1-based), setting a word to the current position and injecting each value.",
-		Pure:  true,
+	"for\\pos": {
+		Effect: env.EffIO, // *TODO -- deduplicate map\pos and map\idx
+		Argsn:  3,
+		Doc:    "Iterates over a collection with position tracking (1-based), setting a word to the current position and injecting each value.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch list := arg0.(type) {
 			case env.Collection:
@@ -691,10 +707,11 @@ var builtins_iteration = map[string]*env.Builtin{
 	// * code: Block of code to execute for each value
 	// Returns:
 	// * result of the last block execution
-	"for\\idx": { // *TODO -- deduplicate map\pos and map\idx
-		Argsn: 3,
-		Doc:   "Iterates over a collection with index tracking (0-based), setting a word to the current index and injecting each value.",
-		Pure:  true,
+	"for\\idx": {
+		Effect: env.EffIO, // *TODO -- deduplicate map\pos and map\idx
+		Argsn:  3,
+		Doc:    "Iterates over a collection with index tracking (0-based), setting a word to the current index and injecting each value.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch list := arg0.(type) {
 			case env.Collection:
@@ -743,8 +760,9 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Returns:
 	// * result of the last block execution
 	"walk": { // **
-		Argsn: 2,
-		Doc:   "Walks through a block, executing code that can modify the block on each iteration (useful for custom iteration patterns).",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Walks through a block, executing code that can modify the block on each iteration (useful for custom iteration patterns).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
 			case env.Block:
@@ -790,8 +808,9 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Returns:
 	// * result of the last block execution
 	"walk\\pos": { // **
-		Argsn: 3,
-		Doc:   "Walks through a block with position tracking (1-based), setting a word to the current position and executing code that can modify the block.",
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Walks through a block with position tracking (1-based), setting a word to the current position and executing code that can modify the block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
 			case env.Block:
@@ -848,8 +867,9 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Returns:
 	// * result of the last block execution
 	"walk\\idx": { // **
-		Argsn: 3,
-		Doc:   "Walks through a block with index tracking (0-based), setting a word to the current index and executing code that can modify the block.",
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Walks through a block with index tracking (0-based), setting a word to the current index and executing code that can modify the block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
 			case env.Block:
@@ -911,9 +931,10 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Returns:
 	// * modified series with matching values removed
 	"purge": { // TODO ... doesn't fully work
-		Argsn: 2,
-		Doc:   "Purges values from a series based on return of a injected code block.",
-		Pure:  false,
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Purges values from a series based on return of a injected code block.",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
 			case env.Block:
@@ -1031,9 +1052,10 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Returns:
 	// * Block containing the purged values
 	"purge!": { // TODO ... doesn't fully work
-		Argsn: 2,
-		Doc:   "Purges values from a block stored in a word (modifying it in-place), returning the purged values.",
-		Pure:  false,
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Purges values from a block stored in a word (modifying it in-place), returning the purged values.",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch wrd := arg1.(type) {
 			case env.Word:
@@ -1102,9 +1124,10 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Returns:
 	// * a Block or List with the mapped values.
 	"map": { // **
-		Argsn: 2,
-		Doc:   "Maps values of a block to a new block by evaluating a block of code or function.",
-		Pure:  true,
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Maps values of a block to a new block by evaluating a block of code or function.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch list := arg0.(type) {
 			case env.Collection:
@@ -1172,7 +1195,8 @@ var builtins_iteration = map[string]*env.Builtin{
 	//
 	// Returns:
 	// * a Block or List with the mapped values.
-	"map\\pos": { // *TODO -- deduplicate map\pos and map\idx
+	"map\\pos": {
+		Effect: env.EffIO, // *TODO -- deduplicate map\pos and map\idx
 		// TODO --- test { + i } didn't produce / report a valid error, find out why
 		Argsn: 3,
 		Doc:   "Maps values of a block to a new block by evaluating a block of code.",
@@ -1232,10 +1256,11 @@ var builtins_iteration = map[string]*env.Builtin{
 	//
 	// Returns:
 	// * a Block or List with the mapped values.
-	"map\\idx": { // TODO -- deduplicate map\idx and map\idx
-		Argsn: 3,
-		Doc:   "Maps values of a block to a new block by evaluating a block of code.",
-		Pure:  true,
+	"map\\idx": {
+		Effect: env.EffIO, // TODO -- deduplicate map\idx and map\idx
+		Argsn:  3,
+		Doc:    "Maps values of a block to a new block by evaluating a block of code.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch list := arg0.(type) {
 			case env.Collection:
@@ -1291,9 +1316,10 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Returns:
 	// * final accumulated value
 	"reduce": { // **
-		Argsn: 3,
-		Doc:   "Reduces values of a block to a single value by evaluating a block of code, using the first element as the initial accumulator.",
-		Pure:  true,
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Reduces values of a block to a single value by evaluating a block of code, using the first element as the initial accumulator.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch list := arg0.(type) {
 			case env.Collection:
@@ -1359,9 +1385,10 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Returns:
 	// * the final accumulator value.
 	"fold\\do": { // **
-		Argsn: 4,
-		Doc:   "Reduces values of a block to a new block by evaluating a block of code ...",
-		Pure:  true,
+		Effect: env.EffIO,
+		Argsn:  4,
+		Doc:    "Reduces values of a block to a new block by evaluating a block of code ...",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch list := arg0.(type) {
 			case env.Collection:
@@ -1420,9 +1447,10 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Returns:
 	// * the final accumulator value.
 	"fold": { // **
-		Argsn: 3,
-		Doc:   "Reduces values of a block to a new block by evaluating a block of code ...",
-		Pure:  true,
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Reduces values of a block to a new block by evaluating a block of code ...",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch list := arg0.(type) {
 			case env.Collection:
@@ -1559,9 +1587,10 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Returns:
 	// * collection of partitions (each partition contains consecutive elements with the same result)
 	"partition": { // **
-		Argsn: 2,
-		Doc:   "Partitions a series by evaluating a block of code, grouping consecutive elements that return the same result.",
-		Pure:  true,
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Partitions a series by evaluating a block of code, grouping consecutive elements that return the same result.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch list := arg0.(type) {
 			case env.String:
@@ -1697,9 +1726,10 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Returns:
 	// * Dict with string keys and List values containing grouped elements
 	"group": { // **
-		Argsn: 2,
-		Doc:   "Groups a block or list of values by a key generated from a code block (keys must be strings).",
-		Pure:  true,
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Groups a block or list of values by a key generated from a code block (keys must be strings).",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var ll []any
 			var lo []env.Object
@@ -1826,9 +1856,10 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Returns:
 	// * a collection of the same kind containing matching items.
 	"filter": { // **
-		Argsn: 2,
-		Doc:   "Filters values from a seris based on return of a injected code block.",
-		Pure:  true,
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Filters values from a seris based on return of a injected code block.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var ll []any
 			var lo []env.Object
@@ -1970,9 +2001,10 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Returns:
 	// * first value for which the code returns true, error if none found
 	"seek": { // **
-		Argsn: 2,
-		Doc:   "Seek over a series until a Block of code, Builtin, or Function returns True and return the value.",
-		Pure:  true,
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Seek over a series until a Block of code, Builtin, or Function returns True and return the value.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var ll []any
 			var lo []env.Object
@@ -2079,8 +2111,9 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Returns:
 	// * result of the last body execution
 	"while": {
-		Argsn: 2,
-		Doc:   "Executes a block of code repeatedly while a condition is true.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Executes a block of code repeatedly while a condition is true.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
 			case env.Block:
@@ -2152,8 +2185,9 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Returns:
 	// * result of the last body execution
 	"until": {
-		Argsn: 2,
-		Doc:   "Executes a block of code repeatedly until a condition becomes true. Executes the body at least once before checking condition (do-until loop).",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Executes a block of code repeatedly until a condition becomes true. Executes the body at least once before checking condition (do-until loop).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
 			case env.Block:
@@ -2219,8 +2253,9 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Returns:
 	// * result of the last block execution
 	"for\\": {
-		Argsn: 3,
-		Doc:   "Iterates over a collection, setting a word to each value. Works with lists, blocks, and strings.",
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Iterates over a collection, setting a word to each value. Works with lists, blocks, and strings.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch valueWord := arg1.(type) {
 			case env.Word:
@@ -2291,8 +2326,9 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Returns:
 	// * result of the last block execution
 	"for\\kv": {
-		Argsn: 4,
-		Doc:   "Iterates over a collection with separate key and value words. For dicts, uses actual keys and values. For other collections, uses indices as keys.",
+		Effect: env.EffIO,
+		Argsn:  4,
+		Doc:    "Iterates over a collection with separate key and value words. For dicts, uses actual keys and values. For other collections, uses indices as keys.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch keyWord := arg1.(type) {
 			case env.Word:

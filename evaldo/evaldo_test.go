@@ -4,6 +4,7 @@ package evaldo
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/loader"
@@ -313,7 +314,7 @@ func TestEvaldo_load_builtin_1_2_arg(t *testing.T) {
 }
 
 func TestEvaldo_load_builtin_1_2_arg_setwords(t *testing.T) {
-	input := "  sum: inc 1000 + inc inc 777 word: sum  sum + 10000  "
+	input := "  total: inc 1000 + inc inc 777 saved: total  total + 10000  "
 	block, genv := loader.LoadStringNoPEG(input, false)
 	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
@@ -330,10 +331,12 @@ func TestEvaldo_load_builtin_1_2_arg_setwords(t *testing.T) {
 }
 
 func TestEvaldo_load_builtin_loop(t *testing.T) {
-	input := "  sum: 1 loop 1000 { sum: sum + 1 } sum  "
+	input := "  loop 1000 { counter:: counter + 1 } counter  "
 	block, genv := loader.LoadStringNoPEG(input, false)
 	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
+	counterIdx, _ := es.Idx.GetIndex("counter")
+	es.Ctx.SetVar(counterIdx, *env.NewInteger(1))
 
 	Eval(es)
 
@@ -365,7 +368,7 @@ func DISABLE_TestEvaldo_curry_1(t *testing.T) {
 }
 
 func TestEvaldo_curry_2(t *testing.T) {
-	input := "  second: nth _ 2 , { 11 22 33 } .second  "
+	input := "  get-second: partial ?nth { _ 2 } , get-second { 11 22 33 }  "
 	block, genv := loader.LoadStringNoPEG(input, false)
 	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
@@ -398,15 +401,33 @@ func TestEvaldo_load_lsetword1(t *testing.T) {
 
 		Eval(es)
 
-		if es.Res.Type() != env.IntegerType {
-			t.Fatalf("Expected integer, got %T: %v", es.Res, es.Res)
+		if !es.ErrorFlag {
+			t.Fatalf("Expected an error when LSetword overwrites an existing constant, got %T: %v", es.Res, es.Res)
 		}
-
-		if es.Res.(env.Integer).Value != 30303 {
-			t.Error("Expected result value 30303")
+		if errObj, ok := es.Res.(*env.Error); !ok || !strings.Contains(errObj.Message, "constant") {
+			t.Fatalf("Expected constant-binding error, got %T: %v", es.Res, es.Res)
 		}
 	} else {
 		t.Error("Word not found in state")
+	}
+}
+
+func TestEvaldo_lsetword_modifies_variable(t *testing.T) {
+	input := " var 'lword 0 30303 ::lword 10101 lword "
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
+	RegisterBuiltins(es)
+
+	Eval(es)
+
+	if es.ErrorFlag || es.FailureFlag {
+		t.Fatalf("Expected successful evaluation, got %T: %v", es.Res, es.Res)
+	}
+	if es.Res.Type() != env.IntegerType {
+		t.Fatalf("Expected integer, got %T: %v", es.Res, es.Res)
+	}
+	if es.Res.(env.Integer).Value != 30303 {
+		t.Errorf("Expected result value 30303, got %d", es.Res.(env.Integer).Value)
 	}
 }
 

@@ -589,6 +589,7 @@ func (e *RyeCtx) Set(word int, val Object) Object {
 		return *NewError("Can't set already set word, try using modword! FIXME !")
 	} else {
 		e.state[word] = val
+		delete(e.varFlags, word)
 		return val
 	}
 }
@@ -607,6 +608,7 @@ func (e *RyeCtx) Unset(word int, idxs *Idxs) Object {
 		return *NewError("Can't unset non-existing word " + idxs.GetWord(word) + " in this context")
 	} else {
 		delete(e.state, word)
+		delete(e.varFlags, word)
 		return NewInteger(1)
 	}
 }
@@ -616,6 +618,7 @@ func (e *RyeCtx) SetNew(word int, val Object, idxs *Idxs) bool {
 		return false
 	} else {
 		e.state[word] = val
+		delete(e.varFlags, word)
 		return true
 	}
 }
@@ -627,14 +630,18 @@ func (e *RyeCtx) MarkAsVariable(word int) {
 
 // Check if a word is a variable
 func (e *RyeCtx) IsVariable(word int) bool {
+	// A local binding shadows the parent's mutability as well as its value.
+	if _, exists := e.state[word]; exists {
+		return e.varFlags[word]
+	}
 	// Fast path: check current context first
 	if isVar, exists := e.varFlags[word]; exists && isVar {
 		return true
 	}
 	// Walk parent chain without recursion
 	for ctx := e.Parent; ctx != nil; ctx = ctx.Parent {
-		if isVar, exists := ctx.varFlags[word]; exists && isVar {
-			return true
+		if _, exists := ctx.state[word]; exists {
+			return ctx.varFlags[word]
 		}
 	}
 	// Not a variable in this context or any parent
@@ -660,7 +667,7 @@ func (e *RyeCtx) Mod(word int, val Object) bool {
 func (e *RyeCtx) ModWithInfo(word int, val Object) (ModResult, Type) {
 	if _, exists := e.state[word]; exists {
 		// Word exists, check if it's a variable
-		if !e.IsVariable(word) {
+		if !e.varFlags[word] {
 			// Cannot modify constants
 			return ModErrConstant, 0
 		}

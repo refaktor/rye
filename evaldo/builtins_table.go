@@ -56,8 +56,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * new Table built from the column names and row values.
 	"table": {
-		Argsn: 2,
-		Doc:   "Creates a table by accepting block of column names and flat block of values",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates a table by accepting block of column names and flat block of values",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch header1 := arg0.(type) {
 			case env.Block:
@@ -118,8 +119,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * new Table built from the provided columns.
 	"table\\columns": {
-		Argsn: 2,
-		Doc:   "Creats a table by accepting a block of columns",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creats a table by accepting a block of columns",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			return SheetFromColumns(ps, arg0, arg1)
 		},
@@ -134,8 +136,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * new Table built from the provided rows.
 	"table\\rows": {
-		Argsn: 2,
-		Doc:   "Creates a table by accepting a block or list of rows",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates a table by accepting a block or list of rows",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			cols, err := ColNames(ps, arg0, "table\\rows	")
 			if err != nil {
@@ -177,8 +180,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * Table built from the block or list of dicts.
 	"to-table": {
-		Argsn: 1,
-		Doc:   "Creates a table by accepting block or list of dicts",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a table by accepting block or list of dicts",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			switch block := arg0.(type) {
 			case env.Block:
@@ -286,8 +290,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	//  * a dict mapping each value in the first column (as string key) to the corresponding value in the second column
 	"to-dict": {
-		Argsn: 1,
-		Doc:   "Creates a dict from a two-column table, using the first column as keys and the second column as values.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a dict from a two-column table, using the first column as keys and the second column as values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var spr *env.Table
 			switch s := arg0.(type) {
@@ -338,8 +343,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * new Table containing rows whose column equals the value.
 	"where-equal": {
-		Argsn: 3,
-		Doc:   "Returns table of rows where specific colum is equal to given value.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Returns table of rows where specific colum is equal to given value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var spr *env.Table
 			switch s := arg0.(type) {
@@ -370,8 +376,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * new Table containing rows whose column does not equal the value.
 	"where-not-equal": {
-		Argsn: 3,
-		Doc:   "Returns table of rows where specific colum is not equal to given value.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Returns table of rows where specific colum is not equal to given value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var spr *env.Table
 			switch s := arg0.(type) {
@@ -406,8 +413,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * new Table containing rows where the column is void.
 	"where-void": {
-		Argsn: 2,
-		Doc:   "Returns table of rows where specific colum is void.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Returns table of rows where specific colum is void.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var spr *env.Table
 			switch s := arg0.(type) {
@@ -442,8 +450,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * new Table containing rows whose column matches the regular expression.
 	"where-match": {
-		Argsn: 3,
-		Doc:   "Returns table of rows where a specific colum matches a regex.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Returns table of rows where a specific colum matches a regex.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			var spr *env.Table
 			switch sheet := arg0.(type) {
@@ -487,8 +496,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * new Table containing rows whose column contains the substring.
 	"where-contains": {
-		Argsn: 3,
-		Doc:   "Returns table of rows where specific colum contains a given string value.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Returns table of rows where specific colum contains a given string value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			var spr *env.Table
 			switch sheet := arg0.(type) {
@@ -528,8 +538,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * new Table containing rows whose column does not contain the substring.
 	"where-not-contains": {
-		Argsn: 3,
-		Doc:   "Returns table of rows where specific colum does not contain a given string value.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Returns table of rows where specific colum does not contain a given string value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			var spr *env.Table
 			switch sheet := arg0.(type) {
@@ -568,8 +579,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * new Table containing rows whose column is greater than the value.
 	"where-greater": {
-		Argsn: 3,
-		Doc:   "Returns table of rows where specific colum is greater than given value.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Returns table of rows where specific colum is greater than given value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var spr *env.Table
 			switch sheet := arg0.(type) {
@@ -603,8 +615,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * new Table containing rows whose column is less than the value.
 	"where-lesser": {
-		Argsn: 3,
-		Doc:   "Returns table of rows where specific colum is lesser than given value.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Returns table of rows where specific colum is lesser than given value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var spr *env.Table
 			switch sheet := arg0.(type) {
@@ -641,8 +654,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * new Table containing rows whose column is between the limits (exclusive).
 	"where-between": {
-		Argsn: 4,
-		Doc:   "Returns table of rows where specific colum is between given values.",
+		Effect: env.EffNone,
+		Argsn:  4,
+		Doc:    "Returns table of rows where specific colum is between given values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			var spr *env.Table
 			switch sheet := arg0.(type) {
@@ -677,8 +691,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * new Table containing rows whose column is within the inclusive limits.
 	"where-between\\inclusive": {
-		Argsn: 4,
-		Doc:   "Returns table of rows where specific colum is between given values (inclusive).",
+		Effect: env.EffNone,
+		Argsn:  4,
+		Doc:    "Returns table of rows where specific colum is between given values (inclusive).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			var spr *env.Table
 			switch sheet := arg0.(type) {
@@ -715,8 +730,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * new Table containing rows whose column value is in the provided block.
 	"where-in": {
-		Argsn: 3,
-		Doc:   "Returns table of rows where specific colum value is found in block of values.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Returns table of rows where specific colum value is found in block of values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			var spr *env.Table
 			switch s := arg0.(type) {
@@ -758,8 +774,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * new Table containing rows whose column value is not in the provided block.
 	"where-not-in": {
-		Argsn: 3,
-		Doc:   "Returns table of rows where specific colum value is not found in block of values.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Returns table of rows where specific colum value is not found in block of values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			var spr *env.Table
 			switch s := arg0.(type) {
@@ -806,8 +823,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * new Table containing rows for which the block returns a truthy value.
 	"where": {
-		Argsn: 3,
-		Doc:   "Returns table of rows where code block evaluates to true for the column value.",
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Returns table of rows where code block evaluates to true for the column value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var spr *env.Table
 			switch table := arg0.(type) {
@@ -871,8 +889,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * new Table with duplicate rows removed.
 	"distinct": {
-		Argsn: 2,
-		Doc:   "Returns table with duplicate rows removed based on specified column(s).",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Returns table with duplicate rows removed based on specified column(s).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var spr *env.Table
 			switch s := arg0.(type) {
@@ -923,8 +942,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * new Table with void cells replaced in the specified column.
 	"fill-void": {
-		Argsn: 3,
-		Doc:   "Returns table with void values in specified column replaced with given value.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Returns table with void values in specified column replaced with given value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var spr *env.Table
 			switch s := arg0.(type) {
@@ -963,8 +983,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * Integer count of matching rows.
 	"count-where": {
-		Argsn: 3,
-		Doc:   "Returns count of rows where code block evaluates to true for the column value.",
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Returns count of rows where code block evaluates to true for the column value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var spr *env.Table
 			switch table := arg0.(type) {
@@ -1027,8 +1048,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * new Table with the row appended.
 	"add-row": {
-		Argsn: 2,
-		Doc:   "Returns a table with new-row added to it",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Returns a table with new-row added to it",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch table := arg0.(type) {
 			case env.Table:
@@ -1065,8 +1087,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * native rows value that can be passed to add-rows or add-rows!.
 	"get-rows": {
-		Argsn: 1,
-		Doc:   "Get rows as a native. This value can be used in `add-rows` and `add-rows!`",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Get rows as a native. This value can be used in `add-rows` and `add-rows!`",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Table:
@@ -1099,8 +1122,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * new Table with the rows appended.
 	"add-rows": {
-		Argsn: 2,
-		Doc:   "Add one or more rows to a table",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Add one or more rows to a table",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Table:
@@ -1118,12 +1142,12 @@ var Builtins_table = map[string]*env.Builtin{
 					return spr
 				case env.List:
 					data := data1.Data
-					for item := range data {
-						rowd := make([]any, len(spr.Cols))
-						for ii := 0; ii < len(spr.Cols); ii++ {
-							k1 := item
-							rowd[ii] = k1
+					for pos := 0; pos < len(data); pos += len(spr.Cols) {
+						if len(data)-pos < len(spr.Cols) {
+							return MakeBuiltinError(ps, "List does not contain a whole number of rows.", "add-rows")
 						}
+						rowd := make([]any, len(spr.Cols))
+						copy(rowd, data[pos:pos+len(spr.Cols)])
 						spr.AddRow(*env.NewTableRow(rowd, &spr))
 					}
 					return spr
@@ -1131,8 +1155,7 @@ var Builtins_table = map[string]*env.Builtin{
 					spr.Rows = append(spr.Rows, data1.Value.([]env.TableRow)...)
 					return spr
 				default:
-					fmt.Println(data1.Inspect(*ps.Idx))
-					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.NativeType}, "add-rows")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.ListType, env.NativeType}, "add-rows")
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.TableType}, "add-rows")
@@ -1155,8 +1178,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * the updated table.
 	"add-rows!": {
-		Argsn: 2,
-		Doc:   "Add one or more rows to a table ref",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Add one or more rows to a table ref",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case *env.Table:
@@ -1223,8 +1247,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * the updated table reference.
 	"update-row!": {
-		Argsn: 3, // Table, index function/dict
-		Doc:   `Update the row at the given index.`,
+		Effect: env.EffIO,
+		Argsn:  3, // Table, index function/dict
+		Doc:    `Update the row at the given index.`,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case *env.Table:
@@ -1289,8 +1314,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * the updated table reference.
 	"remove-row!": {
-		Argsn: 2,
-		Doc:   "Remove a row from a table by index",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Remove a row from a table by index",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case *env.Table:
@@ -1327,8 +1353,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * new Table containing only the selected columns.
 	"columns?": {
-		Argsn: 2,
-		Doc:   "Returns table with just given columns. Use lsetwords (:newName) to rename the previous column.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Returns table with just given columns. Use lsetwords (:newName) to rename the previous column.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Table:
@@ -1379,8 +1406,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * Block of column names.
 	"header?": {
-		Argsn: 1,
-		Doc:   "Gets the column names (header) as block.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the column names (header) as block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case *env.Table:
@@ -1406,8 +1434,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * Block of values from the requested column.
 	"column?": {
-		Argsn: 2,
-		Doc:   "Gets all values of a column as a block.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Gets all values of a column as a block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			switch spr := arg0.(type) {
 			case env.Table:
@@ -1466,8 +1495,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * new Table without the dropped column(s).
 	"drop-column": {
-		Argsn: 2,
-		Doc:   "Remove a column from a table. Returns new table",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Remove a column from a table. Returns new table",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Table:
@@ -1496,8 +1526,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * the updated table reference.
 	"rename-column!": {
-		Argsn: 3,
-		Doc:   "Remove a column from a table. Returns new table",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Remove a column from a table. Returns new table",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case *env.Table:
@@ -1537,8 +1568,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * the updated table.
 	"gen-column": {
-		Argsn: 4,
-		Doc:   "Adds a new column to table. Changes in-place and returns the new table.",
+		Effect: env.EffIO,
+		Argsn:  4,
+		Doc:    "Adds a new column to table. Changes in-place and returns the new table.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Table:
@@ -1605,8 +1637,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * the updated table reference.
 	"update-column!": {
-		Argsn: 3,
-		Doc:   "Updates all cells in a column by applying a function that receives the cell value and the row.",
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Updates all cells in a column by applying a function that receives the cell value and the row.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case *env.Table:
@@ -1656,8 +1689,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * the updated table.
 	"add-column": {
-		Argsn: 3,
-		Doc:   "Adds a new column to table with the given data. Returns the modified table.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Adds a new column to table with the given data. Returns the modified table.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Table:
@@ -1725,8 +1759,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * the updated table.
 	"order-by!": {
-		Argsn: 3,
-		Doc:   "Sorts row by given column, changes table in place.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Sorts row by given column, changes table in place.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			dir, ok := arg2.(env.Word)
 			if !ok {
@@ -1780,8 +1815,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * new sorted Table.
 	"order-by": {
-		Argsn: 3,
-		Doc:   "Sorts row by given column, changes table in place.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Sorts row by given column, changes table in place.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			dir, ok := arg2.(env.Word)
 			if !ok {
@@ -1835,8 +1871,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * the updated table.
 	"add-indexes!": {
-		Argsn: 2,
-		Doc:   "Creates an index for all values in the provided columns. Changes in-place and returns the new table.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates an index for all values in the provided columns. Changes in-place and returns the new table.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Table:
@@ -1873,8 +1910,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * Block of indexed column names.
 	"indexes?": {
-		Argsn: 1,
-		Doc:   "Returns the columns that are indexed in a table.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the columns that are indexed in a table.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			switch spr := arg0.(type) {
 			case env.Table:
@@ -1898,8 +1936,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * the updated table with inferred column types.
 	"autotype": {
-		Argsn: 2,
-		Doc:   "Takes a table and tries to determine and change the types of columns.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Takes a table and tries to determine and change the types of columns.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			switch spr := arg0.(type) {
 			case env.Table:
@@ -1940,8 +1979,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * new joined Table including all left-table rows.
 	"left-join": {
-		Argsn: 4,
-		Doc:   "Left joins two tables on the given columns.",
+		Effect: env.EffNone,
+		Argsn:  4,
+		Doc:    "Left joins two tables on the given columns.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			switch spr1 := arg0.(type) {
 			case env.Table:
@@ -1998,8 +2038,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * new joined Table containing only matching rows.
 	"inner-join": {
-		Argsn: 4,
-		Doc:   "Inner joins two tables on the given columns.",
+		Effect: env.EffNone,
+		Argsn:  4,
+		Doc:    "Inner joins two tables on the given columns.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			switch spr1 := arg0.(type) {
 			case env.Table:
@@ -2086,8 +2127,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * new Table with one row per group and the requested aggregations.
 	"group-by": {
-		Argsn: 3,
-		Doc:   "Groups a table by the given column(s) and (optional) aggregations.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Groups a table by the given column(s) and (optional) aggregations.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			switch spr := arg0.(type) {
 			case env.Table:
@@ -2155,8 +2197,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * the cell at row 1, column 1.
 	"A1": {
-		Argsn: 1,
-		Doc:   "Accepts a Table and returns the first row first column cell.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Accepts a Table and returns the first row first column cell.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s0 := arg0.(type) {
 			case env.Table:
@@ -2179,8 +2222,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * the cell at row 1, column 2.
 	"B1": {
-		Argsn: 1,
-		Doc:   "Accepts a Table and returns the first row second column cell.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Accepts a Table and returns the first row second column cell.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s0 := arg0.(type) {
 			case env.Table:
@@ -2203,8 +2247,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * the cell at row 2, column 1.
 	"A2": {
-		Argsn: 1,
-		Doc:   "Accepts a Table and returns the second row first column cell.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Accepts a Table and returns the second row first column cell.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s0 := arg0.(type) {
 			case env.Table:
@@ -2225,8 +2270,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * the cell at row 2, column 2.
 	"B2": {
-		Argsn: 1,
-		Doc:   "Accepts a Table and returns the second row second column cell.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Accepts a Table and returns the second row second column cell.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s0 := arg0.(type) {
 			case env.Table:
@@ -2264,6 +2310,7 @@ var Builtins_table = map[string]*env.Builtin{
 	// Tests:
 	// equal { table { 'a } { 1 2 3 } |col-sum "a" } 6
 	"col-sum": {
+		Effect: env.EffNone,
 		Argsn: 2,
 		Doc:   "Accepts a table and a column name and returns a sum of a column.", // TODO -- let it accept a block and list also
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2295,6 +2342,7 @@ var Builtins_table = map[string]*env.Builtin{
 	// Tests:
 	// equal { table { 'a } { 1 2 3 } |col-avg 'a } 2.0
 	"col-avg": {
+		Effect: env.EffNone,
 		Argsn: 2,
 		Doc:   "Accepts a table and a column name and returns a sum of a column.", // TODO -- let it accept a block and list also
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2339,8 +2387,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * persistent table object.
 	"persistent-table": {
-		Argsn: 3,
-		Doc:   "Creates a persistent table using BadgerDB for storage",
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Creates a persistent table using BadgerDB for storage",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			cols, err := ColNames(ps, arg0, "persistent-table")
 			if err != nil {
@@ -2373,8 +2422,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * the closed persistent table.
 	"close-persistent-table!": {
-		Argsn: 1,
-		Doc:   "Closes the BadgerDB connection for a persistent table",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Closes the BadgerDB connection for a persistent table",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch pt := arg0.(type) {
 			case *env.PersistentTable:
@@ -2398,8 +2448,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * Table parsed from the CSV string.
 	"parse\\csv": {
-		Argsn: 1,
-		Doc:   "Parses a CSV string to a table datatype.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Parses a CSV string to a table datatype.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch csvData := arg0.(type) {
 			case env.String:
@@ -2438,8 +2489,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * Table parsed from the CSV string using the separator.
 	"parse\\csv\\separator": {
-		Argsn: 2,
-		Doc:   "Parses a CSV string to a table datatype with a custom separator character.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Parses a CSV string to a table datatype with a custom separator character.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch csvData := arg0.(type) {
 			case env.String:
@@ -2486,8 +2538,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * Table parsed from the TSV string.
 	"parse\\tsv": {
-		Argsn: 1,
-		Doc:   "Parses a TSV (tab-separated values) string to a table datatype.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Parses a TSV (tab-separated values) string to a table datatype.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch tsvData := arg0.(type) {
 			case env.String:
@@ -2526,8 +2579,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * CSV string representation of the table.
 	"format\\csv": {
-		Argsn: 1,
-		Doc:   "Converts a table to a CSV string.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Converts a table to a CSV string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Table:
@@ -2588,8 +2642,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * TSV string representation of the table.
 	"format\\tsv": {
-		Argsn: 1,
-		Doc:   "Converts a table to a TSV string.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Converts a table to a TSV string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Table:
@@ -2652,8 +2707,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * Table containing the first sheet of the XLSX data.
 	"parse\\xlsx": {
-		Argsn: 1,
-		Doc:   "Parses an xlsx binary string or bytes into a table (first sheet). Cells starting with \"{\" are loaded as Rye code.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Parses an xlsx binary string or bytes into a table (first sheet). Cells starting with \"{\" are loaded as Rye code.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var data []byte
 
@@ -2740,8 +2796,9 @@ var Builtins_table = map[string]*env.Builtin{
 	// Returns:
 	// * XLSX bytes native value.
 	"format\\xlsx": {
-		Argsn: 1,
-		Doc:   "Converts a table to an XLSX as bytes native value. Block cells are serialized with their Rye dump.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Converts a table to an XLSX as bytes native value. Block cells are serialized with their Rye dump.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Table:

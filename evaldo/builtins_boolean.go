@@ -17,9 +17,10 @@ var builtins_boolean = map[string]*env.Builtin{
 	// Returns:
 	// * boolean true value
 	"true": {
-		Argsn: 0,
-		Doc:   "Returns a boolean true value.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns a boolean true value.",
+		Pure:   true,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewBoolean(true)
 		},
@@ -33,9 +34,10 @@ var builtins_boolean = map[string]*env.Builtin{
 	// Returns:
 	// * boolean false value
 	"false": {
-		Argsn: 0,
-		Doc:   "Returns a boolean false value.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns a boolean false value.",
+		Pure:   true,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewBoolean(false)
 		},
@@ -51,9 +53,10 @@ var builtins_boolean = map[string]*env.Builtin{
 	// Returns:
 	// * boolean false if the input is true, true if the input is false
 	"not": {
-		Argsn: 1,
-		Doc:   "Performs logical negation on boolean values only.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Performs logical negation on boolean values only.",
+		Pure:   true,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch b := arg0.(type) {
 			case env.Boolean:
@@ -81,9 +84,10 @@ var builtins_boolean = map[string]*env.Builtin{
 	// Returns:
 	// * boolean result of logical AND if both inputs are booleans, or element-wise bitwise AND of two equal-length bytes values
 	"and": {
-		Argsn: 2,
-		Doc:   "Performs a logical AND operation between two boolean values, or an element-wise bitwise AND operation between two equal-length bytes values.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Performs a logical AND operation between two boolean values, or an element-wise bitwise AND operation between two equal-length bytes values.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Boolean:
@@ -130,9 +134,10 @@ var builtins_boolean = map[string]*env.Builtin{
 	// Returns:
 	// * boolean result of logical OR if both inputs are booleans, or element-wise bitwise OR of two equal-length bytes values
 	"or": {
-		Argsn: 2,
-		Doc:   "Performs a logical OR operation between two boolean values, or an element-wise bitwise OR operation between two equal-length bytes values.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Performs a logical OR operation between two boolean values, or an element-wise bitwise OR operation between two equal-length bytes values.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Boolean:
@@ -179,9 +184,10 @@ var builtins_boolean = map[string]*env.Builtin{
 	// Returns:
 	// * boolean result of logical XOR if both inputs are booleans, or element-wise bitwise XOR of two equal-length bytes values
 	"xor": {
-		Argsn: 2,
-		Doc:   "Performs a logical XOR (exclusive OR) operation between two boolean values, or an element-wise bitwise XOR operation between two equal-length bytes values.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Performs a logical XOR (exclusive OR) operation between two boolean values, or an element-wise bitwise XOR operation between two equal-length bytes values.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Boolean:
@@ -223,8 +229,9 @@ var builtins_boolean = map[string]*env.Builtin{
 	// Returns:
 	// * the last value if all expressions are truthy, otherwise the first falsy value encountered
 	"all": { // **
-		Argsn: 1,
-		Doc:   "Evaluates all expressions in a block and returns the last value if all are truthy, or the first falsy value encountered.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Evaluates all expressions in a block and returns the last value if all are truthy, or the first falsy value encountered.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -257,8 +264,9 @@ var builtins_boolean = map[string]*env.Builtin{
 	// Returns:
 	// * the first truthy value encountered, or the last value if none are truthy
 	"any": { // **
-		Argsn: 1,
-		Doc:   "Evaluates expressions in a block until a truthy value is found and returns it, or returns the last value if none are truthy.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Evaluates expressions in a block until a truthy value is found and returns it, or returns the last value if none are truthy.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -292,8 +300,9 @@ var builtins_boolean = map[string]*env.Builtin{
 	// Returns:
 	// * the first truthy result of applying an expression to the value, or the last result if none are truthy
 	"any\\with": {
-		Argsn: 2,
-		Doc:   "Evaluates expressions in a block with the provided value injected, returning the first truthy result or the last result if none are truthy. Commas between expressions are supported.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Evaluates expressions in a block with the provided value injected, returning the first truthy result or the last result if none are truthy. Commas between expressions are supported.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg1.(type) {
 			case env.Block:

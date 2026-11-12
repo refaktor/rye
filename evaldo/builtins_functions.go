@@ -19,9 +19,10 @@ var builtins_functions = map[string]*env.Builtin{
 	// Returns:
 	// * The initial value
 	"var": {
-		Argsn: 2,
-		Doc:   "Declares a word as a variable with the given value, allowing it to be modified. Returns the word for use with on-change.",
-		Pure:  false,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Declares a word as a variable with the given value, allowing it to be modified. Returns the word for use with on-change.",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch word := arg0.(type) {
 			case env.Tagword:
@@ -67,9 +68,10 @@ var builtins_functions = map[string]*env.Builtin{
 	// Returns:
 	// * function object with no parameters
 	"does": { // **
-		Argsn: 1,
-		Doc:   "Creates a function with no arguments that executes the given block when called.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a function with no arguments that executes the given block when called.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch body := arg0.(type) {
 			case env.Block:
@@ -94,9 +96,10 @@ var builtins_functions = map[string]*env.Builtin{
 	// Returns:
 	// * function object that accepts one anonymous argument
 	"fn1": { // **
-		Argsn: 1,
-		Doc:   "Creates a function that accepts one anonymous argument and executes the given block with that argument.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a function that accepts one anonymous argument and executes the given block with that argument.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch body := arg0.(type) {
 			case env.Block:
@@ -123,9 +126,10 @@ var builtins_functions = map[string]*env.Builtin{
 	// Returns:
 	// * function object with the specified parameters
 	"fn": {
-		Argsn: 2,
-		Doc:   "Creates a function with named parameters specified in the first block and code in the second block.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates a function with named parameters specified in the first block and code in the second block.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch args := arg0.(type) {
 			case env.Block:
@@ -156,9 +160,10 @@ var builtins_functions = map[string]*env.Builtin{
 	// Returns:
 	// * function object whose free words resolve dynamically through the caller's context
 	"fn\\dyn": {
-		Argsn: 2,
-		Doc:   "Creates a function whose free words resolve through the caller's context (dynamic scoping).",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates a function whose free words resolve through the caller's context (dynamic scoping).",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch args := arg0.(type) {
 			case env.Block:
@@ -188,9 +193,10 @@ var builtins_functions = map[string]*env.Builtin{
 	// Returns:
 	// * Block containing the function's parameter specification
 	"fn\\spec?": {
-		Argsn: 1,
-		Doc:   "Returns the argument specification block of a function.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the argument specification block of a function.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch fn := arg0.(type) {
 			case env.Function:
@@ -209,9 +215,10 @@ var builtins_functions = map[string]*env.Builtin{
 	// Returns:
 	// * Block containing the function's body code
 	"fn\\body?": {
-		Argsn: 1,
-		Doc:   "Returns the body block of a function.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the body block of a function.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch fn := arg0.(type) {
 			case env.Function:
@@ -233,9 +240,10 @@ var builtins_functions = map[string]*env.Builtin{
 	// Returns:
 	// * pure function object with the specified parameters
 	"pfn": {
-		Argsn: 2,
-		Doc:   "Creates a pure function (no side effects allowed) with named parameters and code body.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates a pure function (no side effects allowed) with named parameters and code body.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch args := arg0.(type) {
 			case env.Block:
@@ -300,6 +308,7 @@ var builtins_functions = map[string]*env.Builtin{
 	// Returns:
 	// * function object with the current context captured
 	"fn\\cc": {
+		Effect: env.EffNone,
 		// a function with context	 bb: 10 add10 [ a ] context [ b: bb ] [ add a b ]
 		// 							add10 [ a ] this [ add a b ]
 		// later maybe			   add10 [ a ] [ b: b ] [ add a b ]
@@ -337,6 +346,7 @@ var builtins_functions = map[string]*env.Builtin{
 	// Returns:
 	// * function object with the specified parent context
 	"fn\\in": {
+		Effect: env.EffNone,
 		// a function with context	 bb: 10 add10 [ a ] context [ b: bb ] [ add a b ]
 		// 							add10 [ a ] this [ add a b ]
 		// later maybe			   add10 [ a ] [ b: b ] [ add a b ]
@@ -380,6 +390,7 @@ var builtins_functions = map[string]*env.Builtin{
 	// Returns:
 	// * function object that executes directly in the specified context
 	"fn\\inside": {
+		Effect: env.EffNone,
 		// a function with context	 bb: 10 add10 [ a ] context [ b: bb ] [ add a b ]
 		// 							add10 [ a ] this [ add a b ]
 		// later maybe			   add10 [ a ] [ b: b ] [ add a b ]
@@ -423,9 +434,10 @@ var builtins_functions = map[string]*env.Builtin{
 	// Returns:
 	// * function object that executes directly in the current context (captured at creation), with arguments as variables
 	"modder": {
-		Argsn: 2,
-		Doc:   "Creates a function that executes directly in the current context (like fn\\inside with current), allowing arguments and context words to be modified with word::.",
-		Pure:  false,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates a function that executes directly in the current context (like fn\\inside with current), allowing arguments and context words to be modified with word::.",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			ctx := ps.Ctx
 			// NewFunctionC preserves the context after argument validation.
@@ -459,6 +471,7 @@ var builtins_functions = map[string]*env.Builtin{
 	// Returns:
 	// * function object that captures the current context at creation time
 	"closure": {
+		Effect: env.EffNone,
 		// a function with context	 bb: 10 add10 [ a ] context [ b: bb ] [ add a b ]
 		// 							add10 [ a ] this [ add a b ]
 		// later maybe			   add10 [ a ] [ b: b ] [ add a b ]
@@ -503,9 +516,10 @@ var builtins_functions = map[string]*env.Builtin{
 	// Returns:
 	// * CurriedCaller object that can be called with the remaining arguments
 	"partial": {
-		Argsn: 2,
-		Doc:   "Creates a partially applied function with specified arguments, using _ (void) for arguments to be filled later.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates a partially applied function with specified arguments, using _ (void) for arguments to be filled later.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Check if first argument is a function or builtin
 			var callerType int
@@ -607,9 +621,10 @@ var builtins_functions = map[string]*env.Builtin{
 	// Returns:
 	// * The result of applying the function to the arguments
 	"apply": {
-		Argsn: 2,
-		Doc:   "Applies a function or builtin to a block of arguments.",
-		Pure:  false,
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Applies a function or builtin to a block of arguments.",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch fn := arg0.(type) {
 			case env.Function:
@@ -764,9 +779,10 @@ var builtins_functions = map[string]*env.Builtin{
 	// Returns:
 	// * The observer block
 	"on-change": {
-		Argsn: 2,
-		Doc:   "Registers an observer block to be executed when a variable changes. Use with 'var' result.",
-		Pure:  false,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Registers an observer block to be executed when a variable changes. Use with 'var' result.",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch word := arg0.(type) {
 			case env.Word:

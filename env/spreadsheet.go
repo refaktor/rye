@@ -88,7 +88,7 @@ func AddTableRowAndDict(row TableRow, dict Dict) TableRow {
 }
 
 func AddTableRowAndMap(row TableRow, dict map[string]any) TableRow {
-	newRow := TableRow{row.Values, row.Uplink}
+	newRow := TableRow{append([]any(nil), row.Values...), row.Uplink}
 
 	for i, v := range row.Uplink.GetColumnNames() {
 		if val, ok := dict[v]; ok {
@@ -216,7 +216,7 @@ func (s Table) Columns(ps *ProgramState, names []string) Object {
 	for _, row := range s.Rows {
 		row2 := make([]any, len(names))
 		for col := range idxs {
-			if len(row.Values) > col {
+			if len(row.Values) > idxs[col] {
 				//				row2[col] = row.Values[idxs[col]].(Object)
 				row2[col] = row.Values[idxs[col]]
 			}

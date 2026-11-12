@@ -19,8 +19,9 @@ var builtins_combinators = map[string]*env.Builtin{
 	// Returns:
 	// * The original value, regardless of what the block returns
 	"pass": { // **
-		Argsn: 2,
-		Doc:   "Accepts a value and a block. It does the block, with value injected, and returns (passes on) the initial value.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Accepts a value and a block. It does the block, with value injected, and returns (passes on) the initial value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg1.(type) {
 			case env.Block:
@@ -49,8 +50,9 @@ var builtins_combinators = map[string]*env.Builtin{
 	// Returns:
 	// * The result of the main block execution
 	"wrap": { // **
-		Argsn: 2,
-		Doc:   "Executes a wrapper block before and after executing a main block, returning the result of the main block.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Executes a wrapper block before and after executing a main block, returning the result of the main block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch wrap := arg0.(type) {
 			case env.Block:
@@ -101,8 +103,9 @@ var builtins_combinators = map[string]*env.Builtin{
 	// Returns:
 	// * The result of the first block, ignoring the result of the second block
 	"keep": { // **
-		Argsn: 3,
-		Doc:   "Do the first block, then the second one but return the result of the first one.",
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Do the first block, then the second one but return the result of the first one.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch b1 := arg1.(type) {
 			case env.Block:

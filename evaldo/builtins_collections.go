@@ -33,9 +33,10 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * a randomly selected value from the block
 	"random": {
-		Argsn: 1,
-		Doc:   "Selects a random value from a block of values.",
-		Pure:  true,
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Selects a random value from a block of values.",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Block:
@@ -62,9 +63,10 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * a new block or list with the same values in a randomized order
 	"randomize": {
-		Argsn: 1,
-		Doc:   "Returns a new block or list with the same values as the input but in a randomized (shuffled) order.",
-		Pure:  true,
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Returns a new block or list with the same values as the input but in a randomized (shuffled) order.",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Block:
@@ -110,8 +112,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * a flattened block or list with all inner blocks/lists unpacked
 	"unpack": {
-		Argsn: 1,
-		Doc:   "Flattens a block of blocks or list of lists by one level, combining all inner collections into a single collection.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Flattens a block of blocks or list of lists by one level, combining all inner collections into a single collection.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -158,9 +161,10 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * a new collection with randomly selected elements
 	"sample": {
-		Argsn: 2,
-		Doc:   "Randomly selects a specified number of elements from a collection without replacement.",
-		Pure:  true,
+		Effect: env.EffInput,
+		Argsn:  2,
+		Doc:    "Randomly selects a specified number of elements from a collection without replacement.",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			num, ok := arg1.(env.Integer)
 			if !ok {
@@ -210,8 +214,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * the maximum value in the collection
 	"max": { // **
-		Argsn: 1,
-		Doc:   "Finds the maximum value in a block or list of comparable values.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Finds the maximum value in a block or list of comparable values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch data := arg0.(type) {
 			case env.Block:
@@ -292,8 +297,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * the original value that produces the maximum result when transformed by the code block
 	"max\\by": {
-		Argsn: 2,
-		Doc:   "Finds the value in a collection that produces the maximum result when transformed by a code block. Returns the original value, not the transformed result.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Finds the value in a collection that produces the maximum result when transformed by a code block. Returns the original value, not the transformed result.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch data := arg0.(type) {
 			case env.Block:
@@ -391,8 +397,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * the minimum value in the collection
 	"min": { // **
-		Argsn: 1,
-		Doc:   "Finds the minimum value in a block or list of comparable values.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Finds the minimum value in a block or list of comparable values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch data := arg0.(type) {
 			case env.Block:
@@ -486,8 +493,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * the original value that produces the minimum result when transformed by the code block
 	"min\\by": {
-		Argsn: 2,
-		Doc:   "Finds the value in a collection that produces the minimum result when transformed by a code block. Returns the original value, not the transformed result.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Finds the value in a collection that produces the minimum result when transformed by a code block. Returns the original value, not the transformed result.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch data := arg0.(type) {
 			case env.Block:
@@ -587,8 +595,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * the arithmetic mean (average) of the values as a decimal
 	"avg": { // **
-		Argsn: 1,
-		Doc:   "Calculates the arithmetic mean (average) of numeric values in a collection.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Calculates the arithmetic mean (average) of numeric values in a collection.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sum float64
 			switch block := arg0.(type) {
@@ -653,8 +662,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * the average of all transformed results as a decimal
 	"avg\\by": {
-		Argsn: 2,
-		Doc:   "Calculates the average of the results of transforming each value in a collection by a code block. Returns the average of all transformed results.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Calculates the average of the results of transforming each value in a collection by a code block. Returns the average of all transformed results.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch data := arg0.(type) {
 			case env.Block:
@@ -762,8 +772,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * the sum of all values (integer if all values are integers, decimal otherwise)
 	"sum": { // **
-		Argsn: 1,
-		Doc:   "Calculates the sum of all numeric values in a collection.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Calculates the sum of all numeric values in a collection.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sum float64
 			switch block := arg0.(type) {
@@ -832,8 +843,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * the sum of all transformed results (integer if all results are integers, decimal otherwise)
 	"sum\\by": {
-		Argsn: 2,
-		Doc:   "Sums the results of transforming each value in a collection by a code block. Returns the sum of all transformed results.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Sums the results of transforming each value in a collection by a code block. Returns the sum of all transformed results.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch data := arg0.(type) {
 			case env.Block:
@@ -948,8 +960,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * the product of all values (integer if all values are integers, decimal otherwise)
 	"mul": { // **
-		Argsn: 1,
-		Doc:   "Calculates the product of all numeric values in a collection.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Calculates the product of all numeric values in a collection.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sum float64 = 1
 			switch block := arg0.(type) {
@@ -1024,8 +1037,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * the first item in the collection (for matrix: first row as vector)
 	"first": { // **
-		Argsn: 1,
-		Doc:   "Retrieves the first item from a collection (block, list, string, table, vector, matrix, or bytes).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Retrieves the first item from a collection (block, list, string, table, vector, matrix, or bytes).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -1091,8 +1105,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * a new collection containing all items except the first one (for matrix: all rows except first)
 	"rest": { // **
-		Argsn: 1,
-		Doc:   "Creates a new collection with all items except the first one from the input collection.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a new collection with all items except the first one from the input collection.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -1151,8 +1166,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * a new collection containing all items starting from position n (for matrix: from row n)
 	"rest\\from": { // **
-		Argsn: 2,
-		Doc:   "Creates a new collection with all items starting from the specified position in the input collection.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates a new collection with all items starting from the specified position in the input collection.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch num := arg1.(type) {
 			case env.Integer:
@@ -1244,8 +1260,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * a new collection containing the last n items (for matrix: last n rows), or all except the first |n| if n is negative
 	"tail": { // **
-		Argsn: 2,
-		Doc:   "Creates a new collection with the last n items from the input collection, or all but the first |n| items if n is negative.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates a new collection with the last n items from the input collection, or all but the first |n| items if n is negative.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch num := arg1.(type) {
 			case env.Integer:
@@ -1393,9 +1410,10 @@ var builtins_collection = map[string]*env.Builtin{
 	// * collection: Block, list, string, vector or matrix to get the second item from
 	// Returns:
 	// * the second item in the collection (for matrix: second row as vector)
-	"second": { // **
-		Argsn: 1,
-		Doc:   "Retrieves the second item from a collection (block, list, string, vector, matrix, or bytes).",
+	"second": {
+		Effect: env.EffNone, // **
+		Argsn:  1,
+		Doc:    "Retrieves the second item from a collection (block, list, string, vector, matrix, or bytes).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -1451,8 +1469,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * the third item in the collection (for matrix: third row as vector)
 	"third": {
-		Argsn: 1,
-		Doc:   "Retrieves the third item from a collection (block, list, string, vector, matrix, or bytes).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Retrieves the third item from a collection (block, list, string, vector, matrix, or bytes).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -1509,8 +1528,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * the last item in the collection (for matrix: last row as vector)
 	"last": { // **
-		Argsn: 1,
-		Doc:   "Retrieves the last item from a collection (block, list, string, vector, matrix, or bytes).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Retrieves the last item from a collection (block, list, string, vector, matrix, or bytes).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -1567,8 +1587,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * a new collection containing all items except the last one (for matrix: all rows except last)
 	"before-last": { // **
-		Argsn: 1,
-		Doc:   "Creates a new collection with all items except the last one from the input collection.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a new collection with all items except the last one from the input collection.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -1623,8 +1644,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * a new collection containing the first n items or all but the last |n| items
 	"head": { // **
-		Argsn: 2,
-		Doc:   "Creates a new collection with the first n items from the input collection, or all but the last |n| items if n is negative.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates a new collection with the first n items from the input collection, or all but the last |n| items if n is negative.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch num := arg1.(type) {
 			case env.Integer:
@@ -1746,8 +1768,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * the item at position n in the collection
 	"nth": { // **
-		Argsn: 2,
-		Doc:   "Retrieves the item at the specified position (1-based indexing) from a collection.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Retrieves the item at the specified position (1-based indexing) from a collection.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return getFrom(ps, arg0, arg1, true)
 			/* switch num := arg1.(type) {
@@ -1800,8 +1823,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * list containing all values from the dictionary
 	"values": { // **
-		Argsn: 1,
-		Doc:   "Extracts all values from a dictionary and returns them as a list.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Extracts all values from a dictionary and returns them as a list.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch dict := arg0.(type) {
 			case env.Dict:
@@ -1828,8 +1852,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * a new collection with items sorted in ascending order
 	"sort": { // TODO -- make sort (not in place) and  decide if sort will only work on ref
-		Argsn: 1,
-		Doc:   "Creates a new collection with items sorted in ascending order.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a new collection with items sorted in ascending order.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
 			case env.Block:
@@ -1862,8 +1887,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * the sorted collection (same reference, modified in-place)
 	"sort!": { // TODO -- make sort (not in place) and  decide if sort will only work on ref
-		Argsn: 1,
-		Doc:   "Sorts a block or list in-place in ascending order and returns the modified collection.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Sorts a block or list in-place in ascending order and returns the modified collection.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
 			case *env.Block:
@@ -1891,8 +1917,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * a new collection with items sorted according to the comparator function
 	"sort\\by": { // TODO -- make sort (not in place) and  decide if sort will only work on ref
-		Argsn: 2,
-		Doc:   "Creates a new collection with items sorted according to a custom comparison function.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Creates a new collection with items sorted according to a custom comparison function.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
 			case env.Block:
@@ -1981,8 +2008,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * a new collection with items sorted according to the computed keys
 	"sort\\by\\key": {
-		Argsn: 2,
-		Doc:   "Efficiently sorts a collection by pre-computing a sort key for each element using a key function. Much faster than sort\\by for large datasets (Schwartzian Transform).",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Efficiently sorts a collection by pre-computing a sort key for each element using a key function. Much faster than sort\\by for large datasets (Schwartzian Transform).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
 			case env.Block:
@@ -2122,8 +2150,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * a new collection with duplicate values removed
 	"unique": { // **
-		Argsn: 1,
-		Doc:   "Creates a new collection with duplicate values removed, keeping only the first occurrence of each value.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a new collection with duplicate values removed, keeping only the first occurrence of each value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
 			case env.List:
@@ -2150,8 +2179,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * a new collection with items in reverse order
 	"reverse": { // **
-		Argsn: 1,
-		Doc:   "Creates a new collection with items in reverse order from the input collection.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a new collection with items in reverse order from the input collection.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
 			case env.Block:
@@ -2201,8 +2231,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * the reversed collection (same reference, modified in-place)
 	"reverse!": { // **
-		Argsn: 1,
-		Doc:   "Reverses a block or list in-place and returns the modified collection.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Reverses a block or list in-place and returns the modified collection.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
 			case *env.Block:
@@ -2237,9 +2268,10 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * a new block with value prepended; the original block is not modified
 	"prepend": {
-		Argsn: 2,
-		Doc:   "Returns a new block with the value prepended. The original block is not modified.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Returns a new block with the value prepended. The original block is not modified.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
 			case env.Block:
@@ -2266,9 +2298,10 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * result of concatenating the two values
 	"concat": {
-		Argsn: 2,
-		Doc:   "Joins two series values together.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Joins two series values together.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Integer:
@@ -2334,9 +2367,10 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * result of joining the values, type depends on input types
 	"_++": {
-		Argsn: 2,
-		Doc:   "Joins two values together, with behavior depending on types: concatenates strings, joins blocks, merges dictionaries, etc.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Joins two values together, with behavior depending on types: concatenates strings, joins blocks, merges dictionaries, etc.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Integer:
@@ -2555,8 +2589,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * a new collection containing all unique values from both collections
 	"union": {
-		Argsn: 2,
-		Doc:   "Combines two collections, removing any duplicate values to create a union of all unique values.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Combines two collections, removing any duplicate values to create a union of all unique values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -2610,8 +2645,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * a block containing all integers from start to end, inclusive
 	"range": { // **
-		Argsn: 2,
-		Doc:   "Creates a block containing all integers from start to end, inclusive. Requires start <= end and at most 16777216 elements.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates a block containing all integers from start to end, inclusive. Requires start <= end and at most 16777216 elements.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch i1 := arg0.(type) {
 			case env.Integer:
@@ -2649,8 +2685,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * boolean true if the collection is empty, false otherwise
 	"is-empty": { // **
-		Argsn: 1,
-		Doc:   "Checks if a collection is empty, returning true if empty and false otherwise.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Checks if a collection is empty, returning true if empty and false otherwise.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -2694,8 +2731,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * integer count of elements in the collection
 	"length?": { // **
-		Argsn: 1,
-		Doc:   "Returns the number of elements in a collection.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the number of elements in a collection.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -2739,8 +2777,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * integer index of the last element in the collection
 	"max-idx?": { // **
-		Argsn: 1,
-		Doc:   "Returns the maximum valid index in a collection (length? - 1).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the maximum valid index in a collection (length? - 1).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -2775,8 +2814,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * block containing all keys from the dictionary or column names from the table
 	"keys": {
-		Argsn: 1,
-		Doc:   "Extracts the keys from a dictionary or column names from a table as a block.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Extracts the keys from a dictionary or column names from a table as a block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Dict:
@@ -2809,8 +2849,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * value at the specified index or key
 	"_->": {
-		Argsn: 2,
-		Doc:   "Accesses a value in a collection by index or key (0-based indexing for blocks and lists).",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Accesses a value in a collection by index or key (0-based indexing for blocks and lists).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return getFrom(ps, arg0, arg1, false)
 		},
@@ -2825,8 +2866,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * value at the specified index or key
 	"_<-": {
-		Argsn: 2,
-		Doc:   "Accesses a value in a collection by index or key, with reversed argument order (0-based indexing for blocks and lists).",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Accesses a value in a collection by index or key, with reversed argument order (0-based indexing for blocks and lists).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return getFrom(ps, arg1, arg0, false)
 		},
@@ -2866,8 +2908,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * value at the specified index
 	"_<~": {
-		Argsn: 2,
-		Doc:   "Accesses a value in a collection by index with reversed argument order (1-based indexing).",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Accesses a value in a collection by index with reversed argument order (1-based indexing).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return getFrom(ps, arg1, arg0, true)
 		},
@@ -2881,8 +2924,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * value at the specified index
 	"_~>": {
-		Argsn: 2,
-		Doc:   "Accesses a value in a collection by index (1-based indexing).",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Accesses a value in a collection by index (1-based indexing).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return getFrom(ps, arg0, arg1, true)
 		},
@@ -2907,9 +2951,10 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * a new collection containing only values that appear in both input collections
 	"intersection": {
-		Argsn: 2,
-		Doc:   "Finds the common elements between two collections, returning only values that appear in both.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Finds the common elements between two collections, returning only values that appear in both.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -2973,9 +3018,10 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * a new collection containing values from the first collection that match with values from the second collection according to the comparator
 	"intersection\\by": {
-		Argsn: 3,
-		Doc:   "Finds the intersection of two collections using a custom comparison function to determine matching elements.",
-		Pure:  true,
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Finds the intersection of two collections using a custom comparison function to determine matching elements.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -3046,9 +3092,10 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * a new collection containing values from the first collection that do not appear in the second collection
 	"difference": {
-		Argsn: 2,
-		Doc:   "Creates a new collection containing elements from the first collection that are not present in the second collection.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates a new collection containing elements from the first collection that are not present in the second collection.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -3110,8 +3157,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * transposed matrix (rows become columns and columns become rows)
 	"transpose": {
-		Argsn: 1,
-		Doc:   "Transposes a matrix (block of blocks), converting rows to columns and columns to rows.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Transposes a matrix (block of blocks), converting rows to columns and columns to rows.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch blk := arg0.(type) {
 			case env.Block:
@@ -3187,8 +3235,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * a block of blocks, where each inner block contains paired elements from both collections
 	"zip": { // **
-		Argsn: 2,
-		Doc:   "Combines two same-size collections into a block of pairs, where each pair contains corresponding elements from both collections.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Combines two same-size collections into a block of pairs, where each pair contains corresponding elements from both collections.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch col1 := arg0.(type) {
 			case env.Block:
@@ -3257,9 +3306,10 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * the modified block with the last element removed
 	"remove-last!": { // **
-		Argsn: 1,
-		Pure:  false,
-		Doc:   "Removes the last element from a block in-place and returns the modified block.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Pure:   false,
+		Doc:    "Removes the last element from a block in-place and returns the modified block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch wrd := arg0.(type) {
 			case env.Word:
@@ -3295,9 +3345,10 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * the modified collection with the value appended
 	"append!": { // **
-		Argsn: 2,
-		Doc:   "Appends a value to a block, list or string in-place and returns the modified collection.",
-		Pure:  false,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Appends a value to a block, list or string in-place and returns the modified collection.",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val1 := arg1.(type) {
 			case env.Word:
@@ -3403,9 +3454,10 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * the modified collection with the value changed at the specified index
 	"update!": { // **
-		Argsn: 3,
-		Doc:   "Updates the value at a specific index in a block or list in-place and returns the modified collection (0-based indexing).",
-		Pure:  false,
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Updates the value at a specific index in a block or list in-place and returns the modified collection (0-based indexing).",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch num := arg1.(type) {
 			case env.Integer:
@@ -3443,9 +3495,10 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * the modified collection with the value at the index transformed by the code block
 	"update\\with!": { // **
-		Argsn: 3,
-		Doc:   "Updates the value at a specific index by evaluating a code block with the current value injected and storing the result (0-based indexing).",
-		Pure:  false,
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Updates the value at a specific index by evaluating a code block with the current value injected and storing the result (0-based indexing).",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch num := arg1.(type) {
 			case env.Integer:
@@ -3530,9 +3583,10 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * the modified collection with the value changed at the specified position
 	"update\\pos!": { // **
-		Argsn: 3,
-		Doc:   "Updates the value at a specific position in a block or list in-place and returns the modified collection (1-based indexing).",
-		Pure:  false,
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Updates the value at a specific position in a block or list in-place and returns the modified collection (1-based indexing).",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch num := arg1.(type) {
 			case env.Integer:
@@ -3572,9 +3626,10 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * the updated collection.
 	"change\\nth!": { // **
-		Argsn: 3,
-		Doc:   "Updates the value at a specific position in a block or list in-place and returns the modified collection (1-based indexing).",
-		Pure:  false,
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Updates the value at a specific position in a block or list in-place and returns the modified collection (1-based indexing).",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch num := arg1.(type) {
 			case env.Integer:
@@ -3623,9 +3678,10 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * the modified collection with each value from the block appended
 	"append\\each!": { // **
-		Argsn: 2,
-		Doc:   "Appends each value from a block to a collection (block, list or string) in-place and returns the modified collection.",
-		Pure:  false,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Appends each value from a block to a collection (block, list or string) in-place and returns the modified collection.",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Validate that first argument is a block
 			valuesBlock, ok := arg0.(env.Block)
@@ -3723,8 +3779,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * the current value at the block's cursor position without advancing the cursor
 	"peek": {
-		Argsn: 1,
-		Doc:   "Returns the current value at a block's cursor position without advancing the cursor.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the current value at a block's cursor position without advancing the cursor.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -3746,8 +3803,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * the current value at the block's cursor position, advancing the cursor
 	"pop": {
-		Argsn: 1,
-		Doc:   "Returns the current value at a block's cursor position and advances the cursor.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the current value at a block's cursor position and advances the cursor.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -3765,8 +3823,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * the current cursor position in the block
 	"pos": {
-		Argsn: 1,
-		Doc:   "Returns the current cursor position in a block.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the current cursor position in a block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -3786,8 +3845,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * the block with its cursor advanced to the next position
 	"next": {
-		Argsn: 1,
-		Doc:   "Advances the cursor position in a block and returns the block.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Advances the cursor position in a block and returns the block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -3811,8 +3871,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * the block with its cursor set to the specified position
 	"at": {
-		Argsn: 2,
-		Doc:   "Sets the cursor position in a block to the specified index and returns the block.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Sets the cursor position in a block to the specified index and returns the block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -3842,8 +3903,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * block of evaluated results (for a block input) or the resolved word value
 	"evals": { // **
-		Argsn: 1,
-		Doc:   "Takes a block of Rye values and evaluates each value or expression.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Takes a block of Rye values and evaluates each value or expression.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -3888,8 +3950,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * block of evaluated results
 	"evals\\with": {
-		Argsn: 2,
-		Doc:   "Evaluate a block with injecting the first argument.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Evaluate a block with injecting the first argument.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg1.(type) {
 			case env.Block:

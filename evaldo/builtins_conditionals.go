@@ -23,9 +23,10 @@ var builtins_conditionals = map[string]*env.Builtin{
 	// Returns:
 	// * result of the block if condition is true, false otherwise
 	"if": { // **
-		Argsn: 2,
-		Doc:   "Executes a block of code only if the condition is true, returning the result of the block or false.",
-		Pure:  true,
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Executes a block of code only if the condition is true, returning the result of the block or false.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// function accepts 2 args. arg0 is a boolean value, arg1 is a block of code
 
@@ -85,9 +86,10 @@ var builtins_conditionals = map[string]*env.Builtin{
 	// Returns:
 	// * the value of the evaluated action block if condition is truthy or the original injected value if condition is falsy
 	"when": { // **
-		Argsn: 3,
-		Doc:   "Conditionally executes an action block if a condition block evaluates to true, injecting the same value into both blocks and returning the value of the action block if the condition is truthy or the original value otherwise.",
-		Pure:  true,
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Conditionally executes an action block if a condition block evaluates to true, injecting the same value into both blocks and returning the value of the action block if the condition is truthy or the original value otherwise.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// function accepts 3 args: arg0 is the value to inject, arg1 is the condition block, arg2 is the action block
 
@@ -151,9 +153,10 @@ var builtins_conditionals = map[string]*env.Builtin{
 	// Returns:
 	// * the value of the evaluated action block if condition is truthy or the original injected value if condition is falsy
 	"^when": { // **
-		Argsn: 3,
-		Doc:   "Conditionally executes an action block if a condition block evaluates to true, injecting the same value into both blocks and returning the value of the action block if the condition is truthy or the original value otherwise.",
-		Pure:  true,
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Conditionally executes an action block if a condition block evaluates to true, injecting the same value into both blocks and returning the value of the action block if the condition is truthy or the original value otherwise.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// function accepts 3 args: arg0 is the value to inject, arg1 is the condition block, arg2 is the action block
 
@@ -221,9 +224,10 @@ var builtins_conditionals = map[string]*env.Builtin{
 	// Returns:
 	// * result of the true-block if condition is truthy, result of the false-block otherwise
 	"whether": { // **
-		Argsn: 4,
-		Doc:   "Evaluates a condition block with the injected value and executes either the true or false block accordingly, returning the result. Like when with an else branch.",
-		Pure:  true,
+		Effect: env.EffIO,
+		Argsn:  4,
+		Doc:    "Evaluates a condition block with the injected value and executes either the true or false block accordingly, returning the result. Like when with an else branch.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// function accepts 4 args: arg0 is the value, arg1 is the condition block,
 			// arg2 is the true-block, arg3 is the false-block
@@ -289,9 +293,10 @@ var builtins_conditionals = map[string]*env.Builtin{
 	// Returns:
 	// * result of the block if condition is truthy (with return flag set), 0 otherwise
 	"^if": { // **
-		Argsn: 2,
-		Doc:   "Conditional that sets the return flag when true, allowing early return from a function when the condition is a boolean.",
-		Pure:  true,
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Conditional that sets the return flag when true, allowing early return from a function when the condition is a boolean.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Check if the first argument is a boolean
 			switch cond := arg0.(type) {
@@ -336,9 +341,10 @@ var builtins_conditionals = map[string]*env.Builtin{
 	// Returns:
 	// * result of executing the true_block if condition is true, otherwise result of false_block
 	"either": { // **
-		Argsn: 3,
-		Doc:   "Executes one of two blocks based on a boolean condition, similar to if/else in other languages.",
-		Pure:  true,
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Executes one of two blocks based on a boolean condition, similar to if/else in other languages.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Check if the first argument is a boolean
 			switch cond := arg0.(type) {
@@ -400,9 +406,10 @@ var builtins_conditionals = map[string]*env.Builtin{
 	// Returns:
 	// * first value if condition is true, second value if condition is false
 	"choose": { // **
-		Argsn: 2,
-		Doc:   "Returns the first or second value from a block of two values based on a boolean condition.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Returns the first or second value from a block of two values based on a boolean condition.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Check if the first argument is a boolean
 			switch cond := arg0.(type) {
@@ -443,6 +450,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 	// Returns:
 	// * result of executing the matching handler block, or a descriptive failure if no case matches
 	"switch": { // **
+		Effect:        env.EffIO,
 		Argsn:         2,
 		Doc:           "Pattern matching construct that executes a block of code corresponding to the first matching case value. Fails if no case matches and no default case is provided.",
 		AcceptFailure: true,
@@ -522,8 +530,9 @@ var builtins_conditionals = map[string]*env.Builtin{
 	// Returns:
 	// * cumulative result after applying all matching transformation blocks to the initial value
 	"cases": { // ** , TODO-FIXME: error handling
-		Argsn: 2,
-		Doc:   "Evaluates multiple condition-action pairs and applies all matching actions cumulatively to the initial value.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Evaluates multiple condition-action pairs and applies all matching actions cumulatively to the initial value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// function accepts 2 args. arg0 is a "boolean" value, arg1 is a block of code
 			// we set bloc to block of code
@@ -544,11 +553,18 @@ var builtins_conditionals = map[string]*env.Builtin{
 				cumul := arg0
 
 				foundany := false
-				for {
-
+				for bloc.Series.Pos() < bloc.Series.Len() {
+					if bloc.Series.Len()-bloc.Series.Pos() < 2 {
+						ps.Ser = ser
+						return MakeBuiltinError(ps, "Each condition in cases must have an action block.", "cases")
+					}
 					doblk := false
 					cond_ := bloc.Series.Pop()
-					blk := bloc.Series.Pop().(env.Block)
+					blk, ok := bloc.Series.Pop().(env.Block)
+					if !ok {
+						ps.Ser = ser
+						return MakeBuiltinError(ps, "Each action in cases must be a block.", "cases")
+					}
 
 					switch cond := cond_.(type) {
 					case env.Block:
@@ -571,6 +587,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 							doblk = true
 						}
 					default:
+						ps.Ser = ser
 						return MakeBuiltinError(ps, "Invalid block series type.", "cases")
 					}
 					// we set ProgramStates series to series ob the block
@@ -585,9 +602,6 @@ var builtins_conditionals = map[string]*env.Builtin{
 							return ps.Res
 						}
 						cumul = ps.Res
-					}
-					if bloc.Series.AtLast() {
-						break
 					}
 				}
 				ps.Ser = ser

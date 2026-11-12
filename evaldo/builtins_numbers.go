@@ -40,9 +40,10 @@ var builtins_numbers = map[string]*env.Builtin{
 	// Returns:
 	// * integer value incremented by 1
 	"inc": { // ***
-		Argsn: 1,
-		Doc:   "Increments an integer value by 1.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Increments an integer value by 1.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
@@ -63,9 +64,10 @@ var builtins_numbers = map[string]*env.Builtin{
 	// Returns:
 	// * integer value decremented by 1
 	"dec": { // ***
-		Argsn: 1,
-		Doc:   "Decrements an integer value by 1.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Decrements an integer value by 1.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
@@ -88,9 +90,10 @@ var builtins_numbers = map[string]*env.Builtin{
 	// Returns:
 	// * negated number of the same type
 	"negate": { // ***
-		Argsn: 1,
-		Doc:   "Negates a number by multiplying it by -1, works with integers, decimals, and complex numbers.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Negates a number by multiplying it by -1, works with integers, decimals, and complex numbers.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
@@ -118,9 +121,10 @@ var builtins_numbers = map[string]*env.Builtin{
 	// Returns:
 	// * reciprocal (1/value) as decimal or complex number
 	"invert": { // ***
-		Argsn: 1,
-		Doc:   "Calculates the reciprocal (1/x) of a number, works with integers, decimals, and complex numbers.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Calculates the reciprocal (1/x) of a number, works with integers, decimals, and complex numbers.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
@@ -158,9 +162,10 @@ var builtins_numbers = map[string]*env.Builtin{
 	// Returns:
 	// * boolean true if the value is positive, false otherwise
 	"is-positive": { // ***
-		Argsn: 1,
-		Doc:   "Checks if a number is positive (greater than zero).",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Checks if a number is positive (greater than zero).",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
@@ -193,9 +198,10 @@ var builtins_numbers = map[string]*env.Builtin{
 	// Returns:
 	// * integer sign of the value (-1 for negative, 0 for zero, 1 for positive)
 	"sign": { // ***
-		Argsn: 1,
-		Doc:   "Returns the sign of a number as -1, 0, or 1.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the sign of a number as -1, 0, or 1.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
@@ -230,9 +236,10 @@ var builtins_numbers = map[string]*env.Builtin{
 	// Returns:
 	// * boolean true if the value is zero, false otherwise
 	"is-zero": { // ***
-		Argsn: 1,
-		Doc:   "Checks if a number is exactly zero.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Checks if a number is exactly zero.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			switch arg := arg0.(type) {
 			case env.Integer:
@@ -264,9 +271,10 @@ var builtins_numbers = map[string]*env.Builtin{
 	// Returns:
 	// * boolean true if value is divisible by divisor with no remainder, false otherwise
 	"is-multiple-of": { // ***
-		Argsn: 2,
-		Doc:   "Checks if the first integer is evenly divisible by the second integer.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Checks if the first integer is evenly divisible by the second integer.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
 			case env.Integer:
@@ -295,9 +303,10 @@ var builtins_numbers = map[string]*env.Builtin{
 	// Returns:
 	// * boolean true if the value is odd, false if even
 	"is-odd": { // ***
-		Argsn: 1,
-		Doc:   "Checks if an integer is odd (not divisible by 2).",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Checks if an integer is odd (not divisible by 2).",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
 			case env.Integer:
@@ -321,9 +330,10 @@ var builtins_numbers = map[string]*env.Builtin{
 	// Returns:
 	// * boolean true if the value is even, false if odd
 	"is-even": { // ***
-		Argsn: 1,
-		Doc:   "Checks if an integer is even (divisible by 2).",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Checks if an integer is even (divisible by 2).",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
 			case env.Integer:
@@ -350,9 +360,10 @@ var builtins_numbers = map[string]*env.Builtin{
 	// Returns:
 	// * integer remainder after division
 	"mod": { // ***
-		Argsn: 2,
-		Doc:   "Calculates the modulo (remainder) when dividing the first integer by the second.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Calculates the modulo (remainder) when dividing the first integer by the second.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
 			case env.Integer:
@@ -381,9 +392,10 @@ var builtins_numbers = map[string]*env.Builtin{
 	// Returns:
 	// * random integer in the range [0, max)
 	"random\\integer": {
-		Argsn: 1,
-		Doc:   "Generates a cryptographically secure random integer between 0 (inclusive) and the specified maximum (exclusive).",
-		Pure:  true,
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Generates a cryptographically secure random integer between 0 (inclusive) and the specified maximum (exclusive).",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
@@ -410,9 +422,10 @@ var builtins_numbers = map[string]*env.Builtin{
 	// Returns:
 	// * random decimal in the range [0.0, max)
 	"random\\decimal": {
-		Argsn: 1,
-		Doc:   "Generates a cryptographically secure random decimal between 0.0 (inclusive) and the specified maximum (exclusive).",
-		Pure:  true,
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Generates a cryptographically secure random decimal between 0.0 (inclusive) and the specified maximum (exclusive).",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Decimal:
@@ -461,9 +474,10 @@ var builtins_numbers = map[string]*env.Builtin{
 	// Returns:
 	// * the new incremented integer value
 	"inc!": { // ***
-		Argsn: 1,
-		Doc:   "Increments an integer value stored in a variable (word) by 1 and updates the variable in-place.",
-		Pure:  false,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Increments an integer value stored in a variable (word) by 1 and updates the variable in-place.",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Word:
@@ -503,9 +517,10 @@ var builtins_numbers = map[string]*env.Builtin{
 	// Returns:
 	// * the new decremented integer value
 	"dec!": { // ***
-		Argsn: 1,
-		Doc:   "Decrements an integer value stored in a variable (word) by 1 and updates the variable in-place.",
-		Pure:  false,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Decrements an integer value stored in a variable (word) by 1 and updates the variable in-place.",
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Word:
@@ -542,9 +557,10 @@ var builtins_numbers = map[string]*env.Builtin{
 	// Returns:
 	// * void value (used to discard values)
 	"_.": { // ***
-		Argsn: 1,
-		Doc:   "Discards the input value and returns a void value, useful only for Eyr (stack based dialect).",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Discards the input value and returns a void value, useful only for Eyr (stack based dialect).",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewVoid()
 		},
@@ -562,9 +578,10 @@ var builtins_numbers = map[string]*env.Builtin{
 	// Returns:
 	// * result of adding values, type depends on input types
 	"_+": { // **
-		Argsn: 2,
-		Doc:   "Adds two numerical values. Accepts Integer, Decimal, Complex, Time and Vector.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Adds two numerical values. Accepts Integer, Decimal, Complex, Time and Vector.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Integer:
@@ -669,9 +686,10 @@ var builtins_numbers = map[string]*env.Builtin{
 	// Returns:
 	// * result of subtracting value2 from value1
 	"_-": { // **
-		Argsn: 2,
-		Doc:   "Subtracts the second number from the first, working with integers, decimals, complex numbers, and vectors.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Subtracts the second number from the first, working with integers, decimals, complex numbers, and vectors.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
 			case env.Integer:
@@ -780,9 +798,10 @@ var builtins_numbers = map[string]*env.Builtin{
 	// Returns:
 	// * product of the two numbers, or scaled vector
 	"_*": { // **
-		Argsn: 2,
-		Doc:   "Multiplies two numbers, working with integers, decimals, complex numbers, and vectors (scalar multiplication).",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Multiplies two numbers, working with integers, decimals, complex numbers, and vectors (scalar multiplication).",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
 			case env.Integer:
@@ -896,9 +915,10 @@ var builtins_numbers = map[string]*env.Builtin{
 	// Returns:
 	// * decimal result of dividing value1 by value2
 	"_/": {
-		Argsn: 2,
-		Doc:   "Divides the first number by the second and returns a result, with error checking for division by zero.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Divides the first number by the second and returns a result, with error checking for division by zero.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
 			case env.Integer:
@@ -988,9 +1008,10 @@ var builtins_numbers = map[string]*env.Builtin{
 	// Returns:
 	// * integer result of dividing value1 by value2 (truncated)
 	"_//": { // **
-		Argsn: 2,
-		Doc:   "Performs integer division, dividing the first number by the second and truncating to an integer result.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Performs integer division, dividing the first number by the second and truncating to an integer result.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
 			case env.Integer:
@@ -1047,9 +1068,10 @@ var builtins_numbers = map[string]*env.Builtin{
 	// Returns:
 	// * integer remainder after division
 	"_%": { // ***
-		Argsn: 2,
-		Doc:   "Alias for mod - calculates the modulo (remainder) when dividing the first integer by the second.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Alias for mod - calculates the modulo (remainder) when dividing the first integer by the second.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
 			case env.Integer:
@@ -1084,9 +1106,10 @@ var builtins_numbers = map[string]*env.Builtin{
 	// Returns:
 	// * clamped number, ensuring value is between min and max (inclusive)
 	"clamp": { // ***
-		Argsn: 3,
-		Doc:   "Clamps a number between a minimum and maximum value, ensuring the result stays within the specified bounds.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Clamps a number between a minimum and maximum value, ensuring the result stays within the specified bounds.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Handle different combinations of Integer and Decimal for all three arguments
 			switch val := arg0.(type) {
@@ -1229,9 +1252,10 @@ var builtins_numbers = map[string]*env.Builtin{
 	// Returns:
 	// * boolean true if values are equal, false otherwise
 	"_=": { // ***
-		Argsn: 2,
-		Doc:   "Compares two values for equality, returning 1 if equal or 0 if not equal.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Compares two values for equality, returning 1 if equal or 0 if not equal.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if arg0.Equal(arg1) {
 				return *env.NewBoolean(true)
@@ -1254,9 +1278,10 @@ var builtins_numbers = map[string]*env.Builtin{
 	// Returns:
 	// * boolean true if values are not equal, false otherwise
 	"_!=": { // ***
-		Argsn: 2,
-		Doc:   "Compares two values for inequality, returning true if not equal or false if equal.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Compares two values for inequality, returning true if not equal or false if equal.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if arg0.Equal(arg1) {
 				return *env.NewBoolean(false)
@@ -1278,9 +1303,10 @@ var builtins_numbers = map[string]*env.Builtin{
 	// Returns:
 	// * boolean true if value1 is greater than value2, false otherwise
 	"_>": { // ***
-		Argsn: 2,
-		Doc:   "Compares if the first value is greater than the second value.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Compares if the first value is greater than the second value.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if greaterThanNew(arg0, arg1) {
 				return *env.NewBoolean(true)
@@ -1303,9 +1329,10 @@ var builtins_numbers = map[string]*env.Builtin{
 	// Returns:
 	// * boolean true if value1 is greater than or equal to value2, false otherwise
 	"_>=": { // * *
-		Argsn: 2,
-		Doc:   "Compares if the first value is greater than or equal to the second value.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Compares if the first value is greater than or equal to the second value.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if arg0.Equal(arg1) || greaterThanNew(arg0, arg1) {
 				return *env.NewBoolean(true)
@@ -1327,9 +1354,10 @@ var builtins_numbers = map[string]*env.Builtin{
 	// Returns:
 	// * boolean true if value1 is less than value2, false otherwise
 	"_<": { // **
-		Argsn: 2,
-		Doc:   "Compares if the first value is less than the second value.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Compares if the first value is less than the second value.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if lesserThanNew(arg0, arg1) {
 				return *env.NewBoolean(true)
@@ -1352,9 +1380,10 @@ var builtins_numbers = map[string]*env.Builtin{
 	// Returns:
 	// * boolean true if value1 is less than or equal to value2, false otherwise
 	"_<=": {
-		Argsn: 2,
-		Doc:   "Compares if the first value is less than or equal to the second value.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Compares if the first value is less than or equal to the second value.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if arg0.Equal(arg1) || lesserThanNew(arg0, arg1) {
 				return *env.NewBoolean(true)

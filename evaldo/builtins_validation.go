@@ -689,8 +689,9 @@ var Builtins_validation = map[string]*env.Builtin{
 	// Returns:
 	// * validated Dictionary/Context/List with converted values or error if validation fails
 	"validate": {
-		Argsn: 2,
-		Doc:   "Validates and transforms data according to specified rules, returning a dictionary with converted values or an error.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Validates and transforms data according to specified rules, returning a dictionary with converted values or an error.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return BuiValidate(env1, arg0, arg1)
 		},
@@ -705,8 +706,9 @@ var Builtins_validation = map[string]*env.Builtin{
 	// Returns:
 	// * validated Context with converted values or error if validation fails
 	"validate>ctx": {
-		Argsn: 2,
-		Doc:   "Validates and transforms data according to specified rules, returning a context object for easy field access.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Validates and transforms data according to specified rules, returning a context object for easy field access.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			obj := BuiValidate(env1, arg0, arg1)
 			if env1.FailureFlag {

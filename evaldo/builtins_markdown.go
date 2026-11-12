@@ -940,8 +940,9 @@ var Builtins_markdown = map[string]*env.Builtin{
 	// Returns:
 	// * the result of processing the markdown document
 	"reader//do-markdown": {
-		Argsn: 2,
-		Doc:   "Processes Markdown using a streaming approach with section handlers.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Processes Markdown using a streaming approach with section handlers.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			rm, err := load_markdown_Dict(ps, arg1.(env.Block))
 			if err != nil {
@@ -961,8 +962,9 @@ var Builtins_markdown = map[string]*env.Builtin{
 	// Returns:
 	// * string containing HTML
 	"markdown->html": {
-		Argsn: 1,
-		Doc:   "Converts Markdown text to HTML.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Converts Markdown text to HTML.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			text, ok := arg0.(env.String)
 			if !ok {
@@ -987,8 +989,9 @@ var Builtins_markdown = map[string]*env.Builtin{
 	// Returns:
 	// * Markdown value
 	"markdown": {
-		Argsn: 1,
-		Doc:   "Creates a Markdown value from a string.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a Markdown value from a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch text := arg0.(type) {
 			case env.String:
@@ -1009,8 +1012,9 @@ var Builtins_markdown = map[string]*env.Builtin{
 	// Returns:
 	// * raw markdown text as string
 	"text": {
-		Argsn: 1,
-		Doc:   "Gets the raw markdown text from a Markdown value.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the raw markdown text from a Markdown value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			md, ok := arg0.(env.Markdown)
 			if !ok {
@@ -1036,8 +1040,9 @@ var Builtins_markdown = map[string]*env.Builtin{
 	// Returns:
 	// * string containing HTML
 	"to-html": {
-		Argsn: 1,
-		Doc:   "Converts a Markdown value to HTML.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Converts a Markdown value to HTML.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			md, ok := arg0.(env.Markdown)
 			if !ok {
@@ -1061,8 +1066,9 @@ var Builtins_markdown = map[string]*env.Builtin{
 	// Returns:
 	// * list of strings with headings
 	"headings": {
-		Argsn: 1,
-		Doc:   "Extracts all headings from markdown text as a list of strings.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Extracts all headings from markdown text as a list of strings.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			md, ok := arg0.(env.Markdown)
 			if !ok {
@@ -1086,8 +1092,9 @@ var Builtins_markdown = map[string]*env.Builtin{
 	// Returns:
 	// * list of strings with paragraphs
 	"paragraphs": {
-		Argsn: 1,
-		Doc:   "Extracts all paragraphs from markdown text as a list of strings.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Extracts all paragraphs from markdown text as a list of strings.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			md, ok := arg0.(env.Markdown)
 			if !ok {
@@ -1111,8 +1118,9 @@ var Builtins_markdown = map[string]*env.Builtin{
 	// Returns:
 	// * list of dicts with 'text and 'url keys
 	"links": {
-		Argsn: 1,
-		Doc:   "Extracts all links from markdown text as a list of dictionaries with 'text' and 'url' keys.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Extracts all links from markdown text as a list of dictionaries with 'text' and 'url' keys.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			md, ok := arg0.(env.Markdown)
 			if !ok {

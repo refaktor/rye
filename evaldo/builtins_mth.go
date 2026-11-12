@@ -418,9 +418,10 @@ var builtins_mth = map[string]*env.Builtin{
 	// Returns:
 	// * result of evaluating the expression with proper operator precedence
 	"mth": {
-		Argsn: 1,
-		Doc:   "Fast infix math evaluator with proper operator precedence (+,-,*,/,//,%,<,>,=,<=,>=,!=). Single-pass Shunting-yard, direct Go arithmetic, no builtin lookup.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Fast infix math evaluator with proper operator precedence (+,-,*,/,//,%,<,>,=,<=,>=,!=). Single-pass Shunting-yard, direct Go arithmetic, no builtin lookup.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch blk := arg0.(type) {
 			case env.Block:
