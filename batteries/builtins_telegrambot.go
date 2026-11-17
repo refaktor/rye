@@ -4,8 +4,6 @@
 package batteries
 
 import (
-	"fmt"
-
 	"github.com/jinzhu/copier"
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
@@ -62,8 +60,9 @@ func TelegramUpdateToRyeDict(update_ tgm.Update) env.Dict {
 var Builtins_telegrambot = map[string]*env.Builtin{
 
 	"bot": {
-		Argsn: 1,
-		Doc:   "Create new telegram bot using API value.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Create new telegram bot using API value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.String:
@@ -79,8 +78,9 @@ var Builtins_telegrambot = map[string]*env.Builtin{
 	},
 
 	"telegram-bot//on-update": {
-		Argsn: 2,
-		Doc:   "Get telegram update and add to Rye dictionary",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Get telegram update and add to Rye dictionary",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bot := arg0.(type) {
 			case env.Native:
@@ -89,7 +89,11 @@ var Builtins_telegrambot = map[string]*env.Builtin{
 					u := tgm.NewUpdate(0)
 					u.Timeout = 60
 
-					updates, _ := bot.Value.(*tgm.BotAPI).GetUpdatesChan(u)
+					updates, err := bot.Value.(*tgm.BotAPI).GetUpdatesChan(u)
+					if err != nil {
+						ps.FailureFlag = true
+						return evaldo.MakeBuiltinError(ps, err.Error(), "telegram-bot//on-update")
+					}
 					ser := ps.Ser
 					ps.Ser = code.Series
 
@@ -108,7 +112,11 @@ var Builtins_telegrambot = map[string]*env.Builtin{
 					u := tgm.NewUpdate(0)
 					u.Timeout = 60
 
-					updates, _ := bot.Value.(*tgm.BotAPI).GetUpdatesChan(u)
+					updates, err := bot.Value.(*tgm.BotAPI).GetUpdatesChan(u)
+					if err != nil {
+						ps.FailureFlag = true
+						return evaldo.MakeBuiltinError(ps, err.Error(), "telegram-bot//on-update")
+					}
 
 					for update := range updates {
 						dict := TelegramUpdateToRyeDict(update)
@@ -116,10 +124,9 @@ var Builtins_telegrambot = map[string]*env.Builtin{
 						ps.ErrorFlag = false
 						ps.ReturnFlag = false
 						psTemp := env.ProgramState{}
-						err := copier.Copy(&psTemp, &ps)
-						if err != nil {
-							fmt.Println(err.Error())
-							// TODO return evaldo.MakeError(ps, err.Error())
+						if err := copier.Copy(&psTemp, &ps); err != nil {
+							ps.FailureFlag = true
+							return evaldo.MakeBuiltinError(ps, err.Error(), "telegram-bot//on-update")
 						}
 						evaldo.CallFunctionArgsN(code, ps, nil, dict)
 					}
@@ -135,8 +142,9 @@ var Builtins_telegrambot = map[string]*env.Builtin{
 	},
 
 	"telegram-message//send": {
-		Argsn: 2,
-		Doc:   "Send message in telegram bot.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Send message in telegram bot.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch msg := arg0.(type) {
 			case env.Native:
@@ -158,8 +166,9 @@ var Builtins_telegrambot = map[string]*env.Builtin{
 	},
 
 	"telegram-message//parse-mode!": {
-		Argsn: 2,
-		Doc:   "Set the parse mode of the message",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Set the parse mode of the message",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch msg := arg0.(type) {
 			case env.Native:
@@ -179,8 +188,9 @@ var Builtins_telegrambot = map[string]*env.Builtin{
 	},
 
 	"message": {
-		Argsn: 2,
-		Doc:   "Create new telegram bot message.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Create new telegram bot message.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cid := arg0.(type) {
 			case env.Integer:

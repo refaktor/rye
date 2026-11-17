@@ -894,8 +894,9 @@ var Builtins_imap = map[string]*env.Builtin{
 	// * Native imap-client object on success
 	// * Error on connection/authentication failure
 	"imap-uri//Open": {
-		Argsn: 1,
-		Doc:   "Opens an IMAP client connection. URI format: imap[s]://user[:pass]@host[:port][/mailbox].",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Opens an IMAP client connection. URI format: imap[s]://user[:pass]@host[:port][/mailbox].",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch uri := arg0.(type) {
 			case env.Uri:
@@ -919,8 +920,9 @@ var Builtins_imap = map[string]*env.Builtin{
 	// Returns:
 	// * Native imap-client object on success
 	"imap-uri//Open\\pwd": {
-		Argsn: 2,
-		Doc:   "Opens an IMAP client connection with a separate password parameter.",
+		Effect: env.EffInput,
+		Argsn:  2,
+		Doc:    "Opens an IMAP client connection with a separate password parameter.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch uri := arg0.(type) {
 			case env.Uri:
@@ -951,8 +953,9 @@ var Builtins_imap = map[string]*env.Builtin{
 	// Returns:
 	// * Native imap-client object on success
 	"imap-uri//Open\\oauth2": {
-		Argsn: 2,
-		Doc:   "Opens an IMAP client connection with OAuth2 (XOAUTH2/OAUTHBEARER) authentication.",
+		Effect: env.EffInput,
+		Argsn:  2,
+		Doc:    "Opens an IMAP client connection with OAuth2 (XOAUTH2/OAUTHBEARER) authentication.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch uri := arg0.(type) {
 			case env.Uri:
@@ -983,8 +986,9 @@ var Builtins_imap = map[string]*env.Builtin{
 	// Returns:
 	// * Native imap-client object on success
 	"imap-client": {
-		Argsn: 4,
-		Doc:   "Create an IMAP client connection with username, password, server, and port.",
+		Effect: env.EffNone,
+		Argsn:  4,
+		Doc:    "Create an IMAP client connection with username, password, server, and port.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch username := arg0.(type) {
 			case env.String:
@@ -1027,8 +1031,9 @@ var Builtins_imap = map[string]*env.Builtin{
 	// Returns:
 	// * Native imap-client object on success
 	"imap-client\\oauth2": {
-		Argsn: 4,
-		Doc:   "Create an IMAP client connection with OAuth2 authentication (email, access_token, server, port).",
+		Effect: env.EffNone,
+		Argsn:  4,
+		Doc:    "Create an IMAP client connection with OAuth2 authentication (email, access_token, server, port).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch email := arg0.(type) {
 			case env.String:
@@ -1068,8 +1073,9 @@ var Builtins_imap = map[string]*env.Builtin{
 	// Returns:
 	// * Native imap-client object (for method chaining)
 	"imap-client//Select-folder": {
-		Argsn: 2,
-		Doc:   "Selects a folder for IMAP operations (e.g., 'INBOX').",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Selects a folder for IMAP operations (e.g., 'INBOX').",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			client, ok := imapClientFrom(arg0)
 			if !ok {
@@ -1097,8 +1103,9 @@ var Builtins_imap = map[string]*env.Builtin{
 	// Returns:
 	// * Block of strings containing folder names
 	"imap-client//Get-folders": {
-		Argsn: 1,
-		Doc:   "Gets the list of available folders.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Gets the list of available folders.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			client, ok := imapClientFrom(arg0)
 			if !ok {
@@ -1128,8 +1135,9 @@ var Builtins_imap = map[string]*env.Builtin{
 	// Returns:
 	// * Dictionary with name, messages, flags and permanent-flags for the selected folder
 	"imap-client//Mailbox-info": {
-		Argsn: 1,
-		Doc:   "Gets information about the currently selected folder.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Gets information about the currently selected folder.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			client, ok := imapClientFrom(arg0)
 			if !ok {
@@ -1156,8 +1164,9 @@ var Builtins_imap = map[string]*env.Builtin{
 	// Returns:
 	// * Block of integers containing matching email UIDs
 	"imap-client//Search-emails": {
-		Argsn: 2,
-		Doc:   "Searches for emails using IMAP search criteria and returns matching UIDs.",
+		Effect: env.EffInput,
+		Argsn:  2,
+		Doc:    "Searches for emails using IMAP search criteria and returns matching UIDs.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			client, ok := imapClientFrom(arg0)
 			if !ok {
@@ -1197,8 +1206,9 @@ var Builtins_imap = map[string]*env.Builtin{
 	// Returns:
 	// * Block of dictionaries with uid, subject, from, to, cc, bcc, date, received, message-id, size and flags
 	"imap-client//Get-overviews": {
-		Argsn: 2,
-		Doc:   "Gets email overviews (headers only, fast) for a block of UIDs.",
+		Effect: env.EffInput,
+		Argsn:  2,
+		Doc:    "Gets email overviews (headers only, fast) for a block of UIDs.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			client, ok := imapClientFrom(arg0)
 			if !ok {
@@ -1234,8 +1244,9 @@ var Builtins_imap = map[string]*env.Builtin{
 	// * Block of dictionaries with uid, subject, from, to, cc, bcc, sender, reply-to,
 	//   date, received, message-id, size, text, html, flags and attachments
 	"imap-client//Get-emails": {
-		Argsn: 2,
-		Doc:   "Gets full emails with bodies and attachments (slower) for a block of UIDs.",
+		Effect: env.EffInput,
+		Argsn:  2,
+		Doc:    "Gets full emails with bodies and attachments (slower) for a block of UIDs.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			client, ok := imapClientFrom(arg0)
 			if !ok {
@@ -1272,8 +1283,9 @@ var Builtins_imap = map[string]*env.Builtin{
 	// * Block of dictionaries with uid, subject, from, to, cc, bcc, date, received,
 	//   message-id, size, flags and raw (the complete RFC 822 message)
 	"imap-client//Get-raw-emails": {
-		Argsn: 2,
-		Doc:   "Gets complete raw RFC 822 messages for a block of UIDs.",
+		Effect: env.EffInput,
+		Argsn:  2,
+		Doc:    "Gets complete raw RFC 822 messages for a block of UIDs.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			client, ok := imapClientFrom(arg0)
 			if !ok {
@@ -1307,8 +1319,9 @@ var Builtins_imap = map[string]*env.Builtin{
 	// Returns:
 	// * Native imap-client object (for method chaining)
 	"imap-client//Mark-seen": {
-		Argsn: 2,
-		Doc:   "Marks an email as read/seen by UID.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Marks an email as read/seen by UID.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			client, ok := imapClientFrom(arg0)
 			if !ok {
@@ -1343,8 +1356,9 @@ var Builtins_imap = map[string]*env.Builtin{
 	// Returns:
 	// * Native imap-client object (for method chaining)
 	"imap-client//Move-email": {
-		Argsn: 3,
-		Doc:   "Moves an email to another folder by UID.",
+		Effect: env.EffOutput,
+		Argsn:  3,
+		Doc:    "Moves an email to another folder by UID.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			client, ok := imapClientFrom(arg0)
 			if !ok {
@@ -1379,8 +1393,9 @@ var Builtins_imap = map[string]*env.Builtin{
 	// Returns:
 	// * Native imap-client object (for method chaining)
 	"imap-client//Delete-email": {
-		Argsn: 2,
-		Doc:   "Marks an email for deletion by UID (use expunge to permanently delete).",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Marks an email for deletion by UID (use expunge to permanently delete).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			client, ok := imapClientFrom(arg0)
 			if !ok {
@@ -1413,8 +1428,9 @@ var Builtins_imap = map[string]*env.Builtin{
 	// Returns:
 	// * Native imap-client object (for method chaining)
 	"imap-client//Expunge": {
-		Argsn: 1,
-		Doc:   "Permanently removes emails marked for deletion.",
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Permanently removes emails marked for deletion.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			client, ok := imapClientFrom(arg0)
 			if !ok {
@@ -1437,8 +1453,9 @@ var Builtins_imap = map[string]*env.Builtin{
 	// Returns:
 	// * Void
 	"imap-client//Close": {
-		Argsn: 1,
-		Doc:   "Logs out and closes the IMAP client connection.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Logs out and closes the IMAP client connection.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			client, ok := imapClientFrom(arg0)
 			if !ok {

@@ -731,7 +731,7 @@ var Builtins_validation = map[string]*env.Builtin{
 				case env.Uri:
 					fmt.Println(str.Path)
 					db, _ := sql.Open("sqlite3", "temp-database") // TODO -- we need to make path parser in URI then this will be path
-					return *env.NewNative(env1.Idx, db, "Rye-sqlite")
+					return *env.NewNative(env1.Idx, db, "sqlite")
 				default:
 					return env.NewError("arg 2 should be Uri")
 				}
@@ -745,7 +745,7 @@ var Builtins_validation = map[string]*env.Builtin{
 				case env.Uri:
 					fmt.Println(str.Path)
 					db, _ := sql.Open("sqlite3", "temp-database") // TODO -- we need to make path parser in URI then this will be path
-					return *env.NewNative(env1.Idx, db, "Rye-sqlite")
+					return *env.NewNative(env1.Idx, db, "sqlite")
 				default:
 					return env.NewError("arg 2 should be Uri")
 				}

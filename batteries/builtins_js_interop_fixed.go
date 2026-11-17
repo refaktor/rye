@@ -6,19 +6,20 @@ package batteries
 import (
 	"syscall/js"
 	"time"
-	
+
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
 )
 
 // FIXED: Non-blocking async call that uses timeout instead of channels
 var FixedAsyncBuiltins = map[string]*env.Builtin{
-	
+
 	// The CORRECT way to handle async in WASM
 	// This version doesn't block the browser thread
 	"js-call-async\\fixed": {
-		Argsn: 2,
-		Doc:   "Calls a JavaScript function that returns a Promise (non-blocking).",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Calls a JavaScript function that returns a Promise (non-blocking).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch funcName := arg0.(type) {
 			case env.String:
@@ -42,7 +43,7 @@ var FixedAsyncBuiltins = map[string]*env.Builtin{
 
 				// Use a global storage approach instead of channels
 				resultId := js.Global().Get("Date").New().Call("getTime").String()
-				
+
 				// Set up global result storage if it doesn't exist
 				if js.Global().Get("__ryeAsyncResults").IsUndefined() {
 					js.Global().Set("__ryeAsyncResults", js.Global().Get("Object").New())
@@ -95,53 +96,54 @@ var FixedAsyncBuiltins = map[string]*env.Builtin{
 						}
 					})
 				`
-				
+
 				wrapper := js.Global().Get("eval").Invoke(wrapperCode)
 				wrapper.Invoke(funcName.Value, jsArgs, resultId)
 
 				// Now, instead of using channels, we use a timeout-based polling approach
 				// This is not ideal, but it works in WASM without deadlocking
 				maxWait := 100 // Maximum polling iterations (adjust as needed)
-				
+
 				for i := 0; i < maxWait; i++ {
 					// Check if result is ready
 					result := js.Global().Get("__ryeAsyncResults").Get(resultId)
-					
+
 					if !result.IsUndefined() && result.Get("ready").Bool() {
 						// Clean up
 						js.Global().Get("__ryeAsyncResults").Delete(resultId)
-						
+
 						if result.Get("success").Bool() {
 							return jsToRye(result.Get("data"), ps)
 						} else {
 							return evaldo.MakeBuiltinError(ps, "JavaScript Promise rejected: "+result.Get("error").String(), "js-call-async\\fixed")
 						}
 					}
-					
+
 					// Small delay to prevent busy-waiting and allow JS to execute
 					// This is the key: we yield control back to the browser
 					time.Sleep(10 * time.Millisecond)
 				}
-				
+
 				// If we reach here, the operation timed out
 				js.Global().Get("__ryeAsyncResults").Delete(resultId)
 				return evaldo.MakeBuiltinError(ps, "Async operation timed out", "js-call-async\\fixed")
-				
+
 			default:
 				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType}, "js-call-async\\fixed")
 			}
 		},
 	},
-	
+
 	// Alternative: Callback-based approach that doesn't block at all
 	"js-call-async\\callback": {
-		Argsn: 3,
-		Doc:   "Calls a JavaScript function asynchronously and executes Rye callback with result.",
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Calls a JavaScript function asynchronously and executes Rye callback with result.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch funcName := arg0.(type) {
 			case env.String:
 				// arg1 = arguments, arg2 = callback block
-				
+
 				// Convert arguments
 				var jsArgs []interface{}
 				switch args := arg1.(type) {
@@ -167,7 +169,7 @@ var FixedAsyncBuiltins = map[string]*env.Builtin{
 
 				// Create unique ID for this callback
 				callbackId := js.Global().Get("Date").New().Call("getTime").String()
-				
+
 				// Store callback in global registry
 				if js.Global().Get("__ryeCallbacks").IsUndefined() {
 					js.Global().Set("__ryeCallbacks", js.Global().Get("Object").New())
@@ -175,7 +177,7 @@ var FixedAsyncBuiltins = map[string]*env.Builtin{
 
 				// The tricky part: we need to store the Rye callback somehow
 				// For now, we'll use a simpler approach and just return immediately
-				
+
 				// Create the JS wrapper
 				wrapperCode := `
 					(function(funcName, args, callbackId) {
@@ -206,13 +208,13 @@ var FixedAsyncBuiltins = map[string]*env.Builtin{
 						}
 					})
 				`
-				
+
 				wrapper := js.Global().Get("eval").Invoke(wrapperCode)
 				wrapper.Invoke(funcName.Value, jsArgs, callbackId)
-				
+
 				// Return the callback ID so the caller knows the operation is in progress
 				return *env.NewString("ASYNC_STARTED_" + callbackId)
-				
+
 			default:
 				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType}, "js-call-async\\callback")
 			}

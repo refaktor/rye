@@ -5,7 +5,9 @@ package batteries
 
 import (
 	"fmt"
+	"net"
 	"net/http"
+	"os"
 	"strconv"
 	"sync"
 
@@ -472,9 +474,10 @@ func __prometheus_must_register(ps *env.ProgramState, arg0 env.Object, arg1 env.
 			return evaldo.MakeBuiltinError(ps, "Expected a Prometheus collector", "prometheus//must-register")
 		}
 
-		// Use MustRegister to register the collector
-		// This will panic if registration fails
-		prometheus.MustRegister(collector.Value.(prometheus.Collector))
+		if err := prometheus.Register(collector.Value.(prometheus.Collector)); err != nil {
+			ps.FailureFlag = true
+			return evaldo.MakeBuiltinError(ps, err.Error(), "prometheus//must-register")
+		}
 		return arg0
 	default:
 		return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "prometheus//must-register")
@@ -492,13 +495,18 @@ func __prometheus_handler(ps *env.ProgramState, arg0 env.Object, arg1 env.Object
 func __prometheus_start_http_server(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch addr := arg0.(type) {
 	case env.String:
-		// Set up the HTTP server for Prometheus metrics
-		http.Handle("/metrics", promhttp.Handler())
+		// Bind synchronously so address and permission errors reach the caller.
+		listener, err := net.Listen("tcp", addr.Value)
+		if err != nil {
+			ps.FailureFlag = true
+			return evaldo.MakeBuiltinError(ps, err.Error(), "prometheus//start-http-server")
+		}
 
-		// Start the server in a goroutine
+		mux := http.NewServeMux()
+		mux.Handle("/metrics", promhttp.Handler())
 		go func() {
-			if err := http.ListenAndServe(addr.Value, nil); err != nil {
-				fmt.Printf("Failed to start Prometheus HTTP server: %v\n", err)
+			if err := http.Serve(listener, mux); err != nil {
+				fmt.Fprintf(os.Stderr, "Prometheus HTTP server stopped: %v\n", err)
 			}
 		}()
 
@@ -548,110 +556,129 @@ func __prometheus_mutex_unlock(ps *env.ProgramState, arg0 env.Object, arg1 env.O
 var Builtins_prometheus = map[string]*env.Builtin{
 	// Counter functions
 	"new-counter": {
-		Argsn: 3,
-		Doc:   "Creates a new Prometheus counter with the given name, help text, and optional labels.",
-		Fn:    __prometheus_new_counter,
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Creates a new Prometheus counter with the given name, help text, and optional labels.",
+		Fn:     __prometheus_new_counter,
 	},
 	"prometheus-counter//Inc": {
-		Argsn: 1,
-		Doc:   "Increments a Prometheus counter by 1.",
-		Fn:    __prometheus_counter_inc,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Increments a Prometheus counter by 1.",
+		Fn:     __prometheus_counter_inc,
 	},
 	"prometheus-counter//Add": {
-		Argsn: 2,
-		Doc:   "Adds the given value to a Prometheus counter.",
-		Fn:    __prometheus_counter_add,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Adds the given value to a Prometheus counter.",
+		Fn:     __prometheus_counter_add,
 	},
 
 	// Gauge functions
 	"new-gauge": {
-		Argsn: 3,
-		Doc:   "Creates a new Prometheus gauge with the given name, help text, and optional labels.",
-		Fn:    __prometheus_new_gauge,
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Creates a new Prometheus gauge with the given name, help text, and optional labels.",
+		Fn:     __prometheus_new_gauge,
 	},
 	"prometheus-gauge//Set": {
-		Argsn: 2,
-		Doc:   "Sets a Prometheus gauge to the given value.",
-		Fn:    __prometheus_gauge_set,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Sets a Prometheus gauge to the given value.",
+		Fn:     __prometheus_gauge_set,
 	},
 	"prometheus-gauge//Inc": {
-		Argsn: 1,
-		Doc:   "Increments a Prometheus gauge by 1.",
-		Fn:    __prometheus_gauge_inc,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Increments a Prometheus gauge by 1.",
+		Fn:     __prometheus_gauge_inc,
 	},
 	"prometheus-gauge//Dec": {
-		Argsn: 1,
-		Doc:   "Decrements a Prometheus gauge by 1.",
-		Fn:    __prometheus_gauge_dec,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Decrements a Prometheus gauge by 1.",
+		Fn:     __prometheus_gauge_dec,
 	},
 	"prometheus-gauge//Add": {
-		Argsn: 2,
-		Doc:   "Adds the given value to a Prometheus gauge.",
-		Fn:    __prometheus_gauge_add,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Adds the given value to a Prometheus gauge.",
+		Fn:     __prometheus_gauge_add,
 	},
 	"prometheus-gauge//Sub": {
-		Argsn: 2,
-		Doc:   "Subtracts the given value from a Prometheus gauge.",
-		Fn:    __prometheus_gauge_sub,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Subtracts the given value from a Prometheus gauge.",
+		Fn:     __prometheus_gauge_sub,
 	},
 
 	// Histogram functions
 	"new-histogram": {
-		Argsn: 4,
-		Doc:   "Creates a new Prometheus histogram with the given name, help text, optional buckets, and optional labels.",
-		Fn:    __prometheus_new_histogram,
+		Effect: env.EffNone,
+		Argsn:  4,
+		Doc:    "Creates a new Prometheus histogram with the given name, help text, optional buckets, and optional labels.",
+		Fn:     __prometheus_new_histogram,
 	},
 	"prometheus-histogram//Observe": {
-		Argsn: 2,
-		Doc:   "Observes the given value in a Prometheus histogram.",
-		Fn:    __prometheus_histogram_observe,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Observes the given value in a Prometheus histogram.",
+		Fn:     __prometheus_histogram_observe,
 	},
 
 	// Summary functions
 	"new-summary": {
-		Argsn: 4,
-		Doc:   "Creates a new Prometheus summary with the given name, help text, optional objectives, and optional labels.",
-		Fn:    __prometheus_new_summary,
+		Effect: env.EffNone,
+		Argsn:  4,
+		Doc:    "Creates a new Prometheus summary with the given name, help text, optional objectives, and optional labels.",
+		Fn:     __prometheus_new_summary,
 	},
 	"prometheus-summary//Observe": {
-		Argsn: 2,
-		Doc:   "Observes the given value in a Prometheus summary.",
-		Fn:    __prometheus_summary_observe,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Observes the given value in a Prometheus summary.",
+		Fn:     __prometheus_summary_observe,
 	},
 
 	// HTTP server functions
 	"start-http-server": {
-		Argsn: 1,
-		Doc:   "Starts a Prometheus HTTP server on the given address (e.g., ':8080').",
-		Fn:    __prometheus_start_http_server,
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Starts a Prometheus HTTP server on the given address (e.g., ':8080').",
+		Fn:     __prometheus_start_http_server,
 	},
 
 	// Mutex functions for thread safety
 	"new-mutex": {
-		Argsn: 0,
-		Doc:   "Creates a new mutex for protecting metrics from concurrent access.",
-		Fn:    __prometheus_new_mutex,
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Creates a new mutex for protecting metrics from concurrent access.",
+		Fn:     __prometheus_new_mutex,
 	},
 	"prometheus-mutex//Lock": {
-		Argsn: 1,
-		Doc:   "Locks a mutex.",
-		Fn:    __prometheus_mutex_lock,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Locks a mutex.",
+		Fn:     __prometheus_mutex_lock,
 	},
 	"prometheus-mutex//Unlock": {
-		Argsn: 1,
-		Doc:   "Unlocks a mutex.",
-		Fn:    __prometheus_mutex_unlock,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Unlocks a mutex.",
+		Fn:     __prometheus_mutex_unlock,
 	},
 
 	// Additional functions
 	"must-register": {
-		Argsn: 1,
-		Doc:   "Registers a Prometheus collector using MustRegister. Will panic if registration fails.",
-		Fn:    __prometheus_must_register,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Registers a Prometheus collector using MustRegister. Will panic if registration fails.",
+		Fn:     __prometheus_must_register,
 	},
 	"handler": {
-		Argsn: 0,
-		Doc:   "Returns a Prometheus HTTP handler for custom HTTP server setups.",
-		Fn:    __prometheus_handler,
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns a Prometheus HTTP handler for custom HTTP server setups.",
+		Fn:     __prometheus_handler,
 	},
 }

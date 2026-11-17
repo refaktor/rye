@@ -167,7 +167,7 @@ var builtins_printing_extra = map[string]*env.Builtin{
 	// Example:
 	// display [1 2 3]
 	"display": {
-		Effect: env.EffNone,
+		Effect: env.EffOutput,
 		Argsn:  1,
 		Doc:    "Displays all entries without interaction or pagination and returns the original value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -192,7 +192,7 @@ var builtins_printing_extra = map[string]*env.Builtin{
 	// Example:
 	// [1 2 3] |explore
 	"explore": {
-		Effect: env.EffNone,
+		Effect: env.EffOutput,
 		Argsn:  1,
 		Doc:    "Interactively explores a value; returns the selected item or the original value when cancelled.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -208,7 +208,7 @@ var builtins_printing_extra = map[string]*env.Builtin{
 	// Returns:
 	// * the selected value or the original value when user exits
 	"_..": {
-		Effect: env.EffNone,
+		Effect: env.EffOutput,
 		Argsn:  1,
 		Doc:    "Shorthand alias for explore: interactively select a value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -225,7 +225,7 @@ var builtins_printing_extra = map[string]*env.Builtin{
 	// Returns:
 	// * the selected row or original table when user exits
 	"explore\\custom": {
-		Effect: env.EffNone,
+		Effect: env.EffOutput,
 		Argsn:  2,
 		Doc:    "Interactively displays a Table in the terminal with a custom rendering function for each row.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -262,7 +262,7 @@ var builtins_printing_extra = map[string]*env.Builtin{
 	// Returns:
 	// * the input block, unchanged
 	"print\\ssv": {
-		Effect: env.EffNone,
+		Effect: env.EffOutput,
 		Argsn:  1,
 		Doc:    "Prints a block of values as space-separated values followed by a newline, returning the input block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -283,7 +283,7 @@ var builtins_printing_extra = map[string]*env.Builtin{
 	// Returns:
 	// * the input block, unchanged
 	"print\\csv": {
-		Effect: env.EffNone,
+		Effect: env.EffOutput,
 		Argsn:  1,
 		Doc:    "Prints a block of values as comma-separated values followed by a newline, returning the input block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

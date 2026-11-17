@@ -4,8 +4,6 @@
 package batteries
 
 import (
-	"fmt"
-
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
 
@@ -79,7 +77,6 @@ func ValueToBSON(arg0 env.Object, topLevel bool) any {
 		typ = "spr"
 		met = obj.Cols
 	default:
-		fmt.Println("No matching arguments found.")
 		// TODO-FIXME
 	}
 	if topLevel || typ != "" {
@@ -194,8 +191,9 @@ var Builtins_bson = map[string]*env.Builtin{
 	// Returns:
 	// * decoded Rye value (string, integer, decimal, block, etc.)
 	"from-bson": {
-		Argsn: 1,
-		Doc:   "Decodes BSON data into Rye values.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Decodes BSON data into Rye values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var val map[string]any
 			// var val interface{}
@@ -218,8 +216,9 @@ var Builtins_bson = map[string]*env.Builtin{
 	// Returns:
 	// * native bytes object containing the BSON-encoded data
 	"to-bson": {
-		Argsn: 1,
-		Doc:   "Encodes a Rye value into BSON format.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Encodes a Rye value into BSON format.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			value := ValueToBSON(arg0, true)
 			encoded, err := bson.Marshal(value)

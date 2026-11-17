@@ -205,8 +205,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * true (simulated)
 	"gpio-open": {
-		Argsn: 0,
-		Doc:   "[SIM] Opens simulated GPIO (no hardware access).",
+		Effect: env.EffIO,
+		Argsn:  0,
+		Doc:    "[SIM] Opens simulated GPIO (no hardware access).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewBoolean(true)
 		},
@@ -217,8 +218,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * true (simulated)
 	"gpio-close": {
-		Argsn: 0,
-		Doc:   "[SIM] Closes simulated GPIO.",
+		Effect: env.EffIO,
+		Argsn:  0,
+		Doc:    "[SIM] Closes simulated GPIO.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewBoolean(true)
 		},
@@ -229,8 +231,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * native sim-pin object
 	"gpio-pin": {
-		Argsn: 1,
-		Doc:   "[SIM] Creates a simulated GPIO pin by BCM pin number.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "[SIM] Creates a simulated GPIO pin by BCM pin number.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch n := arg0.(type) {
 			case env.Integer:
@@ -247,8 +250,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * the pin object (for chaining)
 	"gpio-pin//Input": {
-		Argsn: 1,
-		Doc:   "[SIM] Sets the pin to input mode.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "[SIM] Sets the pin to input mode.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -270,8 +274,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * the pin object (for chaining)
 	"gpio-pin//Output": {
-		Argsn: 1,
-		Doc:   "[SIM] Sets the pin to output mode.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "[SIM] Sets the pin to output mode.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -293,8 +298,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * the pin object (for chaining)
 	"gpio-pin//High": {
-		Argsn: 1,
-		Doc:   "[SIM] Sets the pin output to high.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "[SIM] Sets the pin output to high.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -316,8 +322,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * the pin object (for chaining)
 	"gpio-pin//Low": {
-		Argsn: 1,
-		Doc:   "[SIM] Sets the pin output to low.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "[SIM] Sets the pin output to low.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -339,8 +346,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * the pin object (for chaining)
 	"gpio-pin//Toggle": {
-		Argsn: 1,
-		Doc:   "[SIM] Toggles the pin output state.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "[SIM] Toggles the pin output state.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -362,8 +370,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * integer 0 (low) or 1 (high)
 	"gpio-pin//Read": {
-		Argsn: 1,
-		Doc:   "[SIM] Reads the pin state. Returns 0 for low, 1 for high.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "[SIM] Reads the pin state. Returns 0 for low, 1 for high.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -384,8 +393,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * the pin object (for chaining)
 	"gpio-pin//Pull-up": {
-		Argsn: 1,
-		Doc:   "[SIM] Enables pull-up resistor.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "[SIM] Enables pull-up resistor.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -407,8 +417,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * the pin object (for chaining)
 	"gpio-pin//Pull-down": {
-		Argsn: 1,
-		Doc:   "[SIM] Enables pull-down resistor.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "[SIM] Enables pull-down resistor.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -430,8 +441,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * the pin object (for chaining)
 	"gpio-pin//Pull-off": {
-		Argsn: 1,
-		Doc:   "[SIM] Disables pull resistors.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "[SIM] Disables pull resistors.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -454,8 +466,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * the pin object (for chaining)
 	"gpio-pin//Freq": {
-		Argsn: 2,
-		Doc:   "[SIM] Sets the PWM frequency.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "[SIM] Sets the PWM frequency.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -484,8 +497,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * the pin object (for chaining)
 	"gpio-pin//Duty-cycle": {
-		Argsn: 3,
-		Doc:   "[SIM] Sets the PWM duty cycle.",
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "[SIM] Sets the PWM duty cycle.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -518,8 +532,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * the pin object (for chaining)
 	"gpio-pin//Mode": {
-		Argsn: 2,
-		Doc:   "[SIM] Sets the pin mode.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "[SIM] Sets the pin mode.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -554,8 +569,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * the pin object (for chaining)
 	"gpio-pin//Detect": {
-		Argsn: 2,
-		Doc:   "[SIM] Sets edge detection mode.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "[SIM] Sets edge detection mode.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -589,8 +605,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * true if an edge was detected
 	"gpio-pin//Edge-detected?": {
-		Argsn: 1,
-		Doc:   "[SIM] Returns true if edge was detected since last call.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "[SIM] Returns true if edge was detected since last call.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -612,8 +629,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * the pin object (for chaining)
 	"gpio-pin//Write": {
-		Argsn: 2,
-		Doc:   "[SIM] Writes a state to the pin.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "[SIM] Writes a state to the pin.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:

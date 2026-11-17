@@ -111,8 +111,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * native SSH server object
 	"ssh-server": {
-		Argsn: 1,
-		Doc:   "Creates a new SSH server that listens on the specified address.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a new SSH server that listens on the specified address.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.String:
@@ -133,8 +134,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * the SSH server object
 	"ssh-server//Handle": {
-		Argsn: 2,
-		Doc:   "Sets a handler function for SSH sessions on the server.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Sets a handler function for SSH sessions on the server.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch server := arg0.(type) {
 			case env.Native:
@@ -172,8 +174,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * the SSH server object
 	"ssh-server//Password-auth": {
-		Argsn: 2,
-		Doc:   "Sets a password authentication handler for the SSH server.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Sets a password authentication handler for the SSH server.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch server := arg0.(type) {
 			case env.Native:
@@ -207,8 +210,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * the SSH server object
 	"ssh-server//Public-key-auth": {
-		Argsn: 2,
-		Doc:   "Sets a public key authentication handler for the SSH server.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Sets a public key authentication handler for the SSH server.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch server := arg0.(type) {
 			case env.Native:
@@ -243,8 +247,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * the SSH server object
 	"ssh-server//Host-key-file": {
-		Argsn: 2,
-		Doc:   "Loads a private key file and uses it as the SSH server host key.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Loads a private key file and uses it as the SSH server host key.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch server := arg0.(type) {
 			case env.Native:
@@ -271,8 +276,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * the SSH server object
 	"ssh-server//Banner": {
-		Argsn: 2,
-		Doc:   "Sets the banner string sent to clients before authentication.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Sets the banner string sent to clients before authentication.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch server := arg0.(type) {
 			case env.Native:
@@ -298,8 +304,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * the SSH server object, or error if unable to serve
 	"ssh-server//Serve": {
-		Argsn: 1,
-		Doc:   "Starts the SSH server, listening for connections.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Starts the SSH server, listening for connections.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch server := arg0.(type) {
 			case env.Native:
@@ -320,8 +327,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * the SSH server object
 	"ssh-server//Close": {
-		Argsn: 1,
-		Doc:   "Closes all active listeners and connections on the SSH server.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Closes all active listeners and connections on the SSH server.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch server := arg0.(type) {
 			case env.Native:
@@ -341,8 +349,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * the SSH server object
 	"ssh-server//Shutdown": {
-		Argsn: 1,
-		Doc:   "Gracefully shuts down the SSH server, closing listeners without interrupting active connections.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Gracefully shuts down the SSH server, closing listeners without interrupting active connections.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch server := arg0.(type) {
 			case env.Native:
@@ -365,8 +374,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * the SSH session object
 	"ssh-session//Write": {
-		Argsn: 2,
-		Doc:   "Writes a string to an SSH session.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Writes a string to an SSH session.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch session := arg0.(type) {
 			case env.Native:
@@ -391,8 +401,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * String read from the session, or error on failure
 	"ssh-session//Read": {
-		Argsn: 2,
-		Doc:   "Reads up to a given number of bytes from an SSH session.",
+		Effect: env.EffInput,
+		Argsn:  2,
+		Doc:    "Reads up to a given number of bytes from an SSH session.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch session := arg0.(type) {
 			case env.Native:
@@ -421,8 +432,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * the SSH session object
 	"ssh-session//Exit": {
-		Argsn: 2,
-		Doc:   "Sends an exit status and closes the SSH session.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Sends an exit status and closes the SSH session.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch session := arg0.(type) {
 			case env.Native:
@@ -448,8 +460,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * String username used for the connection
 	"ssh-session//User": {
-		Argsn: 1,
-		Doc:   "Returns the username used when establishing the SSH connection.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the username used when establishing the SSH connection.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch session := arg0.(type) {
 			case env.Native:
@@ -466,8 +479,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * String remote address of the client
 	"ssh-session//Remote-addr": {
-		Argsn: 1,
-		Doc:   "Returns the remote address of the SSH connection.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the remote address of the SSH connection.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch session := arg0.(type) {
 			case env.Native:
@@ -484,8 +498,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * String local address of the server
 	"ssh-session//Local-addr": {
-		Argsn: 1,
-		Doc:   "Returns the local address of the SSH connection.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the local address of the SSH connection.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch session := arg0.(type) {
 			case env.Native:
@@ -502,8 +517,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * Block of shell-parsed command arguments
 	"ssh-session//Command": {
-		Argsn: 1,
-		Doc:   "Returns the shell-parsed command arguments provided by the user.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the shell-parsed command arguments provided by the user.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch session := arg0.(type) {
 			case env.Native:
@@ -525,8 +541,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * String raw command provided by the user
 	"ssh-session//Raw-command": {
-		Argsn: 1,
-		Doc:   "Returns the exact raw command string provided by the user.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the exact raw command string provided by the user.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch session := arg0.(type) {
 			case env.Native:
@@ -543,8 +560,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * Block of "key=value" environment strings
 	"ssh-session//Environ": {
-		Argsn: 1,
-		Doc:   "Returns the environment variables set for the session as a block of key=value strings.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the environment variables set for the session as a block of key=value strings.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch session := arg0.(type) {
 			case env.Native:
@@ -566,8 +584,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * String subsystem requested by the user
 	"ssh-session//Subsystem": {
-		Argsn: 1,
-		Doc:   "Returns the subsystem requested by the user.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the subsystem requested by the user.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch session := arg0.(type) {
 			case env.Native:
@@ -584,8 +603,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * String authorized-keys formatted public key, or error if none used
 	"ssh-session//Public-key": {
-		Argsn: 1,
-		Doc:   "Returns the public key used to authenticate the session, in authorized_keys format.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the public key used to authenticate the session, in authorized_keys format.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch session := arg0.(type) {
 			case env.Native:
@@ -612,8 +632,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * native SSH client object
 	"ssh-uri//Open": {
-		Argsn: 1,
-		Doc:   "Opens an SSH client connection. URI format: ssh://user[:pass]@host[:port].",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Opens an SSH client connection. URI format: ssh://user[:pass]@host[:port].",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch uri := arg0.(type) {
 			case env.Uri:
@@ -647,8 +668,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * native SSH client object
 	"ssh-uri//Open\\pwd": {
-		Argsn: 2,
-		Doc:   "Opens an SSH client connection with a separate password parameter. URI format: ssh://user@host[:port].",
+		Effect: env.EffInput,
+		Argsn:  2,
+		Doc:    "Opens an SSH client connection with a separate password parameter. URI format: ssh://user@host[:port].",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch uri := arg0.(type) {
 			case env.Uri:
@@ -682,8 +704,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * native SSH client object
 	"ssh-uri//Open\\key": {
-		Argsn: 2,
-		Doc:   "Opens an SSH client connection using a private key file. URI format: ssh://user@host[:port].",
+		Effect: env.EffInput,
+		Argsn:  2,
+		Doc:    "Opens an SSH client connection using a private key file. URI format: ssh://user@host[:port].",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch uri := arg0.(type) {
 			case env.Uri:
@@ -728,8 +751,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * Dict with stdout, stderr and exit keys
 	"run": {
-		Argsn: 2,
-		Doc:   "Runs a command on a remote SSH client and returns a dict with 'stdout', 'stderr' and 'exit'.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Runs a command on a remote SSH client and returns a dict with 'stdout', 'stderr' and 'exit'.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch client := arg0.(type) {
 			case env.Native:
@@ -758,8 +782,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * the SSH client object
 	"ssh-client//Close": {
-		Argsn: 1,
-		Doc:   "Closes the SSH client connection.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Closes the SSH client connection.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch client := arg0.(type) {
 			case env.Native:
@@ -782,8 +807,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * native SSH client session object
 	"ssh-client//New-session": {
-		Argsn: 1,
-		Doc:   "Creates a new SSH session on the client, with stdin/stdout/stderr prepared for use.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a new SSH session on the client, with stdin/stdout/stderr prepared for use.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch client := arg0.(type) {
 			case env.Native:
@@ -821,8 +847,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * Dict with stdout, stderr and exit keys
 	"ssh-client//Run": {
-		Argsn: 2,
-		Doc:   "Runs a command on a remote SSH client and returns a dict with 'stdout', 'stderr' and 'exit'.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Runs a command on a remote SSH client and returns a dict with 'stdout', 'stderr' and 'exit'.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch client := arg0.(type) {
 			case env.Native:
@@ -852,8 +879,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * the SSH client session object
 	"ssh-client-session//Start": {
-		Argsn: 2,
-		Doc:   "Starts a command on the SSH session (non-blocking).",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Starts a command on the SSH session (non-blocking).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch session := arg0.(type) {
 			case env.Native:
@@ -882,8 +910,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * the SSH client session object
 	"ssh-client-session//Stdin": {
-		Argsn: 2,
-		Doc:   "Writes a string or bytes to the session's standard input.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Writes a string or bytes to the session's standard input.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch session := arg0.(type) {
 			case env.Native:
@@ -919,8 +948,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * the SSH client session object
 	"ssh-client-session//Close-stdin": {
-		Argsn: 1,
-		Doc:   "Closes the session's standard input, signaling end-of-file to the remote program.",
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Closes the session's standard input, signaling end-of-file to the remote program.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch session := arg0.(type) {
 			case env.Native:
@@ -943,8 +973,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * Integer exit code of the command
 	"ssh-client-session//Wait": {
-		Argsn: 1,
-		Doc:   "Waits for the command to finish and returns its exit code.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Waits for the command to finish and returns its exit code.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch session := arg0.(type) {
 			case env.Native:
@@ -974,8 +1005,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * Dict with stdout, stderr and exit keys
 	"ssh-client-session//Run": {
-		Argsn: 2,
-		Doc:   "Runs a command on the session and waits, returning a dict with 'stdout', 'stderr' and 'exit'.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Runs a command on the session and waits, returning a dict with 'stdout', 'stderr' and 'exit'.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch session := arg0.(type) {
 			case env.Native:
@@ -1013,8 +1045,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * String captured standard output
 	"ssh-client-session//Stdout": {
-		Argsn: 1,
-		Doc:   "Returns the captured standard output of the session as a string.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Returns the captured standard output of the session as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch session := arg0.(type) {
 			case env.Native:
@@ -1034,8 +1067,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * String captured standard error
 	"ssh-client-session//Stderr": {
-		Argsn: 1,
-		Doc:   "Returns the captured standard error of the session as a string.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Returns the captured standard error of the session as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch session := arg0.(type) {
 			case env.Native:
@@ -1055,8 +1089,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * the SSH client session object
 	"ssh-client-session//Shell": {
-		Argsn: 1,
-		Doc:   "Starts a login shell on the SSH session.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Starts a login shell on the SSH session.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch session := arg0.(type) {
 			case env.Native:
@@ -1081,8 +1116,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * the SSH client session object
 	"ssh-client-session//Setenv": {
-		Argsn: 3,
-		Doc:   "Sets an environment variable on the SSH session before starting the command.",
+		Effect: env.EffOutput,
+		Argsn:  3,
+		Doc:    "Sets an environment variable on the SSH session before starting the command.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch session := arg0.(type) {
 			case env.Native:
@@ -1115,8 +1151,9 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Returns:
 	// * the SSH client session object
 	"ssh-client-session//Close": {
-		Argsn: 1,
-		Doc:   "Closes the SSH client session.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Closes the SSH client session.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch session := arg0.(type) {
 			case env.Native:

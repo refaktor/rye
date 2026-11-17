@@ -8,8 +8,9 @@ import (
 // Builtins_control contains control flow helpers.
 var Builtins_control = map[string]*env.Builtin{
 	"case": {
-		Argsn: 1,
-		Doc:   "Evaluates condition expressions followed by action blocks. Returns the result of the first block whose condition is boolean true, or the default block marked with _ if no condition matches. Returns void if none match. Non-boolean conditions fail.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Evaluates condition expressions followed by action blocks. Returns the result of the first block whose condition is boolean true, or the default block marked with _ if no condition matches. Returns void if none match. Non-boolean conditions fail.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			pairs, ok := arg0.(env.Block)
 			if !ok {

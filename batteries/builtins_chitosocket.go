@@ -26,8 +26,9 @@ var Builtins_chitosocket = map[string]*env.Builtin{
 	// Returns:
 	// * native Chitosocket-server object
 	"chitosocket": {
-		Argsn: 1,
-		Doc:   "Creates a new ChitoSocket WebSocket server with the specified number of CPU cores.",
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Creates a new ChitoSocket WebSocket server with the specified number of CPU cores.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cores := arg0.(type) {
 			case env.Integer:
@@ -50,8 +51,9 @@ var Builtins_chitosocket = map[string]*env.Builtin{
 	// Returns:
 	// * Integer 1 on success
 	"Chitosocket-server//close": {
-		Argsn: 1,
-		Doc:   "Closes the ChitoSocket server and releases resources.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Closes the ChitoSocket server and releases resources.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch server := arg0.(type) {
 			case env.Native:
@@ -77,8 +79,9 @@ var Builtins_chitosocket = map[string]*env.Builtin{
 	// Returns:
 	// * the server object for method chaining
 	"Chitosocket-server//on": {
-		Argsn: 3,
-		Doc:   "Registers an event handler for the specified event name. Handler receives subscriber and data as arguments.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Registers an event handler for the specified event name. Handler receives subscriber and data as arguments.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch server := arg0.(type) {
 			case env.Native:
@@ -144,8 +147,9 @@ var Builtins_chitosocket = map[string]*env.Builtin{
 	// Returns:
 	// * Block containing [connection, response-writer, subscriber] or error
 	"Chitosocket-server//upgrade-connection": {
-		Argsn: 3,
-		Doc:   "Upgrades an HTTP connection to WebSocket. Returns a block with connection, response writer, and subscriber.",
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Upgrades an HTTP connection to WebSocket. Returns a block with connection, response writer, and subscriber.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch server := arg0.(type) {
 			case env.Native:
@@ -201,8 +205,9 @@ var Builtins_chitosocket = map[string]*env.Builtin{
 	// Returns:
 	// * Integer 1 on success
 	"Chitosocket-server//emit-direct": {
-		Argsn: 4,
-		Doc:   "Emits an event directly to a specific subscriber with the given data.",
+		Effect: env.EffOutput,
+		Argsn:  4,
+		Doc:    "Emits an event directly to a specific subscriber with the given data.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch server := arg0.(type) {
 			case env.Native:
@@ -254,8 +259,9 @@ var Builtins_chitosocket = map[string]*env.Builtin{
 	// Returns:
 	// * Integer 1 on success
 	"Chitosocket-server//emit": {
-		Argsn: 4,
-		Doc:   "Emits an event to all subscribers in a specific room (excluding none).",
+		Effect: env.EffOutput,
+		Argsn:  4,
+		Doc:    "Emits an event to all subscribers in a specific room (excluding none).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch server := arg0.(type) {
 			case env.Native:
@@ -306,8 +312,9 @@ var Builtins_chitosocket = map[string]*env.Builtin{
 	// Returns:
 	// * Integer 1 on success
 	"Chitosocket-server//broadcast": {
-		Argsn: 3,
-		Doc:   "Broadcasts an event to all connected subscribers.",
+		Effect: env.EffOutput,
+		Argsn:  3,
+		Doc:    "Broadcasts an event to all connected subscribers.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch server := arg0.(type) {
 			case env.Native:
@@ -351,8 +358,9 @@ var Builtins_chitosocket = map[string]*env.Builtin{
 	// Returns:
 	// * Integer 1 on success
 	"Chitosocket-server//add-to-room": {
-		Argsn: 3,
-		Doc:   "Adds a subscriber to a room.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Adds a subscriber to a room.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch server := arg0.(type) {
 			case env.Native:
@@ -387,8 +395,9 @@ var Builtins_chitosocket = map[string]*env.Builtin{
 	// Returns:
 	// * Integer 1 on success
 	"Chitosocket-server//remove-from-room": {
-		Argsn: 3,
-		Doc:   "Removes a subscriber from a room.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Removes a subscriber from a room.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch server := arg0.(type) {
 			case env.Native:
@@ -422,8 +431,9 @@ var Builtins_chitosocket = map[string]*env.Builtin{
 	// Returns:
 	// * Integer count of subscribers in the room
 	"Chitosocket-server//room-count?": {
-		Argsn: 2,
-		Doc:   "Returns the number of subscribers in a room.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Returns the number of subscribers in a room.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch server := arg0.(type) {
 			case env.Native:
@@ -453,8 +463,9 @@ var Builtins_chitosocket = map[string]*env.Builtin{
 	// Returns:
 	// * String subscriber ID
 	"Chitosocket-subscriber//id?": {
-		Argsn: 1,
-		Doc:   "Returns the unique ID of the subscriber.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the unique ID of the subscriber.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch sub := arg0.(type) {
 			case env.Native:
@@ -474,8 +485,9 @@ var Builtins_chitosocket = map[string]*env.Builtin{
 	// Returns:
 	// * Function handler or void if not found
 	"Chitosocket-server//handler?": {
-		Argsn: 2,
-		Doc:   "Returns the handler function for a specific event, or void if not set.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Returns the handler function for a specific event, or void if not set.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch server := arg0.(type) {
 			case env.Native:
@@ -505,8 +517,9 @@ var Builtins_chitosocket = map[string]*env.Builtin{
 	// Returns:
 	// * Integer 1 on success
 	"Chitosocket-handler//call": {
-		Argsn: 3,
-		Doc:   "Calls a handler function with the given subscriber and data.",
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Calls a handler function with the given subscriber and data.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch handler := arg0.(type) {
 			case env.Native:
@@ -545,8 +558,9 @@ var Builtins_chitosocket = map[string]*env.Builtin{
 	// Returns:
 	// * Integer 1 on success
 	"Chitosocket-server//remove": {
-		Argsn: 2,
-		Doc:   "Removes a subscriber from the server.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Removes a subscriber from the server.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch server := arg0.(type) {
 			case env.Native:

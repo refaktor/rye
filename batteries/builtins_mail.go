@@ -24,8 +24,9 @@ var Builtins_mail = map[string]*env.Builtin{
 	// Returns:
 	// * native parsed-email object
 	"reader//Parse-email": {
-		Argsn: 1,
-		Doc:   "Parses email data from a reader.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Parses email data from a reader.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch reader := arg0.(type) {
 			case env.Native:
@@ -47,8 +48,9 @@ var Builtins_mail = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the email subject
 	"parsed-email//Subject?": {
-		Argsn: 1,
-		Doc:   "Gets the subject from a parsed email.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the subject from a parsed email.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch email := arg0.(type) {
 			case env.Native:
@@ -103,8 +105,9 @@ var Builtins_mail = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the email message ID
 	"parsed-email//Message-id?": {
-		Argsn: 1,
-		Doc:   "Gets the message ID from a parsed email.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the message ID from a parsed email.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch email := arg0.(type) {
 			case env.Native:
@@ -122,8 +125,9 @@ var Builtins_mail = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the HTML body of the email
 	"parsed-email//Html-body?": {
-		Argsn: 1,
-		Doc:   "Gets the HTML body from a parsed email.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the HTML body from a parsed email.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch email := arg0.(type) {
 			case env.Native:
@@ -141,8 +145,9 @@ var Builtins_mail = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the plain text body of the email
 	"parsed-email//Text-body?": {
-		Argsn: 1,
-		Doc:   "Gets the plain text body from a parsed email.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the plain text body from a parsed email.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch email := arg0.(type) {
 			case env.Native:
@@ -157,10 +162,25 @@ var Builtins_mail = map[string]*env.Builtin{
 	// Returns:
 	// * native object containing email attachments
 	"parsed-email//Attachments?": {
-		Argsn: 1,
-		Doc:   "Gets the attachments from a parsed email.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the attachments from a parsed email.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return *env.NewNative(ps.Idx, arg0, "smtpd")
+			switch email := arg0.(type) {
+			case env.Native:
+				attachments := email.Value.(parsemail.Email).Attachments
+				items := make([]env.Object, len(attachments))
+				for i, attachment := range attachments {
+					items[i] = *env.NewDict(map[string]any{
+						"filename":     attachment.Filename,
+						"content-type": attachment.ContentType,
+						"data":         *env.NewNative(ps.Idx, attachment.Data, "reader"),
+					})
+				}
+				return *env.NewBlock(*env.NewTSeries(items))
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "parsed-email//Attachments?")
+			}
 		},
 	},
 	// Args:
@@ -168,10 +188,26 @@ var Builtins_mail = map[string]*env.Builtin{
 	// Returns:
 	// * native object containing embedded files from the email
 	"parsed-email//Embedded-files?": {
-		Argsn: 1,
-		Doc:   "Gets the embedded files from a parsed email.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the embedded files from a parsed email.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return *env.NewNative(ps.Idx, arg0, "smtpd")
+			switch email := arg0.(type) {
+			case env.Native:
+				files := email.Value.(parsemail.Email).EmbeddedFiles
+				items := make([]env.Object, len(files))
+				for i, file := range files {
+					items[i] = *env.NewDict(map[string]any{
+						"cid":          file.CID,
+						"filename":     file.Filename,
+						"content-type": file.ContentType,
+						"data":         *env.NewNative(ps.Idx, file.Data, "reader"),
+					})
+				}
+				return *env.NewBlock(*env.NewTSeries(items))
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "parsed-email//Embedded-files?")
+			}
 		},
 	},
 }

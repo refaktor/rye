@@ -170,23 +170,24 @@ var Builtins_conversion = map[string]*env.Builtin{
 	//
 	// Tests:
 	// ; TODO: convert returns different type than expected - needs investigation
-// ; equal { dict { "first-name" "John" } |convert { name: .first-name } |type? } 'ctx
+	// ; equal { dict { "first-name" "John" } |convert { name: .first-name } |type? } 'ctx
 	// Args:
 	// * value: Dict or RyeCtx to convert
 	// * spec: Block specifying the conversion rules
 	// Returns:
 	// * converted value based on the specification
 	"convert": {
-		Argsn: 2,
-		Doc:   "Converts value from one kind to another based on a conversion specification block.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Converts value from one kind to another based on a conversion specification block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return BuiConvert(ps, arg0, arg1)
 		},
 	},
 
 	// Tests:
-	// ; TODO: converter test needs proper setup - needs investigation  
-// ; equal { converter 'source-kind 'target-kind { name: .full-name } |type? } 'kind
+	// ; TODO: converter test needs proper setup - needs investigation
+	// ; equal { converter 'source-kind 'target-kind { name: .full-name } |type? } 'kind
 	// Args:
 	// * source-kind: Kind to convert from
 	// * target-kind: Kind to convert to
@@ -194,8 +195,9 @@ var Builtins_conversion = map[string]*env.Builtin{
 	// Returns:
 	// * the target kind with the converter registered
 	"converter": {
-		Argsn: 3,
-		Doc:   "Registers a converter between two kinds of objects.",
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Registers a converter between two kinds of objects.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// obj := BuiValidate(ps, arg0, arg1)
 			switch obj1 := arg0.(type) {

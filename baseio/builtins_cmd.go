@@ -580,7 +580,7 @@ var Builtins_cmd = map[string]*env.Builtin{
 	// Returns:
 	// * the original command object after redirecting stdin/stdout/stderr to /dev/null
 	"command//Detach!": {
-		Effect: env.EffNone,
+		Effect: env.EffOutput,
 		Argsn:  1,
 		Doc:    "Redirect stdin, stdout, and stderr of a command to /dev/null.",
 		Fn: commandFn("Detach!", func(ps *env.ProgramState, c *command, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

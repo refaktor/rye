@@ -161,28 +161,32 @@ func decodeRFC2047(s string) (string, error) {
 var Builtins_mimeMail = map[string]*env.Builtin{
 
 	"mail-message//header?": {
-		Argsn: 1,
+		Effect: env.EffNone,
+		Argsn:  1,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewNative(ps.Idx, arg0, "smtpd")
 		},
 	},
 
 	"mail-message//body?": {
-		Argsn: 1,
+		Effect: env.EffNone,
+		Argsn:  1,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewNative(ps.Idx, arg0, "smtpd")
 		},
 	},
 
 	"parse-media-type": {
-		Argsn: 1,
+		Effect: env.EffNone,
+		Argsn:  1,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewNative(ps.Idx, arg0, "smtpd")
 		},
 	},
 
 	"mail-message//for-parts": {
-		Argsn: 1,
+		Effect: env.EffNone,
+		Argsn:  1,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewNative(ps.Idx, arg0, "smtpd")
 		},

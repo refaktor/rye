@@ -103,8 +103,9 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// * native MQTT client connection (type: "mqtt-client")
 	// * error if connection fails
 	"mqtt-uri//Open": {
-		Argsn: 1,
-		Doc:   "Opens a connection to an MQTT broker.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Opens a connection to an MQTT broker.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch uri := arg0.(type) {
 			case env.Uri:
@@ -138,8 +139,9 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// * integer 1 for success
 	// * error if disconnection fails
 	"mqtt-client//Disconnect": {
-		Argsn: 1,
-		Doc:   "Disconnects from the MQTT broker.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Disconnects from the MQTT broker.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch client := arg0.(type) {
 			case env.Native:
@@ -161,8 +163,9 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// * integer 1 for success
 	// * error if close fails
 	"mqtt-client//Close": {
-		Argsn: 1,
-		Doc:   "Closes the MQTT client connection (alias for Disconnect).",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Closes the MQTT client connection (alias for Disconnect).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch client := arg0.(type) {
 			case env.Native:
@@ -191,8 +194,9 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// * integer 1 for success
 	// * error if publish fails
 	"mqtt-client//Publish": {
-		Argsn: 5,
-		Doc:   "Publishes a message to an MQTT topic with specified QoS and retain flag.",
+		Effect: env.EffOutput,
+		Argsn:  5,
+		Doc:    "Publishes a message to an MQTT topic with specified QoS and retain flag.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch client := arg0.(type) {
 			case env.Native:
@@ -252,8 +256,9 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// * integer 1 for success (uses QoS 0, no retain)
 	// * error if publish fails
 	"mqtt-client//Publish-simple": {
-		Argsn: 3,
-		Doc:   "Publishes a message to an MQTT topic with default settings (QoS 0, no retain).",
+		Effect: env.EffOutput,
+		Argsn:  3,
+		Doc:    "Publishes a message to an MQTT topic with default settings (QoS 0, no retain).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch client := arg0.(type) {
 			case env.Native:
@@ -296,8 +301,9 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// * integer 1 for success
 	// * error if subscription fails
 	"mqtt-client//Subscribe": {
-		Argsn: 4,
-		Doc:   "Subscribes to an MQTT topic with a message handler function.",
+		Effect: env.EffIO,
+		Argsn:  4,
+		Doc:    "Subscribes to an MQTT topic with a message handler function.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch client := arg0.(type) {
 			case env.Native:
@@ -324,7 +330,6 @@ var Builtins_mqtt = map[string]*env.Builtin{
 
 							return *env.NewInteger(1)
 						default:
-							fmt.Println(arg3.Inspect(*ps.Idx))
 							ps.FailureFlag = true
 							return evaldo.MakeArgError(ps, 4, []env.Type{env.FunctionType}, "mqtt-client//Subscribe")
 						}
@@ -354,8 +359,9 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// * integer 1 for success (uses QoS 0)
 	// * error if subscription fails
 	"mqtt-client//Subscribe-simple": {
-		Argsn: 3,
-		Doc:   "Subscribes with QoS 0; the handler receives a payload string and metadata dict, just like Subscribe.",
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Subscribes with QoS 0; the handler receives a payload string and metadata dict, just like Subscribe.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch client := arg0.(type) {
 			case env.Native:
@@ -398,8 +404,9 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// * integer 1 for success
 	// * error if unsubscription fails
 	"mqtt-client//Unsubscribe": {
-		Argsn: 2,
-		Doc:   "Unsubscribes from an MQTT topic.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Unsubscribes from an MQTT topic.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch client := arg0.(type) {
 			case env.Native:
@@ -432,8 +439,9 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// Returns:
 	// * integer 1 if connected, 0 if not connected
 	"mqtt-client//Is-connected": {
-		Argsn: 1,
-		Doc:   "Checks if the MQTT client is currently connected to the broker.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Checks if the MQTT client is currently connected to the broker.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch client := arg0.(type) {
 			case env.Native:
@@ -455,8 +463,9 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// Returns:
 	// * new MQTT client options object (type: "mqtt-options")
 	"mqtt-options": {
-		Argsn: 0,
-		Doc:   "Creates a new MQTT client options object for advanced configuration.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Creates a new MQTT client options object for advanced configuration.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			opts := mqtt.NewClientOptions()
 			return *env.NewNative(ps.Idx, opts, "mqtt-options")
@@ -471,8 +480,9 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// Returns:
 	// * the same options object (for method chaining)
 	"mqtt-options//Set-broker": {
-		Argsn: 2,
-		Doc:   "Sets the MQTT broker address in the options.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Sets the MQTT broker address in the options.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch opts := arg0.(type) {
 			case env.Native:
@@ -500,8 +510,9 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// Returns:
 	// * the same options object (for method chaining)
 	"mqtt-options//Set-client-id": {
-		Argsn: 2,
-		Doc:   "Sets the client ID in the MQTT options.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Sets the client ID in the MQTT options.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch opts := arg0.(type) {
 			case env.Native:
@@ -529,8 +540,9 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// Returns:
 	// * the same options object (for method chaining)
 	"mqtt-options//Set-keep-alive": {
-		Argsn: 2,
-		Doc:   "Sets the keep alive interval in seconds.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Sets the keep alive interval in seconds.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch opts := arg0.(type) {
 			case env.Native:
@@ -558,8 +570,9 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// Returns:
 	// * the same options object (for method chaining)
 	"mqtt-options//Set-username": {
-		Argsn: 2,
-		Doc:   "Sets the username for MQTT authentication.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Sets the username for MQTT authentication.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch opts := arg0.(type) {
 			case env.Native:
@@ -587,8 +600,9 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// Returns:
 	// * the same options object (for method chaining)
 	"mqtt-options//Set-password": {
-		Argsn: 2,
-		Doc:   "Sets the password for MQTT authentication.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Sets the password for MQTT authentication.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch opts := arg0.(type) {
 			case env.Native:
@@ -619,8 +633,9 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// Returns:
 	// * the same options object (for method chaining)
 	"mqtt-options//Set-will": {
-		Argsn: 5,
-		Doc:   "Sets the Last Will and Testament message with QoS and retain flag.",
+		Effect: env.EffNone,
+		Argsn:  5,
+		Doc:    "Sets the Last Will and Testament message with QoS and retain flag.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch opts := arg0.(type) {
 			case env.Native:
@@ -672,8 +687,9 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// * native MQTT client connection (type: "mqtt-client")
 	// * error if connection fails
 	"mqtt-options//Connect-with-options": {
-		Argsn: 1,
-		Doc:   "Creates and connects an MQTT client using the configured options.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Creates and connects an MQTT client using the configured options.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch opts := arg0.(type) {
 			case env.Native:

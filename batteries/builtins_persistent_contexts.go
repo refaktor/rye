@@ -405,8 +405,9 @@ func (pce *PersistentCtxEvaluator) handleModword(mw env.Modword) {
 
 var builtins_persistent_contexts = map[string]*env.Builtin{
 	"persistent-context": {
-		Argsn: 1,
-		Doc:   "Opens or creates a persistent context at the given path.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Opens or creates a persistent context at the given path.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.String:

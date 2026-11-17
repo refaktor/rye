@@ -1463,7 +1463,7 @@ section "SQLite" "SQLite database functions" {
 	{
 	}
 
-	group "Rye-sqlite//Exec"
+	group "sqlite//Exec"
 	"Executes a SQL statement that doesn't return rows."
 	{
 		argsn 2
@@ -1479,7 +1479,7 @@ section "SQLite" "SQLite database functions" {
 	{
 	}
 
-	group "Rye-sqlite//Query"
+	group "sqlite//Query"
 	"Executes a SQL query and returns results as a table."
 	{
 		argsn 2
@@ -1496,7 +1496,7 @@ section "SQLite" "SQLite database functions" {
 	{
 	}
 
-	group "Rye-sqlite//Show-SQL"
+	group "sqlite//Show-SQL"
 	"Generates and returns the SQL string without executing it."
 	{
 		argsn 2
@@ -1512,7 +1512,7 @@ section "SQLite" "SQLite database functions" {
 	{
 	}
 
-	group "Rye-sqlite//Close"
+	group "sqlite//Close"
 	"Closes the SQLite database connection."
 	{
 		argsn 1

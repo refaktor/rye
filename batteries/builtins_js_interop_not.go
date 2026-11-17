@@ -1,5 +1,5 @@
 //go:build !wasm
-// +build !sm
+// +build !wasm
 
 package batteries
 
@@ -8,5 +8,4 @@ import (
 )
 
 // JavaScript interop functions for Rye WASM
-var Builtins_js_interop = map[string]*env.Builtin{
-}
+var Builtins_js_interop = map[string]*env.Builtin{}

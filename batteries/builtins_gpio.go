@@ -32,8 +32,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * true if successful
 	"gpio-open": {
-		Argsn: 0,
-		Doc:   "Opens and initializes GPIO memory for RPi GPIO access.",
+		Effect: env.EffIO,
+		Argsn:  0,
+		Doc:    "Opens and initializes GPIO memory for RPi GPIO access.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			err := rpio.Open()
 			if err != nil {
@@ -49,8 +50,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * true if successful
 	"gpio-close": {
-		Argsn: 0,
-		Doc:   "Closes GPIO memory and frees resources.",
+		Effect: env.EffIO,
+		Argsn:  0,
+		Doc:    "Closes GPIO memory and frees resources.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			err := rpio.Close()
 			if err != nil {
@@ -69,8 +71,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * native gpio-pin object
 	"gpio-pin": {
-		Argsn: 1,
-		Doc:   "Creates a new GPIO pin object by BCM pin number.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Creates a new GPIO pin object by BCM pin number.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch n := arg0.(type) {
 			case env.Integer:
@@ -87,8 +90,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * the pin object (for chaining)
 	"gpio-pin//Input": {
-		Argsn: 1,
-		Doc:   "Sets the pin to input mode.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Sets the pin to input mode.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -110,8 +114,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * the pin object (for chaining)
 	"gpio-pin//Output": {
-		Argsn: 1,
-		Doc:   "Sets the pin to output mode.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Sets the pin to output mode.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -133,8 +138,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * the pin object (for chaining)
 	"gpio-pin//High": {
-		Argsn: 1,
-		Doc:   "Sets the pin output to high (3.3V).",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Sets the pin output to high (3.3V).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -156,8 +162,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * the pin object (for chaining)
 	"gpio-pin//Low": {
-		Argsn: 1,
-		Doc:   "Sets the pin output to low (0V).",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Sets the pin output to low (0V).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -179,8 +186,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * the pin object (for chaining)
 	"gpio-pin//Toggle": {
-		Argsn: 1,
-		Doc:   "Toggles the pin output state (high -> low, low -> high).",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Toggles the pin output state (high -> low, low -> high).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -204,8 +212,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * integer 0 (low) or 1 (high)
 	"gpio-pin//Read": {
-		Argsn: 1,
-		Doc:   "Reads the pin state. Returns 0 for low, 1 for high.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Reads the pin state. Returns 0 for low, 1 for high.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -227,8 +236,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * the pin object (for chaining)
 	"gpio-pin//Pull-up": {
-		Argsn: 1,
-		Doc:   "Enables the internal pull-up resistor on the pin.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Enables the internal pull-up resistor on the pin.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -250,8 +260,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * the pin object (for chaining)
 	"gpio-pin//Pull-down": {
-		Argsn: 1,
-		Doc:   "Enables the internal pull-down resistor on the pin.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Enables the internal pull-down resistor on the pin.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -273,8 +284,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * the pin object (for chaining)
 	"gpio-pin//Pull-off": {
-		Argsn: 1,
-		Doc:   "Disables pull-up and pull-down resistors on the pin.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Disables pull-up and pull-down resistors on the pin.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -297,8 +309,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * the pin object (for chaining)
 	"gpio-pin//Freq": {
-		Argsn: 2,
-		Doc:   "Sets the PWM frequency for a pin in PWM mode.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Sets the PWM frequency for a pin in PWM mode.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -327,8 +340,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * the pin object (for chaining)
 	"gpio-pin//Duty-cycle": {
-		Argsn: 3,
-		Doc:   "Sets the PWM duty cycle. Usage: pin .Duty-cycle duty cycleLen.",
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Sets the PWM duty cycle. Usage: pin .Duty-cycle duty cycleLen.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -361,8 +375,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * the pin object (for chaining)
 	"gpio-pin//Mode": {
-		Argsn: 2,
-		Doc:   "Sets the pin mode (e.g. 'Pwm for PWM, 'Clock for clock output).",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Sets the pin mode (e.g. 'Pwm for PWM, 'Clock for clock output).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -403,8 +418,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * the pin object (for chaining)
 	"gpio-pin//Detect": {
-		Argsn: 2,
-		Doc:   "Sets edge detection mode on the pin. Valid modes: 'No, 'Rising, 'Falling, 'Both.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Sets edge detection mode on the pin. Valid modes: 'No, 'Rising, 'Falling, 'Both.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -444,8 +460,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * true if an edge was detected
 	"gpio-pin//Edge-detected?": {
-		Argsn: 1,
-		Doc:   "Returns true if an edge was detected on the pin since last call.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Returns true if an edge was detected on the pin since last call.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -468,8 +485,9 @@ var Builtins_gpio = map[string]*env.Builtin{
 	// Returns:
 	// * the pin object (for chaining)
 	"gpio-pin//Write": {
-		Argsn: 2,
-		Doc:   "Writes a state (0 for low, 1 for high) to the pin.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Writes a state (0 for low, 1 for high) to the pin.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:

@@ -68,8 +68,9 @@ var Builtins_goroutines = map[string]*env.Builtin{
 	// Returns:
 	// * the original value that was passed to the goroutine
 	"go-with": {
-		Argsn: 2,
-		Doc:   "Executes a function in a separate goroutine, passing the specified value as an argument.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Executes a function in a separate goroutine, passing the specified value as an argument.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Object:
@@ -122,8 +123,9 @@ var Builtins_goroutines = map[string]*env.Builtin{
 	// Returns:
 	// * the function that was executed
 	"go": {
-		Argsn: 1,
-		Doc:   "Executes a function in a separate goroutine without passing any arguments.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Executes a function in a separate goroutine without passing any arguments.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch handler := arg0.(type) {
 			case env.Function:
@@ -171,8 +173,9 @@ var Builtins_goroutines = map[string]*env.Builtin{
 	// Returns:
 	// * a new channel native object with the specified buffer size
 	"channel": {
-		Argsn: 1,
-		Doc:   "Creates a new channel with the specified buffer size for goroutine communication.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a new channel with the specified buffer size for goroutine communication.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch buflen := arg0.(type) {
 			case env.Integer:
@@ -197,8 +200,9 @@ var Builtins_goroutines = map[string]*env.Builtin{
 	// Returns:
 	// * the next value from the channel, or an error if the channel is closed
 	"Rye-channel//Read": {
-		Argsn: 1,
-		Doc:   "Reads the next value from a channel, blocking until a value is available or the channel is closed.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Reads the next value from a channel, blocking until a value is available or the channel is closed.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch chn := arg0.(type) {
 			case env.Native:
@@ -232,8 +236,9 @@ var Builtins_goroutines = map[string]*env.Builtin{
 	// Returns:
 	// * the channel object
 	"Rye-channel//Send": {
-		Argsn: 2,
-		Doc:   "Sends a value through a channel, blocking if the channel is unbuffered or full.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Sends a value through a channel, blocking if the channel is unbuffered or full.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (result env.Object) {
 			// Recover from panic if channel is closed
 			defer func() {
@@ -267,8 +272,9 @@ var Builtins_goroutines = map[string]*env.Builtin{
 	// Returns:
 	// * the closed channel object
 	"Rye-channel//Close": {
-		Argsn: 1,
-		Doc:   "Closes a channel, preventing further sends. Buffered values remain readable until the channel is drained.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Closes a channel, preventing further sends. Buffered values remain readable until the channel is drained.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (result env.Object) {
 			defer func() {
 				if r := recover(); r != nil {
@@ -300,8 +306,9 @@ var Builtins_goroutines = map[string]*env.Builtin{
 	// Returns:
 	// * a new mutex native object for synchronization
 	"mutex": {
-		Argsn: 0,
-		Doc:   "Creates a new mutex for synchronizing access to shared resources between goroutines.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Creates a new mutex for synchronizing access to shared resources between goroutines.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			mtx := &RyeMutex{}
 			return *env.NewNative(ps.Idx, mtx, "Rye-mutex")
@@ -316,8 +323,9 @@ var Builtins_goroutines = map[string]*env.Builtin{
 	// Returns:
 	// * a new waitgroup native object for coordinating goroutines
 	"waitgroup": {
-		Argsn: 0,
-		Doc:   "Creates a new waitgroup for coordinating multiple goroutines to wait for completion.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Creates a new waitgroup for coordinating multiple goroutines to wait for completion.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var wg sync.WaitGroup
 			return *env.NewNative(ps.Idx, &wg, "Rye-waitgroup")
@@ -332,8 +340,9 @@ var Builtins_goroutines = map[string]*env.Builtin{
 	// Returns:
 	// * the mutex object
 	"Rye-mutex//Lock": {
-		Argsn: 1,
-		Doc:   "Acquires the lock on a mutex, blocking until the lock becomes available.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Acquires the lock on a mutex, blocking until the lock becomes available.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch mtx := arg0.(type) {
 			case env.Native:
@@ -354,8 +363,9 @@ var Builtins_goroutines = map[string]*env.Builtin{
 	// Returns:
 	// * the mutex object, or error if unlocking an unlocked mutex
 	"Rye-mutex//Unlock": {
-		Argsn: 1,
-		Doc:   "Releases the lock on a mutex, allowing other goroutines to acquire it.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Releases the lock on a mutex, allowing other goroutines to acquire it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch mtx := arg0.(type) {
 			case env.Native:
@@ -381,8 +391,9 @@ var Builtins_goroutines = map[string]*env.Builtin{
 	// Returns:
 	// * the waitgroup object
 	"Rye-waitgroup//Add": {
-		Argsn: 2,
-		Doc:   "Adds the specified count to the waitgroup counter, indicating how many goroutines to wait for.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Adds the specified count to the waitgroup counter, indicating how many goroutines to wait for.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch wg := arg0.(type) {
 			case env.Native:
@@ -409,8 +420,9 @@ var Builtins_goroutines = map[string]*env.Builtin{
 	// Returns:
 	// * the waitgroup object
 	"Rye-waitgroup//Done": {
-		Argsn: 1,
-		Doc:   "Decrements the waitgroup counter by one, indicating that a goroutine has completed.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Decrements the waitgroup counter by one, indicating that a goroutine has completed.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch wg := arg0.(type) {
 			case env.Native:
@@ -431,8 +443,9 @@ var Builtins_goroutines = map[string]*env.Builtin{
 	// Returns:
 	// * the waitgroup object after all goroutines have completed
 	"Rye-waitgroup//Wait": {
-		Argsn: 1,
-		Doc:   "Blocks until the waitgroup counter reaches zero, meaning all goroutines have completed.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Blocks until the waitgroup counter reaches zero, meaning all goroutines have completed.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch wg := arg0.(type) {
 			case env.Native:
@@ -453,8 +466,9 @@ var Builtins_goroutines = map[string]*env.Builtin{
 	// Returns:
 	// * the selected handler's result, or failure if a closed channel is selected
 	"select\\fn": {
-		Argsn: 1,
-		Doc:   "Selects a channel or default function and returns its result. Selecting a drained closed channel fails without calling a handler.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Selects a channel or default function and returns its result. Selecting a drained closed channel fails without calling a handler.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return runChannelSelect(ps, arg0, true)
 		},
@@ -465,8 +479,9 @@ var Builtins_goroutines = map[string]*env.Builtin{
 	// Compatibility: returns the handler result, not the specification block.
 
 	"select": {
-		Argsn: 1,
-		Doc:   "Selects a channel or default block and returns its result. Selecting a drained closed channel fails without running a handler.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Selects a channel or default block and returns its result. Selecting a drained closed channel fails without running a handler.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return runChannelSelect(ps, arg0, false)
 		},

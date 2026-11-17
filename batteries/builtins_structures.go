@@ -672,8 +672,9 @@ var Builtins_structures = map[string]*env.Builtin{
 	// Returns:
 	// * native containing the populated struct
 	"dict->struct": {
-		Argsn: 2,
-		Doc:   "Converts a Rye Dict to a Go struct using reflection. Takes a Dict and a Native containing a pointer to a struct.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Converts a Rye Dict to a Go struct using reflection. Takes a Dict and a Native containing a pointer to a struct.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Check if the first argument is a Dict
 			switch dict := arg0.(type) {
@@ -699,8 +700,9 @@ var Builtins_structures = map[string]*env.Builtin{
 	// Returns:
 	// * native containing the dynamically created struct
 	"dict->new-struct": {
-		Argsn: 2,
-		Doc:   "Creates a new Go struct type at runtime based on a Rye Dict and populates it with values. Takes a Dict and a string for the struct name.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates a new Go struct type at runtime based on a Rye Dict and populates it with values. Takes a Dict and a string for the struct name.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Check if the first argument is a Dict
 			switch dict := arg0.(type) {
@@ -731,8 +733,9 @@ var Builtins_structures = map[string]*env.Builtin{
 	// Returns:
 	// * dict with struct field names as keys and field values as values
 	"struct->dict": {
-		Argsn: 1,
-		Doc:   "Converts a Go struct to a Rye Dict using reflection. Takes a Native containing a struct or pointer to a struct.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Converts a Go struct to a Rye Dict using reflection. Takes a Native containing a struct or pointer to a struct.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Check if the argument is a Native
 			switch native := arg0.(type) {
@@ -746,8 +749,9 @@ var Builtins_structures = map[string]*env.Builtin{
 	},
 
 	"process": {
-		Argsn: 2,
-		Doc:   "TODODOC",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "TODODOC",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			rm, err := load_structures_Dict(ps, arg1.(env.Block))
 			//fmt.Println(rm)

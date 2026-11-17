@@ -417,8 +417,9 @@ var Builtins_html = map[string]*env.Builtin{
 	// Returns:
 	// * string with HTML entities converted to their character equivalents
 	"unescape\\html": {
-		Argsn: 1,
-		Doc:   "Converts HTML entities to their character equivalents.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Converts HTML entities to their character equivalents.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			text, ok := arg0.(env.String)
 			if !ok {
@@ -436,8 +437,9 @@ var Builtins_html = map[string]*env.Builtin{
 	// Returns:
 	// * string with special characters converted to HTML entities
 	"escape\\html": {
-		Argsn: 1,
-		Doc:   "Converts special characters to HTML entities.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Converts special characters to HTML entities.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			text, ok := arg0.(env.String)
 			if !ok {
@@ -455,8 +457,9 @@ var Builtins_html = map[string]*env.Builtin{
 	// Returns:
 	// * string containing markdown equivalent of the HTML
 	"html->markdown": {
-		Argsn: 1,
-		Doc:   "Converts HTML text to markdown format.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Converts HTML text to markdown format.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			text, ok := arg0.(env.String)
 			if !ok {
@@ -481,8 +484,9 @@ var Builtins_html = map[string]*env.Builtin{
 	// Returns:
 	// * result of processing the HTML
 	"reader//Parse-html": {
-		Argsn: 2,
-		Doc:   "Parses HTML using a streaming approach with tag handlers.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Parses HTML using a streaming approach with tag handlers.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			rm, err := load_html_Dict(ps, arg1.(env.Block))
 			trace8("*** _--- GOT RM ++**")
@@ -505,8 +509,9 @@ var Builtins_html = map[string]*env.Builtin{
 	// Returns:
 	// * string value of the attribute or void if not found
 	"rye-html-start//Attr?": {
-		Argsn: 2,
-		Doc:   "Retrieves an attribute value by name or index from an HTML element.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Retrieves an attribute value by name or index from an HTML element.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch tok1 := arg0.(type) {
 			case env.Native:
@@ -552,8 +557,9 @@ var Builtins_html = map[string]*env.Builtin{
 	// Returns:
 	// * dict with all attributes where keys are attribute names
 	"rye-html-start//Attrs?": {
-		Argsn: 1,
-		Doc:   "Returns a dict of all attributes from an HTML element.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns a dict of all attributes from an HTML element.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch tok1 := arg0.(type) {
 			case env.Native:
@@ -581,8 +587,9 @@ var Builtins_html = map[string]*env.Builtin{
 	// Returns:
 	// * string name of the HTML element
 	"rye-html-start//Name?": {
-		Argsn: 1,
-		Doc:   "Returns the name of an HTML element.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the name of an HTML element.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch tok1 := arg0.(type) {
 			case env.Native:

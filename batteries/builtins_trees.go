@@ -2,8 +2,6 @@
 package batteries
 
 import (
-	"fmt"
-
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
 	"github.com/refaktor/rye/util"
@@ -25,8 +23,9 @@ var builtins_trees = map[string]*env.Builtin{
 	// Returns:
 	// * result of the last body block execution
 	"for-tree": {
-		Argsn: 5,
-		Doc:   "Traverses a tree structure, executing a block of code for each node that meets a condition.",
+		Effect: env.EffIO,
+		Argsn:  5,
+		Doc:    "Traverses a tree structure, executing a block of code for each node that meets a condition.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// arg0: Initial node
 			// arg1: Node word (to store current node)
@@ -49,17 +48,13 @@ var builtins_trees = map[string]*env.Builtin{
 							var traverseTree func(node env.Object) env.Object
 							traverseTree = func(node env.Object) env.Object {
 								// Store current node in context
-								fmt.Println(ps.FailureFlag)
 								ps.Ctx.Mod(nodeWord.Index, node)
 								ser := ps.Ser
 								// Evaluate condition
 								ps.Ser = condBlock.Series
 								// ps.Ser.Reset()
-								fmt.Println(ps)
-								fmt.Println(ps.Ser)
 								evaldo.Eval(ps)
 								if ps.ErrorFlag {
-									fmt.Println("***1")
 									ps.Ser = ser
 									return ps.Res
 								}
@@ -73,7 +68,6 @@ var builtins_trees = map[string]*env.Builtin{
 									ps.Ser.Reset()
 									evaldo.Eval(ps)
 									if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
-										fmt.Println("***2")
 										ps.Ser = ser
 										return ps.Res
 									}
@@ -109,7 +103,6 @@ var builtins_trees = map[string]*env.Builtin{
 										fmt.Println(ps.Res)
 										return ps.Res
 									}*/
-									fmt.Println("---")
 									// Process child nodes
 									switch children := ps.Res.(type) {
 									case env.Block:
@@ -117,7 +110,6 @@ var builtins_trees = map[string]*env.Builtin{
 											childNode := children.Series.Get(i)
 											traverseTree(childNode)
 											if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
-												fmt.Println("***4")
 												break
 											}
 										}
@@ -126,7 +118,6 @@ var builtins_trees = map[string]*env.Builtin{
 											childNode := env.ToRyeValue(children.Data[i])
 											traverseTree(childNode)
 											if ps.ErrorFlag || ps.ReturnFlag || ps.FailureFlag {
-												fmt.Println("***5")
 												break
 											}
 										}
@@ -165,9 +156,10 @@ var builtins_trees = map[string]*env.Builtin{
 	// Returns:
 	// * a new tree with the same structure but transformed nodes
 	"tree-map": {
-		Argsn: 2,
-		Doc:   "Creates a new tree by applying a transformation to each node while preserving the structure.",
-		Pure:  true,
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Creates a new tree by applying a transformation to each node while preserving the structure.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch node := arg0.(type) {
 			case env.Dict:
@@ -253,9 +245,10 @@ var builtins_trees = map[string]*env.Builtin{
 	// Returns:
 	// * final accumulated value after traversing the entire tree
 	"tree-fold": {
-		Argsn: 3,
-		Doc:   "Traverses a tree and accumulates a value by applying a function to each node.",
-		Pure:  true,
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Traverses a tree and accumulates a value by applying a function to each node.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch node := arg0.(type) {
 			case env.Dict:

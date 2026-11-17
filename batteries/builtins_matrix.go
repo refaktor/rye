@@ -28,8 +28,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * a new zero-initialized matrix
 	"matrix\\zeros": {
-		Argsn: 2,
-		Doc:   "Creates a new matrix with the given dimensions, initialized to zeros.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates a new matrix with the given dimensions, initialized to zeros.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch rows := arg0.(type) {
 			case env.Integer:
@@ -56,8 +57,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * a new matrix with the given data
 	"matrix": {
-		Argsn: 2,
-		Doc:   "Creates a matrix from a shape block and a data block.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates a matrix from a shape block and a data block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch shape := arg0.(type) {
 			case env.Block:
@@ -109,8 +111,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * a new matrix with random normal values (mean 0, std 1)
 	"matrix\\randn": {
-		Argsn: 2,
-		Doc:   "Creates a matrix with random normal values (mean 0, std 1).",
+		Effect: env.EffInput,
+		Argsn:  2,
+		Doc:    "Creates a matrix with random normal values (mean 0, std 1).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch rows := arg0.(type) {
 			case env.Integer:
@@ -144,8 +147,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * a new matrix filled with ones
 	"matrix\\ones": {
-		Argsn: 2,
-		Doc:   "Creates a matrix filled with ones.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates a matrix filled with ones.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch rows := arg0.(type) {
 			case env.Integer:
@@ -179,8 +183,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * an n×n identity matrix
 	"matrix\\eye": {
-		Argsn: 1,
-		Doc:   "Creates an identity matrix of size n×n.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates an identity matrix of size n×n.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch n := arg0.(type) {
 			case env.Integer:
@@ -210,8 +215,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * block with { rows cols }
 	"shape?": {
-		Argsn: 1,
-		Doc:   "Returns the shape of a matrix as { rows cols }.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the shape of a matrix as { rows cols }.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch m := arg0.(type) {
 			case env.Matrix:
@@ -232,8 +238,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * number of rows
 	"rows?": {
-		Argsn: 1,
-		Doc:   "Returns the number of rows in a matrix.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the number of rows in a matrix.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch m := arg0.(type) {
 			case env.Matrix:
@@ -251,8 +258,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * number of columns
 	"cols?": {
-		Argsn: 1,
-		Doc:   "Returns the number of columns in a matrix.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the number of columns in a matrix.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch m := arg0.(type) {
 			case env.Matrix:
@@ -273,8 +281,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * the element at (row, col)
 	"mat-get": {
-		Argsn: 3,
-		Doc:   "Gets the element at the specified row and column (0-indexed).",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Gets the element at the specified row and column (0-indexed).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch m := arg0.(type) {
 			case env.Matrix:
@@ -310,8 +319,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * the modified matrix
 	"mat-set!": {
-		Argsn: 4,
-		Doc:   "Sets the element at the specified row and column (0-indexed). Modifies matrix in place.",
+		Effect: env.EffNone,
+		Argsn:  4,
+		Doc:    "Sets the element at the specified row and column (0-indexed). Modifies matrix in place.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch m := arg0.(type) {
 			case env.Matrix:
@@ -355,8 +365,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * the row as a vector
 	"mat-row": {
-		Argsn: 2,
-		Doc:   "Returns a row of the matrix as a vector.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Returns a row of the matrix as a vector.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch m := arg0.(type) {
 			case env.Matrix:
@@ -388,8 +399,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * the column as a vector
 	"mat-col": {
-		Argsn: 2,
-		Doc:   "Returns a column of the matrix as a vector.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Returns a column of the matrix as a vector.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch m := arg0.(type) {
 			case env.Matrix:
@@ -425,8 +437,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * transposed matrix
 	"mat-transpose": {
-		Argsn: 1,
-		Doc:   "Returns the transpose of a matrix.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the transpose of a matrix.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch m := arg0.(type) {
 			case env.Matrix:
@@ -453,8 +466,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * result matrix (m×p)
 	"mat-mul": {
-		Argsn: 2,
-		Doc:   "Matrix multiplication. A (m×n) × B (n×p) = C (m×p).",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Matrix multiplication. A (m×n) × B (n×p) = C (m×p).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch A := arg0.(type) {
 			case env.Matrix:
@@ -507,8 +521,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * element-wise product
 	"mat-hadamard": {
-		Argsn: 2,
-		Doc:   "Element-wise (Hadamard) multiplication of two matrices. In the future, could have a dedicated .* operator.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Element-wise (Hadamard) multiplication of two matrices. In the future, could have a dedicated .* operator.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch A := arg0.(type) {
 			case env.Matrix:
@@ -540,8 +555,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * element-wise sum
 	"mat-add": {
-		Argsn: 2,
-		Doc:   "Element-wise addition of two matrices. In the future, could have a dedicated .+ operator.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Element-wise addition of two matrices. In the future, could have a dedicated .+ operator.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch A := arg0.(type) {
 			case env.Matrix:
@@ -573,8 +589,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * element-wise difference
 	"mat-sub": {
-		Argsn: 2,
-		Doc:   "Element-wise subtraction of two matrices. In the future, could have a dedicated .- operator.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Element-wise subtraction of two matrices. In the future, could have a dedicated .- operator.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch A := arg0.(type) {
 			case env.Matrix:
@@ -605,8 +622,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * scaled matrix
 	"mat-scale": {
-		Argsn: 2,
-		Doc:   "Multiplies all elements of a matrix by a scalar.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Multiplies all elements of a matrix by a scalar.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch m := arg0.(type) {
 			case env.Matrix:
@@ -641,8 +659,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * vector with sum of each row
 	"mat-sum-rows": {
-		Argsn: 1,
-		Doc:   "Returns a vector containing the sum of each row.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns a vector containing the sum of each row.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch m := arg0.(type) {
 			case env.Matrix:
@@ -668,8 +687,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * vector with sum of each column
 	"mat-sum-cols": {
-		Argsn: 1,
-		Doc:   "Returns a vector containing the sum of each column.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns a vector containing the sum of each column.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch m := arg0.(type) {
 			case env.Matrix:
@@ -695,8 +715,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * vector with max of each row
 	"mat-max-rows": {
-		Argsn: 1,
-		Doc:   "Returns a vector containing the maximum of each row.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns a vector containing the maximum of each row.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch m := arg0.(type) {
 			case env.Matrix:
@@ -724,8 +745,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * vector with max of each column
 	"mat-max-cols": {
-		Argsn: 1,
-		Doc:   "Returns a vector containing the maximum of each column.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns a vector containing the maximum of each column.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch m := arg0.(type) {
 			case env.Matrix:
@@ -757,8 +779,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * block of blocks (each inner block is a row)
 	"mat-to-block": {
-		Argsn: 1,
-		Doc:   "Converts a matrix to a block of blocks (each row is a block).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Converts a matrix to a block of blocks (each row is a block).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch m := arg0.(type) {
 			case env.Matrix:
@@ -784,8 +807,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * matrix
 	"block-to-mat": {
-		Argsn: 1,
-		Doc:   "Converts a block of blocks (rows) to a matrix.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Converts a block of blocks (rows) to a matrix.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch blk := arg0.(type) {
 			case env.Block:
@@ -836,8 +860,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * matrix (1×n or n×1)
 	"vector-to-mat": {
-		Argsn: 2,
-		Doc:   "Converts a vector to a matrix. Use 'row for 1×n or 'col for n×1.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Converts a vector to a matrix. Use 'row for 1×n or 'col for n×1.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch v := arg0.(type) {
 			case env.Vector:
@@ -871,8 +896,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * sub-matrix
 	"mat-slice": {
-		Argsn: 3,
-		Doc:   "Extracts a sub-matrix. Row and column ranges are { start end } (inclusive, 0-indexed).",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Extracts a sub-matrix. Row and column ranges are { start end } (inclusive, 0-indexed).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch m := arg0.(type) {
 			case env.Matrix:
@@ -929,8 +955,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * a new matrix with softmax applied to each column
 	"mat-softmax": {
-		Argsn: 1,
-		Doc:   "Applies softmax to each column of the matrix. Returns a new matrix.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Applies softmax to each column of the matrix. Returns a new matrix.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch m := arg0.(type) {
 			case env.Matrix:
@@ -971,8 +998,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * the modified matrix
 	"mat-set-col!": {
-		Argsn: 3,
-		Doc:   "Sets a column of the matrix from a vector or block. Mutates in place.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Sets a column of the matrix from a vector or block. Mutates in place.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch m := arg0.(type) {
 			case env.Matrix:
@@ -1026,8 +1054,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * a new vector with element-wise sum
 	"vec-add": {
-		Argsn: 2,
-		Doc:   "Adds two vectors element-wise. Returns a new vector.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Adds two vectors element-wise. Returns a new vector.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch v1 := arg0.(type) {
 			case env.Vector:
@@ -1058,8 +1087,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * a new vector with element-wise difference (v1 - v2)
 	"vec-sub": {
-		Argsn: 2,
-		Doc:   "Subtracts two vectors element-wise (v1 - v2). Returns a new vector.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Subtracts two vectors element-wise (v1 - v2). Returns a new vector.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch v1 := arg0.(type) {
 			case env.Vector:
@@ -1089,8 +1119,9 @@ var Builtins_matrix = map[string]*env.Builtin{
 	// Returns:
 	// * a block containing the vector values as decimals
 	"vec-to-block": {
-		Argsn: 1,
-		Doc:   "Converts a vector to a block of decimal values.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Converts a vector to a block of decimal values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch v := arg0.(type) {
 			case env.Vector:

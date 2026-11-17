@@ -35,8 +35,9 @@ var Builtins_sqlite = map[string]*env.Builtin{
 	// Returns:
 	// * native SQLite database connection
 	"sqlite-uri//Open": {
-		Argsn: 1,
-		Doc:   "Opens a connection to a SQLite database file.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Opens a connection to a SQLite database file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.Uri:
@@ -48,7 +49,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 				if err := db.Ping(); err != nil {
 					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Error connecting to SQLite: %v", err.Error()), "sqlite-uri//Open")
 				}
-				return *env.NewNative(ps.Idx, db, "Rye-sqlite")
+				return *env.NewNative(ps.Idx, db, "sqlite")
 			default:
 				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType}, "sqlite-uri//Open")
 			}
@@ -63,8 +64,9 @@ var Builtins_sqlite = map[string]*env.Builtin{
 	// Returns:
 	// * string containing HTML representation of the table
 	"htmlize": {
-		Argsn: 1,
-		Doc:   "Converts a table to HTML format.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Converts a table to HTML format.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.Table:
@@ -83,9 +85,10 @@ var Builtins_sqlite = map[string]*env.Builtin{
 	// * sql: SQL statement as string or block
 	// Returns:
 	// * database connection
-	"Rye-sqlite//Exec": {
-		Argsn: 2,
-		Doc:   "Executes a SQL statement that doesn't return rows.",
+	"sqlite//Exec": {
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Executes a SQL statement that doesn't return rows.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sqlstr string
 			var vals []any
@@ -103,21 +106,21 @@ var Builtins_sqlite = map[string]*env.Builtin{
 				case env.String:
 					sqlstr = str.Value
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.BlockType, env.StringType}, "Rye-sqlite//Exec")
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.BlockType, env.StringType}, "sqlite//Exec")
 				}
 				if sqlstr != "" {
 					db2 := db1.Value.(*sql.DB)
 					_, err := db2.Exec(sqlstr, vals...)
 					if err != nil {
-						return evaldo.MakeBuiltinError(ps, err.Error(), "Rye-sqlite//Exec")
+						return evaldo.MakeBuiltinError(ps, err.Error(), "sqlite//Exec")
 					}
 					// rows, err := db1.Value.(*sql.DB).Query(sqlstr, vals...)
 					return arg0
 				} else {
-					return evaldo.MakeBuiltinError(ps, "sql string not found.", "Rye-sqlite//Exec")
+					return evaldo.MakeBuiltinError(ps, "sql string not found.", "sqlite//Exec")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-sqlite//Exec")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "sqlite//Exec")
 			}
 		},
 	},
@@ -130,9 +133,10 @@ var Builtins_sqlite = map[string]*env.Builtin{
 	// * sql: SQL query as string, SQL-DSL block, or a block where first value is SQL string and the rest are parameters
 	// Returns:
 	// * table containing query results
-	"Rye-sqlite//Query": {
-		Argsn: 2,
-		Doc:   "Executes a SQL query and returns results as a table.",
+	"sqlite//Query": {
+		Effect: env.EffInput,
+		Argsn:  2,
+		Doc:    "Executes a SQL query and returns results as a table.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sqlstr string
 			var vals []any
@@ -200,17 +204,17 @@ var Builtins_sqlite = map[string]*env.Builtin{
 						}
 					} else {
 						// Empty block
-						return evaldo.MakeBuiltinError(ps, "Sql block is empty.", "Rye-sqlite//Query")
+						return evaldo.MakeBuiltinError(ps, "Sql block is empty.", "sqlite//Query")
 					}
 				case env.String:
 					sqlstr = str.Value
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.BlockType, env.StringType}, "Rye-sqlite//Query")
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.BlockType, env.StringType}, "sqlite//Query")
 				}
 				if sqlstr != "" {
 					rows, err := db1.Value.(*sql.DB).Query(sqlstr, vals...)
 					if err != nil {
-						return evaldo.MakeBuiltinError(ps, err.Error(), "Rye-sqlite//Query")
+						return evaldo.MakeBuiltinError(ps, err.Error(), "sqlite//Query")
 					}
 					columns, _ := rows.Columns()
 					spr := env.NewTable(columns)
@@ -258,12 +262,12 @@ var Builtins_sqlite = map[string]*env.Builtin{
 						// return *env.NewNative(ps.Idx, *spr, "Rye-table")
 						return *spr
 					}
-					return evaldo.MakeBuiltinError(ps, "Empty SQL.", "Rye-sqlite//Query")
+					return evaldo.MakeBuiltinError(ps, "Empty SQL.", "sqlite//Query")
 				} else {
-					return evaldo.MakeBuiltinError(ps, "Sql string not found.", "Rye-sqlite//Query")
+					return evaldo.MakeBuiltinError(ps, "Sql string not found.", "sqlite//Query")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-sqlite//Query")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "sqlite//Query")
 			}
 		},
 	},
@@ -275,9 +279,10 @@ var Builtins_sqlite = map[string]*env.Builtin{
 	// * sql: SQL query as string or block
 	// Returns:
 	// * string containing the generated SQL with parameters
-	"Rye-sqlite//Show-SQL": {
-		Argsn: 2,
-		Doc:   "Generates and returns the SQL string without executing it.",
+	"sqlite//Show-SQL": {
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Generates and returns the SQL string without executing it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sqlstr string
 			var vals []any
@@ -294,7 +299,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 				case env.String:
 					sqlstr = str.Value
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.BlockType, env.StringType}, "Rye-sqlite//Show-SQL")
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.BlockType, env.StringType}, "sqlite//Show-SQL")
 				}
 				if sqlstr != "" {
 					// If there are parameters, show them as comments
@@ -310,10 +315,10 @@ var Builtins_sqlite = map[string]*env.Builtin{
 					}
 					return *env.NewString(sqlstr)
 				} else {
-					return evaldo.MakeBuiltinError(ps, "Empty SQL.", "Rye-sqlite//Show-SQL")
+					return evaldo.MakeBuiltinError(ps, "Empty SQL.", "sqlite//Show-SQL")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-sqlite//Show-SQL")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "sqlite//Show-SQL")
 			}
 		},
 	},
@@ -324,27 +329,28 @@ var Builtins_sqlite = map[string]*env.Builtin{
 	// * db: SQLite database connection
 	// Returns:
 	// * integer 1 on successful close, error otherwise
-	"Rye-sqlite//Close": {
-		Argsn: 1,
-		Doc:   "Closes the SQLite database connection.",
+	"sqlite//Close": {
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Closes the SQLite database connection.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch db := arg0.(type) {
 			case env.Native:
-				sqliteKind, _ := ps.Idx.GetIndex("Rye-sqlite")
+				sqliteKind, _ := ps.Idx.GetIndex("sqlite")
 				if db.Kind.Index != sqliteKind {
-					return evaldo.MakeBuiltinError(ps, "Expected SQLite database connection.", "Rye-sqlite//Close")
+					return evaldo.MakeBuiltinError(ps, "Expected SQLite database connection.", "sqlite//Close")
 				}
 				sqlDB, ok := db.Value.(*sql.DB)
 				if !ok {
-					return evaldo.MakeBuiltinError(ps, "Invalid database connection.", "Rye-sqlite//Close")
+					return evaldo.MakeBuiltinError(ps, "Invalid database connection.", "sqlite//Close")
 				}
 				err := sqlDB.Close()
 				if err != nil {
-					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Error closing database: %v", err.Error()), "Rye-sqlite//Close")
+					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Error closing database: %v", err.Error()), "sqlite//Close")
 				}
 				return *env.NewInteger(1)
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-sqlite//Close")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "sqlite//Close")
 			}
 		},
 	},

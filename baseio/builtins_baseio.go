@@ -45,7 +45,7 @@ var builtins_baseio = map[string]*env.Builtin{
 		Effect: env.EffOutput,
 		Argsn:  0,
 		Doc:    "Saves current state of the program to a file.",
-		Pure:   true,
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			s := ps.Dump()
 			fileName := fmt.Sprintf("console_%s.rye", time.Now().Format("060102_150405"))
@@ -64,7 +64,7 @@ var builtins_baseio = map[string]*env.Builtin{
 		Effect: env.EffOutput,
 		Argsn:  0,
 		Doc:    "Saves current state of the program to a file with password protection.",
-		Pure:   true,
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			s := ps.Dump()
 			fileName := fmt.Sprintf("console_%s.rye.enc", time.Now().Format("060102_150405"))
@@ -72,7 +72,8 @@ var builtins_baseio = map[string]*env.Builtin{
 			fmt.Print("Enter Password: ")
 			bytePassword, err := goterm.ReadPassword(int(os.Stdin.Fd()))
 			if err != nil {
-				panic(err)
+				ps.FailureFlag = true
+				return evaldo.MakeBuiltinError(ps, fmt.Sprintf("error reading password: %s", err.Error()), "save\\current\\secure")
 			}
 			password := string(bytePassword)
 
@@ -315,16 +316,16 @@ var builtins_baseio = map[string]*env.Builtin{
 	},
 
 	// -------------------------------------------------------------------------
-	// Rye-itself - args / history (requires os.Args / process context)
+	// rye-runtime - args / history (requires os.Args / process context)
 	// -------------------------------------------------------------------------
 
-	// Rye-itself//Args?
+	// rye-runtime//Args?
 	// Summary: Returns command line arguments as a block of parsed values.
 	// Args: none
 	// Returns: block of values (each arg parsed as integer, float, or string)
 	// Example:
-	//   Rye-itself//Args?
-	"Rye-itself//Args?": {
+	//   rye-runtime//Args?
+	"rye-runtime//Args?": {
 		Effect: env.EffInput,
 		Argsn:  0,
 		Doc:    "Returns command line arguments as a block of parsed values. Each argument is converted to appropriate type (integer, float, or string).",
@@ -333,13 +334,13 @@ var builtins_baseio = map[string]*env.Builtin{
 		},
 	},
 
-	// Rye-itself//Args\\raw?
+	// rye-runtime//Args\\raw?
 	// Summary: Returns raw command line arguments joined as a single string.
 	// Args: separator (ignored currently; kept for future parity) – pass _
 	// Returns: string
 	// Example:
-	//   Rye-itself//Args\\raw? _
-	"Rye-itself//Args\\raw?": {
+	//   rye-runtime//Args\\raw? _
+	"rye-runtime//Args\\raw?": {
 		Effect: env.EffInput,
 		Argsn:  1,
 		Doc:    "Returns raw command line arguments joined as a single string.",
@@ -353,13 +354,13 @@ var builtins_baseio = map[string]*env.Builtin{
 	},
 
 	// Args:
-	// * rye-itself: Native Rye-itself object passed via dot dispatch.
+	// * rye-runtime: Native rye-runtime object passed via dot dispatch.
 	// * count: Integer number of history lines to return.
 	// Returns:
 	// * Block of strings from REPL history; error when not running in the REPL.
 	// Example:
-	// Rye-itself//History? _ 10
-	"Rye-itself//History?": {
+	// rye-runtime//History? _ 10
+	"rye-runtime//History?": {
 		Effect: env.EffInput,
 		Argsn:  2,
 		Doc:    "Returns a block of the last N lines from REPL history.",
@@ -367,7 +368,7 @@ var builtins_baseio = map[string]*env.Builtin{
 			switch n := arg1.(type) {
 			case env.Integer:
 				if ps.GetHistoryLast == nil {
-					return evaldo.MakeBuiltinError(ps, "History not available (not running in REPL)", "Rye-itself//history")
+					return evaldo.MakeBuiltinError(ps, "History not available (not running in REPL)", "rye-runtime//history")
 				}
 				lines := ps.GetHistoryLast(int(n.Value))
 				objs := make([]env.Object, len(lines))
@@ -376,19 +377,19 @@ var builtins_baseio = map[string]*env.Builtin{
 				}
 				return *env.NewBlock(*env.NewTSeries(objs))
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.IntegerType}, "Rye-itself//history")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.IntegerType}, "rye-runtime//history")
 			}
 		},
 	},
 
-	// Rye-itself//Landlock
+	// rye-runtime//Landlock
 	// Summary: Create a Landlock builder object (Linux only) to configure and then enforce restrictions.
 	// Args: none
 	// Returns: native 'landlock' builder
 	// Example:
-	//   ll: Rye-itself//Landlock
+	//   ll: rye-runtime//Landlock
 	//   ll | landlock//Limit-to-cwd | landlock//Enforce
-	"Rye-itself//Landlock": {
+	"rye-runtime//Landlock": {
 		Effect: env.EffNone,
 		Argsn:  0,
 		Doc:    "Create a landlock builder object that can be configured and then enforced.",
@@ -491,12 +492,12 @@ var builtins_baseio = map[string]*env.Builtin{
 		},
 	},
 
-	// Rye-itself//Landlock-to-cwd
+	// rye-runtime//Landlock-to-cwd
 	// Summary: Immediately restrict filesystem access to current working directory using Landlock (Linux only).
 	// Args: none
 	// Returns: 'ok tagword on success; error on failure
 	// Notes: Call early in the script; applies process-wide and is irreversible for current process.
-	"Rye-itself//Landlock-to-cwd": {
+	"rye-runtime//Landlock-to-cwd": {
 		Effect: env.EffOutput,
 		Argsn:  0,
 		Doc:    "Restrict filesystem access to the current working directory and its subdirectories using Landlock (Linux only). Call early in the script.",
@@ -532,7 +533,7 @@ var builtins_baseio = map[string]*env.Builtin{
 		},
 	},
 
-	// Rye-itself//Landlock-only
+	// rye-runtime//Landlock-only
 	// Summary: Immediately restrict filesystem access to exactly the provided paths and modes.
 	// Args: spec (string or block of strings). Spec format examples:
 	//   "/proj:r,/proj/bin:rx,/tmp:rw" or block [ "/proj:r" "/proj/bin:rx" "/tmp:rw" ]
@@ -542,10 +543,10 @@ var builtins_baseio = map[string]*env.Builtin{
 	//   rx => read + execute (dir => RX for files under it; file => exec)
 	// Returns: 'ok tagword on success; error on failure
 	// Notes: Call early in the script; applies process-wide and is irreversible.
-	"Rye-itself//Landlock-only": {
+	"rye-runtime//Landlock-only": {
 		Effect: env.EffOutput,
 		Argsn:  1,
-		Doc:    "Immediately restrict filesystem access to the provided list of paths with modes r, rw, or rx. Example: Rye-itself//Landlock-only \"/proj:r,/tmp:rw,/proj/bin:rx\"",
+		Doc:    "Immediately restrict filesystem access to the provided list of paths with modes r, rw, or rx. Example: rye-runtime//Landlock-only \"/proj:r,/tmp:rw,/proj/bin:rx\"",
 		Pure:   false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
 			// Parse spec(s)
@@ -613,78 +614,78 @@ var builtins_baseio = map[string]*env.Builtin{
 		},
 	},
 
-	// Rye-itself//Is-unshare-fs
+	// rye-runtime//Is-unshare-fs
 	// Summary: Returns true if filesystem namespace isolation is enabled under --unshare.
 	// Args: none
 	// Returns: boolean
 	// Notes: Checks env var RYE_UNSHARE_FS set by the runner.
-	"Rye-itself//Is-unshare-fs": {
+	"rye-runtime//Is-unshare-fs": {
 		Effect: env.EffInput,
 		Argsn:  0,
 		Doc:    "Returns true if filesystem namespace isolation is enabled under --unshare.",
-		Pure:   true,
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, _ env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
 			return *env.NewBoolean(os.Getenv("RYE_UNSHARE_FS") == "1")
 		},
 	},
 
-	// Rye-itself//Is-unshare-net
+	// rye-runtime//Is-unshare-net
 	// Summary: Returns true if network namespace isolation is enabled under --unshare.
 	// Args: none
 	// Returns: boolean
 	// Notes: Checks env var RYE_UNSHARE_NET set by the runner.
-	"Rye-itself//Is-unshare-net": {
+	"rye-runtime//Is-unshare-net": {
 		Effect: env.EffInput,
 		Argsn:  0,
 		Doc:    "Returns true if network namespace isolation is enabled under --unshare.",
-		Pure:   true,
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, _ env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
 			return *env.NewBoolean(os.Getenv("RYE_UNSHARE_NET") == "1")
 		},
 	},
 
-	// Rye-itself//Is-unshare-pid
+	// rye-runtime//Is-unshare-pid
 	// Summary: Returns true if PID namespace isolation is enabled under --unshare.
 	// Args: none
 	// Returns: boolean
 	// Notes: Checks env var RYE_UNSHARE_PID set by the runner.
-	"Rye-itself//Is-unshare-pid": {
+	"rye-runtime//Is-unshare-pid": {
 		Effect: env.EffInput,
 		Argsn:  0,
 		Doc:    "Returns true if PID namespace isolation is enabled under --unshare.",
-		Pure:   true,
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, _ env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
 			return *env.NewBoolean(os.Getenv("RYE_UNSHARE_PID") == "1")
 		},
 	},
 
-	// Rye-itself//Is-unshare-uts
+	// rye-runtime//Is-unshare-uts
 	// Summary: Returns true if UTS namespace isolation is enabled under --unshare.
 	// Args: none
 	// Returns: boolean
 	// Notes: Checks env var RYE_UNSHARE_UTS set by the runner.
-	"Rye-itself//Is-unshare-uts": {
+	"rye-runtime//Is-unshare-uts": {
 		Effect: env.EffInput,
 		Argsn:  0,
 		Doc:    "Returns true if UTS namespace isolation is enabled under --unshare.",
-		Pure:   true,
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, _ env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
 			return *env.NewBoolean(os.Getenv("RYE_UNSHARE_UTS") == "1")
 		},
 	},
 
-	// Rye-itself//Unshare-config?
+	// rye-runtime//Unshare-config?
 	// Summary: Returns a dictionary describing the active unshare isolation config.
 	// Args: none
 	// Returns: dict with keys: active, fs, net, pid, uts (booleans)
 	// Notes: Reads environment variables set by the runner: RYE_UNSHARE_CHILD, RYE_UNSHARE_FS, RYE_UNSHARE_NET, RYE_UNSHARE_PID, RYE_UNSHARE_UTS.
 	// Example:
-	//   cc Rye-itself Unshare-config? |print
-	"Rye-itself//Unshare-config?": {
+	//   cc rye-runtime Unshare-config? |print
+	"rye-runtime//Unshare-config?": {
 		Effect: env.EffInput,
 		Argsn:  0,
 		Doc:    "Returns a dictionary with unshare isolation flags: active, fs, net, pid, uts (booleans).",
-		Pure:   true,
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, _ env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
 			d := make(map[string]any, 5)
 			d["active"] = *env.NewBoolean(os.Getenv("RYE_UNSHARE_CHILD") == "1")
@@ -696,30 +697,30 @@ var builtins_baseio = map[string]*env.Builtin{
 		},
 	},
 
-	// Rye-itself//Is-unshare
+	// rye-runtime//Is-unshare
 	// Summary: Returns true if running inside a Rye --unshare sandbox (Linux only).
 	// Args:
 	// * none
 	// Returns:
 	// * boolean, true when the runner set RYE_UNSHARE_CHILD=1
 	// Notes: Checks env var RYE_UNSHARE_CHILD set by the runner in the unshare child.
-	"Rye-itself//Is-unshare": {
+	"rye-runtime//Is-unshare": {
 		Effect: env.EffInput,
 		Argsn:  0,
 		Doc:    "Returns true if current process runs inside Rye --unshare sandbox (Linux only).",
-		Pure:   true,
+		Pure:   false,
 		Fn: func(ps *env.ProgramState, _ env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
 			return *env.NewBoolean(os.Getenv("RYE_UNSHARE_CHILD") == "1")
 		},
 	},
 
-	// Rye-itself//Require-unshared
+	// rye-runtime//Require-unshared
 	// Summary: Fails and exits the program if unshare is not active.
 	// Args: none
 	// Returns: never on failure (process exits); 'ok tagword when already unshared
 	// Notes: Intended for CI or scripts that must run sandboxed. Linux-only behavior; on non-Linux it will not detect unshare and will fail unless adapted.
-	"Rye-itself//Require-unshared": {
-		Effect: env.EffNone,
+	"rye-runtime//Require-unshared": {
+		Effect: env.EffOutput,
 		Argsn:  0,
 		Doc:    "Fails and exits if unshare is not active (use in CI/safety-critical runs).",
 		Pure:   false,
@@ -734,14 +735,14 @@ var builtins_baseio = map[string]*env.Builtin{
 		},
 	},
 
-	// Rye-itself//Is-dry-run
+	// rye-runtime//Is-dry-run
 	// Summary: Returns true if Rye is in dry-run/scenario mode.
 	// Args:
 	// * none
 	// Returns:
 	// * boolean, true when -eff-dry-run is active or effect-mode hooks report scenario mode
 	// Notes: Checks the active EffectMode, then embedded scenario hooks. The runner applies RYE_EFF_DRY_RUN to EffectMode.
-	"Rye-itself//Is-dry-run": {
+	"rye-runtime//Is-dry-run": {
 		Effect: env.EffNone,
 		Argsn:  0,
 		Doc:    "Returns true if Rye is running with declared effects in dry-run mode (-eff-dry-run)",

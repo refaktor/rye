@@ -80,8 +80,9 @@ var Builtins_bcrypt = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the bcrypt hash of the password
 	"bcrypt-hash": {
-		Argsn: 1,
-		Doc:   "Generates a bcrypt hash from a password string.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Generates a bcrypt hash from a password string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __bcrypt_hash(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -102,8 +103,9 @@ var Builtins_bcrypt = map[string]*env.Builtin{
 	// Returns:
 	// * integer 1 if the password matches the hash, 0 otherwise
 	"bcrypt-check": {
-		Argsn: 2,
-		Doc:   "Compares a bcrypt hash with a plain text password.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Compares a bcrypt hash with a plain text password.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __bcrypt_check(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -122,8 +124,9 @@ var Builtins_bcrypt = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the hex-encoded random token
 	"generate-token": {
-		Argsn: 1,
-		Doc:   "Generates a cryptographically secure random token of the specified length in bytes.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Generates a cryptographically secure random token of the specified length in bytes.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __generate_token(ps, arg0, arg1, arg2, arg3, arg4)
 		},

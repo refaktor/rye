@@ -421,8 +421,9 @@ var Builtins_eyr = map[string]*env.Builtin{
 	// Returns:
 	// * result of evaluating the block as postfix stack-based code
 	"eyr": {
-		Argsn: 1,
-		Doc:   "Evaluates Rye block as Eyr (postfix) stack based code.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Evaluates Rye block as Eyr (postfix) stack based code.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -451,8 +452,9 @@ var Builtins_eyr = map[string]*env.Builtin{
 	// Returns:
 	// * result of evaluating the block in RYE0 dialect
 	"rye0": {
-		Argsn: 1,
-		Doc:   "Evaluates Rye block as Rye0 dialect.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Evaluates Rye block as Rye0 dialect.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -479,8 +481,9 @@ var Builtins_eyr = map[string]*env.Builtin{
 	// Returns:
 	// * result of evaluating the block in RYE00 dialect (minimal feature set)
 	"rye00": {
-		Argsn: 1,
-		Doc:   "Evaluates Rye block as Rye00 dialect (builtins and integers only).",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Evaluates Rye block as Rye00 dialect (builtins and integers only).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -506,8 +509,9 @@ var Builtins_eyr = map[string]*env.Builtin{
 	// Returns:
 	// * void
 	"eyr\\clear": {
-		Argsn: 0,
-		Doc:   "Clears the EYR stack.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Clears the EYR stack.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			ps.ResetStack()
 			return env.NewBoolean(false)
@@ -523,8 +527,9 @@ var Builtins_eyr = map[string]*env.Builtin{
 	// Returns:
 	// * block containing all values from the EYR evaluation stack
 	"eyr\\full": {
-		Argsn: 1,
-		Doc:   "Evaluates Rye block as Eyr (postfix) stack based code.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Evaluates Rye block as Eyr (postfix) stack based code.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -552,8 +557,9 @@ var Builtins_eyr = map[string]*env.Builtin{
 	// Returns:
 	// * result of the final EYR evaluation
 	"eyr\\loop": {
-		Argsn: 2,
-		Doc:   "Evaluates Rye block in loop as Eyr code (postfix stack based) N times.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Evaluates Rye block in loop as Eyr code (postfix stack based) N times.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
 			case env.Integer:
@@ -584,8 +590,9 @@ var Builtins_eyr = map[string]*env.Builtin{
 	// Returns:
 	// * block containing the EYR-compiled version of the input block
 	"to-eyr": {
-		Argsn: 1,
-		Doc:   "Evaluates Rye block as Eyr (postfix) stack based code.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Evaluates Rye block as Eyr (postfix) stack based code.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:

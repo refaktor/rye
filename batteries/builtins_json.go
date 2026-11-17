@@ -32,7 +32,6 @@ func resultToJS(res env.Object) any {
 	case *env.RyeCtx:
 		return "{ 'state': 'todo' }"
 	default:
-		fmt.Println("No matching type available.")
 		// TODO-FIXME - ps - ProgramState is not available, can not add error handling.
 	}
 	return nil
@@ -326,8 +325,9 @@ var Builtins_json = map[string]*env.Builtin{
 	// Returns:
 	// * parsed Rye value (list, dict, string, integer, etc.)
 	"parse-json": {
-		Argsn: 1,
-		Doc:   "Parses JSON string into Rye values.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Parses JSON string into Rye values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch input := arg0.(type) {
 			case env.String:
@@ -351,8 +351,9 @@ var Builtins_json = map[string]*env.Builtin{
 	// Returns:
 	// * list of parsed Rye values
 	"parse-json\\lines": {
-		Argsn: 1,
-		Doc:   "Parses JSON string into Rye values.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Parses JSON string into Rye values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch input := arg0.(type) {
 			case env.String:
@@ -386,8 +387,9 @@ var Builtins_json = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the JSON representation
 	"to-json": {
-		Argsn: 1,
-		Doc:   "Converts a Rye value to a JSON string. Supports block (like list) and context (like dict).",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Converts a Rye value to a JSON string. Supports block (like list) and context (like dict).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(RyeToJSONWithIdxs(arg0, ps.Idx))
 		},
@@ -399,8 +401,9 @@ var Builtins_json = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the JSON representation with each row on a new line
 	"to-json\\lines": {
-		Argsn: 1,
-		Doc:   "Converts a table to JSON with each row on a separate line.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Converts a table to JSON with each row on a separate line.",
 		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(RyeToJSONLines(arg0))
 		},

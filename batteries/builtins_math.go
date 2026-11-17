@@ -128,8 +128,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal remainder of x/y
 	"mod": {
-		Argsn: 2,
-		Doc:   "Returns the remainder of dividing x by y.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Returns the remainder of dividing x by y.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fa, fb, errPos := assureFloats(arg0, arg1)
 			if errPos > 0 {
@@ -149,8 +150,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal result of base raised to the power of exponent for integer/decimal inputs, complex result for complex inputs
 	"pow": {
-		Argsn: 2,
-		Doc:   "Returns base raised to the power of exponent.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Returns base raised to the power of exponent.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch base := arg0.(type) {
 			case env.Complex:
@@ -199,8 +201,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal binary logarithm of x
 	"log2": {
-		Argsn: 1,
-		Doc:   "Returns the binary logarithm (base-2) of x.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the binary logarithm (base-2) of x.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -219,8 +222,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal base-10 logarithm of x
 	"log10": {
-		Argsn: 1,
-		Doc:   "Returns the decimal logarithm (base-10) of x.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the decimal logarithm (base-10) of x.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -246,8 +250,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * natural logarithm of x (element-wise for vector/matrix)
 	"log": {
-		Argsn: 1,
-		Doc:   "Returns the natural logarithm of x.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the natural logarithm of x.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -292,8 +297,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal natural logarithm of (1 + x)
 	"log1p": {
-		Argsn: 1,
-		Doc:   "Returns the natural logarithm of 1 plus its argument x.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the natural logarithm of 1 plus its argument x.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -312,8 +318,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal binary exponent of x
 	"logb": {
-		Argsn: 1,
-		Doc:   "Returns the binary exponent of x.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the binary exponent of x.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -333,8 +340,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal square of x
 	"sq": {
-		Argsn: 1,
-		Doc:   "Returns the square of x.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the square of x.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -356,8 +364,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal sine of x for integer/decimal input, complex sine for complex input
 	"sin": {
-		Argsn: 1,
-		Doc:   "Returns the sine of the radian argument.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the sine of the radian argument.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -380,8 +389,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal cosine of x for integer/decimal input, complex cosine for complex input
 	"cos": {
-		Argsn: 1,
-		Doc:   "Returns the cosine of the radian argument.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the cosine of the radian argument.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -404,8 +414,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal tangent of x for integer/decimal input, complex tangent for complex input
 	"tan": {
-		Argsn: 1,
-		Doc:   "Returns the tangent of the radian argument.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the tangent of the radian argument.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -430,8 +441,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * square root of x (element-wise for vector/matrix)
 	"sqrt": {
-		Argsn: 1,
-		Doc:   "Returns the square root of x.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the square root of x.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -468,8 +480,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * absolute value of x (element-wise for vector/matrix)
 	"abs": {
-		Argsn: 1,
-		Doc:   "Returns the absolute value of a number.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the absolute value of a number.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -502,8 +515,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal arccosine of x in radians
 	"acos": {
-		Argsn: 1,
-		Doc:   "Returns the arccosine (inverse cosine) in radians.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the arccosine (inverse cosine) in radians.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -528,8 +542,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal inverse hyperbolic cosine of x
 	"acosh": {
-		Argsn: 1,
-		Doc:   "Returns the inverse hyperbolic cosine.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the inverse hyperbolic cosine.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -554,8 +569,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal arcsine of x in radians
 	"asin": {
-		Argsn: 1,
-		Doc:   "Returns the arcsine (inverse sine) in radians.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the arcsine (inverse sine) in radians.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -580,8 +596,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal inverse hyperbolic sine of x
 	"asinh": {
-		Argsn: 1,
-		Doc:   "Returns the inverse hyperbolic sine.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the inverse hyperbolic sine.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -600,8 +617,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal arctangent of x in radians
 	"atan": {
-		Argsn: 1,
-		Doc:   "Returns the arctangent (inverse tangent) in radians.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the arctangent (inverse tangent) in radians.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -621,8 +639,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal arctangent of y/x in radians, using signs to determine quadrant
 	"atan2": {
-		Argsn: 2,
-		Doc:   "Returns the arc tangent of y/x, using the signs of the two to determine the quadrant of the return value.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Returns the arc tangent of y/x, using the signs of the two to determine the quadrant of the return value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -655,8 +674,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal inverse hyperbolic tangent of x
 	"atanh": {
-		Argsn: 1,
-		Doc:   "Returns the inverse hyperbolic tangent.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the inverse hyperbolic tangent.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -675,8 +695,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal ceiling of x (smallest integer >= x)
 	"ceil": {
-		Argsn: 1,
-		Doc:   "Returns the least integer value greater than or equal to x.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the least integer value greater than or equal to x.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -695,8 +716,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal cube root of x
 	"cbrt": {
-		Argsn: 1,
-		Doc:   "Returns the cube root of x.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the cube root of x.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -716,8 +738,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal with magnitude of x and sign of y
 	"copysign": {
-		Argsn: 2,
-		Doc:   "Returns a value with the magnitude of x and the sign of y.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Returns a value with the magnitude of x and the sign of y.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -752,8 +775,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal max(x-y, 0)
 	"dim": {
-		Argsn: 2,
-		Doc:   "Returns the maximum of x-y or 0.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Returns the maximum of x-y or 0.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -788,8 +812,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal rounded to specified number of decimal places
 	"round\\to": {
-		Argsn: 2,
-		Doc:   "Rounds a decimal to the specified number of decimal places.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Rounds a decimal to the specified number of decimal places.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Decimal:
@@ -813,8 +838,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal rounded to nearest integer
 	"round": {
-		Argsn: 1,
-		Doc:   "Rounds a decimal to the nearest integer.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Rounds a decimal to the nearest integer.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Decimal:
@@ -832,8 +858,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal rounded to nearest integer, with ties rounded to even
 	"roundtoeven": {
-		Argsn: 1,
-		Doc:   "Returns the nearest integer, rounding ties to even.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the nearest integer, rounding ties to even.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Decimal:
@@ -852,8 +879,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal error function value of x
 	"erf": {
-		Argsn: 1,
-		Doc:   "Returns the error function of value.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the error function of value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -872,8 +900,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal complementary error function value of x
 	"erfc": {
-		Argsn: 1,
-		Doc:   "Returns the complementary error function of value.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the complementary error function of value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -892,8 +921,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal inverse complementary error function value of x
 	"erfcinv": {
-		Argsn: 1,
-		Doc:   "Returns the inverse of erfc(x) function.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the inverse of erfc(x) function.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -912,8 +942,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal inverse error function value of x
 	"erfinv": {
-		Argsn: 1,
-		Doc:   "Returns the inverse error function of value.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the inverse error function of value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -937,8 +968,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * e^x (element-wise for vector/matrix)
 	"exp": {
-		Argsn: 1,
-		Doc:   "Returns e**x, the base-e exponential of x.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns e**x, the base-e exponential of x.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -971,8 +1003,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal 2^x
 	"exp2": {
-		Argsn: 1,
-		Doc:   "Returns 2**x, the base-2 exponential of x.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns 2**x, the base-2 exponential of x.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -991,8 +1024,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal e^x - 1
 	"expm1": {
-		Argsn: 1,
-		Doc:   "Returns e**x - 1, the base-e exponential of x minus 1. It is more accurate than exp(x) - 1 when x is near zero.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns e**x - 1, the base-e exponential of x minus 1. It is more accurate than exp(x) - 1 when x is near zero.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -1013,8 +1047,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal (x * y) + z computed with only one rounding
 	"fma": {
-		Argsn: 3,
-		Doc:   "Returns x * y + z, computed with only one rounding. (That is, FMA returns the fused multiply-add of x, y, and z.)",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Returns x * y + z, computed with only one rounding. (That is, FMA returns the fused multiply-add of x, y, and z.)",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val1 := arg0.(type) {
 			case env.Integer:
@@ -1075,8 +1110,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal order-zero Bessel function of the first kind
 	"j0": {
-		Argsn: 1,
-		Doc:   "Returns the order-zero Bessel function of the first kind.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the order-zero Bessel function of the first kind.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -1095,8 +1131,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal order-one Bessel function of the first kind
 	"j1": {
-		Argsn: 1,
-		Doc:   "Returns the order-one Bessel function of the first kind.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the order-one Bessel function of the first kind.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -1115,8 +1152,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal order-zero Bessel function of the second kind
 	"y0": {
-		Argsn: 1,
-		Doc:   "Returns the order-zero Bessel function of the second kind.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the order-zero Bessel function of the second kind.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -1135,8 +1173,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal order-one Bessel function of the second kind
 	"y1": {
-		Argsn: 1,
-		Doc:   "Returns the order-one Bessel function of the second kind.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the order-one Bessel function of the second kind.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -1156,8 +1195,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal order-n Bessel function of the second kind
 	"yn": {
-		Argsn: 2,
-		Doc:   "Returns the order-n Bessel function of the second kind.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Returns the order-n Bessel function of the second kind.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch v1 := arg0.(type) {
 			case env.Integer:
@@ -1191,8 +1231,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal order-n Bessel function of the first kind
 	"jn": {
-		Argsn: 2,
-		Doc:   "Returns the order-n Bessel function of the first kind.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Returns the order-n Bessel function of the first kind.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch v1 := arg0.(type) {
 			case env.Integer:
@@ -1225,8 +1266,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal integer value of x (truncated toward zero)
 	"trunc": {
-		Argsn: 1,
-		Doc:   "Returns the integer value of input.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the integer value of input.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -1245,8 +1287,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal value of π (pi)
 	"pi": {
-		Argsn: 0,
-		Doc:   "Returns the mathematical constant π (pi).",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns the mathematical constant π (pi).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewDecimal(float64(math.Pi))
 		},
@@ -1258,8 +1301,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * decimal value in radians
 	"deg->rad": {
-		Argsn: 1,
-		Doc:   "Converts degrees to radians.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Converts degrees to radians.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var fa float64
 			switch a := arg0.(type) {
@@ -1282,8 +1326,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * boolean true if values are very close, false otherwise
 	"is-near": {
-		Argsn: 2,
-		Doc:   "Returns true if two decimals are close.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Returns true if two decimals are close.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fa, fb, errPos := assureFloats(arg0, arg1)
 			if errPos > 0 {
@@ -1305,8 +1350,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * boolean true if value is very close to zero, false otherwise
 	"near-zero": {
-		Argsn: 1,
-		Doc:   "Returns true if a decimal is close to zero.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns true if a decimal is close to zero.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var fa float64
 			switch a := arg0.(type) {
@@ -1334,8 +1380,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * integer 1 if n is prime, 0 otherwise
 	"is-prime": {
-		Argsn: 1,
-		Doc:   "Returns true if the integer is a prime number.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns true if the integer is a prime number.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
@@ -1359,8 +1406,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * block converted to Eyr dialect
 	"to-eyr": {
-		Argsn: 1,
-		Doc:   "Converts math dialect to Eyr dialect.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Converts math dialect to Eyr dialect.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return DialectMath(ps, arg0)
 		},
@@ -1382,8 +1430,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * result of evaluating the math expressions following standard mathematical order of operations
 	"calc": {
-		Argsn: 1,
-		Doc:   "Evaluates expressions in math dialect.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Evaluates expressions in math dialect.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			res := DialectMath(ps, arg0)
 			switch block := res.(type) {
@@ -1412,8 +1461,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * integer greatest common divisor of a and b
 	"gcd": {
-		Argsn: 2,
-		Doc:   "Returns the greatest common divisor of two integers using Euclidean algorithm.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Returns the greatest common divisor of two integers using Euclidean algorithm.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val1 := arg0.(type) {
 			case env.Integer:
@@ -1457,8 +1507,9 @@ var Builtins_math = map[string]*env.Builtin{
 	// Returns:
 	// * block of blocks (matrix) where element [i,j] = a[i] * b[j], similar to numpy.outer()
 	"outer-product": {
-		Argsn: 2,
-		Doc:   "Computes the outer product of two vectors (blocks), returning a matrix (block of blocks) where each element [i,j] = a[i] * b[j]. Similar to numpy.outer().",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Computes the outer product of two vectors (blocks), returning a matrix (block of blocks) where each element [i,j] = a[i] * b[j]. Similar to numpy.outer().",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch vec1 := arg0.(type) {
 			case env.Block:

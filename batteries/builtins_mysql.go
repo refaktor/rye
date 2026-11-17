@@ -26,8 +26,9 @@ var Builtins_mysql = map[string]*env.Builtin{
 	// Returns:
 	// * native MySQL database connection
 	"mysql-uri//Open": {
-		Argsn: 1,
-		Doc:   "Opens a connection to a MySQL database.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Opens a connection to a MySQL database.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.Uri:
@@ -55,8 +56,9 @@ var Builtins_mysql = map[string]*env.Builtin{
 	// Returns:
 	// * native MySQL database connection
 	"mysql-uri//Open\\pwd": {
-		Argsn: 2,
-		Doc:   "Opens a connection to a MySQL database with separate password parameter.",
+		Effect: env.EffInput,
+		Argsn:  2,
+		Doc:    "Opens a connection to a MySQL database with separate password parameter.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.Uri:
@@ -90,8 +92,9 @@ var Builtins_mysql = map[string]*env.Builtin{
 	// Returns:
 	// * integer 1 if rows were affected, error otherwise
 	"Rye-mysql//Exec": {
-		Argsn: 2,
-		Doc:   "Executes a SQL statement that modifies data (INSERT, UPDATE, DELETE).",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Executes a SQL statement that modifies data (INSERT, UPDATE, DELETE).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sqlstr string
 			var vals []any
@@ -147,8 +150,9 @@ var Builtins_mysql = map[string]*env.Builtin{
 	// Returns:
 	// * table containing query results
 	"Rye-mysql//Query": {
-		Argsn: 2,
-		Doc:   "Executes a SQL query and returns results as a table.",
+		Effect: env.EffInput,
+		Argsn:  2,
+		Doc:    "Executes a SQL query and returns results as a table.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sqlstr string
 			var vals []any
@@ -245,8 +249,9 @@ var Builtins_mysql = map[string]*env.Builtin{
 	// Returns:
 	// * integer 1 on successful close, error otherwise
 	"Rye-mysql//Close": {
-		Argsn: 1,
-		Doc:   "Closes the MySQL database connection.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Closes the MySQL database connection.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch db := arg0.(type) {
 			case env.Native:

@@ -202,8 +202,9 @@ var Builtins_msgdispatcher = map[string]*env.Builtin{
 	// Returns:
 	// * a new MessageDispatcher native object
 	"msg-dispatcher": {
-		Argsn: 2,
-		Doc:   "Creates a new message dispatcher with specified buffer size and initial state.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates a new message dispatcher with specified buffer size and initial state.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bufSize := arg0.(type) {
 			case env.Integer:
@@ -229,8 +230,9 @@ var Builtins_msgdispatcher = map[string]*env.Builtin{
 	// Returns:
 	// * the dispatcher object
 	"msg-dispatcher//Register": {
-		Argsn: 3,
-		Doc:   "Registers a message handler function for a specific message type.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Registers a message handler function for a specific message type.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch native := arg0.(type) {
 			case env.Native:
@@ -268,8 +270,9 @@ var Builtins_msgdispatcher = map[string]*env.Builtin{
 	// Returns:
 	// * the dispatcher object
 	"msg-dispatcher//Unregister": {
-		Argsn: 2,
-		Doc:   "Unregisters a message handler for a specific message type.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Unregisters a message handler for a specific message type.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch native := arg0.(type) {
 			case env.Native:
@@ -299,8 +302,9 @@ var Builtins_msgdispatcher = map[string]*env.Builtin{
 	// Returns:
 	// * the dispatcher object
 	"msg-dispatcher//Send": {
-		Argsn: 2,
-		Doc:   "Sends a message to the dispatcher for processing.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Sends a message to the dispatcher for processing.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch native := arg0.(type) {
 			case env.Native:
@@ -327,8 +331,9 @@ var Builtins_msgdispatcher = map[string]*env.Builtin{
 	// Returns:
 	// * the current state Dict
 	"msg-dispatcher//State": {
-		Argsn: 1,
-		Doc:   "Gets the current state from the dispatcher.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the current state from the dispatcher.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch native := arg0.(type) {
 			case env.Native:
@@ -351,8 +356,9 @@ var Builtins_msgdispatcher = map[string]*env.Builtin{
 	// Returns:
 	// * the dispatcher object
 	"msg-dispatcher//Set-state": {
-		Argsn: 2,
-		Doc:   "Sets the current state in the dispatcher.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Sets the current state in the dispatcher.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch native := arg0.(type) {
 			case env.Native:
@@ -382,8 +388,9 @@ var Builtins_msgdispatcher = map[string]*env.Builtin{
 	// Returns:
 	// * the dispatcher object
 	"msg-dispatcher//Start": {
-		Argsn: 2,
-		Doc:   "Starts the message dispatcher loop in a goroutine. Optionally takes an update callback function.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Starts the message dispatcher loop in a goroutine. Optionally takes an update callback function.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch native := arg0.(type) {
 			case env.Native:
@@ -421,8 +428,9 @@ var Builtins_msgdispatcher = map[string]*env.Builtin{
 	// Returns:
 	// * the dispatcher object
 	"msg-dispatcher//Stop": {
-		Argsn: 1,
-		Doc:   "Stops the message dispatcher loop and waits for it to finish.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Stops the message dispatcher loop and waits for it to finish.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch native := arg0.(type) {
 			case env.Native:

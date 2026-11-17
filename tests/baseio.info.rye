@@ -144,7 +144,7 @@ section "Runtime and Process Integration" "Saving state, loading scripts, proces
 		"; exit 0"
 	}
 
-	group "Rye-itself//Args?"
+	group "rye-runtime//Args?"
 	"Returns command line arguments as a block of parsed values. Each argument is converted to appropriate type (integer, float, or string)."
 	{
 		arg `none`
@@ -155,10 +155,10 @@ section "Runtime and Process Integration" "Saving state, loading scripts, proces
 	}
 
 	{
-		"Rye-itself//Args?"
+		"rye-runtime//Args?"
 	}
 
-	group "Rye-itself//Args\\raw?"
+	group "rye-runtime//Args\\raw?"
 	"Returns raw command line arguments joined as a single string."
 	{
 		argsn 1
@@ -170,14 +170,14 @@ section "Runtime and Process Integration" "Saving state, loading scripts, proces
 	}
 
 	{
-		"Rye-itself//Args\\\\raw? _"
+		"rye-runtime//Args\\\\raw? _"
 	}
 
-	group "Rye-itself//History?"
+	group "rye-runtime//History?"
 	"Returns a block of the last N lines from REPL history."
 	{
 		argsn 2
-		arg `rye-itself: Native Rye-itself object passed via dot dispatch.`
+		arg `rye-runtime: Native rye-runtime object passed via dot dispatch.`
 		arg `count: Integer number of history lines to return.`
 		returns `Block of strings from REPL history; error when not running in the REPL.`
 	}
@@ -186,10 +186,10 @@ section "Runtime and Process Integration" "Saving state, loading scripts, proces
 	}
 
 	{
-		"Rye-itself//History? _ 10"
+		"rye-runtime//History? _ 10"
 	}
 
-	group "Rye-itself//Landlock"
+	group "rye-runtime//Landlock"
 	"Create a landlock builder object that can be configured and then enforced."
 	{
 		arg `none`
@@ -200,7 +200,7 @@ section "Runtime and Process Integration" "Saving state, loading scripts, proces
 	}
 
 	{
-		"ll: Rye-itself//Landlock\nll | landlock//Limit-to-cwd | landlock//Enforce"
+		"ll: rye-runtime//Landlock\nll | landlock//Limit-to-cwd | landlock//Enforce"
 	}
 
 	group "landlock//Limit-to-cwd"
@@ -259,7 +259,7 @@ section "Runtime and Process Integration" "Saving state, loading scripts, proces
 	{
 	}
 
-	group "Rye-itself//Landlock-to-cwd"
+	group "rye-runtime//Landlock-to-cwd"
 	"Restrict filesystem access to the current working directory and its subdirectories using Landlock (Linux only). Call early in the script."
 	{
 		arg `none`
@@ -272,8 +272,8 @@ section "Runtime and Process Integration" "Saving state, loading scripts, proces
 	{
 	}
 
-	group "Rye-itself//Landlock-only"
-	"Immediately restrict filesystem access to the provided list of paths with modes r, rw, or rx. Example: Rye-itself//Landlock-only \"/proj:r,/tmp:rw,/proj/bin:rx\""
+	group "rye-runtime//Landlock-only"
+	"Immediately restrict filesystem access to the provided list of paths with modes r, rw, or rx. Example: rye-runtime//Landlock-only \"/proj:r,/tmp:rw,/proj/bin:rx\""
 	{
 		argsn 1
 		arg `spec (string or block of strings). Spec format examples:`
@@ -287,7 +287,7 @@ section "Runtime and Process Integration" "Saving state, loading scripts, proces
 	{
 	}
 
-	group "Rye-itself//Is-unshare-fs"
+	group "rye-runtime//Is-unshare-fs"
 	"Returns true if filesystem namespace isolation is enabled under --unshare."
 	{
 		pure
@@ -301,7 +301,7 @@ section "Runtime and Process Integration" "Saving state, loading scripts, proces
 	{
 	}
 
-	group "Rye-itself//Is-unshare-net"
+	group "rye-runtime//Is-unshare-net"
 	"Returns true if network namespace isolation is enabled under --unshare."
 	{
 		pure
@@ -315,7 +315,7 @@ section "Runtime and Process Integration" "Saving state, loading scripts, proces
 	{
 	}
 
-	group "Rye-itself//Is-unshare-pid"
+	group "rye-runtime//Is-unshare-pid"
 	"Returns true if PID namespace isolation is enabled under --unshare."
 	{
 		pure
@@ -329,7 +329,7 @@ section "Runtime and Process Integration" "Saving state, loading scripts, proces
 	{
 	}
 
-	group "Rye-itself//Is-unshare-uts"
+	group "rye-runtime//Is-unshare-uts"
 	"Returns true if UTS namespace isolation is enabled under --unshare."
 	{
 		pure
@@ -343,7 +343,7 @@ section "Runtime and Process Integration" "Saving state, loading scripts, proces
 	{
 	}
 
-	group "Rye-itself//Unshare-config?"
+	group "rye-runtime//Unshare-config?"
 	"Returns a dictionary with unshare isolation flags: active, fs, net, pid, uts (booleans)."
 	{
 		pure
@@ -355,10 +355,10 @@ section "Runtime and Process Integration" "Saving state, loading scripts, proces
 	}
 
 	{
-		"cc Rye-itself Unshare-config? |print"
+		"cc rye-runtime Unshare-config? |print"
 	}
 
-	group "Rye-itself//Is-unshare"
+	group "rye-runtime//Is-unshare"
 	"Returns true if current process runs inside Rye --unshare sandbox (Linux only)."
 	{
 		pure
@@ -372,7 +372,7 @@ section "Runtime and Process Integration" "Saving state, loading scripts, proces
 	{
 	}
 
-	group "Rye-itself//Require-unshared"
+	group "rye-runtime//Require-unshared"
 	"Fails and exits if unshare is not active (use in CI/safety-critical runs)."
 	{
 		arg `none`
@@ -385,7 +385,7 @@ section "Runtime and Process Integration" "Saving state, loading scripts, proces
 	{
 	}
 
-	group "Rye-itself//Is-dry-run"
+	group "rye-runtime//Is-dry-run"
 	"Returns true if Rye is running with declared effects in dry-run mode (-eff-dry-run)"
 	{
 		pure
