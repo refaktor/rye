@@ -23,9 +23,10 @@ var Builtins_complex = map[string]*env.Builtin{
 	// Returns:
 	// * a new complex number with the given real and imaginary parts
 	"complex": {
-		Argsn: 2,
-		Doc:   "Creates a complex number from real and imaginary parts.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates a complex number from real and imaginary parts.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var real, imag float64
 
@@ -62,9 +63,10 @@ var Builtins_complex = map[string]*env.Builtin{
 	// Returns:
 	// * boolean true if the value is a complex number, false otherwise
 	"complex?": {
-		Argsn: 1,
-		Doc:   "Checks if a value is a complex number.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Checks if a value is a complex number.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			_, ok := arg0.(env.Complex)
 			return *env.NewBoolean(ok)
@@ -80,9 +82,10 @@ var Builtins_complex = map[string]*env.Builtin{
 	// Returns:
 	// * decimal value representing the real part of the complex number
 	"real": {
-		Argsn: 1,
-		Doc:   "Returns the real part of a complex number.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the real part of a complex number.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch c := arg0.(type) {
 			case env.Complex:
@@ -102,9 +105,10 @@ var Builtins_complex = map[string]*env.Builtin{
 	// Returns:
 	// * decimal value representing the imaginary part of the complex number
 	"imag": {
-		Argsn: 1,
-		Doc:   "Returns the imaginary part of a complex number.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the imaginary part of a complex number.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch c := arg0.(type) {
 			case env.Complex:
@@ -124,9 +128,10 @@ var Builtins_complex = map[string]*env.Builtin{
 	// Returns:
 	// * complex number representing the complex conjugate of z
 	"complex-conj": {
-		Argsn: 1,
-		Doc:   "Returns the complex conjugate of a complex number.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the complex conjugate of a complex number.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch z := arg0.(type) {
 			case env.Complex:
@@ -146,9 +151,10 @@ var Builtins_complex = map[string]*env.Builtin{
 	// Returns:
 	// * decimal value representing the phase (argument) of the complex number
 	"complex-phase": {
-		Argsn: 1,
-		Doc:   "Returns the phase (argument) of a complex number.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the phase (argument) of a complex number.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch z := arg0.(type) {
 			case env.Complex:

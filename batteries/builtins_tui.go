@@ -42,7 +42,18 @@ func TruncateToWidth(s string, width int, ellipsis string) string {
 	ellipsisWidth := VisibleWidth(ellipsis)
 	targetWidth := width - ellipsisWidth
 	if targetWidth <= 0 {
-		return ellipsis[:width] // Edge case: ellipsis longer than width
+		// Truncate the ellipsis by display width without splitting a rune.
+		var truncated strings.Builder
+		currentWidth := 0
+		for _, r := range ellipsis {
+			rw := runewidth.RuneWidth(r)
+			if currentWidth+rw > width {
+				break
+			}
+			truncated.WriteRune(r)
+			currentWidth += rw
+		}
+		return truncated.String()
 	}
 
 	var result strings.Builder
@@ -840,11 +851,15 @@ func tuiRenderInput(ps *env.ProgramState, content env.Object, width int, styles 
 	if value == "" && !focused && placeholder != "" {
 		display = "\x1b[90m" + placeholder + "\x1b[0m" // Gray placeholder
 	} else if focused {
-		// Show cursor
-		if cursor < len(value) {
-			before := value[:cursor]
-			at := string(value[cursor])
-			after := value[cursor+1:]
+		// Cursor positions are rune indexes; convert before slicing.
+		runes := []rune(value)
+		if cursor < 0 {
+			cursor = 0
+		}
+		if cursor < len(runes) {
+			before := string(runes[:cursor])
+			at := string(runes[cursor])
+			after := string(runes[cursor+1:])
 			display = before + "\x1b[7m" + at + "\x1b[0m" + after
 		} else {
 			display = value + "\x1b[7m \x1b[0m"
@@ -931,7 +946,6 @@ func (app *TuiApp) Render() {
 	app.mu.Unlock()
 
 	if view == nil || ps == nil {
-		fmt.Println("DEBUG Render: view or ps is nil", view == nil, ps == nil)
 		return
 	}
 
@@ -972,11 +986,9 @@ func (app *TuiApp) Render() {
 		if block, ok := psX.Res.(env.Block); ok {
 			widgetBlock = block
 		} else {
-			fmt.Printf("DEBUG Render: view returned %T not Block: %v\n", psX.Res, psX.Res)
 			return
 		}
 	default:
-		fmt.Printf("DEBUG Render: view is %T, not Function or Block\n", view)
 		return
 	}
 
@@ -1610,8 +1622,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * block representing text widget
 	"text": {
-		Argsn: 1,
-		Doc:   "Creates a text widget (no wrapping). Returns { 'text { } content }",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a text widget (no wrapping). Returns { 'text { } content }",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return tuiMakeWidget(ps, "text", *env.NewDict(nil), arg0)
 		},
@@ -1624,8 +1637,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * block representing styled text widget
 	"text\\": {
-		Argsn: 2,
-		Doc:   "Creates a styled text widget. Returns { 'text { styles } content }",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates a styled text widget. Returns { 'text { styles } content }",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var styles env.Dict
 			switch s := arg0.(type) {
@@ -1649,8 +1663,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * block representing block widget
 	"block": {
-		Argsn: 1,
-		Doc:   "Creates a text block widget that wraps. Returns { 'block { } content }",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a text block widget that wraps. Returns { 'block { } content }",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return tuiMakeWidget(ps, "block", *env.NewDict(nil), arg0)
 		},
@@ -1663,8 +1678,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * block representing styled block widget
 	"block\\": {
-		Argsn: 2,
-		Doc:   "Creates a styled text block widget. Returns { 'block { styles } content }",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates a styled text block widget. Returns { 'block { styles } content }",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var styles env.Dict
 			switch s := arg0.(type) {
@@ -1683,8 +1699,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * block representing hline widget
 	"hline": {
-		Argsn: 0,
-		Doc:   "Creates a horizontal line widget. Returns { 'hline { } \"─\" }",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Creates a horizontal line widget. Returns { 'hline { } \"─\" }",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return tuiMakeWidget(ps, "hline", *env.NewDict(nil), *env.NewString("─"))
 		},
@@ -1696,8 +1713,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * block representing hline widget
 	"hline\\char": {
-		Argsn: 1,
-		Doc:   "Creates a horizontal line with custom character. Returns { 'hline { } char }",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a horizontal line with custom character. Returns { 'hline { } char }",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return tuiMakeWidget(ps, "hline", *env.NewDict(nil), arg0)
 		},
@@ -1711,8 +1729,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * block representing vspace widget
 	"vspace": {
-		Argsn: 1,
-		Doc:   "Creates a vertical spacer widget. Returns { 'vspace { } height }",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a vertical spacer widget. Returns { 'vspace { } height }",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return tuiMakeWidget(ps, "vspace", *env.NewDict(nil), arg0)
 		},
@@ -1726,8 +1745,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * block representing vbox widget
 	"vbox": {
-		Argsn: 1,
-		Doc:   "Creates a vertical box container. Evaluates the block and collects widget results. Returns { 'vbox { } children }",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a vertical box container. Evaluates the block and collects widget results. Returns { 'vbox { } children }",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
 			case env.Block:
@@ -1771,8 +1791,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * block representing styled vbox widget
 	"vbox\\": {
-		Argsn: 2,
-		Doc:   "Creates a styled vertical box container. Supports background, color, padding, bold.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates a styled vertical box container. Supports background, color, padding, bold.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			styles, ok := arg0.(env.Dict)
 			if !ok {
@@ -1816,8 +1837,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * block representing select widget
 	"select": {
-		Argsn: 1,
-		Doc:   "Creates a selection list widget. Returns { 'select { selected: 0 } items }",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a selection list widget. Returns { 'select { selected: 0 } items }",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			styles := env.NewDict(map[string]any{"selected": *env.NewInteger(0)})
 			return tuiMakeWidget(ps, "select", *styles, arg0)
@@ -1831,8 +1853,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * block representing select widget
 	"select\\selected": {
-		Argsn: 2,
-		Doc:   "Creates a selection list with initial selection. Returns { 'select { selected: n } items }",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates a selection list with initial selection. Returns { 'select { selected: n } items }",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			idx, ok := arg0.(env.Integer)
 			if !ok {
@@ -1851,8 +1874,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * block representing tabs widget
 	"tabs": {
-		Argsn: 1,
-		Doc:   "Creates a horizontal tabs widget. Returns { 'tabs { selected: 0 } items }",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a horizontal tabs widget. Returns { 'tabs { selected: 0 } items }",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			styles := env.NewDict(map[string]any{"selected": *env.NewInteger(0)})
 			return tuiMakeWidget(ps, "tabs", *styles, arg0)
@@ -1866,8 +1890,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * block representing tabs widget
 	"tabs\\selected": {
-		Argsn: 2,
-		Doc:   "Creates tabs with initial selection. Returns { 'tabs { selected: n } items }",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates tabs with initial selection. Returns { 'tabs { selected: n } items }",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			idx, ok := arg0.(env.Integer)
 			if !ok {
@@ -1884,8 +1909,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * Native TuiInput object
 	"input": {
-		Argsn: 1,
-		Doc:   "Creates a managed text input widget with built-in key handling. Returns native TuiInput.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a managed text input widget with built-in key handling. Returns native TuiInput.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			placeholder, ok := arg0.(env.String)
 			if !ok {
@@ -1903,8 +1929,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * block representing field widget { 'field { } { value: "" placeholder: ... } }
 	"field": {
-		Argsn: 1,
-		Doc:   "Creates an unmanaged text field widget (pure data). Handle keys manually. Returns { 'field { } { value: '' placeholder: ... } }",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates an unmanaged text field widget (pure data). Handle keys manually. Returns { 'field { } { value: '' placeholder: ... } }",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			placeholder, ok := arg0.(env.String)
 			if !ok {
@@ -1921,8 +1948,9 @@ var Builtins_tui = map[string]*env.Builtin{
 
 	// field\value - create field with initial value
 	"field\\value": {
-		Argsn: 2,
-		Doc:   "Creates an unmanaged text field with initial value.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates an unmanaged text field with initial value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			value, ok := arg0.(env.String)
 			if !ok {
@@ -1943,8 +1971,9 @@ var Builtins_tui = map[string]*env.Builtin{
 
 	// input//On-submit - set submit callback
 	"tui-input//On-submit": {
-		Argsn: 2,
-		Doc:   "Sets the callback function called when Enter is pressed. Callback receives (value).",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Sets the callback function called when Enter is pressed. Callback receives (value).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch inp := arg0.(type) {
 			case env.Native:
@@ -1962,8 +1991,9 @@ var Builtins_tui = map[string]*env.Builtin{
 
 	// input//On-change - set change callback
 	"tui-input//On-change": {
-		Argsn: 2,
-		Doc:   "Sets the callback function called when value changes. Callback receives (value).",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Sets the callback function called when value changes. Callback receives (value).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch inp := arg0.(type) {
 			case env.Native:
@@ -1981,8 +2011,9 @@ var Builtins_tui = map[string]*env.Builtin{
 
 	// input//Value? - get current value
 	"tui-input//Value?": {
-		Argsn: 1,
-		Doc:   "Returns the current value of the input.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the current value of the input.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch inp := arg0.(type) {
 			case env.Native:
@@ -1998,8 +2029,9 @@ var Builtins_tui = map[string]*env.Builtin{
 
 	// input//Set-value - set value
 	"tui-input//Set-value": {
-		Argsn: 2,
-		Doc:   "Sets the value of the input.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Sets the value of the input.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch inp := arg0.(type) {
 			case env.Native:
@@ -2019,8 +2051,9 @@ var Builtins_tui = map[string]*env.Builtin{
 
 	// input//Focus - set focus state
 	"tui-input//Focus": {
-		Argsn: 2,
-		Doc:   "Sets the focus state of the input (1 = focused, 0 = not focused).",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Sets the focus state of the input (1 = focused, 0 = not focused).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch inp := arg0.(type) {
 			case env.Native:
@@ -2040,8 +2073,9 @@ var Builtins_tui = map[string]*env.Builtin{
 
 	// input//Width - set display width
 	"tui-input//Width": {
-		Argsn: 2,
-		Doc:   "Sets the display width of the input.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Sets the display width of the input.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch inp := arg0.(type) {
 			case env.Native:
@@ -2061,8 +2095,9 @@ var Builtins_tui = map[string]*env.Builtin{
 
 	// input//Handle-key - process a key event
 	"tui-input//Handle-key": {
-		Argsn: 2,
-		Doc:   "Processes a key event. Returns 1 if handled, 0 if not.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Processes a key event. Returns 1 if handled, 0 if not.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch inp := arg0.(type) {
 			case env.Native:
@@ -2085,8 +2120,9 @@ var Builtins_tui = map[string]*env.Builtin{
 
 	// input//Widget - get the widget block for rendering
 	"tui-input//Widget": {
-		Argsn: 1,
-		Doc:   "Returns the widget block for rendering this input.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the widget block for rendering this input.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch inp := arg0.(type) {
 			case env.Native:
@@ -2108,8 +2144,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * Integer number of lines rendered
 	"render": {
-		Argsn: 1,
-		Doc:   "Renders a widget tree to the terminal and returns number of lines.",
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Renders a widget tree to the terminal and returns number of lines.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			widget, ok := arg0.(env.Block)
 			if !ok {
@@ -2139,8 +2176,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * Integer number of lines rendered
 	"render\\theme": {
-		Argsn: 2,
-		Doc:   "Renders a widget tree with a theme.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Renders a widget tree with a theme.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			theme, ok := arg0.(env.Dict)
 			if !ok {
@@ -2173,8 +2211,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * String rendered output
 	"render\\to-string": {
-		Argsn: 2,
-		Doc:   "Renders a widget tree to a string.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Renders a widget tree to a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			widget, ok := arg0.(env.Block)
 			if !ok {
@@ -2202,8 +2241,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * TuiApp native object
 	"app": {
-		Argsn: 1,
-		Doc:   "Creates a new TUI app with the given theme.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a new TUI app with the given theme.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			theme, ok := arg0.(env.Dict)
 			if !ok {
@@ -2221,8 +2261,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * the app
 	"tui-app//View": {
-		Argsn: 2,
-		Doc:   "Sets the view for the TUI app. Can be a widget block or a function that returns one.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Sets the view for the TUI app. Can be a widget block or a function that returns one.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			native, ok := arg0.(env.Native)
 			if !ok {
@@ -2244,8 +2285,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * the app
 	"tui-app//State": {
-		Argsn: 2,
-		Doc:   "Sets the state for the TUI app.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Sets the state for the TUI app.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			native, ok := arg0.(env.Native)
 			if !ok {
@@ -2270,8 +2312,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * Dict current state
 	"tui-app//State?": {
-		Argsn: 1,
-		Doc:   "Gets the current state of the TUI app.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Gets the current state of the TUI app.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			native, ok := arg0.(env.Native)
 			if !ok {
@@ -2292,8 +2335,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * the app
 	"tui-app//Update": {
-		Argsn: 2,
-		Doc:   "Updates the state and re-renders.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Updates the state and re-renders.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			native, ok := arg0.(env.Native)
 			if !ok {
@@ -2320,8 +2364,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * the app
 	"tui-app//On-key": {
-		Argsn: 3,
-		Doc:   "Registers a handler for a specific key. Key can be 'up', 'down', 'enter', 'escape', 'q', etc.",
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Registers a handler for a specific key. Key can be 'up', 'down', 'enter', 'escape', 'q', etc.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			native, ok := arg0.(env.Native)
 			if !ok {
@@ -2352,8 +2397,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * the app
 	"tui-app//On-keys": {
-		Argsn: 2,
-		Doc:   "Registers a handler for ALL keys. Function receives (state, key). Use switch on key to handle different keys.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Registers a handler for ALL keys. Function receives (state, key). Use switch on key to handle different keys.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			native, ok := arg0.(env.Native)
 			if !ok {
@@ -2380,8 +2426,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * the app
 	"tui-app//Focus": {
-		Argsn: 2,
-		Doc:   "Sets the focused input widget. Keys are routed to focused input first.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Sets the focused input widget. Keys are routed to focused input first.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			native, ok := arg0.(env.Native)
 			if !ok {
@@ -2424,8 +2471,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * the app
 	"tui-app//Start": {
-		Argsn: 1,
-		Doc:   "Starts the TUI app, entering raw mode and beginning the event loop.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Starts the TUI app, entering raw mode and beginning the event loop.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			native, ok := arg0.(env.Native)
 			if !ok {
@@ -2449,8 +2497,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * the app
 	"tui-app//Stop": {
-		Argsn: 1,
-		Doc:   "Stops the TUI app.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Stops the TUI app.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			native, ok := arg0.(env.Native)
 			if !ok {
@@ -2471,8 +2520,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * the app
 	"tui-app//Wait": {
-		Argsn: 1,
-		Doc:   "Blocks until the TUI app stops.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Blocks until the TUI app stops.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			native, ok := arg0.(env.Native)
 			if !ok {
@@ -2493,8 +2543,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * the app
 	"tui-app//Redraw": {
-		Argsn: 1,
-		Doc:   "Forces a re-render of the TUI app.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Forces a re-render of the TUI app.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			native, ok := arg0.(env.Native)
 			if !ok {
@@ -2522,8 +2573,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * the app
 	"tui-app//Send": {
-		Argsn: 2,
-		Doc:   "Sends a message into the app's event loop. Thread-safe, can be called from goroutines. The message is handled by the on-message handler.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Sends a message into the app's event loop. Thread-safe, can be called from goroutines. The message is handled by the on-message handler.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			native, ok := arg0.(env.Native)
 			if !ok {
@@ -2551,8 +2603,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * the app
 	"tui-app//On-message": {
-		Argsn: 2,
-		Doc:   "Registers a handler for async messages sent via Send. Function receives (state, msg). Return a dict to update state.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Registers a handler for async messages sent via Send. Function receives (state, msg). Return a dict to update state.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			native, ok := arg0.(env.Native)
 			if !ok {
@@ -2582,8 +2635,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * Dict style
 	"style": {
-		Argsn: 1,
-		Doc:   "Creates a style dict from a block. Example: tui-style { bold: 1 color: 'blue }",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a style dict from a block. Example: tui-style { bold: 1 color: 'blue }",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch b := arg0.(type) {
 			case env.Block:
@@ -2625,8 +2679,9 @@ var Builtins_tui = map[string]*env.Builtin{
 	// Returns:
 	// * Dict theme
 	"theme": {
-		Argsn: 1,
-		Doc:   "Creates a theme dict. Example: tui-theme { text { color: 'blue } hline { color: 'gray } }",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a theme dict. Example: tui-theme { text { color: 'blue } hline { color: 'gray } }",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch b := arg0.(type) {
 			case env.Block:

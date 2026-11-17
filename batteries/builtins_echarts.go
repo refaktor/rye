@@ -143,8 +143,9 @@ var Builtins_echarts = map[string]*env.Builtin{
 	// Args: none
 	// Returns: native echarts-bar
 	"bar-chart": {
-		Argsn: 0,
-		Doc:   "Creates a new ECharts bar chart instance.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Creates a new ECharts bar chart instance.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			bar := charts.NewBar()
 			return *env.NewNative(ps.Idx, bar, "echarts-bar")
@@ -158,8 +159,9 @@ var Builtins_echarts = map[string]*env.Builtin{
 	// * values: Block of integers or decimals
 	// Returns: native echarts-bar-data (slice of opts.BarData)
 	"bar-data": {
-		Argsn: 1,
-		Doc:   "Converts a block of numbers into ECharts bar data items.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Converts a block of numbers into ECharts bar data items.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch blk := arg0.(type) {
 			case env.Block:
@@ -182,8 +184,9 @@ var Builtins_echarts = map[string]*env.Builtin{
 	// * subtitle: String - subtitle (optional, can be "")
 	// Returns: native echarts-title-opts
 	"title-opts": {
-		Argsn: 2,
-		Doc:   "Creates ECharts title options with title and subtitle.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates ECharts title options with title and subtitle.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			title, ok := arg0.(env.String)
 			if !ok {
@@ -208,8 +211,9 @@ var Builtins_echarts = map[string]*env.Builtin{
 	// * title-opts: native echarts-title-opts
 	// Returns: native echarts-global-opts (a charts.GlobalOpts functional option)
 	"with-title-opts": {
-		Argsn: 1,
-		Doc:   "Wraps title options into a chart global option.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Wraps title options into a chart global option.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch nat := arg0.(type) {
 			case env.Native:
@@ -233,8 +237,9 @@ var Builtins_echarts = map[string]*env.Builtin{
 	// * opts: one or more native echarts-global-opts (variadic via block)
 	// Returns: native echarts-bar (same instance for chaining)
 	"echarts-bar//Global-options!": {
-		Argsn: 2,
-		Doc:   "Sets global options on an ECharts bar chart. Accepts a single option or a block of options.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Sets global options on an ECharts bar chart. Accepts a single option or a block of options.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			barNat, ok := arg0.(env.Native)
 			if !ok {
@@ -284,8 +289,9 @@ var Builtins_echarts = map[string]*env.Builtin{
 	// * labels: Block of strings
 	// Returns: native echarts-bar (same instance for chaining)
 	"echarts-bar//X-axis!": {
-		Argsn: 2,
-		Doc:   "Sets the x-axis labels on an ECharts bar chart.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Sets the x-axis labels on an ECharts bar chart.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			barNat, ok := arg0.(env.Native)
 			if !ok {
@@ -318,8 +324,9 @@ var Builtins_echarts = map[string]*env.Builtin{
 	// * data: native echarts-bar-data
 	// Returns: native echarts-bar (same instance for chaining)
 	"echarts-bar//Add-series": {
-		Argsn: 3,
-		Doc:   "Adds a data series to an ECharts bar chart.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Adds a data series to an ECharts bar chart.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			barNat, ok := arg0.(env.Native)
 			if !ok {
@@ -354,8 +361,9 @@ var Builtins_echarts = map[string]*env.Builtin{
 	// * writer: native (io.Writer, e.g., from open//write)
 	// Returns: native echarts-bar on success
 	"echarts-bar//Render": {
-		Argsn: 2,
-		Doc:   "Renders an ECharts bar chart to a writer (file, etc.).",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Renders an ECharts bar chart to a writer (file, etc.).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			barNat, ok := arg0.(env.Native)
 			if !ok {
@@ -386,8 +394,9 @@ var Builtins_echarts = map[string]*env.Builtin{
 	//
 
 	"line-chart": {
-		Argsn: 0,
-		Doc:   "Creates a new ECharts line chart instance.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Creates a new ECharts line chart instance.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			line := charts.NewLine()
 			return *env.NewNative(ps.Idx, line, "echarts-line")
@@ -395,8 +404,9 @@ var Builtins_echarts = map[string]*env.Builtin{
 	},
 
 	"line-data": {
-		Argsn: 1,
-		Doc:   "Converts a block of numbers into ECharts line data items.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Converts a block of numbers into ECharts line data items.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch blk := arg0.(type) {
 			case env.Block:
@@ -412,8 +422,9 @@ var Builtins_echarts = map[string]*env.Builtin{
 	},
 
 	"echarts-line//Global-options!": {
-		Argsn: 2,
-		Doc:   "Sets global options on an ECharts line chart.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Sets global options on an ECharts line chart.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			lineNat, ok := arg0.(env.Native)
 			if !ok {
@@ -455,8 +466,9 @@ var Builtins_echarts = map[string]*env.Builtin{
 	},
 
 	"echarts-line//X-axis!": {
-		Argsn: 2,
-		Doc:   "Sets the x-axis labels on an ECharts line chart.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Sets the x-axis labels on an ECharts line chart.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			lineNat, ok := arg0.(env.Native)
 			if !ok {
@@ -481,8 +493,9 @@ var Builtins_echarts = map[string]*env.Builtin{
 	},
 
 	"echarts-line//Add-series": {
-		Argsn: 3,
-		Doc:   "Adds a data series to an ECharts line chart.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Adds a data series to an ECharts line chart.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			lineNat, ok := arg0.(env.Native)
 			if !ok {
@@ -510,8 +523,9 @@ var Builtins_echarts = map[string]*env.Builtin{
 	},
 
 	"echarts-line//Render": {
-		Argsn: 2,
-		Doc:   "Renders an ECharts line chart to a writer (file, etc.).",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Renders an ECharts line chart to a writer (file, etc.).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			lineNat, ok := arg0.(env.Native)
 			if !ok {
@@ -542,8 +556,9 @@ var Builtins_echarts = map[string]*env.Builtin{
 	//
 
 	"pie-chart": {
-		Argsn: 0,
-		Doc:   "Creates a new ECharts pie chart instance.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Creates a new ECharts pie chart instance.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			pie := charts.NewPie()
 			return *env.NewNative(ps.Idx, pie, "echarts-pie")
@@ -551,8 +566,9 @@ var Builtins_echarts = map[string]*env.Builtin{
 	},
 
 	"pie-data": {
-		Argsn: 1,
-		Doc:   "Converts a block of name-value pairs into ECharts pie data items.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Converts a block of name-value pairs into ECharts pie data items.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch blk := arg0.(type) {
 			case env.Block:
@@ -568,8 +584,9 @@ var Builtins_echarts = map[string]*env.Builtin{
 	},
 
 	"echarts-pie//Global-options!": {
-		Argsn: 2,
-		Doc:   "Sets global options on an ECharts pie chart.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Sets global options on an ECharts pie chart.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			pieNat, ok := arg0.(env.Native)
 			if !ok {
@@ -611,8 +628,9 @@ var Builtins_echarts = map[string]*env.Builtin{
 	},
 
 	"echarts-pie//Add-series": {
-		Argsn: 2,
-		Doc:   "Adds a data series to an ECharts pie chart.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Adds a data series to an ECharts pie chart.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			pieNat, ok := arg0.(env.Native)
 			if !ok {
@@ -636,8 +654,9 @@ var Builtins_echarts = map[string]*env.Builtin{
 	},
 
 	"echarts-pie//Render": {
-		Argsn: 2,
-		Doc:   "Renders an ECharts pie chart to a writer (file, etc.).",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Renders an ECharts pie chart to a writer (file, etc.).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			pieNat, ok := arg0.(env.Native)
 			if !ok {
@@ -668,8 +687,9 @@ var Builtins_echarts = map[string]*env.Builtin{
 	//
 
 	"scatter-chart": {
-		Argsn: 0,
-		Doc:   "Creates a new ECharts scatter chart instance.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Creates a new ECharts scatter chart instance.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			scatter := charts.NewScatter()
 			return *env.NewNative(ps.Idx, scatter, "echarts-scatter")
@@ -677,8 +697,9 @@ var Builtins_echarts = map[string]*env.Builtin{
 	},
 
 	"scatter-data": {
-		Argsn: 1,
-		Doc:   "Converts a block of [x y] pairs into ECharts scatter data items.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Converts a block of [x y] pairs into ECharts scatter data items.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch blk := arg0.(type) {
 			case env.Block:
@@ -694,8 +715,9 @@ var Builtins_echarts = map[string]*env.Builtin{
 	},
 
 	"echarts-scatter//Global-options!": {
-		Argsn: 2,
-		Doc:   "Sets global options on an ECharts scatter chart.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Sets global options on an ECharts scatter chart.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			scatterNat, ok := arg0.(env.Native)
 			if !ok {
@@ -737,8 +759,9 @@ var Builtins_echarts = map[string]*env.Builtin{
 	},
 
 	"echarts-scatter//X-axis!": {
-		Argsn: 2,
-		Doc:   "Sets the x-axis labels on an ECharts scatter chart.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Sets the x-axis labels on an ECharts scatter chart.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			scatterNat, ok := arg0.(env.Native)
 			if !ok {
@@ -763,8 +786,9 @@ var Builtins_echarts = map[string]*env.Builtin{
 	},
 
 	"echarts-scatter//Add-series": {
-		Argsn: 3,
-		Doc:   "Adds a data series to an ECharts scatter chart.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Adds a data series to an ECharts scatter chart.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			scatterNat, ok := arg0.(env.Native)
 			if !ok {
@@ -792,8 +816,9 @@ var Builtins_echarts = map[string]*env.Builtin{
 	},
 
 	"echarts-scatter//Render": {
-		Argsn: 2,
-		Doc:   "Renders an ECharts scatter chart to a writer (file, etc.).",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Renders an ECharts scatter chart to a writer (file, etc.).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			scatterNat, ok := arg0.(env.Native)
 			if !ok {
@@ -824,8 +849,9 @@ var Builtins_echarts = map[string]*env.Builtin{
 	//
 
 	"legend-opts": {
-		Argsn: 0,
-		Doc:   "Creates ECharts legend options.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Creates ECharts legend options.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			legendOpts := opts.Legend{}
 			return *env.NewNative(ps.Idx, legendOpts, "echarts-legend-opts")
@@ -833,8 +859,9 @@ var Builtins_echarts = map[string]*env.Builtin{
 	},
 
 	"with-legend-opts": {
-		Argsn: 1,
-		Doc:   "Wraps legend options into a chart global option.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Wraps legend options into a chart global option.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch nat := arg0.(type) {
 			case env.Native:
@@ -851,8 +878,9 @@ var Builtins_echarts = map[string]*env.Builtin{
 	},
 
 	"tooltip-opts": {
-		Argsn: 0,
-		Doc:   "Creates ECharts tooltip options.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Creates ECharts tooltip options.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			tooltipOpts := opts.Tooltip{}
 			return *env.NewNative(ps.Idx, tooltipOpts, "echarts-tooltip-opts")
@@ -860,8 +888,9 @@ var Builtins_echarts = map[string]*env.Builtin{
 	},
 
 	"with-tooltip-opts": {
-		Argsn: 1,
-		Doc:   "Wraps tooltip options into a chart global option.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Wraps tooltip options into a chart global option.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch nat := arg0.(type) {
 			case env.Native:

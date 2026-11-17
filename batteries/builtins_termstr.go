@@ -21,8 +21,9 @@ var Builtins_termstr = map[string]*env.Builtin{
 	// Returns:
 	// * string containing ANSI escape code for black text
 	"black": {
-		Argsn: 0,
-		Doc:   "Returns ANSI escape code string for black text color.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns ANSI escape code string for black text color.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(term.StrColorBlack())
 		},
@@ -35,8 +36,9 @@ var Builtins_termstr = map[string]*env.Builtin{
 	// Returns:
 	// * string containing ANSI escape code for red text
 	"red": {
-		Argsn: 0,
-		Doc:   "Returns ANSI escape code string for red text color.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns ANSI escape code string for red text color.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(term.StrColorRed())
 		},
@@ -49,8 +51,9 @@ var Builtins_termstr = map[string]*env.Builtin{
 	// Returns:
 	// * string containing ANSI escape code for blue text
 	"blue": {
-		Argsn: 0,
-		Doc:   "Returns ANSI escape code string for blue text color.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns ANSI escape code string for blue text color.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(term.StrColorBlue())
 		},
@@ -63,8 +66,9 @@ var Builtins_termstr = map[string]*env.Builtin{
 	// Returns:
 	// * string containing ANSI escape code for green text
 	"green": {
-		Argsn: 0,
-		Doc:   "Returns ANSI escape code string for green text color.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns ANSI escape code string for green text color.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(term.StrColorGreen())
 		},
@@ -77,8 +81,9 @@ var Builtins_termstr = map[string]*env.Builtin{
 	// Returns:
 	// * string containing ANSI escape code for yellow text
 	"yellow": {
-		Argsn: 0,
-		Doc:   "Returns ANSI escape code string for yellow text color.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns ANSI escape code string for yellow text color.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(term.StrColorYellow())
 		},
@@ -91,8 +96,9 @@ var Builtins_termstr = map[string]*env.Builtin{
 	// Returns:
 	// * string containing ANSI escape code for magenta text
 	"magenta": {
-		Argsn: 0,
-		Doc:   "Returns ANSI escape code string for magenta text color.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns ANSI escape code string for magenta text color.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(term.StrColorMagenta())
 		},
@@ -105,8 +111,9 @@ var Builtins_termstr = map[string]*env.Builtin{
 	// Returns:
 	// * string containing ANSI escape code for cyan text
 	"cyan": {
-		Argsn: 0,
-		Doc:   "Returns ANSI escape code string for cyan text color.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns ANSI escape code string for cyan text color.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(term.StrColorCyan())
 		},
@@ -119,8 +126,9 @@ var Builtins_termstr = map[string]*env.Builtin{
 	// Returns:
 	// * string containing ANSI escape code for white text
 	"white": {
-		Argsn: 0,
-		Doc:   "Returns ANSI escape code string for white text color.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns ANSI escape code string for white text color.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(term.StrColorWhite())
 		},
@@ -133,8 +141,9 @@ var Builtins_termstr = map[string]*env.Builtin{
 	// Returns:
 	// * string containing ANSI escape code for bright black text
 	"br-black": {
-		Argsn: 0,
-		Doc:   "Returns ANSI escape code string for bright black (gray) text color.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns ANSI escape code string for bright black (gray) text color.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(term.StrColorBrBlack())
 		},
@@ -147,8 +156,9 @@ var Builtins_termstr = map[string]*env.Builtin{
 	// Returns:
 	// * string containing ANSI escape code for bright red text
 	"br-red": {
-		Argsn: 0,
-		Doc:   "Returns ANSI escape code string for bright red text color.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns ANSI escape code string for bright red text color.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(term.StrColorBrRed())
 		},
@@ -161,8 +171,9 @@ var Builtins_termstr = map[string]*env.Builtin{
 	// Returns:
 	// * string containing ANSI escape code for bright blue text
 	"br-blue": {
-		Argsn: 0,
-		Doc:   "Returns ANSI escape code string for bright blue text color.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns ANSI escape code string for bright blue text color.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(term.StrColorBrBlue())
 		},
@@ -175,8 +186,9 @@ var Builtins_termstr = map[string]*env.Builtin{
 	// Returns:
 	// * string containing ANSI escape code for bright green text
 	"br-green": {
-		Argsn: 0,
-		Doc:   "Returns ANSI escape code string for bright green text color.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns ANSI escape code string for bright green text color.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(term.StrColorBrGreen())
 		},
@@ -189,8 +201,9 @@ var Builtins_termstr = map[string]*env.Builtin{
 	// Returns:
 	// * string containing ANSI escape code for bright yellow text
 	"br-yellow": {
-		Argsn: 0,
-		Doc:   "Returns ANSI escape code string for bright yellow text color.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns ANSI escape code string for bright yellow text color.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(term.StrColorBrYellow())
 		},
@@ -203,8 +216,9 @@ var Builtins_termstr = map[string]*env.Builtin{
 	// Returns:
 	// * string containing ANSI escape code for bright magenta text
 	"br-magenta": {
-		Argsn: 0,
-		Doc:   "Returns ANSI escape code string for bright magenta text color.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns ANSI escape code string for bright magenta text color.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(term.StrColorBrMagenta())
 		},
@@ -217,8 +231,9 @@ var Builtins_termstr = map[string]*env.Builtin{
 	// Returns:
 	// * string containing ANSI escape code for bright cyan text
 	"br-cyan": {
-		Argsn: 0,
-		Doc:   "Returns ANSI escape code string for bright cyan text color.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns ANSI escape code string for bright cyan text color.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(term.StrColorBrCyan())
 		},
@@ -231,8 +246,9 @@ var Builtins_termstr = map[string]*env.Builtin{
 	// Returns:
 	// * string containing ANSI escape code for bright white text
 	"br-white": {
-		Argsn: 0,
-		Doc:   "Returns ANSI escape code string for bright white text color.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns ANSI escape code string for bright white text color.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(term.StrColorBrWhite())
 		},
@@ -245,8 +261,9 @@ var Builtins_termstr = map[string]*env.Builtin{
 	// Returns:
 	// * string containing ANSI escape code for black background
 	"bg-black": {
-		Argsn: 0,
-		Doc:   "Returns ANSI escape code string for black background color.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns ANSI escape code string for black background color.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(term.StrColorBgBlack())
 		},
@@ -259,8 +276,9 @@ var Builtins_termstr = map[string]*env.Builtin{
 	// Returns:
 	// * string containing ANSI escape code for red background
 	"bg-red": {
-		Argsn: 0,
-		Doc:   "Returns ANSI escape code string for red background color.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns ANSI escape code string for red background color.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(term.StrColorBgRed())
 		},
@@ -273,8 +291,9 @@ var Builtins_termstr = map[string]*env.Builtin{
 	// Returns:
 	// * string containing ANSI escape code for blue background
 	"bg-blue": {
-		Argsn: 0,
-		Doc:   "Returns ANSI escape code string for blue background color.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns ANSI escape code string for blue background color.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(term.StrColorBgBlue())
 		},
@@ -287,8 +306,9 @@ var Builtins_termstr = map[string]*env.Builtin{
 	// Returns:
 	// * string containing ANSI escape code for green background
 	"bg-green": {
-		Argsn: 0,
-		Doc:   "Returns ANSI escape code string for green background color.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns ANSI escape code string for green background color.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(term.StrColorBgGreen())
 		},
@@ -301,8 +321,9 @@ var Builtins_termstr = map[string]*env.Builtin{
 	// Returns:
 	// * string containing ANSI escape code for yellow background
 	"bg-yellow": {
-		Argsn: 0,
-		Doc:   "Returns ANSI escape code string for yellow background color.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns ANSI escape code string for yellow background color.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(term.StrColorBgYellow())
 		},
@@ -315,8 +336,9 @@ var Builtins_termstr = map[string]*env.Builtin{
 	// Returns:
 	// * string containing ANSI escape code for magenta background
 	"bg-magenta": {
-		Argsn: 0,
-		Doc:   "Returns ANSI escape code string for magenta background color.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns ANSI escape code string for magenta background color.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(term.StrColorBgMagenta())
 		},
@@ -329,8 +351,9 @@ var Builtins_termstr = map[string]*env.Builtin{
 	// Returns:
 	// * string containing ANSI escape code for cyan background
 	"bg-cyan": {
-		Argsn: 0,
-		Doc:   "Returns ANSI escape code string for cyan background color.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns ANSI escape code string for cyan background color.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(term.StrColorBgCyan())
 		},
@@ -343,8 +366,9 @@ var Builtins_termstr = map[string]*env.Builtin{
 	// Returns:
 	// * string containing ANSI escape code for white background
 	"bg-white": {
-		Argsn: 0,
-		Doc:   "Returns ANSI escape code string for white background color.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns ANSI escape code string for white background color.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(term.StrColorBgWhite())
 		},
@@ -357,8 +381,9 @@ var Builtins_termstr = map[string]*env.Builtin{
 	// Returns:
 	// * string containing ANSI escape code for bold text
 	"bold": {
-		Argsn: 0,
-		Doc:   "Returns ANSI escape code string for bold text style.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns ANSI escape code string for bold text style.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(term.StrBold())
 		},
@@ -371,8 +396,9 @@ var Builtins_termstr = map[string]*env.Builtin{
 	// Returns:
 	// * string containing ANSI escape code for underlined text
 	"underline": {
-		Argsn: 0,
-		Doc:   "Returns ANSI escape code string for underlined text style.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns ANSI escape code string for underlined text style.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(term.StrUnderline())
 		},
@@ -385,8 +411,9 @@ var Builtins_termstr = map[string]*env.Builtin{
 	// Returns:
 	// * string containing ANSI escape code to reset bold text
 	"reset\\bold": {
-		Argsn: 0,
-		Doc:   "Returns ANSI escape code string to reset bold text style.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns ANSI escape code string to reset bold text style.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(term.StrResetBold())
 		},
@@ -399,8 +426,9 @@ var Builtins_termstr = map[string]*env.Builtin{
 	// Returns:
 	// * string containing ANSI escape code to reset all styles
 	"reset": {
-		Argsn: 0,
-		Doc:   "Returns ANSI escape code string to reset all terminal text styles and colors.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns ANSI escape code string to reset all terminal text styles and colors.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(term.StrCloseProps())
 		},

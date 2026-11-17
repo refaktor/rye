@@ -26,8 +26,9 @@ var Builtins_psql = map[string]*env.Builtin{
 	// * native PostgreSQL database connection (type: "Rye-psql")
 	// * error if connection fails
 	"postgres-uri//Open": {
-		Argsn: 1,
-		Doc:   "Opens a connection to a PostgreSQL database.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Opens a connection to a PostgreSQL database.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.Uri:
@@ -58,8 +59,9 @@ var Builtins_psql = map[string]*env.Builtin{
 	// * integer number of rows affected
 	// * error if execution fails
 	"Rye-psql//Exec": {
-		Argsn: 2,
-		Doc:   "Executes a SQL statement that modifies data (INSERT, UPDATE, DELETE).",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Executes a SQL statement that modifies data (INSERT, UPDATE, DELETE).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sqlstr string
 			var vals []any
@@ -116,8 +118,9 @@ var Builtins_psql = map[string]*env.Builtin{
 	// * table containing query results (SQL NULL values converted to Void{})
 	// * error if query fails or returns no data
 	"Rye-psql//Query": {
-		Argsn: 2,
-		Doc:   "Executes a SQL query and returns results as a table.",
+		Effect: env.EffInput,
+		Argsn:  2,
+		Doc:    "Executes a SQL query and returns results as a table.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sqlstr string
 			var vals []any
@@ -217,8 +220,9 @@ var Builtins_psql = map[string]*env.Builtin{
 	// * string containing the generated SQL with parameters (includes parameter comments if present)
 	// * error if SQL is empty
 	"Rye-psql//Show-SQL": {
-		Argsn: 2,
-		Doc:   "Generates and returns the SQL string without executing it.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Generates and returns the SQL string without executing it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sqlstr string
 			var vals []any
@@ -267,8 +271,9 @@ var Builtins_psql = map[string]*env.Builtin{
 	// Returns:
 	// * integer 1 on successful close, error otherwise
 	"Rye-psql//Close": {
-		Argsn: 1,
-		Doc:   "Closes the PostgreSQL database connection.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Closes the PostgreSQL database connection.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch db := arg0.(type) {
 			case env.Native:

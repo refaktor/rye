@@ -184,8 +184,9 @@ var Builtins_match = map[string]*env.Builtin{
 	// Returns:
 	// * Integer 1 if successful, or failure if the match fails
 	"match-block": {
-		Argsn: 2,
-		Doc:   "Tries to match and deconstruct a value into multiple values, with support for literal values, type checking, get-words, code evaluation, and nested blocks. First argument can be any value. If it doesn't match, returns failure.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Tries to match and deconstruct a value into multiple values, with support for literal values, type checking, get-words, code evaluation, and nested blocks. First argument can be any value. If it doesn't match, returns failure.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			value := arg0
 
@@ -270,8 +271,9 @@ var Builtins_match = map[string]*env.Builtin{
 	// Returns:
 	// * The result of evaluating the code block of the first matching pattern, or failure if no pattern matches
 	"match": {
-		Argsn: 2,
-		Doc:   "Matches a value against a series of pattern/action pairs. Pattern can be a single element or block. Returns the result of the first matching action, or failure if none match.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Matches a value against a series of pattern/action pairs. Pattern can be a single element or block. Returns the result of the first matching action, or failure if none match.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			value := arg0
 

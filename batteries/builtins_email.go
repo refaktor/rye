@@ -212,8 +212,9 @@ var Builtins_email = map[string]*env.Builtin{
 	// Returns:
 	// * native gomail-message object for building email content
 	"email-message": {
-		Argsn: 0,
-		Doc:   "Creates a new empty email message object that can be configured with headers, body, and attachments.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Creates a new empty email message object that can be configured with headers, body, and attachments.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __newMessage(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -231,8 +232,9 @@ var Builtins_email = map[string]*env.Builtin{
 	// Returns:
 	// * the message object for method chaining
 	"gomail-message//Set-header": {
-		Argsn: 3,
-		Doc:   "Sets a standard email header field such as Subject, To, From, Cc, or Bcc with the specified value.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Sets a standard email header field such as Subject, To, From, Cc, or Bcc with the specified value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __setHeader(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -251,8 +253,9 @@ var Builtins_email = map[string]*env.Builtin{
 	// Returns:
 	// * the message object for method chaining
 	"gomail-message//Set-address-header": {
-		Argsn: 4,
-		Doc:   "Sets an email address header with both email address and display name, commonly used for From, To, Cc, and Bcc fields.",
+		Effect: env.EffNone,
+		Argsn:  4,
+		Doc:    "Sets an email address header with both email address and display name, commonly used for From, To, Cc, and Bcc fields.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __setAddressHeader(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -270,8 +273,9 @@ var Builtins_email = map[string]*env.Builtin{
 	// Returns:
 	// * the message object for method chaining
 	"gomail-message//Set-body": {
-		Argsn: 3,
-		Doc:   "Sets the main body content of the email with the specified MIME content type, supporting plain text and HTML formats.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Sets the main body content of the email with the specified MIME content type, supporting plain text and HTML formats.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __setBody(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -288,8 +292,9 @@ var Builtins_email = map[string]*env.Builtin{
 	// Returns:
 	// * the message object for method chaining
 	"gomail-message//Attach": {
-		Argsn: 2,
-		Doc:   "Attaches a file to the email message using a file URI, making the file available as an email attachment.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Attaches a file to the email message using a file URI, making the file available as an email attachment.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __attach(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -307,8 +312,9 @@ var Builtins_email = map[string]*env.Builtin{
 	// Returns:
 	// * the message object for method chaining
 	"gomail-message//Add-alternative": {
-		Argsn: 3,
-		Doc:   "Adds alternative content to the email (e.g., HTML version alongside plain text), allowing email clients to choose their preferred format.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Adds alternative content to the email (e.g., HTML version alongside plain text), allowing email clients to choose their preferred format.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __addAlternative(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -330,8 +336,9 @@ var Builtins_email = map[string]*env.Builtin{
 	// Returns:
 	// * native gomail-dialer object configured for sending emails
 	"new-email-dialer": {
-		Argsn: 4,
-		Doc:   "Creates a new SMTP dialer configured with server details and authentication credentials for sending emails.",
+		Effect: env.EffNone,
+		Argsn:  4,
+		Doc:    "Creates a new SMTP dialer configured with server details and authentication credentials for sending emails.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __newDialer(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -348,8 +355,9 @@ var Builtins_email = map[string]*env.Builtin{
 	// Returns:
 	// * the dialer object on success, or error object if sending fails
 	"gomail-dialer//Dial-and-send": {
-		Argsn: 2,
-		Doc:   "Connects to the SMTP server and sends the specified email message, handling authentication and delivery.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Connects to the SMTP server and sends the specified email message, handling authentication and delivery.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __dialAndSend(ps, arg0, arg1, arg2, arg3, arg4)
 		},

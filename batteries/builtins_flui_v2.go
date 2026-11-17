@@ -20,8 +20,9 @@ var Builtins_flui_v2 = map[string]*env.Builtin{
 	// select - Interactive selection from Block, Dict, Table, List, TableRow
 	// =========================================================================
 	"select": {
-		Argsn: 1,
-		Doc:   "Interactively displays a selection interface. Returns the selected item. Ctrl+C cancels.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Interactively displays a selection interface. Returns the selected item. Ctrl+C cancels.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			items, ok := extractItems(arg0, ps.Idx)
 			if !ok {
@@ -57,8 +58,9 @@ var Builtins_flui_v2 = map[string]*env.Builtin{
 	// input - Single line text input
 	// =========================================================================
 	"input": {
-		Argsn: 1,
-		Doc:   "Interactively displays an input field. Takes max width, returns entered string. Ctrl+C cancels.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Interactively displays an input field. Takes max width, returns entered string. Ctrl+C cancels.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch width := arg0.(type) {
 			case env.Integer:
@@ -80,8 +82,9 @@ var Builtins_flui_v2 = map[string]*env.Builtin{
 	// datepicker - Interactive date input (YYYY-MM-DD)
 	// =========================================================================
 	"datepicker": {
-		Argsn: 1,
-		Doc:   "Interactive date input. Use arrow keys to navigate/change values, or type digits. Ctrl+C cancels.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Interactive date input. Use arrow keys to navigate/change values, or type digits. Ctrl+C cancels.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch initialDate := arg0.(type) {
 			case env.String:
@@ -103,8 +106,9 @@ var Builtins_flui_v2 = map[string]*env.Builtin{
 	// textarea - Multiline text input
 	// =========================================================================
 	"textarea": {
-		Argsn: 2,
-		Doc:   "Interactive multiline text input. Takes width and height. Ctrl+D to submit, Ctrl+C cancels.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Interactive multiline text input. Takes width and height. Ctrl+D to submit, Ctrl+C cancels.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch width := arg0.(type) {
 			case env.Integer:
@@ -131,8 +135,9 @@ var Builtins_flui_v2 = map[string]*env.Builtin{
 	// textarea\ - Multiline text input with initial text (pipe-friendly)
 	// =========================================================================
 	"textarea\\": {
-		Argsn: 3,
-		Doc:   "Interactive multiline text input with initial text. Ctrl+D to submit, Ctrl+C cancels.",
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Interactive multiline text input with initial text. Ctrl+D to submit, Ctrl+C cancels.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch text := arg0.(type) {
 			case env.String:
@@ -164,8 +169,9 @@ var Builtins_flui_v2 = map[string]*env.Builtin{
 	// displayx - JSON representation for Flutter UI
 	// =========================================================================
 	"displayx": {
-		Argsn: 1,
-		Doc:   "Returns a !!! prefixed JSON representation for Flutter UI rendering.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Returns a !!! prefixed JSON representation for Flutter UI rendering.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Block:
@@ -198,8 +204,8 @@ func extractItems(arg env.Object, idx *env.Idxs) ([]env.Object, bool) {
 		return dictToObjects(val), true
 	case *env.Dict:
 		return dictToObjects(*val), true
-	// Note: Table and TableRow would need special handling
-	// to preserve their row structure
+		// Note: Table and TableRow would need special handling
+		// to preserve their row structure
 	}
 	return nil, false
 }

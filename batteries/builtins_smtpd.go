@@ -5,7 +5,6 @@ package batteries
 
 import (
 	"bytes"
-	"fmt"
 	"net"
 
 	"github.com/refaktor/rye/env"
@@ -28,8 +27,9 @@ var Builtins_smtpd = map[string]*env.Builtin{
 	// Returns:
 	// * native smtpd object configured to listen on the specified address
 	"smtp-server": {
-		Argsn: 1,
-		Doc:   "Creates a new SMTP server that can receive incoming email messages on the specified address.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a new SMTP server that can receive incoming email messages on the specified address.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Wrap the address string in a native smtpd object
 			return *env.NewNative(ps.Idx, arg0, "smtpd")
@@ -48,8 +48,9 @@ var Builtins_smtpd = map[string]*env.Builtin{
 	// Returns:
 	// * the server object after starting to listen, or error if unable to serve
 	"smtpd//Serve": {
-		Argsn: 4,
-		Doc:   "Starts the SMTP server listening for incoming emails and calls the handler function for each received message.",
+		Effect: env.EffIO,
+		Argsn:  4,
+		Doc:    "Starts the SMTP server listening for incoming emails and calls the handler function for each received message.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch server := arg0.(type) {
 			case env.Native:
@@ -66,9 +67,8 @@ var Builtins_smtpd = map[string]*env.Builtin{
 								ps.ReturnFlag = false
 								// Create temporary program state to avoid conflicts
 								psTemp := env.ProgramState{}
-								err := copier.Copy(&psTemp, &ps)
-								if err != nil {
-									fmt.Println(err.Error()) // TODO: proper error handling
+								if err := copier.Copy(&psTemp, &ps); err != nil {
+									return err
 								}
 								// Convert recipient list to Rye list format
 								lstTo := make([]any, len(to))
@@ -98,7 +98,7 @@ var Builtins_smtpd = map[string]*env.Builtin{
 					return evaldo.MakeArgError(ps, 2, []env.Type{env.FunctionType}, "smtpd//serve")
 				}
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType}, "smtpd//serve")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "smtpd//serve")
 			}
 		},
 	},

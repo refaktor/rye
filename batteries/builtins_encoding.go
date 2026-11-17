@@ -27,9 +27,10 @@ var Builtins_encoding = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the decoded bytes as a UTF-8 string
 	"decode\\hex-string": {
-		Argsn: 1,
-		Doc:   "Decodes a hexadecimal string to a UTF-8 string.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Decodes a hexadecimal string to a UTF-8 string.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch hexStr := arg0.(type) {
 			case env.String:
@@ -55,9 +56,10 @@ var Builtins_encoding = map[string]*env.Builtin{
 	// Returns:
 	// * hexadecimal string representation
 	"encode-to\\hex-string": {
-		Argsn: 1,
-		Doc:   "Encodes a string to its hexadecimal representation.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Encodes a string to its hexadecimal representation.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.String:
@@ -79,9 +81,10 @@ var Builtins_encoding = map[string]*env.Builtin{
 	// Returns:
 	// * cleaned hex string with whitespace removed and even length
 	"clean\\hex-string": {
-		Argsn: 1,
-		Doc:   "Removes all whitespace from a hex string and ensures even length.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Removes all whitespace from a hex string and ensures even length.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch hexStr := arg0.(type) {
 			case env.String:
@@ -113,9 +116,10 @@ var Builtins_encoding = map[string]*env.Builtin{
 	// Returns:
 	// * Windows-1250 encoding as a native value
 	"charmap\\windows-1250": {
-		Argsn: 0,
-		Doc:   "Returns the Windows-1250 (CP1250) character encoding for Central European languages.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns the Windows-1250 (CP1250) character encoding for Central European languages.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewNative(ps.Idx, charmap.Windows1250, "charmap-encoding")
 		},
@@ -129,9 +133,10 @@ var Builtins_encoding = map[string]*env.Builtin{
 	// Returns:
 	// * ISO-8859-1 encoding as a native value
 	"charmap\\iso-8859-1": {
-		Argsn: 0,
-		Doc:   "Returns the ISO-8859-1 (Latin-1) character encoding.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns the ISO-8859-1 (Latin-1) character encoding.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewNative(ps.Idx, charmap.ISO8859_1, "charmap-encoding")
 		},
@@ -145,9 +150,10 @@ var Builtins_encoding = map[string]*env.Builtin{
 	// Returns:
 	// * ISO-8859-2 encoding as a native value
 	"charmap\\iso-8859-2": {
-		Argsn: 0,
-		Doc:   "Returns the ISO-8859-2 (Latin-2) character encoding for Central European languages.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns the ISO-8859-2 (Latin-2) character encoding for Central European languages.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewNative(ps.Idx, charmap.ISO8859_2, "charmap-encoding")
 		},
@@ -161,9 +167,10 @@ var Builtins_encoding = map[string]*env.Builtin{
 	// Returns:
 	// * Windows-1252 encoding as a native value
 	"charmap\\windows-1252": {
-		Argsn: 0,
-		Doc:   "Returns the Windows-1252 character encoding for Western European languages.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns the Windows-1252 character encoding for Western European languages.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewNative(ps.Idx, charmap.Windows1252, "charmap-encoding")
 		},
@@ -177,9 +184,10 @@ var Builtins_encoding = map[string]*env.Builtin{
 	// Returns:
 	// * Code Page 437 encoding as a native value
 	"charmap\\code-page-437": {
-		Argsn: 0,
-		Doc:   "Returns the Code Page 437 (DOS/IBM PC) character encoding.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns the Code Page 437 (DOS/IBM PC) character encoding.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewNative(ps.Idx, charmap.CodePage437, "charmap-encoding")
 		},
@@ -193,9 +201,10 @@ var Builtins_encoding = map[string]*env.Builtin{
 	// Returns:
 	// * Code Page 850 encoding as a native value
 	"charmap\\code-page-850": {
-		Argsn: 0,
-		Doc:   "Returns the Code Page 850 (DOS Latin-1) character encoding.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns the Code Page 850 (DOS Latin-1) character encoding.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewNative(ps.Idx, charmap.CodePage850, "charmap-encoding")
 		},
@@ -209,9 +218,10 @@ var Builtins_encoding = map[string]*env.Builtin{
 	// Returns:
 	// * KOI8-R encoding as a native value
 	"charmap\\koi8r": {
-		Argsn: 0,
-		Doc:   "Returns the KOI8-R character encoding for Russian.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns the KOI8-R character encoding for Russian.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewNative(ps.Idx, charmap.KOI8R, "charmap-encoding")
 		},
@@ -225,9 +235,10 @@ var Builtins_encoding = map[string]*env.Builtin{
 	// Returns:
 	// * text decoder as a native value
 	"charmap-encoding//Decoder": {
-		Argsn: 1,
-		Doc:   "Creates a new text decoder for the given character encoding.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a new text decoder for the given character encoding.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch encoding := arg0.(type) {
 			case env.Native:
@@ -253,9 +264,10 @@ var Builtins_encoding = map[string]*env.Builtin{
 	// Returns:
 	// * text encoder as a native value
 	"charmap-encoding//Encoder": {
-		Argsn: 1,
-		Doc:   "Creates a new text encoder for the given character encoding.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a new text encoder for the given character encoding.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch encoding := arg0.(type) {
 			case env.Native:
@@ -283,9 +295,10 @@ var Builtins_encoding = map[string]*env.Builtin{
 	// Returns:
 	// * decoded string
 	"text-decoder//Decode": {
-		Argsn: 2,
-		Doc:   "Decodes a string using the given text decoder.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Decodes a string using the given text decoder.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch decoder := arg0.(type) {
 			case env.Native:
@@ -322,9 +335,10 @@ var Builtins_encoding = map[string]*env.Builtin{
 	// Returns:
 	// * encoded string
 	"text-encoder//Encode": {
-		Argsn: 2,
-		Doc:   "Encodes a string using the given text encoder.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Encodes a string using the given text encoder.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch encoder := arg0.(type) {
 			case env.Native:
@@ -365,9 +379,10 @@ var Builtins_encoding = map[string]*env.Builtin{
 	// Returns:
 	// * boolean true if character is whitespace, false otherwise
 	"is-space": {
-		Argsn: 1,
-		Doc:   "Checks if a single character string is a whitespace character.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Checks if a single character string is a whitespace character.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.String:
@@ -396,9 +411,10 @@ var Builtins_encoding = map[string]*env.Builtin{
 	// Returns:
 	// * string with all whitespace characters removed
 	"remove-all-space": {
-		Argsn: 1,
-		Doc:   "Removes all whitespace characters from a string.",
-		Pure:  true,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Removes all whitespace characters from a string.",
+		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.String:

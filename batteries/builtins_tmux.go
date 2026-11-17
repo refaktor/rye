@@ -13,8 +13,9 @@ import (
 var Builtins_tmux = map[string]*env.Builtin{
 	// TMUX related builtins loaded under tmux context
 	"is-available": {
-		Argsn: 0,
-		Doc:   "Checks if tmux is available on the system.",
+		Effect: env.EffIO,
+		Argsn:  0,
+		Doc:    "Checks if tmux is available on the system.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			_, err := exec.LookPath("tmux")
 			return *env.NewBoolean(err == nil)
@@ -22,8 +23,9 @@ var Builtins_tmux = map[string]*env.Builtin{
 	},
 
 	"session": {
-		Argsn: 1,
-		Doc:   "Creates a new tmux session with the given name using gotmux library.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Creates a new tmux session with the given name using gotmux library.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			tmux, err := gotmux.DefaultTmux()
 			if err != nil {
@@ -44,8 +46,9 @@ var Builtins_tmux = map[string]*env.Builtin{
 	},
 
 	"sessions?": {
-		Argsn: 0,
-		Doc:   "Lists all tmux sessions using gotmux library.",
+		Effect: env.EffIO,
+		Argsn:  0,
+		Doc:    "Lists all tmux sessions using gotmux library.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			tmux, err := gotmux.DefaultTmux()
 			if err != nil {
@@ -64,8 +67,9 @@ var Builtins_tmux = map[string]*env.Builtin{
 	},
 
 	"session?": {
-		Argsn: 1,
-		Doc:   "Gets a tmux session by name using gotmux library.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Gets a tmux session by name using gotmux library.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			tmux, err := gotmux.DefaultTmux()
 			if err != nil {
@@ -85,8 +89,9 @@ var Builtins_tmux = map[string]*env.Builtin{
 	},
 
 	"tmux-window//Rename": {
-		Argsn: 2,
-		Doc:   "Renames the tmux window.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Renames the tmux window.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch win := arg0.(type) {
 			case env.Native:
@@ -109,8 +114,9 @@ var Builtins_tmux = map[string]*env.Builtin{
 	},
 
 	"tmux-window//Select": {
-		Argsn: 1,
-		Doc:   "Selects (focuses) the tmux window.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Selects (focuses) the tmux window.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch win := arg0.(type) {
 			case env.Native:
@@ -128,8 +134,9 @@ var Builtins_tmux = map[string]*env.Builtin{
 	},
 
 	"tmux-session//Window": {
-		Argsn: 1,
-		Doc:   "Creates a new window in the given tmux session.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Creates a new window in the given tmux session.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch sess := arg0.(type) {
 			case env.Native:
@@ -148,8 +155,9 @@ var Builtins_tmux = map[string]*env.Builtin{
 	},
 
 	"tmux-session//Window\\named": {
-		Argsn: 2,
-		Doc:   "Creates a new window in the given tmux session with a specific name.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Creates a new window in the given tmux session with a specific name.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch sess := arg0.(type) {
 			case env.Native:
@@ -173,8 +181,9 @@ var Builtins_tmux = map[string]*env.Builtin{
 	},
 
 	"tmux-session//Rename": {
-		Argsn: 2,
-		Doc:   "Renames a tmux session.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Renames a tmux session.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch sess := arg0.(type) {
 			case env.Native:
@@ -197,8 +206,9 @@ var Builtins_tmux = map[string]*env.Builtin{
 	},
 
 	"tmux-session//Windows?": {
-		Argsn: 1,
-		Doc:   "Lists all windows in the given tmux session.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Lists all windows in the given tmux session.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch sess := arg0.(type) {
 			case env.Native:
@@ -221,8 +231,9 @@ var Builtins_tmux = map[string]*env.Builtin{
 	},
 
 	"tmux-window//Layout\\select": {
-		Argsn: 2,
-		Doc:   "Selects layout for a window (even-horizontal, even-vertical, main-horizontal, tiled).",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Selects layout for a window (even-horizontal, even-vertical, main-horizontal, tiled).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch win := arg0.(type) {
 			case env.Native:
@@ -252,8 +263,9 @@ var Builtins_tmux = map[string]*env.Builtin{
 	},
 
 	"tmux-session//Pane?": {
-		Argsn: 2,
-		Doc:   "Gets a pane from a tmux window by index.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Gets a pane from a tmux window by index.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch win := arg0.(type) {
 			case env.Native:
@@ -277,8 +289,9 @@ var Builtins_tmux = map[string]*env.Builtin{
 	},
 
 	"tmux-window//Panes?": {
-		Argsn: 1,
-		Doc:   "Lists panes in the given tmux window.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Lists panes in the given tmux window.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch win := arg0.(type) {
 			case env.Native:
@@ -301,8 +314,9 @@ var Builtins_tmux = map[string]*env.Builtin{
 	},
 
 	"tmux-pane//Kill": {
-		Argsn: 1,
-		Doc:   "Kills the tmux pane.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Kills the tmux pane.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -320,8 +334,9 @@ var Builtins_tmux = map[string]*env.Builtin{
 	},
 
 	"tmux-pane//Split-pane": {
-		Argsn: 1,
-		Doc:   "Splits a tmux pane horizontally.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Splits a tmux pane horizontally.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -340,8 +355,9 @@ var Builtins_tmux = map[string]*env.Builtin{
 	},
 
 	"tmux-pane//Select": {
-		Argsn: 1,
-		Doc:   "Selects (focuses) the tmux pane.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Selects (focuses) the tmux pane.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -359,8 +375,9 @@ var Builtins_tmux = map[string]*env.Builtin{
 	},
 
 	"tmux-pane//Send-keys": {
-		Argsn: 2,
-		Doc:   "Sends keys/command to a tmux pane.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Sends keys/command to a tmux pane.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
@@ -384,8 +401,9 @@ var Builtins_tmux = map[string]*env.Builtin{
 	},
 
 	"tmux-session//Attach": {
-		Argsn: 1,
-		Doc:   "Attaches to a tmux session (switch-client).",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Attaches to a tmux session (switch-client).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch sess := arg0.(type) {
 			case env.Native:
@@ -403,8 +421,9 @@ var Builtins_tmux = map[string]*env.Builtin{
 	},
 
 	"tmux-session//Kill": {
-		Argsn: 1,
-		Doc:   "Kills/destroys a tmux session.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Kills/destroys a tmux session.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch sess := arg0.(type) {
 			case env.Native:

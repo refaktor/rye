@@ -63,40 +63,42 @@ var builtins_unique = map[string]*env.Builtin{
 	//
 
 	// Tests:
-	// different { Rye-itself//unique-id } { Rye-itself//unique-id }
-	// does { Rye-itself//unique-id } |type? |= 'string
+	// different { rye-runtime//unique-id } { rye-runtime//unique-id }
+	// does { rye-runtime//unique-id } |type? |= 'string
 	// Args:
 	// * rye-ctx: Rye runtime context (automatically provided)
 	// Returns:
 	// * string: Process-unique identifier
-	"Rye-itself//Unique-id?": {
-		Argsn: 1,
-		Doc:   "Generates a process-unique identifier string. Each call within the same process run is guaranteed to return a different ID.",
+	"rye-runtime//Unique-id?": {
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Generates a process-unique identifier string. Each call within the same process run is guaranteed to return a different ID.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// arg0 should be Rye context, but we don't need to validate it for this implementation
 			uniqueID, err := generateProcessUniqueID()
 			if err != nil {
-				return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Failed to generate unique ID: %v", err), "Rye-itself//unique-id")
+				return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Failed to generate unique ID: %v", err), "rye-runtime//unique-id")
 			}
 			return *env.NewString(uniqueID)
 		},
 	},
 
 	// Tests:
-	// different { Rye-itself//unique-temp-dir } { Rye-itself//unique-temp-dir }
-	// does { Rye-itself//unique-temp-dir } |type? |= 'uri
+	// different { rye-runtime//unique-temp-dir } { rye-runtime//unique-temp-dir }
+	// does { rye-runtime//unique-temp-dir } |type? |= 'uri
 	// Args:
 	// * rye-ctx: Rye runtime context (automatically provided)
 	// Returns:
 	// * uri: File URI pointing to a unique temporary directory
-	"Rye-itself//Temp-dir?": {
-		Argsn: 1,
-		Doc:   "Creates a unique temporary directory and returns its file URI. The directory is guaranteed to be unique for this process run.",
+	"rye-runtime//Temp-dir?": {
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Creates a unique temporary directory and returns its file URI. The directory is guaranteed to be unique for this process run.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Generate unique ID for directory name
 			uniqueID, err := generateProcessUniqueID()
 			if err != nil {
-				return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Failed to generate unique ID: %v", err), "Rye-itself//unique-temp-dir")
+				return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Failed to generate unique ID: %v", err), "rye-runtime//unique-temp-dir")
 			}
 
 			// Create the full path in system temp directory
@@ -106,7 +108,7 @@ var builtins_unique = map[string]*env.Builtin{
 			// Create the directory
 			err = os.MkdirAll(uniqueDirPath, 0755)
 			if err != nil {
-				return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Failed to create temp directory: %v", err), "Rye-itself//unique-temp-dir")
+				return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Failed to create temp directory: %v", err), "rye-runtime//unique-temp-dir")
 			}
 
 			// Return as file URI
@@ -115,20 +117,21 @@ var builtins_unique = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// different { Rye-itself//unique-temp-file } { Rye-itself//unique-temp-file }
-	// does { Rye-itself//unique-temp-file } |type? |= 'uri
+	// different { rye-runtime//unique-temp-file } { rye-runtime//unique-temp-file }
+	// does { rye-runtime//unique-temp-file } |type? |= 'uri
 	// Args:
 	// * rye-ctx: Rye runtime context (automatically provided)
 	// Returns:
 	// * uri: File URI pointing to a unique temporary file path
-	"Rye-itself//Temp-file?": {
-		Argsn: 1,
-		Doc:   "Generates a unique temporary file path and returns its file URI. The file path is guaranteed to be unique for this process run. Note: the file is not created, only the path is generated.",
+	"rye-runtime//Temp-file?": {
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Generates a unique temporary file path and returns its file URI. The file path is guaranteed to be unique for this process run. Note: the file is not created, only the path is generated.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Generate unique ID for file name
 			uniqueID, err := generateProcessUniqueID()
 			if err != nil {
-				return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Failed to generate unique ID: %v", err), "Rye-itself//unique-temp-file")
+				return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Failed to generate unique ID: %v", err), "rye-runtime//unique-temp-file")
 			}
 
 			// Create the full path in system temp directory with .tmp extension
@@ -140,4 +143,3 @@ var builtins_unique = map[string]*env.Builtin{
 		},
 	},
 }
-

@@ -10,8 +10,9 @@ import (
 
 var Builtins_flui = map[string]*env.Builtin{
 	"select": {
-		Argsn: 1,
-		Doc:   "Interactively displays a selection interface for Block, Dict, Table, List, or TableRow. Returns the selected item. Ctrl+C cancels and returns a failure.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Interactively displays a selection interface for Block, Dict, Table, List, or TableRow. Returns the selected item. Ctrl+C cancels and returns a failure.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			term.SaveCurPos()
 			var obj env.Object
@@ -58,8 +59,9 @@ var Builtins_flui = map[string]*env.Builtin{
 		},
 	},
 	"input": {
-		Argsn: 1,
-		Doc:   "Interactively displays an input field. Takes the max input width, returns the entered string. Ctrl+C cancels and returns a failure.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Interactively displays an input field. Takes the max input width, returns the entered string. Ctrl+C cancels and returns a failure.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// This is temporary implementation for experimenting what it would work like at all
 			// later it should belong to the object (and the medium of display, terminal, html ..., it's part of the frontend)
@@ -78,8 +80,9 @@ var Builtins_flui = map[string]*env.Builtin{
 		},
 	},
 	"input\\integer": {
-		Argsn: 1,
-		Doc:   "Interactive date input in format YYYY-MM-DD. Use arrow keys to navigate between year/month/day fields and increment/decrement values, or type digits. Returns date string. Ctrl+C cancels and returns a failure.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Interactive date input in format YYYY-MM-DD. Use arrow keys to navigate between year/month/day fields and increment/decrement values, or type digits. Returns date string. Ctrl+C cancels and returns a failure.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			term.SaveCurPos()
 			switch initialDate := arg0.(type) {
@@ -96,8 +99,9 @@ var Builtins_flui = map[string]*env.Builtin{
 		},
 	},
 	"datepicker": {
-		Argsn: 1,
-		Doc:   "Interactive date input in format YYYY-MM-DD. Use arrow keys to navigate between year/month/day fields and increment/decrement values, or type digits. Returns date string. Ctrl+C cancels and returns a failure.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Interactive date input in format YYYY-MM-DD. Use arrow keys to navigate between year/month/day fields and increment/decrement values, or type digits. Returns date string. Ctrl+C cancels and returns a failure.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			term.SaveCurPos()
 			switch initialDate := arg0.(type) {
@@ -114,8 +118,9 @@ var Builtins_flui = map[string]*env.Builtin{
 		},
 	},
 	"selectbox": {
-		Argsn: 1,
-		Doc:   "Interactive date input in format YYYY-MM-DD. Use arrow keys to navigate between year/month/day fields and increment/decrement values, or type digits. Returns date string. Ctrl+C cancels and returns a failure.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Interactive date input in format YYYY-MM-DD. Use arrow keys to navigate between year/month/day fields and increment/decrement values, or type digits. Returns date string. Ctrl+C cancels and returns a failure.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			term.SaveCurPos()
 			switch options := arg0.(type) {
@@ -132,8 +137,9 @@ var Builtins_flui = map[string]*env.Builtin{
 		},
 	},
 	"textarea": {
-		Argsn: 2,
-		Doc:   "Interactive multiline text input. Takes width and height (number of lines). Use arrow keys to navigate, Enter for new line, Ctrl+D to submit. Returns string with newlines. Ctrl+C cancels.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Interactive multiline text input. Takes width and height (number of lines). Use arrow keys to navigate, Enter for new line, Ctrl+D to submit. Returns string with newlines. Ctrl+C cancels.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			term.SaveCurPos()
 			switch width := arg0.(type) {
@@ -155,8 +161,9 @@ var Builtins_flui = map[string]*env.Builtin{
 		},
 	},
 	"textarea\\": {
-		Argsn: 3,
-		Doc:   "Interactive multiline text input with initial text. Takes width, height (number of lines), and initial text string. Use arrow keys to navigate, Enter for new line, Ctrl+D to submit. Returns string with newlines. Ctrl+C cancels.",
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Interactive multiline text input with initial text. Takes width, height (number of lines), and initial text string. Use arrow keys to navigate, Enter for new line, Ctrl+D to submit. Returns string with newlines. Ctrl+C cancels.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			term.SaveCurPos()
 			switch width := arg1.(type) {
@@ -183,8 +190,9 @@ var Builtins_flui = map[string]*env.Builtin{
 		},
 	},
 	"displayx": {
-		Argsn: 1,
-		Doc:   "Returns a special !!! prefixed JSON representation of a Block for Flutter UI rendering. The JSON format is [\"block\", [[\"type\", \"value\"], ...]]. Used for interactive display in Flutter clients.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Returns a special !!! prefixed JSON representation of a Block for Flutter UI rendering. The JSON format is [\"block\", [[\"type\", \"value\"], ...]]. Used for interactive display in Flutter clients.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Block:

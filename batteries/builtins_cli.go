@@ -115,7 +115,7 @@ func CLI_ParseSpec(es *env.ProgramState, specBlock env.Block) (*CLISpec, error) 
 					}
 				}
 			} else {
-				return nil, fmt.Errorf("program, description or subcommand expected but got " + wordName)
+				return nil, fmt.Errorf("program, description or subcommand expected but got %s", wordName)
 			}
 
 			/* else if wordName == "_" || strings.HasPrefix(wordName, "_") {
@@ -427,7 +427,7 @@ func parseSubcommands(es *env.ProgramState, block env.Block) (map[string]*Subcom
 						}
 					}
 				} else {
-					return nil, fmt.Errorf("program, description or subcommand expected but got " + wordName)
+					return nil, fmt.Errorf("program, description or subcommand expected but got %s", wordName)
 				}
 				//else if strings.HasPrefix(wordName, "_") || wordName == "_" {
 			case env.Setword:
@@ -1365,8 +1365,9 @@ var Builtins_cli = map[string]*env.Builtin{
 	// Returns:
 	// * Dict with parsed argument values or error if parsing fails
 	"parse-args": {
-		Argsn: 2,
-		Doc:   "Parses command line arguments according to a specification block, returning a dictionary with the parsed values.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Parses command line arguments according to a specification block, returning a dictionary with the parsed values.",
 		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return BuiParseArgs(es, arg0, arg1)
 		},
@@ -1382,8 +1383,9 @@ var Builtins_cli = map[string]*env.Builtin{
 	// Returns:
 	// * Context with parsed argument values or error if parsing fails
 	"parse-args\\ctx": {
-		Argsn: 2,
-		Doc:   "Parses command line arguments according to a specification block, returning a context for easy field access.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Parses command line arguments according to a specification block, returning a context for easy field access.",
 		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			result := BuiParseArgs(es, arg0, arg1)
 			if es.FailureFlag || es.ErrorFlag || es.ReturnFlag {
@@ -1416,23 +1418,25 @@ var Builtins_cli = map[string]*env.Builtin{
 	// Returns:
 	// * Dict with parsed values on success, or generated help text on failure
 	"parse-args\\full": {
-		Argsn: 2,
-		Doc:   "Parses command line arguments and on failure prints parse errors plus generated help, returning the parsed Dict or help text.",
+		Effect: env.EffOutput,
+		Argsn:  2,
+		Doc:    "Parses command line arguments and on failure prints parse errors plus generated help, returning the parsed Dict or help text.",
 		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return BuiParseArgsFull(es, arg0, arg1)
 		},
 	},
 
 	// Tests:
-	// ; Rye-itself//Parse-args\full reads the process arguments directly.
+	// ; rye-runtime//Parse-args\full reads the process arguments directly.
 	// Args:
-	// * rye-itself: Native Rye-itself object passed via dot dispatch.
+	// * rye-runtime: Native rye-runtime object passed via dot dispatch.
 	// * spec: Block containing argument specifications
 	// Returns:
 	// * Dict with parsed values on success, or generated help text on failure
-	"Rye-itself//Parse-args\\full": {
-		Argsn: 2,
-		Doc:   "Parses process arguments using a CLI specification, printing parse errors and generated help on failure. Equivalent to rye .Args? |parse-args spec with automatic error/help output.",
+	"rye-runtime//Parse-args\\full": {
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Parses process arguments using a CLI specification, printing parse errors and generated help on failure. Equivalent to rye .Args? |parse-args spec with automatic error/help output.",
 		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return BuiParseArgsFull(es, ryeItselfArgsForCLI(es), arg1)
 		},
@@ -1447,8 +1451,9 @@ var Builtins_cli = map[string]*env.Builtin{
 	// Returns:
 	// * String containing formatted help text
 	"generate-help": {
-		Argsn: 1,
-		Doc:   "Generates help text from a CLI specification block.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Generates help text from a CLI specification block.",
 		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			spec, ok := arg0.(env.Block)
 			if !ok {
@@ -1477,8 +1482,9 @@ var Builtins_cli = map[string]*env.Builtin{
 	// Returns:
 	// * String containing formatted help text for the subcommand
 	"generate-help\\command": {
-		Argsn: 2,
-		Doc:   "Generates help text for a specific subcommand.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Generates help text for a specific subcommand.",
 		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			spec, ok := arg0.(env.Block)
 			if !ok {
@@ -1527,8 +1533,9 @@ var Builtins_cli = map[string]*env.Builtin{
 	// Returns:
 	// * String with formatted error messages
 	"format-parse-errors": {
-		Argsn: 1,
-		Doc:   "Formats parse errors into human-readable messages.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Formats parse errors into human-readable messages.",
 		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch errObj := arg0.(type) {
 			case env.Dict:

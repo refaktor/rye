@@ -2968,7 +2968,7 @@ var Builtins_os = map[string]*env.Builtin{
 	// * integer seconds slept
 	// Tags: #system #time
 	"sleep": {
-		Effect: env.EffNone,
+		Effect: env.EffOutput,
 		Argsn:  1,
 		Doc:    "Sleeps for the specified number of seconds.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -3024,7 +3024,7 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * block of native net-addr objects assigned to the interface, or error
 	"net-iface//Addrs?": {
-		Effect: env.EffNone,
+		Effect: env.EffInput,
 		Argsn:  1,
 		Doc:    "Returns a block of network addresses assigned to the interface.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

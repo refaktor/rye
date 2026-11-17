@@ -143,8 +143,9 @@ func Stck_EvalBlock(ps *env.ProgramState) *env.ProgramState {
 var Builtins_stackless = map[string]*env.Builtin{
 
 	"ry0": {
-		Argsn: 1,
-		Doc:   "TODODOC",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "TODODOC",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -160,8 +161,9 @@ var Builtins_stackless = map[string]*env.Builtin{
 	},
 
 	"ry0-loop": {
-		Argsn: 2,
-		Doc:   "TODODOC",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "TODODOC",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
 			case env.Integer:

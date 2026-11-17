@@ -20,8 +20,9 @@ var Builtins_regex = map[string]*env.Builtin{
 	// Returns:
 	// * native regex object or error if pattern is invalid
 	"regex": {
-		Argsn: 1,
-		Doc:   "Creates a compiled regular expression object from a pattern string.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a compiled regular expression object from a pattern string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.String:
@@ -45,8 +46,9 @@ var Builtins_regex = map[string]*env.Builtin{
 	// Returns:
 	// * native regex object or error if pattern is invalid
 	"re": {
-		Argsn: 1,
-		Doc:   "Creates a compiled regular expression object from a pattern string.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a compiled regular expression object from a pattern string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.String:
@@ -70,8 +72,9 @@ var Builtins_regex = map[string]*env.Builtin{
 	// Returns:
 	// * boolean true if the string matches the pattern, false otherwise
 	"regex//Is-match": {
-		Argsn: 2,
-		Doc:   "Tests if a string matches the regular expression pattern.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Tests if a string matches the regular expression pattern.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg1.(type) {
 			case env.String:
@@ -100,8 +103,9 @@ var Builtins_regex = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the first captured group or error if no submatch found
 	"regex//Submatch?": {
-		Argsn: 2,
-		Doc:   "Extracts the first captured group from a string using the regular expression.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Extracts the first captured group from a string using the regular expression.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg1.(type) {
 			case env.String:
@@ -130,8 +134,9 @@ var Builtins_regex = map[string]*env.Builtin{
 	// Returns:
 	// * block containing all captured groups from the first match or error if no match found
 	"regex//Submatches?": {
-		Argsn: 2,
-		Doc:   "Extracts all captured groups from the first match as a block of strings.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Extracts all captured groups from the first match as a block of strings.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg1.(type) {
 			case env.String:
@@ -165,8 +170,9 @@ var Builtins_regex = map[string]*env.Builtin{
 	// Returns:
 	// * block of blocks, each inner block containing the captured groups from one match
 	"regex//Submatches\\all?": {
-		Argsn: 2,
-		Doc:   "Extracts all captured groups from all matches as a nested block structure.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Extracts all captured groups from all matches as a nested block structure.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg1.(type) {
 			case env.String:
@@ -204,8 +210,9 @@ var Builtins_regex = map[string]*env.Builtin{
 	// Returns:
 	// * block containing all matching substrings or error if no matches found
 	"regex//Find-all": {
-		Argsn: 2,
-		Doc:   "Finds all substrings matching the regular expression and returns them as a block.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Finds all substrings matching the regular expression and returns them as a block.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg1.(type) {
 			case env.String:
@@ -237,8 +244,9 @@ var Builtins_regex = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the first match or empty string if no match found
 	"regex//Match?": {
-		Argsn: 2,
-		Doc:   "Finds the first substring matching the regular expression.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Finds the first substring matching the regular expression.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg1.(type) {
 			case env.String:
@@ -267,8 +275,9 @@ var Builtins_regex = map[string]*env.Builtin{
 	// Returns:
 	// * string with all matches replaced by the replacement string
 	"regex//Replace-all": {
-		Argsn: 3,
-		Doc:   "Replaces all occurrences of the regular expression pattern with the specified replacement string.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Replaces all occurrences of the regular expression pattern with the specified replacement string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch re := arg0.(type) {
 			case env.Native:

@@ -2360,17 +2360,17 @@ var builtins = map[string]*env.Builtin{
 	// Args:
 	// * none
 	// Returns:
-	// * native Rye-itself object used to access runtime properties.
+	// * native rye-runtime object used to access runtime properties.
 	"rye": {
 		Effect: env.EffNone,
 		Argsn:  0,
-		Doc:    "Returns the native Rye-itself object used to inspect and configure the running interpreter.",
+		Doc:    "Returns the native rye-runtime object used to inspect and configure the running interpreter.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return *env.NewNative(ps.Idx, BuiltinNames, "Rye-itself")
+			return *env.NewNative(ps.Idx, BuiltinNames, "rye-runtime")
 		},
 	},
 
-	"Rye-itself//Needs": {
+	"rye-runtime//Needs": {
 		Effect: env.EffNone,
 		Argsn:  2,
 		Doc:    "",
@@ -2409,7 +2409,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"Rye-itself//Includes?": {
+	"rye-runtime//Includes?": {
 		Effect: env.EffNone,
 		Argsn:  1,
 		Doc:    "",
@@ -2424,7 +2424,7 @@ var builtins = map[string]*env.Builtin{
 			return *env.NewBlock(*env.NewTSeries(blts))
 		},
 	},
-	"Rye-itself//Can-include": {
+	"rye-runtime//Can-include": {
 		Effect: env.EffNone,
 		Argsn:  1,
 		Doc:    "",
@@ -2439,17 +2439,17 @@ var builtins = map[string]*env.Builtin{
 			return *env.NewBlock(*env.NewTSeries(blts))
 		},
 	},
-	// Rye-itself//args?, Args?, Args\raw?, History? moved to builtins_baseio.go
+	// rye-runtime//args?, Args?, Args\raw?, History? moved to builtins_baseio.go
 
 	// Tests:
 	// stdout { rye .On-error { .disarm .print } 1 / 0 } "Error: { message: division by zero  }\n"
 	// stdout { rye .On-error { .disarm .print } "ok" } ""
 	// Args:
-	// * rye-itself: The rye native object (passed via dot-word dispatch)
+	// * rye-runtime: The rye native object (passed via dot-word dispatch)
 	// * block: Block of code to execute with the On-errord error injected when an error bubbles to top-level
 	// Returns:
-	// * The rye-itself native (so the chain continues cleanly)
-	"Rye-itself//On-error": {
+	// * The rye-runtime native (so the chain continues cleanly)
+	"rye-runtime//On-error": {
 		Effect: env.EffIO,
 		Argsn:  2,
 		Doc:    "Registers a On-error block that will be executed with the error injected if an unhandled error bubbles to the top of the program. The error value is injected as the first value (use .disarm, .print, etc.).",
@@ -2459,7 +2459,7 @@ var builtins = map[string]*env.Builtin{
 				ps.CaptureBlock = &bloc
 				return arg0
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "Rye-itself//On-error")
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "rye-runtime//On-error")
 			}
 		},
 	},

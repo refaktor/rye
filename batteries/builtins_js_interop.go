@@ -34,8 +34,9 @@ var Builtins_js_interop = map[string]*env.Builtin{
 	// Returns:
 	// * result from JavaScript function call
 	"js-call": {
-		Argsn: 2,
-		Doc:   "Calls a JavaScript function with multiple arguments from a block.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Calls a JavaScript function with multiple arguments from a block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch funcName := arg0.(type) {
 			case env.String:
@@ -76,8 +77,9 @@ var Builtins_js_interop = map[string]*env.Builtin{
 	// Returns:
 	// * JSON response data as Rye objects
 	"___js-get": {
-		Argsn: 1,
-		Doc:   "Makes HTTP GET request using JavaScript fetch with authentication cookies.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Makes HTTP GET request using JavaScript fetch with authentication cookies.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch url := arg0.(type) {
 			case env.String:
@@ -171,8 +173,9 @@ var Builtins_js_interop = map[string]*env.Builtin{
 	// Returns:
 	// * JSON response data as Rye objects
 	"__js-post": {
-		Argsn: 2,
-		Doc:   "Makes HTTP POST request using JavaScript fetch with authentication cookies.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Makes HTTP POST request using JavaScript fetch with authentication cookies.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch url := arg0.(type) {
 			case env.String:
@@ -226,8 +229,9 @@ var Builtins_js_interop = map[string]*env.Builtin{
 	// Returns:
 	// * JSON response data as Rye objects
 	"js-authenticated-request": {
-		Argsn: 3,
-		Doc:   "Makes authenticated HTTP request using current user context.",
+		Effect: env.EffIO,
+		Argsn:  3,
+		Doc:    "Makes authenticated HTTP request using current user context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch url := arg0.(type) {
 			case env.String:
@@ -284,8 +288,9 @@ var Builtins_js_interop = map[string]*env.Builtin{
 	// Returns:
 	// * String containing CSV data
 	"js-to-csv": {
-		Argsn: 1,
-		Doc:   "Converts data to CSV format using JavaScript.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Converts data to CSV format using JavaScript.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			jsFunc := js.Global().Get("jsToCsv")
 			if jsFunc.IsUndefined() {
@@ -310,8 +315,9 @@ var Builtins_js_interop = map[string]*env.Builtin{
 	// Returns:
 	// * String containing XML data
 	"js-to-xml": {
-		Argsn: 1,
-		Doc:   "Converts data to XML format using JavaScript.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Converts data to XML format using JavaScript.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			jsFunc := js.Global().Get("jsToXml")
 			if jsFunc.IsUndefined() {
@@ -337,8 +343,9 @@ var Builtins_js_interop = map[string]*env.Builtin{
 	// Returns:
 	// * String confirmation message
 	"js-download": {
-		Argsn: 2,
-		Doc:   "Downloads content as a file using JavaScript.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Downloads content as a file using JavaScript.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch content := arg0.(type) {
 			case env.String:
@@ -370,8 +377,9 @@ var Builtins_js_interop = map[string]*env.Builtin{
 	// Returns:
 	// * the message string
 	"js-log": {
-		Argsn: 1,
-		Doc:   "Logs a message to the browser console (ANSI codes are stripped).",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Logs a message to the browser console (ANSI codes are stripped).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch message := arg0.(type) {
 			case env.String:
@@ -395,8 +403,9 @@ var Builtins_js_interop = map[string]*env.Builtin{
 	// Returns:
 	// * String containing current ISO timestamp
 	"js-current-time": {
-		Argsn: 0,
-		Doc:   "Gets current timestamp from JavaScript Date.",
+		Effect: env.EffIO,
+		Argsn:  0,
+		Doc:    "Gets current timestamp from JavaScript Date.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			jsFunc := js.Global().Get("jsCurrentTime")
 			if jsFunc.IsUndefined() {
@@ -417,8 +426,9 @@ var Builtins_js_interop = map[string]*env.Builtin{
 	// Returns:
 	// * the message string
 	"js-alert": {
-		Argsn: 1,
-		Doc:   "Shows a browser alert dialog with the given message (ANSI codes are stripped).",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Shows a browser alert dialog with the given message (ANSI codes are stripped).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch message := arg0.(type) {
 			case env.String:
@@ -445,8 +455,9 @@ var Builtins_js_interop = map[string]*env.Builtin{
 	// Returns:
 	// * String containing the user input, or void if cancelled
 	"js-prompt": {
-		Argsn: -1, // Variable arguments (1 or 2)
-		Doc:   "Shows a browser prompt dialog and returns user input (ANSI codes are stripped from message).",
+		Effect: env.EffIO,
+		Argsn:  -1, // Variable arguments (1 or 2)
+		Doc:    "Shows a browser prompt dialog and returns user input (ANSI codes are stripped from message).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Check if arg0 is nil (no arguments)
 			if arg0 == nil {
@@ -501,7 +512,8 @@ var Builtins_js_interop = map[string]*env.Builtin{
 	},
 
 	"js-call-callback": {
-		Argsn: 3,
+		Effect: env.EffIO,
+		Argsn:  3,
 		Doc: "Calls a JS async function and executes a Rye callback with the result. " +
 			"Callback receives the result or an error string prefixed with 'Error: '.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -592,8 +604,9 @@ var Builtins_js_interop = map[string]*env.Builtin{
 	// Returns:
 	// * String confirmation message
 	"js-display-table": {
-		Argsn: 1,
-		Doc:   "Displays data as a table using JavaScript ryeDisplayTable function.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Displays data as a table using JavaScript ryeDisplayTable function.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			jsFunc := js.Global().Get("ryeDisplayTable")
 			if jsFunc.IsUndefined() {
@@ -623,8 +636,9 @@ var Builtins_js_interop = map[string]*env.Builtin{
 	// Returns:
 	// * Integer milliseconds actually slept
 	"js-sleep": {
-		Argsn: 1,
-		Doc:   "Non-blocking sleep that yields control to JavaScript event loop, allowing async operations to complete.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Non-blocking sleep that yields control to JavaScript event loop, allowing async operations to complete.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch ms := arg0.(type) {
 			case env.Integer:
@@ -647,8 +661,9 @@ var Builtins_js_interop = map[string]*env.Builtin{
 	// Yields control to JavaScript event loop without delay
 	// This is safer than js-sleep for avoiding deadlocks
 	"js-yield": {
-		Argsn: 0,
-		Doc:   "Yields control to JavaScript event loop without delay.",
+		Effect: env.EffIO,
+		Argsn:  0,
+		Doc:    "Yields control to JavaScript event loop without delay.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Simple yield without any channel operations
 			runtime.Gosched()

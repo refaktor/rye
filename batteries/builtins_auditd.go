@@ -24,8 +24,9 @@ import (
 // export builtins (namespace: auditd)
 var Builtins_auditd = map[string]*env.Builtin{
 	"parse-line": {
-		Argsn: 1,
-		Doc:   "Parses a single auditd log line into a dict using go-libaudit auparse.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Parses a single auditd log line into a dict using go-libaudit auparse.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.String:
@@ -42,8 +43,9 @@ var Builtins_auditd = map[string]*env.Builtin{
 		},
 	},
 	"parse-file": {
-		Argsn: 1,
-		Doc:   "Parses all lines of an auditd log file into a block of dicts using go-libaudit auparse.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Parses all lines of an auditd log file into a block of dicts using go-libaudit auparse.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, _ env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
 			switch u := arg0.(type) {
 			case env.Uri:
@@ -70,8 +72,9 @@ var Builtins_auditd = map[string]*env.Builtin{
 		},
 	},
 	"tail-parse": {
-		Argsn: 2,
-		Doc:   "Parses the last N lines of an auditd log file into a block of dicts using go-libaudit auparse.",
+		Effect: env.EffInput,
+		Argsn:  2,
+		Doc:    "Parses the last N lines of an auditd log file into a block of dicts using go-libaudit auparse.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, _ env.Object, _ env.Object, _ env.Object) env.Object {
 			switch u := arg0.(type) {
 			case env.Uri:

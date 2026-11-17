@@ -530,7 +530,7 @@ var Builtins_http = map[string]*env.Builtin{
 					// Extract query parameters from the request URL
 					vals, ok := req.Value.(*http.Request).URL.Query()[key.Value]
 					// Check if the parameter exists and has a value
-					if !ok || len(vals[0]) < 1 {
+					if !ok || len(vals) == 0 || len(vals[0]) < 1 {
 						ps.FailureFlag = true
 						return evaldo.MakeBuiltinError(ps, "Key is missing.", "Go-server-request//query?")
 					}

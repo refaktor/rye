@@ -100,8 +100,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the hexadecimal representation of the public key
 	"Ed25519-pub-key//To-string": {
-		Argsn: 1,
-		Doc:   "Converts an Ed25519 public key to its hexadecimal string representation.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Converts an Ed25519 public key to its hexadecimal string representation.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.Native:
@@ -120,8 +121,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the hexadecimal representation of the private key
 	"Ed25519-priv-key//To-string": {
-		Argsn: 1,
-		Doc:   "Converts an Ed25519 private key to its hexadecimal string representation.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Converts an Ed25519 private key to its hexadecimal string representation.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.Native:
@@ -145,8 +147,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * block containing [public-key, private-key] as native values
 	"ed25519-generate-keys": {
-		Argsn: 0,
-		Doc:   "Generates a new Ed25519 key pair and returns them in a block with public key first, then private key.",
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Generates a new Ed25519 key pair and returns them in a block with public key first, then private key.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			keys := make([]env.Object, 2)
 			puk, pvk, err := ed25519.GenerateKey(nil)
@@ -170,8 +173,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * Ed25519 private key as a native value
 	"ed25519-private-key": {
-		Argsn: 1,
-		Doc:   "Creates an Ed25519 private key from a hexadecimal string or bytes value.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates an Ed25519 private key from a hexadecimal string or bytes value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var pkey []byte
 			var err error
@@ -202,8 +206,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * Ed25519 public key as a native value
 	"ed25519-public-key": {
-		Argsn: 1,
-		Doc:   "Creates an Ed25519 public key from a hexadecimal string or bytes value.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates an Ed25519 public key from a hexadecimal string or bytes value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var pkey []byte
 			var err error
@@ -240,8 +245,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * signature as a native bytes value
 	"Ed25519-priv-key//Sign": {
-		Argsn: 2,
-		Doc:   "Signs a string message with an Ed25519 private key and returns the signature as bytes.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Signs a string message with an Ed25519 private key and returns the signature as bytes.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch pvk := arg0.(type) {
 			case env.Native:
@@ -269,8 +275,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the hexadecimal representation of the MD5 hash
 	"md5": {
-		Argsn: 1,
-		Doc:   "Calculates the MD5 hash of a string or bytes and returns the result as a hexadecimal string. MD5 is not suitable for security-sensitive use.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Calculates the MD5 hash of a string or bytes and returns the result as a hexadecimal string. MD5 is not suitable for security-sensitive use.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return hashToHex(ps, arg0, md5.New, "md5")
 		},
@@ -285,8 +292,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the hexadecimal representation of the SHA-1 hash
 	"sha1": {
-		Argsn: 1,
-		Doc:   "Calculates the SHA-1 hash of a string or bytes and returns the result as a hexadecimal string. SHA-1 is not suitable for security-sensitive use.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Calculates the SHA-1 hash of a string or bytes and returns the result as a hexadecimal string. SHA-1 is not suitable for security-sensitive use.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return hashToHex(ps, arg0, sha1.New, "sha1")
 		},
@@ -301,8 +309,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the hexadecimal representation of the SHA-224 hash
 	"sha224": {
-		Argsn: 1,
-		Doc:   "Calculates the SHA-224 hash of a string or bytes and returns the result as a hexadecimal string.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Calculates the SHA-224 hash of a string or bytes and returns the result as a hexadecimal string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return hashToHex(ps, arg0, sha256.New224, "sha224")
 		},
@@ -317,8 +326,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the hexadecimal representation of the SHA-256 hash
 	"sha256": {
-		Argsn: 1,
-		Doc:   "Calculates the SHA-256 hash of a string or bytes and returns the result as a hexadecimal string.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Calculates the SHA-256 hash of a string or bytes and returns the result as a hexadecimal string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return hashToHex(ps, arg0, sha256.New, "sha256")
 		},
@@ -333,8 +343,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the hexadecimal representation of the SHA-384 hash
 	"sha384": {
-		Argsn: 1,
-		Doc:   "Calculates the SHA-384 hash of a string or bytes and returns the result as a hexadecimal string.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Calculates the SHA-384 hash of a string or bytes and returns the result as a hexadecimal string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return hashToHex(ps, arg0, sha512.New384, "sha384")
 		},
@@ -349,8 +360,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the hexadecimal representation of the SHA-512 hash
 	"sha512": {
-		Argsn: 1,
-		Doc:   "Calculates the SHA-512 hash of a string or bytes and returns the result as a hexadecimal string.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Calculates the SHA-512 hash of a string or bytes and returns the result as a hexadecimal string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return hashToHex(ps, arg0, sha512.New, "sha512")
 		},
@@ -365,8 +377,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the hexadecimal representation of the CRC-32 checksum
 	"crc32": {
-		Argsn: 1,
-		Doc:   "Calculates the CRC-32 (IEEE) checksum of a string or bytes and returns it as a hexadecimal string.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Calculates the CRC-32 (IEEE) checksum of a string or bytes and returns it as a hexadecimal string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return hashToHex(ps, arg0, func() hash.Hash { return crc32.NewIEEE() }, "crc32")
 		},
@@ -381,8 +394,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the hexadecimal representation of the Adler-32 checksum
 	"adler32": {
-		Argsn: 1,
-		Doc:   "Calculates the Adler-32 checksum of a string or bytes and returns it as a hexadecimal string.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Calculates the Adler-32 checksum of a string or bytes and returns it as a hexadecimal string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return hashToHex(ps, arg0, func() hash.Hash { return adler32.New() }, "adler32")
 		},
@@ -397,8 +411,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// equal { cc crypto age-generate-keys |second |type? } 'native
 	// equal { cc crypto age-generate-keys |second |kind? } 'age-recipient
 	"age-generate-keys": {
-		Argsn: 0,
-		Doc:   "Generates a new age key pair (identity and recipient).",
+		Effect: env.EffInput,
+		Argsn:  0,
+		Doc:    "Generates a new age key pair (identity and recipient).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			identity, err := age.GenerateX25519Identity()
 			if err != nil {
@@ -423,8 +438,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * native age-identity object.
 	"age-identity": {
-		Argsn: 1,
-		Doc:   "Creates an age identity from a string or bytes.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates an age identity from a string or bytes.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var identity *age.X25519Identity
 			var err error
@@ -459,8 +475,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * native age-recipient object.
 	"age-recipient": {
-		Argsn: 1,
-		Doc:   "Creates an age recipient from a string or bytes.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates an age recipient from a string or bytes.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var recipient *age.X25519Recipient
 			var err error
@@ -498,8 +515,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * Reader that yields the encrypted data.
 	"age-encrypt": {
-		Argsn: 2,
-		Doc:   "Encrypts a reader with age for the provided age recipient or string password and returns a reader.",
+		Effect: env.EffInput,
+		Argsn:  2,
+		Doc:    "Encrypts a reader with age for the provided age recipient or string password and returns a reader.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch r := arg0.(type) {
 			case env.Native:
@@ -565,8 +583,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * decrypted data as a reader native value
 	"age-decrypt": {
-		Argsn: 2,
-		Doc:   "Decrypts a reader with age using the provided age identity or string password and returns a reader with the decrypted content.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Decrypts a reader with age using the provided age identity or string password and returns a reader with the decrypted content.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch r := arg0.(type) {
 			case env.Native:
@@ -620,8 +639,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * block containing PEM blocks as native values
 	"pkcs12-to-pem": {
-		Argsn: 2,
-		Doc:   "Converts a PKCS#12 (.p12) file bytes to PEM blocks using the provided password. Returns a block of pem-block native values.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Converts a PKCS#12 (.p12) file bytes to PEM blocks using the provided password. Returns a block of pem-block native values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p12Data := arg0.(type) {
 			case env.Bytes:
@@ -699,8 +719,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * block containing [private-key, certificates-block, ca-certificates-block] as native values
 	"pkcs12-decode": {
-		Argsn: 2,
-		Doc:   "Decodes a PKCS#12 (.p12) file bytes into private key and certificates using the provided password. Returns a block with [private-key, certificates, ca-certificates].",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Decodes a PKCS#12 (.p12) file bytes into private key and certificates using the provided password. Returns a block with [private-key, certificates, ca-certificates].",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p12Data := arg0.(type) {
 			case env.Bytes:
@@ -760,8 +781,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the block type (e.g., "CERTIFICATE", "RSA PRIVATE KEY")
 	"pem-block//Block-type?": {
-		Argsn: 1,
-		Doc:   "Returns the type of a PEM block as a string (e.g., 'CERTIFICATE', 'RSA PRIVATE KEY').",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the type of a PEM block as a string (e.g., 'CERTIFICATE', 'RSA PRIVATE KEY').",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch certData := arg0.(type) {
 			case env.Native:
@@ -789,8 +811,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * dictionary containing the PEM block headers
 	"pem-block//Headers?": {
-		Argsn: 1,
-		Doc:   "Returns the headers of a PEM block as a dictionary.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the headers of a PEM block as a dictionary.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch certData := arg0.(type) {
 			case env.Native:
@@ -823,8 +846,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * X.509 certificate as a native value
 	"x509-parse-certificate": {
-		Argsn: 1,
-		Doc:   "Parses a PEM block into an X.509 certificate native value.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Parses a PEM block into an X.509 certificate native value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch certData := arg0.(type) {
 			case env.Native:
@@ -860,8 +884,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * time value representing the certificate's expiration date
 	"x509-certificate//Not-after?": {
-		Argsn: 1,
-		Doc:   "Returns the expiration date (NotAfter) of an X.509 certificate as a time value.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the expiration date (NotAfter) of an X.509 certificate as a time value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cert := arg0.(type) {
 			case env.Native:
@@ -885,8 +910,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * time value representing the certificate's start date
 	"x509-certificate//Not-before?": {
-		Argsn: 1,
-		Doc:   "Returns the start date (NotBefore) of an X.509 certificate as a time value.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the start date (NotBefore) of an X.509 certificate as a time value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cert := arg0.(type) {
 			case env.Native:
@@ -911,8 +937,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * integer 1 if the certificate has expired, 0 otherwise
 	"x509-certificate//Is-expired": {
-		Argsn: 1,
-		Doc:   "Checks if an X.509 certificate has expired. Returns 1 if expired, 0 otherwise.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Checks if an X.509 certificate has expired. Returns 1 if expired, 0 otherwise.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cert := arg0.(type) {
 			case env.Native:
@@ -946,8 +973,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * block containing [certificate, private-key] as native values
 	"generate-self-signed-certificate": {
-		Argsn: 2,
-		Doc:   "Generates a self-signed X.509 certificate with a new RSA key pair.",
+		Effect: env.EffInput,
+		Argsn:  2,
+		Doc:    "Generates a self-signed X.509 certificate with a new RSA key pair.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Arg0: Key size (int)
 			switch keySize := arg0.(type) {
@@ -1030,8 +1058,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * block with [cert-bytes, key-bytes] as Go-bytes native values
 	"encode-to-pem": {
-		Argsn: 2,
-		Doc:   "Encodes a certificate and private key as PEM-formatted data.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Encodes a certificate and private key as PEM-formatted data.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch certObj := arg0.(type) {
 			case env.Native:
@@ -1095,8 +1124,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * PKCS#12 encoded data as Go-bytes native value
 	"encode-to-p12": {
-		Argsn: 3,
-		Doc:   "Encodes a certificate and private key into a PKCS#12 (.p12) file with password protection.",
+		Effect: env.EffInput,
+		Argsn:  3,
+		Doc:    "Encodes a certificate and private key into a PKCS#12 (.p12) file with password protection.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch certObj := arg0.(type) {
 			case env.Native:
@@ -1142,8 +1172,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the certificate's subject DN
 	"x509-certificate//Subject?": {
-		Argsn: 1,
-		Doc:   "Returns the subject Distinguished Name (DN) of an X.509 certificate as a string.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the subject Distinguished Name (DN) of an X.509 certificate as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cert := arg0.(type) {
 			case env.Native:
@@ -1167,8 +1198,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the certificate's issuer DN
 	"x509-certificate//Issuer?": {
-		Argsn: 1,
-		Doc:   "Returns the issuer Distinguished Name (DN) of an X.509 certificate as a string.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the issuer Distinguished Name (DN) of an X.509 certificate as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cert := arg0.(type) {
 			case env.Native:
@@ -1192,8 +1224,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the certificate's serial number
 	"x509-certificate//Serial-number?": {
-		Argsn: 1,
-		Doc:   "Returns the serial number of an X.509 certificate as a string.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the serial number of an X.509 certificate as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cert := arg0.(type) {
 			case env.Native:
@@ -1217,8 +1250,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the certificate's signature algorithm
 	"x509-certificate//Signature-algorithm?": {
-		Argsn: 1,
-		Doc:   "Returns the signature algorithm of an X.509 certificate as a string.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the signature algorithm of an X.509 certificate as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cert := arg0.(type) {
 			case env.Native:
@@ -1242,8 +1276,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the certificate's public key algorithm
 	"x509-certificate//Public-key-algorithm?": {
-		Argsn: 1,
-		Doc:   "Returns the public key algorithm of an X.509 certificate as a string.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the public key algorithm of an X.509 certificate as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cert := arg0.(type) {
 			case env.Native:
@@ -1267,8 +1302,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * block containing strings of key usage flags
 	"x509-certificate//Key-usage?": {
-		Argsn: 1,
-		Doc:   "Returns the key usage flags of an X.509 certificate as a block of strings.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the key usage flags of an X.509 certificate as a block of strings.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cert := arg0.(type) {
 			case env.Native:
@@ -1321,8 +1357,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * block containing strings of extended key usage flags
 	"x509-certificate//Extended-key-usage?": {
-		Argsn: 1,
-		Doc:   "Returns the extended key usage flags of an X.509 certificate as a block of strings.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the extended key usage flags of an X.509 certificate as a block of strings.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cert := arg0.(type) {
 			case env.Native:
@@ -1368,8 +1405,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * block containing DNS names from Subject Alternative Names
 	"x509-certificate//Dns-names?": {
-		Argsn: 1,
-		Doc:   "Returns the DNS names from Subject Alternative Names of an X.509 certificate as a block of strings.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the DNS names from Subject Alternative Names of an X.509 certificate as a block of strings.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cert := arg0.(type) {
 			case env.Native:
@@ -1398,8 +1436,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * block containing IP addresses from Subject Alternative Names
 	"x509-certificate//Ip-addresses?": {
-		Argsn: 1,
-		Doc:   "Returns the IP addresses from Subject Alternative Names of an X.509 certificate as a block of strings.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the IP addresses from Subject Alternative Names of an X.509 certificate as a block of strings.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cert := arg0.(type) {
 			case env.Native:
@@ -1428,8 +1467,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * block containing email addresses from Subject Alternative Names
 	"x509-certificate//Email-addresses?": {
-		Argsn: 1,
-		Doc:   "Returns the email addresses from Subject Alternative Names of an X.509 certificate as a block of strings.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the email addresses from Subject Alternative Names of an X.509 certificate as a block of strings.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cert := arg0.(type) {
 			case env.Native:
@@ -1458,8 +1498,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the PEM-encoded certificate
 	"x509-certificate//To-pem": {
-		Argsn: 1,
-		Doc:   "Converts an X.509 certificate to PEM-encoded string format.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Converts an X.509 certificate to PEM-encoded string format.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cert := arg0.(type) {
 			case env.Native:
@@ -1485,8 +1526,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * string containing the type of the private key (e.g., "*rsa.PrivateKey", "*ecdsa.PrivateKey")
 	"private-key//Type?": {
-		Argsn: 1,
-		Doc:   "Returns the type of a private key as a string.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the type of a private key as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch key := arg0.(type) {
 			case env.Native:
@@ -1510,8 +1552,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Returns:
 	// * dictionary containing all certificate information
 	"x509-certificate//To-dict": {
-		Argsn: 1,
-		Doc:   "Converts an X.509 certificate to a dictionary containing all certificate information for easy display and manipulation.",
+		Effect: env.EffInput,
+		Argsn:  1,
+		Doc:    "Converts an X.509 certificate to a dictionary containing all certificate information for easy display and manipulation.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cert := arg0.(type) {
 			case env.Native:

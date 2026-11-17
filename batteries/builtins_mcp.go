@@ -18,8 +18,9 @@ var (
 var Builtins_mcp = map[string]*env.Builtin{
 	// Server functions
 	"mcp-server//Create": {
-		Argsn: 2,
-		Doc:   "Creates a new MCP server with the given name and version.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates a new MCP server with the given name and version.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch name := arg0.(type) {
 			case env.String:
@@ -51,8 +52,9 @@ var Builtins_mcp = map[string]*env.Builtin{
 	},
 
 	"mcp//Create-resource": {
-		Argsn: 3,
-		Doc:   "Creates a new MCP resource with the given URI, name, and MIME type.",
+		Effect: env.EffNone,
+		Argsn:  3,
+		Doc:    "Creates a new MCP resource with the given URI, name, and MIME type.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch uri := arg0.(type) {
 			case env.String:
@@ -89,8 +91,9 @@ var Builtins_mcp = map[string]*env.Builtin{
 	},
 
 	"mcp//Create-tool": {
-		Argsn: 2,
-		Doc:   "Creates a new MCP tool with the given name and description.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates a new MCP tool with the given name and description.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch name := arg0.(type) {
 			case env.String:
@@ -119,8 +122,9 @@ var Builtins_mcp = map[string]*env.Builtin{
 	},
 
 	"mcp//Create-prompt": {
-		Argsn: 2,
-		Doc:   "Creates a new MCP prompt with the given name and description.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Creates a new MCP prompt with the given name and description.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch name := arg0.(type) {
 			case env.String:
@@ -149,8 +153,9 @@ var Builtins_mcp = map[string]*env.Builtin{
 	},
 
 	"mcp//Protocol-version": {
-		Argsn: 0,
-		Doc:   "Returns the latest MCP protocol version.",
+		Effect: env.EffNone,
+		Argsn:  0,
+		Doc:    "Returns the latest MCP protocol version.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return env.String{Value: "2024-11-05"} // Hardcoded latest protocol version
 		},
@@ -158,8 +163,9 @@ var Builtins_mcp = map[string]*env.Builtin{
 
 	// Server methods
 	"Rye-mcp-server//Get-name": {
-		Argsn: 1,
-		Doc:   "Gets the name of the MCP server.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the name of the MCP server.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch srv := arg0.(type) {
 			case env.Native:
@@ -186,8 +192,9 @@ var Builtins_mcp = map[string]*env.Builtin{
 	},
 
 	"Rye-mcp-server//Get-version": {
-		Argsn: 1,
-		Doc:   "Gets the version of the MCP server.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the version of the MCP server.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch srv := arg0.(type) {
 			case env.Native:
@@ -215,8 +222,9 @@ var Builtins_mcp = map[string]*env.Builtin{
 
 	// Resource methods
 	"Rye-mcp-resource//Get-uri": {
-		Argsn: 1,
-		Doc:   "Gets the URI of the MCP resource.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the URI of the MCP resource.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch res := arg0.(type) {
 			case env.Native:
@@ -244,8 +252,9 @@ var Builtins_mcp = map[string]*env.Builtin{
 	},
 
 	"Rye-mcp-resource//Get-name": {
-		Argsn: 1,
-		Doc:   "Gets the name of the MCP resource.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the name of the MCP resource.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch res := arg0.(type) {
 			case env.Native:
@@ -273,8 +282,9 @@ var Builtins_mcp = map[string]*env.Builtin{
 	},
 
 	"Rye-mcp-resource//Get-mime-type": {
-		Argsn: 1,
-		Doc:   "Gets the MIME type of the MCP resource.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the MIME type of the MCP resource.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch res := arg0.(type) {
 			case env.Native:
@@ -303,8 +313,9 @@ var Builtins_mcp = map[string]*env.Builtin{
 
 	// Tool methods
 	"Rye-mcp-tool//Get-name": {
-		Argsn: 1,
-		Doc:   "Gets the name of the MCP tool.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the name of the MCP tool.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch tool := arg0.(type) {
 			case env.Native:
@@ -331,8 +342,9 @@ var Builtins_mcp = map[string]*env.Builtin{
 	},
 
 	"Rye-mcp-tool//Get-description": {
-		Argsn: 1,
-		Doc:   "Gets the description of the MCP tool.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the description of the MCP tool.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch tool := arg0.(type) {
 			case env.Native:
@@ -360,8 +372,9 @@ var Builtins_mcp = map[string]*env.Builtin{
 
 	// Prompt methods
 	"Rye-mcp-prompt//Get-name": {
-		Argsn: 1,
-		Doc:   "Gets the name of the MCP prompt.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the name of the MCP prompt.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch prompt := arg0.(type) {
 			case env.Native:
@@ -388,8 +401,9 @@ var Builtins_mcp = map[string]*env.Builtin{
 	},
 
 	"Rye-mcp-prompt//Get-description": {
-		Argsn: 1,
-		Doc:   "Gets the description of the MCP prompt.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Gets the description of the MCP prompt.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch prompt := arg0.(type) {
 			case env.Native:

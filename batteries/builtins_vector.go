@@ -44,8 +44,9 @@ var Builtins_vector = map[string]*env.Builtin{
 	// Returns:
 	// * vector object
 	"vector": {
-		Argsn: 1,
-		Doc:   "Creates a vector from a block of numbers.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Creates a vector from a block of numbers.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Block:
@@ -68,8 +69,9 @@ var Builtins_vector = map[string]*env.Builtin{
 	// Returns:
 	// * decimal representing the L2 norm (Euclidean length) of the vector
 	"normalize": {
-		Argsn: 1,
-		Doc:   "Calculates the L2 norm (Euclidean length) of a vector.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Calculates the L2 norm (Euclidean length) of a vector.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Vector:
@@ -87,8 +89,9 @@ var Builtins_vector = map[string]*env.Builtin{
 	// Returns:
 	// * decimal representing the standard deviation of the vector elements
 	"std-deviation": {
-		Argsn: 1,
-		Doc:   "Calculates the standard deviation of a vector's elements.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Calculates the standard deviation of a vector's elements.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Vector:
@@ -108,8 +111,9 @@ var Builtins_vector = map[string]*env.Builtin{
 	// Returns:
 	// * decimal representing the cosine similarity between the two vectors
 	"cosine-similarity": {
-		Argsn: 2,
-		Doc:   "Calculates the cosine similarity between two vectors.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Calculates the cosine similarity between two vectors.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch v1 := arg0.(type) {
 			case env.Vector:
@@ -138,8 +142,9 @@ var Builtins_vector = map[string]*env.Builtin{
 	// Returns:
 	// * decimal representing the correlation coefficient between the two vectors
 	"correlation": {
-		Argsn: 2,
-		Doc:   "Calculates the correlation coefficient between two vectors.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Calculates the correlation coefficient between two vectors.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch v1 := arg0.(type) {
 			case env.Vector:
@@ -167,8 +172,9 @@ var Builtins_vector = map[string]*env.Builtin{
 	// Returns:
 	// * decimal representing the dot product of the two vectors
 	"dot-product": {
-		Argsn: 2,
-		Doc:   "Calculates the dot product between two vectors.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Calculates the dot product between two vectors.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch v1 := arg0.(type) {
 			case env.Vector:
@@ -201,8 +207,9 @@ var Builtins_vector = map[string]*env.Builtin{
 	// Returns:
 	// * decimal representing the Euclidean distance between the two vectors
 	"euclidean-distance": {
-		Argsn: 2,
-		Doc:   "Calculates the Euclidean distance between two vectors. Useful for K-Means clustering.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Calculates the Euclidean distance between two vectors. Useful for K-Means clustering.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch v1 := arg0.(type) {
 			case env.Vector:
@@ -233,8 +240,9 @@ var Builtins_vector = map[string]*env.Builtin{
 	// Returns:
 	// * new vector representing the element-wise mean of all input vectors
 	"mean-vectors": {
-		Argsn: 1,
-		Doc:   "Calculates the element-wise mean of multiple vectors. Useful for creating 'Master Anchors'.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Calculates the element-wise mean of multiple vectors. Useful for creating 'Master Anchors'.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
 			case env.Block:
@@ -286,8 +294,9 @@ var Builtins_vector = map[string]*env.Builtin{
 	// Returns:
 	// * new vector with length 1 (unit vector)
 	"unit-vector": {
-		Argsn: 1,
-		Doc:   "Returns a new normalized vector (length = 1). Essential for consistent dot products and overlays.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns a new normalized vector (length = 1). Essential for consistent dot products and overlays.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch v := arg0.(type) {
 			case env.Vector:
@@ -314,8 +323,9 @@ var Builtins_vector = map[string]*env.Builtin{
 	// Returns:
 	// * new vector representing the projection of vector1 onto vector2
 	"project-vector": {
-		Argsn: 2,
-		Doc:   "Projects vector onto another vector. Answers: 'How much of this vector is in the direction of another?'",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Projects vector onto another vector. Answers: 'How much of this vector is in the direction of another?'",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch v1 := arg0.(type) {
 			case env.Vector:
@@ -359,8 +369,9 @@ var Builtins_vector = map[string]*env.Builtin{
 	// Returns:
 	// * new vector with the projection onto vector2 removed
 	"reject-vector": {
-		Argsn: 2,
-		Doc:   "Removes projection from vector. Use this to 'subtract' a concept direction from a vector.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Removes projection from vector. Use this to 'subtract' a concept direction from a vector.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch v1 := arg0.(type) {
 			case env.Vector:

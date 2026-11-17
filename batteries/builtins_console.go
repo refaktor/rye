@@ -21,8 +21,9 @@ var Builtins_console = map[string]*env.Builtin{
 	// Returns:
 	// * the last result from the console session
 	"enter-console": {
-		Argsn: 1,
-		Doc:   "Stops execution and gives you an interactive Rye console to test code in the current environment.",
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Stops execution and gives you an interactive Rye console to test code in the current environment.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch name := arg0.(type) {
 			case env.String:
@@ -57,7 +58,7 @@ var Builtins_console = map[string]*env.Builtin{
 						}
 					}
 				*/
-			console.DoRyeRepl(ps, "rye", evaldo.ShowResults, false, "")
+				console.DoRyeRepl(ps, "rye", evaldo.ShowResults, false, "")
 				fmt.Println("-------------------------------------------------------------")
 				ps.Ser = ser
 				return ps.Res

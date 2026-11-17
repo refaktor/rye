@@ -867,8 +867,9 @@ var Builtins_sxml = map[string]*env.Builtin{
 	// Returns:
 	// * collected structure when ( ) projections are used, otherwise true
 	"reader//Do-sxml": {
-		Argsn: 2,
-		Doc:   "Processes XML with streaming tag handlers. [ ] runs code, { } nests rules, and ( 'command , ... ) projects values with put, put-key, append-key, merge-key, sub-block, attach, append, and merge.",
+		Effect: env.EffIO,
+		Argsn:  2,
+		Doc:    "Processes XML with streaming tag handlers. [ ] runs code, { } nests rules, and ( 'command , ... ) projects values with put, put-key, append-key, merge-key, sub-block, attach, append, and merge.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			reader, ok := arg0.(env.Native)
 			if !ok {
@@ -917,8 +918,9 @@ var Builtins_sxml = map[string]*env.Builtin{
 	// Returns:
 	// * list [ namespace tag value ] of the attribute or void if not found
 	"rye-sxml-start//Attr?": {
-		Argsn: 2,
-		Doc:   "Retrieves an attribute by index or name from an XML start element.",
+		Effect: env.EffNone,
+		Argsn:  2,
+		Doc:    "Retrieves an attribute by index or name from an XML start element.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch obj := arg0.(type) {
 			case env.Native:
@@ -994,8 +996,9 @@ var Builtins_sxml = map[string]*env.Builtin{
 	// Returns:
 	// * dict with all attributes where keys are "attrname" or "namespace:attrname"
 	"rye-sxml-start//Attrs?": {
-		Argsn: 1,
-		Doc:   "Returns a dict of all attributes from an XML start element.",
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns a dict of all attributes from an XML start element.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch obj := arg0.(type) {
 			case env.Native:
@@ -1044,9 +1047,10 @@ var Builtins_sxml = map[string]*env.Builtin{
 	// Returns:
 	// * string name of the XML element
 	"rye-sxml-start//Name?": {
-		Argsn: 1,
-		Doc:   "Returns the local name of an XML start or end element.",
-		Fn:    sxmlElementName,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the local name of an XML start or end element.",
+		Fn:     sxmlElementName,
 	},
 	// Example:
 	// ; inside an executable [ ] handler
@@ -1061,9 +1065,10 @@ var Builtins_sxml = map[string]*env.Builtin{
 	// Returns:
 	// * String local name of the element.
 	"rye-sxml-end//Name?": {
-		Argsn: 1,
-		Doc:   "Returns the local name of an XML end element.",
-		Fn:    sxmlElementName,
+		Effect: env.EffNone,
+		Argsn:  1,
+		Doc:    "Returns the local name of an XML end element.",
+		Fn:     sxmlElementName,
 	},
 }
 

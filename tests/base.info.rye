@@ -6642,10 +6642,10 @@ section "Other" "Assignments, word lookup, contexts, and runtime helpers." {
 	}
 
 	group "rye"
-	"Returns the native Rye-itself object used to inspect and configure the running interpreter."
+	"Returns the native rye-runtime object used to inspect and configure the running interpreter."
 	{
 		arg `none`
-		returns `native Rye-itself object used to access runtime properties.`
+		returns `native rye-runtime object used to access runtime properties.`
 	}
 
 	{
@@ -6655,16 +6655,16 @@ section "Other" "Assignments, word lookup, contexts, and runtime helpers." {
 	{
 	}
 
-	group "Rye-itself//On-error"
+	group "rye-runtime//On-error"
 	"Registers a On-error block that will be executed with the error injected if an unhandled error bubbles to the top of the program. The error value is injected as the first value (use .disarm, .print, etc.)."
 	{
 		argsn 2
 		argtypes {
 			2 [ Block ]
 		}
-		arg `rye-itself: The rye native object (passed via dot-word dispatch)`
+		arg `rye-runtime: The rye native object (passed via dot-word dispatch)`
 		arg `block: Block of code to execute with the On-errord error injected when an error bubbles to top-level`
-		returns `The rye-itself native (so the chain continues cleanly)`
+		returns `The rye-runtime native (so the chain continues cleanly)`
 	}
 
 	{
