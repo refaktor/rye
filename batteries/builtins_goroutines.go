@@ -10,8 +10,6 @@ import (
 
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
-
-	"github.com/jinzhu/copier"
 )
 
 // RyeMutex wraps sync.Mutex with state tracking to prevent fatal errors on unlocking unlocked mutex
@@ -80,17 +78,7 @@ var Builtins_goroutines = map[string]*env.Builtin{
 						ps.FailureFlag = true
 						return evaldo.MakeBuiltinError(ps, "function with exactly 1 argument required", "go-with")
 					}
-					// Create a copy of the program state for the goroutine
-					psTemp := env.ProgramState{}
-					err := copier.Copy(&psTemp, &ps)
-					if err != nil {
-						return evaldo.MakeBuiltinError(ps, fmt.Sprintf("failed to copy program state: %s", err), "go-with")
-					}
-
-					// Reset flags for the goroutine state
-					psTemp.FailureFlag = false
-					psTemp.ErrorFlag = false
-					psTemp.ReturnFlag = false
+					psTemp := ps.ForkForGoroutine()
 
 					// Launch goroutine with panic recovery
 					go func() {
@@ -100,7 +88,7 @@ var Builtins_goroutines = map[string]*env.Builtin{
 								fmt.Printf("Goroutine panic in go-with: %v\n", r)
 							}
 						}()
-						evaldo.CallFunction_CollectArgs(handler, &psTemp, arg, false, nil)
+						evaldo.CallFunctionWithArgs(handler, psTemp, nil, arg)
 					}()
 
 					return arg0
@@ -133,17 +121,7 @@ var Builtins_goroutines = map[string]*env.Builtin{
 					ps.FailureFlag = true
 					return evaldo.MakeBuiltinError(ps, "function with 0 arguments required", "go")
 				}
-				// Create a copy of the program state for the goroutine
-				psTemp := env.ProgramState{}
-				err := copier.Copy(&psTemp, &ps)
-				if err != nil {
-					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("failed to copy program state: %s", err), "go")
-				}
-
-				// Reset flags for the goroutine state
-				psTemp.FailureFlag = false
-				psTemp.ErrorFlag = false
-				psTemp.ReturnFlag = false
+				psTemp := ps.ForkForGoroutine()
 
 				// Launch goroutine with panic recovery
 				go func() {
@@ -153,7 +131,7 @@ var Builtins_goroutines = map[string]*env.Builtin{
 							fmt.Printf("Goroutine panic in go: %v\n", r)
 						}
 					}()
-					evaldo.CallFunction_CollectArgs(handler, &psTemp, nil, false, nil)
+					evaldo.CallFunctionWithArgs(handler, psTemp, nil)
 				}()
 
 				return arg0

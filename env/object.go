@@ -2124,9 +2124,9 @@ func (i Error) Print2(e Idxs, depth int, humane bool) string {
 		if e.GetWord(i.Kind.Index) == "warning" {
 			prefix = "Warning"
 		} else if e.GetWord(i.Kind.Index) == "note" {
-			prefix = "Please note"
+			prefix = "Note"
 		} else {
-			prefix = "Error happend"
+			prefix = "Error"
 		}
 	}
 	var b strings.Builder
