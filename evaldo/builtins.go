@@ -2856,6 +2856,7 @@ func RegisterBaseBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(builtins_contexts, ps, "base")
 	RegisterBuiltins2(builtins_functions, ps, "base")
 	RegisterBuiltins2(builtins_effects, ps, "base")
+	RegisterBuiltins2(builtins_tasks, ps, "base")
 
 	// Moved from batteries: core error handling and validation/table builtins
 	RegisterBuiltins2(Builtins_error_creation, ps, "error-creation")
@@ -3050,6 +3051,7 @@ var allBuiltinGroups = []builtinGroup{
 	{"base", builtins_contexts, false},
 	{"base", builtins_functions, false},
 	{"base", builtins_effects, false},
+	{"base", builtins_tasks, false},
 	// Moved from batteries: core error + table/validation builtins
 	{"error-creation", Builtins_error_creation, false},
 	{"error-inspection", Builtins_error_inspection, false},
