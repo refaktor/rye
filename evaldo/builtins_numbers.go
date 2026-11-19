@@ -550,19 +550,20 @@ var builtins_numbers = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { 4 . .type? } 'void
-	// equal { "hello" . .type? } 'void
+	// equal { 4 . .type? } 'integer
+	// equal { "hello" . .type? } 'string
+	// equal { map { 12 2 } { . } } { 12 2 }
 	// Args:
-	// * value: Any value to discard
+	// * value: Any value to pass through
 	// Returns:
-	// * void value (used to discard values)
+	// * the input value (identity opword)
 	"_.": { // ***
 		Effect: env.EffNone,
 		Argsn:  1,
-		Doc:    "Discards the input value and returns a void value, useful only for Eyr (stack based dialect).",
+		Doc:    "Identity opword: returns its input unchanged. Useful for passing an injected value through, e.g. map { 12 2 } { . }.",
 		Pure:   true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return *env.NewVoid()
+			return arg0
 		},
 	},
 

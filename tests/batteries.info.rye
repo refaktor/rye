@@ -1479,6 +1479,21 @@ section "SQLite" "SQLite database functions" {
 	{
 	}
 
+	group "sqlite//Query\\one"
+	"Executes a SQL query and returns the first value of its first row, failing if no value exists."
+	{
+		argsn 2
+		arg `db: SQLite database connection`
+		arg `sql: SQL query as string or block (same forms as Query)`
+		returns `first column of the first row; failure if there is no row or column`
+	}
+
+	{
+	}
+
+	{
+	}
+
 	group "sqlite//Query"
 	"Executes a SQL query and returns results as a table."
 	{
@@ -1562,8 +1577,8 @@ section "PostgreSQL" "Querying PostgreSQL databases and managing connections." {
 		"Open postgres://user:pass@localhost:5432/dbname\n|Exec { INSERT INTO test VALUES ( 1 , \"test\" ) }\n; mind the mandatory spacing in SQL dialect"
 	}
 
-	group "Rye-psql//Query"
-	"Executes a SQL query and returns results as a table."
+	group "Rye-psql//Query\\one"
+	"Executes a SQL query and returns the first value of its first row, failing if no value exists."
 	{
 		argsn 2
 		arg `db: PostgreSQL database connection (type: "Rye-psql")`
@@ -1660,8 +1675,8 @@ section "MySQL" "MySQL database functions" {
 		"Open mysql://user:pass@tcp(localhost:3306)/dbname\" ,\n|Exec { INSERT INTO test VALUES ( 1 , \"test\" ) }"
 	}
 
-	group "Rye-mysql//Query"
-	"Executes a SQL query and returns results as a table."
+	group "Rye-mysql//Query\\one"
+	"Executes a SQL query and returns the first value of its first row, failing if no value exists."
 	{
 		argsn 2
 		arg `db: MySQL database connection`
@@ -3451,40 +3466,6 @@ section "EYR Dialect" "Stack based evaluator / dialect" {
 		equal { eyr { 6 2 / } } 3.0
 		equal { eyr { 10 3 mod } } 1.0
 		equal { eyr { 1 2 3 } } 3
-	}
-
-	{
-	}
-
-	group "rye0"
-	"Evaluates Rye block as Rye0 dialect."
-	{
-		argsn 1
-		arg `block: Block of code to evaluate in RYE0 dialect`
-		returns `result of evaluating the block in RYE0 dialect`
-	}
-
-	{
-		; equal { rye0 { 1 + 2 } } 3
-		; equal { rye0 { 5 - 3 } } 2
-		; equal { rye0 { print "hello" } } "hello"
-	}
-
-	{
-	}
-
-	group "rye00"
-	"Evaluates Rye block as Rye00 dialect (builtins and integers only)."
-	{
-		argsn 1
-		arg `block: Block of code to evaluate in RYE00 dialect (builtins and integers only)`
-		returns `result of evaluating the block in RYE00 dialect (minimal feature set)`
-	}
-
-	{
-		; equal { rye00 { 1 + 2 } } 3
-		; equal { rye00 { 5 * 3 } } 15
-		; equal { rye00 { inc 5 } } 6
 	}
 
 	{

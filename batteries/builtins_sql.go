@@ -9,7 +9,39 @@ import (
 	"strings"
 
 	"github.com/refaktor/rye/env"
+	"github.com/refaktor/rye/evaldo"
 )
+
+// queryOneValue reuses the corresponding Query implementation so SQL-DSL,
+// parameter binding and value conversions remain identical. Query returns a
+// table; Query\one returns its first row's first column instead.
+func queryOneValue(ps *env.ProgramState, db, statement env.Object, query *env.Builtin, name string) env.Object {
+	result := query.Fn(ps, db, statement, nil, nil, nil)
+	if ps.ErrorFlag || ps.FailureFlag {
+		return result
+	}
+	// Some existing Query implementations return an Error without setting a
+	// flag (for example, a SQLite scan error). Preserve that diagnostic.
+	if _, isError := result.(*env.Error); isError {
+		ps.FailureFlag = true
+		return result
+	}
+	table, ok := result.(env.Table)
+	if !ok {
+		return evaldo.MakeBuiltinError(ps, "Query did not return a table", name)
+	}
+	if len(table.Rows) == 0 || len(table.Rows[0].Values) == 0 {
+		return evaldo.MakeBuiltinError(ps, "Query returned no value", name)
+	}
+	if table.Rows[0].Values[0] == nil {
+		return env.Void{} // SQL NULL is a value, not a missing row.
+	}
+	value, ok := table.Rows[0].Values[0].(env.Object)
+	if !ok {
+		return evaldo.MakeBuiltinError(ps, "Query returned an unsupported value", name)
+	}
+	return value
+}
 
 // SQL mode constants for different database parameter styles
 const MODE_SQLITE = 1 // Uses ? placeholders

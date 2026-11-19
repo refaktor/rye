@@ -42,10 +42,11 @@ type SubcommandSpec struct {
 
 // CLISpec holds the complete CLI specification
 type CLISpec struct {
-	GlobalArgs  []ArgSpec
-	Subcommands map[string]*SubcommandSpec
-	ProgramName string // Optional program name for help
-	ProgramDoc  string // Optional program description for help
+	GlobalArgs   []ArgSpec
+	Subcommands  map[string]*SubcommandSpec
+	ProgramName  string // Optional program name for help
+	ProgramDoc   string // Optional program description for help
+	RequiresArgs bool   // Optional when some flags must be set or else help is shown
 }
 
 // ParsedArgs holds the result of parsing
@@ -114,6 +115,8 @@ func CLI_ParseSpec(es *env.ProgramState, specBlock env.Block) (*CLISpec, error) 
 						spec.ProgramDoc = str.Value
 					}
 				}
+			} else if wordName == "requires-args" {
+				spec.RequiresArgs = true
 			} else {
 				return nil, fmt.Errorf("program, description or subcommand expected but got %s", wordName)
 			}
@@ -1135,6 +1138,11 @@ func BuiParseArgs(es *env.ProgramState, args env.Object, specBlock env.Object) e
 	if err != nil {
 		es.FailureFlag = true
 		return env.NewError2(400, "spec error: "+err.Error())
+	}
+
+	if cliSpec.RequiresArgs && argsBlock.Series.Len() == 0 {
+		es.FailureFlag = true
+		return env.NewError2(400, "spec error: requires args but none given")
 	}
 
 	// Parse the arguments

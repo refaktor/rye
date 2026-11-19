@@ -15,6 +15,10 @@ import (
 	_ "github.com/glebarez/sqlite"
 )
 
+var sqliteQueryBuiltin *env.Builtin
+
+func init() { sqliteQueryBuiltin = Builtins_sqlite["sqlite//Query"] }
+
 var Builtins_sqlite = map[string]*env.Builtin{
 
 	//
@@ -122,6 +126,20 @@ var Builtins_sqlite = map[string]*env.Builtin{
 			default:
 				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "sqlite//Exec")
 			}
+		},
+	},
+
+	// Args:
+	// * db: SQLite database connection
+	// * sql: SQL query as string or block (same forms as Query)
+	// Returns:
+	// * first column of the first row; failure if there is no row or column
+	"sqlite//Query\\one": {
+		Effect: env.EffInput,
+		Argsn:  2,
+		Doc:    "Executes a SQL query and returns the first value of its first row, failing if no value exists.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, _, _, _ env.Object) env.Object {
+			return queryOneValue(ps, arg0, arg1, sqliteQueryBuiltin, "sqlite//Query\\one")
 		},
 	},
 

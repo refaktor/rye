@@ -1092,11 +1092,12 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 			case env.Block:
 				ser := ps.Ser
 				ps.Ser = bloc.Series
+				oldInErrHandler := ps.InErrHandler
 				ps.InErrHandler = true
 				Eval(ps)
 				// We don't display it in try function, that is the point
 				// MaybeDisplayFailureOrError(ps, ps.Idx, "try")
-				ps.InErrHandler = false
+				ps.InErrHandler = oldInErrHandler
 				ps.ReturnFlag = false
 				ps.ErrorFlag = false
 				ps.FailureFlag = false
@@ -1128,6 +1129,8 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 				oldSer := ps.Ser
 				oldFailureFlag := ps.FailureFlag
 				oldErrorFlag := ps.ErrorFlag
+				oldReturnFlag := ps.ReturnFlag
+				oldInErrHandler := ps.InErrHandler
 				ps.InErrHandler = true
 				// Execute the block
 				ps.Ser = bloc.Series
@@ -1137,11 +1140,14 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 				// Create result tuple
 				result := ps.Res
 				success := !ps.FailureFlag && !ps.ErrorFlag
-				ps.InErrHandler = false
+				// A return inside the captured block belongs to that block, not to
+				// the function calling try-all.
+				ps.InErrHandler = oldInErrHandler
 				// Restore state
 				ps.Ser = oldSer
 				ps.FailureFlag = oldFailureFlag
 				ps.ErrorFlag = oldErrorFlag
+				ps.ReturnFlag = oldReturnFlag
 
 				// Return [success, result]
 				return *env.NewBlock(*env.NewTSeries([]env.Object{
@@ -1178,10 +1184,11 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
+					oldInErrHandler := ps.InErrHandler
 					ps.InErrHandler = true
 					EvalBlockInCtxInj(ps, ctx, nil, false)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "try\\in")
-					ps.InErrHandler = false
+					ps.InErrHandler = oldInErrHandler
 					ps.ReturnFlag = false
 					ps.ErrorFlag = false
 					ps.FailureFlag = false
@@ -1204,48 +1211,44 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// equal { try { finally { fail "error" } { print "cleanup" } } |message? } "error"
 	// Args:
 	// * main-block: Block of code to execute
-	// * finally-block: Block to execute afterward, regardless of errors
+	// * finally-block: Cleanup block to execute afterward, even if the main block fails or returns
 	// Returns:
-	// * result of the main block, preserving any failure state
+	// * the main block's result and failure state when cleanup succeeds;
+	//   otherwise the cleanup failure/error takes precedence
 	"finally": {
 		Effect: env.EffIO,
 		Argsn:  2,
-		Doc:    "Executes a block and ensures another block is executed afterward, regardless of errors.",
+		Doc:    "Runs the main block, then always runs the cleanup block before continuing. Successful cleanup preserves the main result or failure; failed cleanup replaces it. Unlike try, finally does not handle failures. Unlike defer, cleanup runs at the end of this block, not at function exit.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch mainBlock := arg0.(type) {
 			case env.Block:
 				switch finallyBlock := arg1.(type) {
 				case env.Block:
-					// Save current state
 					oldSer := ps.Ser
+					oldInErrHandler := ps.InErrHandler
+					// Delay reporting until both blocks finish. The cleanup must run even
+					// when the main block fails or returns.
 					ps.InErrHandler = true
-					// Execute the main block
 					ps.Ser = mainBlock.Series
 					Eval(ps)
-					MaybeDisplayFailureOrError(ps, ps.Idx, "finally")
+					mainResult := ps.Res
+					mainFailure, mainError, mainReturn := ps.FailureFlag, ps.ErrorFlag, ps.ReturnFlag
 
-					// Save result and flags
-					result := ps.Res
-					hasFailure := ps.FailureFlag
-					hasError := ps.ErrorFlag
-
-					// Execute the finally block
 					ps.Ser = finallyBlock.Series
-					ps.FailureFlag = false
-					ps.ErrorFlag = false
-					ps.InErrHandler = false
+					ps.FailureFlag, ps.ErrorFlag, ps.ReturnFlag = false, false, false
 					Eval(ps)
-					MaybeDisplayFailureOrError(ps, ps.Idx, "finally")
-
-					// Restore original result and flags
-					ps.Res = result
-					ps.FailureFlag = hasFailure
-					ps.ErrorFlag = hasError
-
-					// Restore series
+					cleanupFailure, cleanupError := ps.FailureFlag, ps.ErrorFlag
 					ps.Ser = oldSer
-
-					return ps.Res
+					ps.InErrHandler = oldInErrHandler
+					if cleanupFailure || cleanupError {
+						// A failed cleanup supersedes the main result; do not allow a
+						// return from the main block to mask it.
+						ps.ReturnFlag = false
+						return ps.Res
+					}
+					ps.Res = mainResult
+					ps.FailureFlag, ps.ErrorFlag, ps.ReturnFlag = mainFailure, mainError, mainReturn
+					return mainResult
 				default:
 					ps.FailureFlag = true
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "finally")
