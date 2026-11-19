@@ -22,6 +22,22 @@ assert\display "fn\\inside modifies context" {
 	ctx2/x
 } 102
 
+; Parameters belong to the target context once a call begins, but collecting
+; arguments in the caller must not partially mutate it if collection fails.
+assert\display "fn\\inside failed later argument leaves context untouched" {
+	ctx-fail: context { a: 10 , b: 20 , ran: 0 }
+	f-fail: fn\inside { a b } ctx-fail { ran:: 1 }
+	try { f-fail 99 (fail "argument failed") }
+	ctx-fail/a + ctx-fail/b + ctx-fail/ran
+} 30
+
+assert\display "fn\\inside parameters persist after successful call" {
+	ctx-params: context { a: 10 , b: 20 }
+	f-params: fn\inside { a b } ctx-params { a + b }
+	f-params 3 4
+	ctx-params/a + ctx-params/b
+} 7
+
 ; ============================================================================
 ; fn\in - context becomes PARENT (non-destructive)
 ; ============================================================================
@@ -47,6 +63,16 @@ assert\display "fn\\in reads parent" {
 	multiply5: fn\in { n } ctx5 { n * multiplier }
 	multiply5 5
 } 50
+
+; Calling a captured function through another context must not reparent its
+; captured scope or alter later calls through its original path.
+assert\display "context path does not reparent fn\\in" {
+	original-ctx: context { x: 10 }
+	captured-f: fn\in { } original-ctx { x }
+	other-ctx: context { x: 20 , f: ?captured-f }
+	other-ctx/f
+	captured-f
+} 10
 
 ; ============================================================================
 ; do\inside - executes block DIRECTLY in context
