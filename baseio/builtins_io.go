@@ -23,6 +23,21 @@ import (
 	"github.com/jlaffaye/ftp"
 )
 
+// consoleInputReader is shared so repeated input calls do not lose data
+// buffered from stdin (for example when input is piped).
+var consoleInputReader *bufio.Reader
+
+func readConsoleLine() string {
+	if consoleInputReader == nil {
+		consoleInputReader = bufio.NewReader(os.Stdin)
+	}
+	line, err := consoleInputReader.ReadString('\n')
+	if err != nil && len(line) == 0 {
+		return ""
+	}
+	return strings.TrimRight(line, "\r\n")
+}
+
 var Builtins_io = map[string]*env.Builtin{
 
 	//
@@ -56,15 +71,8 @@ var Builtins_io = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.String:
-				fmt.Print("" + str.Value)
-				var input string
-				fmt.Scanln(&input)
-				// fmt.Print(input)
-				/* reader := bufio.NewReader(os.Stdin)
-				fmt.Print(str)
-				inp, _ := reader.ReadString('\n')
-				fmt.Println(inp) */
-				return *env.NewString(input)
+				fmt.Print(str.Value)
+				return *env.NewString(readConsoleLine())
 			default:
 				ps.FailureFlag = true
 				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType}, "input")

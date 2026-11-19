@@ -2717,7 +2717,7 @@ func NewDictFromSeriesChecked(block TSeries, idx *Idxs) (Dict, error) {
 			return Dict{}, fmt.Errorf("invalid key %s at position %d; keys must be strings, tagwords, words, or setwords", key.Inspect(*idx), pos)
 		}
 		if val != nil && !IsCollectionLiteral(val) {
-			return Dict{}, fmt.Errorf("non-literal value %s at position %d; only literal values (strings, numbers, nested lists and dicts) are allowed", val.Inspect(*idx), pos+1)
+			return Dict{}, fmt.Errorf("non-literal value %s at position %d; only literal values (strings, numbers, tagwords, nested lists, blocks and dicts) are allowed", val.Inspect(*idx), pos+1)
 		}
 		data[keyStr] = val
 	}
@@ -2897,7 +2897,11 @@ func NewListFromSeries(block TSeries) List {
 			data[i] = k.Value
 		case Boolean:
 			data[i] = k.Value
+		case Tagword:
+			data[i] = k
 		case List:
+			data[i] = k
+		case Block:
 			data[i] = k
 		case Dict:
 			data[i] = k
@@ -2907,10 +2911,10 @@ func NewListFromSeries(block TSeries) List {
 }
 
 // IsCollectionLiteral reports whether the object is a literal value that can be
-// stored in a passive or evaluated list/dict: scalars plus nested lists/dicts.
+// stored in a passive or evaluated list/dict: scalars plus nested lists, blocks and dicts.
 func IsCollectionLiteral(obj Object) bool {
 	switch obj.(type) {
-	case String, Integer, Decimal, Boolean, List, Dict:
+	case String, Integer, Decimal, Boolean, Tagword, List, Block, Dict:
 		return true
 	}
 	return false
@@ -2932,12 +2936,16 @@ func NewListFromSeriesChecked(block TSeries, idx *Idxs) (List, error) {
 			data[i] = k.Value
 		case Boolean:
 			data[i] = k.Value
+		case Tagword:
+			data[i] = k
 		case List:
+			data[i] = k
+		case Block:
 			data[i] = k
 		case Dict:
 			data[i] = k
 		default:
-			return List{}, fmt.Errorf("non-literal value %s at position %d; only literal values (strings, numbers, nested lists and dicts) are allowed", k1.Inspect(*idx), i)
+			return List{}, fmt.Errorf("non-literal value %s at position %d; only literal values (strings, numbers, tagwords, nested lists, blocks and dicts) are allowed", k1.Inspect(*idx), i)
 		}
 	}
 	return *NewList(data), nil

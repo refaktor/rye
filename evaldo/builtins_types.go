@@ -793,3 +793,18 @@ var builtins_types = map[string]*env.Builtin{
 		},
 	},
 }
+
+// init registers compatibility aliases used throughout older Rye examples/docs.
+func init() {
+	aliases := map[string]string{
+		"to-string":  "string",
+		"to-integer": "integer",
+		"to-decimal": "decimal",
+		"to-char":    "char",
+	}
+	for alias, target := range aliases {
+		if builtin, ok := builtins_types[target]; ok {
+			builtins_types[alias] = builtin
+		}
+	}
+}

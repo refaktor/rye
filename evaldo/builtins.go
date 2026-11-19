@@ -865,14 +865,18 @@ func IntersectBlocksCustom(a env.Block, b env.Block, ps *env.ProgramState, fn en
 func LoadScriptLocalFile(ps *env.ProgramState, s1 env.Uri) (env.Object, string) {
 	var str string
 	fileIdx, _ := ps.Idx.GetIndex("file")
-	fullpath := filepath.Join(filepath.Dir(ps.ScriptPath), s1.GetPath())
+	requestedPath := s1.GetPath()
+	fullpath := requestedPath
+	if !filepath.IsAbs(requestedPath) {
+		fullpath = filepath.Join(filepath.Dir(ps.ScriptPath), requestedPath)
+	}
 	if s1.Scheme.Index == fileIdx {
 		var b []byte
 		var err error
 		if ps.Embedded && ps.EmbeddedFS != nil {
 			// Try to read from embedded filesystem
 			// The embedded FS has files under "buildtemp/" prefix
-			embeddedPath := "buildtemp/" + s1.GetPath()
+			embeddedPath := "buildtemp/" + requestedPath
 			type embedReader interface {
 				ReadFile(name string) ([]byte, error)
 			}
@@ -909,6 +913,10 @@ func EvaluateLoadedValue(ps *env.ProgramState, block_ env.Object, script_ string
 		ps.ScriptPath = script_
 		ps.ErrorFlag = true
 		return MakeBuiltinError(ps, block.Message, "import")
+	case *env.Error:
+		ps.ScriptPath = script_
+		ps.ErrorFlag = true
+		return block
 	default:
 		// fmt.Println(block)
 		panic("Not block and not error in import builtin.") // TODO -- Think how best to handle this
