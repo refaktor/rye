@@ -32,7 +32,7 @@ var OfferDebuggingOptionsHook func(es *env.ProgramState, genv *env.Idxs, tag str
 
 // EvalBlock is the main entry point for evaluating a block of code.
 // Called from: Throughout the codebase - main evaluation loops, builtins, function calls
-// Purpose: Dispatches to the appropriate dialect-specific evaluator (Rye2, Eyr, Rye0, Rye00)
+// Purpose: Dispatches to the supported dialect-specific evaluator (Rye2 or Eyr)
 // HOTCODE: Performance-critical function called frequently during execution
 func Eval(ps *env.ProgramState) {
 	EvalBlockInj(ps, nil, false)
@@ -60,10 +60,6 @@ func EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) {
 	case env.EyrDialect:
 		ps.EnsureStack() // Hooks, including embedding-provided hooks, receive a usable stack.
 		BatteryEyrEvalBlockInsideHook(ps, inj, injnow)
-	case env.Rye0Dialect:
-		Rye0_EvalBlockInj(ps, inj, injnow) // TODO ps.Stack is already in ps ... refactor
-	case env.Rye00Dialect:
-		Rye00_EvalBlockInj(ps, inj, injnow) // Simplified dialect for builtins and integers
 	default:
 		panic("Dialect not selected")
 		// TODO fail
@@ -1483,6 +1479,10 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 	defer returnContextToPool(fnCtx, fnCtxFromPool)
 
 	ii := 0
+	// Do not bind parameters until every argument has evaluated successfully.
+	// In particular, fn\inside uses fnCtx itself, so an aborted call must not
+	// overwrite words in the target context before its body has started.
+	argValues := make([]env.Object, fn.Argsn)
 	// For user functions, arg collection does NOT restrict further operators (opword=false, dotword=false).
 	// This matches the original behavior where CallFunction_CollectArgs always used opword=false,
 	// enabling right-to-left grouping of middle arguments (e.g. 6 <add> 12 2 <mul> 3 4 => 42).
@@ -1493,7 +1493,7 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 	if arg0 != nil {
 		if fn.Argsn > 0 {
 			index := fn.Spec.Series.Get(ii).(env.Word).Index
-			fnCtx.SetVar(index, arg0)
+			argValues[ii] = arg0
 			ps.Args[ii] = index
 			ii = 1
 			if !toLeft {
@@ -1507,7 +1507,7 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 	if arg0_ != nil && pipeSecondFlag && fn.Argsn > 1 && ii == 1 {
 		if fn.Spec.Series.Len() > 1 {
 			index := fn.Spec.Series.Get(1).(env.Word).Index
-			fnCtx.SetVar(index, arg0_)
+			argValues[1] = arg0_
 			ps.Args[1] = index
 			ii = 2 // Skip collecting the second argument from code stream
 		}
@@ -1525,11 +1525,14 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 		}
 		// The createcurriedcaller is now created explicitly with partial builtin function
 		index := fn.Spec.Series.Get(i).(env.Word).Index
-		fnCtx.SetVar(index, ps.Res)
+		argValues[i] = ps.Res
 		if i == 0 {
 			arg0 = ps.Res
 		}
 		ps.Args[i] = index
+	}
+	for i := 0; i < fn.Argsn; i++ {
+		fnCtx.SetVar(ps.Args[i], argValues[i])
 	}
 	// Only the function body owns this cleanup scope. Nested calls get their own.
 	callerDefers := ps.DeferBlocks
@@ -1802,12 +1805,10 @@ func DetermineContext(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx) (*
 		if fn.InCtx {
 			return fn.Ctx, false
 		}
-		if ctx != nil && fn.Ctx != ctx && !fn.Lexical {
-			// Preserve the existing context-path parenting semantics. The new
-			// parent escapes through an already captured context.
-			ctx.Preserve()
-			fn.Ctx.Parent = ctx
-		}
+		// A captured context belongs to the function, not to the path used to
+		// reach it. Reparenting it here would change subsequent direct calls and
+		// other functions sharing that context. Context paths remain the parent
+		// for functions without a captured context (below).
 		parent = fn.Ctx
 	} else if ctx != nil {
 		parent = ctx

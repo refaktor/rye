@@ -24,6 +24,7 @@ import (
 	"github.com/refaktor/rye/evaldo"
 	"github.com/refaktor/rye/loader"
 	"github.com/refaktor/rye/security"
+	"github.com/refaktor/rye/term"
 	"github.com/refaktor/rye/util"
 
 	"golang.org/x/sync/errgroup"
@@ -312,6 +313,34 @@ var builtins_baseio = map[string]*env.Builtin{
 				os.Exit(0)
 				return nil
 			}
+		},
+	},
+
+	// Example:
+	// die "fatal problem"
+	// Args:
+	// * value: String to turn into a failure, or an existing failure value
+	//
+	// Returns:
+	// * does not return; displays the failure and terminates the process.
+	"die": {
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Displays a failure value (or a string converted to one) and exits the process with status 1.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var failure env.Object
+			switch value := arg0.(type) {
+			case env.Error:
+				failure = value
+			case *env.Error:
+				failure = value
+			default:
+				failure = evaldo.MakeRyeError(ps, arg0, nil)
+			}
+
+			term.RenderValue(os.Stdout, failure, ps.Idx)
+			os.Exit(1)
+			return nil
 		},
 	},
 
