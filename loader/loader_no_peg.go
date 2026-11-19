@@ -1,5 +1,3 @@
-//go:build !pico_loader
-
 // loader_no_peg.go
 package loader
 

@@ -32,7 +32,7 @@ var OfferDebuggingOptionsHook func(es *env.ProgramState, genv *env.Idxs, tag str
 
 // EvalBlock is the main entry point for evaluating a block of code.
 // Called from: Throughout the codebase - main evaluation loops, builtins, function calls
-// Purpose: Dispatches to the appropriate dialect-specific evaluator (Rye2, Eyr, Rye0, Rye00)
+// Purpose: Dispatches to the supported dialect-specific evaluator (Rye2 or Eyr)
 // HOTCODE: Performance-critical function called frequently during execution
 func Eval(ps *env.ProgramState) {
 	EvalBlockInj(ps, nil, false)
@@ -60,10 +60,6 @@ func EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) {
 	case env.EyrDialect:
 		ps.EnsureStack() // Hooks, including embedding-provided hooks, receive a usable stack.
 		BatteryEyrEvalBlockInsideHook(ps, inj, injnow)
-	case env.Rye0Dialect:
-		Rye0_EvalBlockInj(ps, inj, injnow) // TODO ps.Stack is already in ps ... refactor
-	case env.Rye00Dialect:
-		Rye00_EvalBlockInj(ps, inj, injnow) // Simplified dialect for builtins and integers
 	default:
 		panic("Dialect not selected")
 		// TODO fail

@@ -444,64 +444,6 @@ var Builtins_eyr = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// ; equal { rye0 { 1 + 2 } } 3
-	// ; equal { rye0 { 5 - 3 } } 2
-	// ; equal { rye0 { print "hello" } } "hello"
-	// Args:
-	// * block: Block of code to evaluate in RYE0 dialect
-	// Returns:
-	// * result of evaluating the block in RYE0 dialect
-	"rye0": {
-		Effect: env.EffIO,
-		Argsn:  1,
-		Doc:    "Evaluates Rye block as Rye0 dialect.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch bloc := arg0.(type) {
-			case env.Block:
-				ser := ps.Ser
-				ps.Ser = bloc.Series
-				dialect := ps.Dialect
-				ps.Dialect = env.Rye0Dialect
-				evaldo.Rye0_EvalBlockInj(ps, nil, false)
-				ps.Dialect = dialect
-				ps.Ser = ser
-				return ps.Res
-			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.BlockType}, "rye0")
-			}
-		},
-	},
-
-	// Tests:
-	// ; equal { rye00 { 1 + 2 } } 3
-	// ; equal { rye00 { 5 * 3 } } 15
-	// ; equal { rye00 { inc 5 } } 6
-	// Args:
-	// * block: Block of code to evaluate in RYE00 dialect (builtins and integers only)
-	// Returns:
-	// * result of evaluating the block in RYE00 dialect (minimal feature set)
-	"rye00": {
-		Effect: env.EffIO,
-		Argsn:  1,
-		Doc:    "Evaluates Rye block as Rye00 dialect (builtins and integers only).",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch bloc := arg0.(type) {
-			case env.Block:
-				ser := ps.Ser
-				ps.Ser = bloc.Series
-				dialect := ps.Dialect
-				ps.Dialect = env.Rye00Dialect
-				evaldo.Rye00_EvalBlockInj(ps, nil, false)
-				ps.Dialect = dialect
-				ps.Ser = ser
-				return ps.Res
-			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.BlockType}, "rye00")
-			}
-		},
-	},
-
-	// Tests:
 	// equal { eyr { 1 2 3 eyr\clear } } false
 	// equal { eyr { 1 2 eyr\clear 3 } } 3
 	// Args:
