@@ -996,6 +996,20 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 		}
 
 		if !capitalized {
+			// Lowercase dotwords normally live in context. If that lookup failed,
+			// allow a registered lowercase generic method as a fallback. This keeps
+			// capitalized Rye-style methods working while supporting the lowercase
+			// TUI method spelling used by the TUI examples/docs.
+			if dotword && leftVal != nil && !ps.FailureFlag && ps.Ctx.Kind.Index != -1 {
+				kind := leftVal.GetKind()
+				if kind != 0 {
+					if object, ok := ps.Gen.Get(kind, rword.Index); ok {
+						EvalObject(ps, object, leftVal, toLeft, session, pipeSecond, firstVal, opword, dotword)
+						return
+					}
+				}
+			}
+
 			// Non-capitalized words only live in context and its parents - no generic lookup.
 			// Fail immediately without consuming any tokens from the stream.
 			ps.ErrorFlag = true

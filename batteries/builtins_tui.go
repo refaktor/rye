@@ -2744,3 +2744,44 @@ var Builtins_tui = map[string]*env.Builtin{
 		},
 	},
 }
+
+// init registers compatibility aliases used by the current TUI examples.
+// The implementation historically exposed only capitalized method names and
+// the styled widgets as text\, block\ and vbox\, while docs/examples use
+// lowercase methods and text\style, block\style, vbox\style.
+func init() {
+	aliases := map[string]string{
+		"tui-app//view":       "tui-app//View",
+		"tui-app//state":      "tui-app//State",
+		"tui-app//state?":     "tui-app//State?",
+		"tui-app//update":     "tui-app//Update",
+		"tui-app//on-key":     "tui-app//On-key",
+		"tui-app//on-keys":    "tui-app//On-keys",
+		"tui-app//on-message": "tui-app//On-message",
+		"tui-app//focus":      "tui-app//Focus",
+		"tui-app//start":      "tui-app//Start",
+		"tui-app//stop":       "tui-app//Stop",
+		"tui-app//wait":       "tui-app//Wait",
+		"tui-app//redraw":     "tui-app//Redraw",
+		"tui-app//send":       "tui-app//Send",
+
+		"tui-input//focus":      "tui-input//Focus",
+		"tui-input//handle-key": "tui-input//Handle-key",
+		"tui-input//on-change":  "tui-input//On-change",
+		"tui-input//on-submit":  "tui-input//On-submit",
+		"tui-input//set-value":  "tui-input//Set-value",
+		"tui-input//value?":     "tui-input//Value?",
+		"tui-input//widget":     "tui-input//Widget",
+		"tui-input//width":      "tui-input//Width",
+
+		"text\\style":  "text\\",
+		"block\\style": "block\\",
+		"vbox\\style":  "vbox\\",
+	}
+
+	for alias, target := range aliases {
+		if builtin, ok := Builtins_tui[target]; ok {
+			Builtins_tui[alias] = builtin
+		}
+	}
+}

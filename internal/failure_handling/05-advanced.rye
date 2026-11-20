@@ -1,5 +1,36 @@
 print "## Advanced Failure Handling Tests"
 
+assert\display "try-all consumes return from failed block" {
+	try-all-return-fn: fn { } { try-all { ^fail "boom" } , 42 }
+	try-all-return-fn
+} 42
+
+assert\display "try-all still reports returned failure" {
+	try-all { ^fail "boom" } |first
+} false
+
+assert\display "nested try-all preserves outer handler mode" {
+	try-all-nested-fn: fn { } { try-all { try-all { fail "inner" } , fail "outer" } }
+	try-all-nested-fn |first
+} false
+
+; A cleanup failure supersedes the main result; successful cleanup preserves it.
+assert\display "finally cleanup failure takes precedence" {
+	try { finally { 42 } { fail "cleanup" } } |message?
+} "cleanup"
+
+assert\display "finally cleanup hard error takes precedence" {
+	try { finally { 42 } { 1 / 0 } } |type?
+} 'error
+
+assert\display "finally preserves main failure after successful cleanup" {
+	try { finally { fail "main" } { 20 } } |message?
+} "main"
+
+assert\display "finally preserves main result after successful cleanup" {
+	finally { 10 } { 20 }
+} 10
+
 ; --- fix\either ---
 ; executes first block on failure, second block on success
 assert\display "fix\\either failure branch" {

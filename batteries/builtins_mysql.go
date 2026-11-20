@@ -14,6 +14,10 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+var mysqlQueryBuiltin *env.Builtin
+
+func init() { mysqlQueryBuiltin = Builtins_mysql["Rye-mysql//Query"] }
+
 var Builtins_mysql = map[string]*env.Builtin{
 
 	//
@@ -149,6 +153,15 @@ var Builtins_mysql = map[string]*env.Builtin{
 	// * sql: SQL query as string or block
 	// Returns:
 	// * table containing query results
+	"Rye-mysql//Query\\one": {
+		Effect: env.EffInput,
+		Argsn:  2,
+		Doc:    "Executes a SQL query and returns the first value of its first row, failing if no value exists.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, _, _, _ env.Object) env.Object {
+			return queryOneValue(ps, arg0, arg1, mysqlQueryBuiltin, "Rye-mysql//Query\\one")
+		},
+	},
+
 	"Rye-mysql//Query": {
 		Effect: env.EffInput,
 		Argsn:  2,

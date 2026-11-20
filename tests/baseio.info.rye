@@ -144,6 +144,21 @@ section "Runtime and Process Integration" "Saving state, loading scripts, proces
 		"; exit 0"
 	}
 
+	group "die"
+	"Displays a failure value (or a string converted to one) and exits the process with status 1."
+	{
+		argsn 1
+		arg `value: String to turn into a failure, or an existing failure value`
+		returns `does not return; displays the failure and terminates the process.`
+	}
+
+	{
+	}
+
+	{
+		"die \"fatal problem\""
+	}
+
 	group "rye-runtime//Args?"
 	"Returns command line arguments as a block of parsed values. Each argument is converted to appropriate type (integer, float, or string)."
 	{
@@ -290,7 +305,6 @@ section "Runtime and Process Integration" "Saving state, loading scripts, proces
 	group "rye-runtime//Is-unshare-fs"
 	"Returns true if filesystem namespace isolation is enabled under --unshare."
 	{
-		pure
 		arg `none`
 		returns `boolean`
 	}
@@ -304,7 +318,6 @@ section "Runtime and Process Integration" "Saving state, loading scripts, proces
 	group "rye-runtime//Is-unshare-net"
 	"Returns true if network namespace isolation is enabled under --unshare."
 	{
-		pure
 		arg `none`
 		returns `boolean`
 	}
@@ -318,7 +331,6 @@ section "Runtime and Process Integration" "Saving state, loading scripts, proces
 	group "rye-runtime//Is-unshare-pid"
 	"Returns true if PID namespace isolation is enabled under --unshare."
 	{
-		pure
 		arg `none`
 		returns `boolean`
 	}
@@ -332,7 +344,6 @@ section "Runtime and Process Integration" "Saving state, loading scripts, proces
 	group "rye-runtime//Is-unshare-uts"
 	"Returns true if UTS namespace isolation is enabled under --unshare."
 	{
-		pure
 		arg `none`
 		returns `boolean`
 	}
@@ -346,7 +357,6 @@ section "Runtime and Process Integration" "Saving state, loading scripts, proces
 	group "rye-runtime//Unshare-config?"
 	"Returns a dictionary with unshare isolation flags: active, fs, net, pid, uts (booleans)."
 	{
-		pure
 		arg `none`
 		returns `dict with keys: active, fs, net, pid, uts (booleans)`
 	}
@@ -361,7 +371,6 @@ section "Runtime and Process Integration" "Saving state, loading scripts, proces
 	group "rye-runtime//Is-unshare"
 	"Returns true if current process runs inside Rye --unshare sandbox (Linux only)."
 	{
-		pure
 		arg `none`
 		returns `boolean, true when the runner set RYE_UNSHARE_CHILD=1`
 	}

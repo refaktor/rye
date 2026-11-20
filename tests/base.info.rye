@@ -477,7 +477,6 @@ section "Numbers" "Integer arithmetic, sign checks, random numbers, and numeric 
 	"Generates a cryptographically secure random integer between 0 (inclusive) and the specified maximum (exclusive)."
 	{
 		argsn 1
-		pure
 		argtypes {
 			1 [ Integer ]
 		}
@@ -498,7 +497,6 @@ section "Numbers" "Integer arithmetic, sign checks, random numbers, and numeric 
 	"Generates a cryptographically secure random decimal between 0.0 (inclusive) and the specified maximum (exclusive)."
 	{
 		argsn 1
-		pure
 		argtypes {
 			1 [ Decimal Integer ]
 		}
@@ -556,17 +554,18 @@ section "Numbers" "Integer arithmetic, sign checks, random numbers, and numeric 
 	}
 
 	group "_."
-	"Discards the input value and returns a void value, useful only for Eyr (stack based dialect)."
+	"Identity opword: returns its input unchanged. Useful for passing an injected value through, e.g. map { 12 2 } { . }."
 	{
 		argsn 1
 		pure
-		arg `value: Any value to discard`
-		returns `void value (used to discard values)`
+		arg `value: Any value to pass through`
+		returns `the input value (identity opword)`
 	}
 
 	{
-		equal { 4 . .type? } 'void
-		equal { "hello" . .type? } 'void
+		equal { 4 . .type? } 'integer
+		equal { "hello" . .type? } 'string
+		equal { map { 12 2 } { . } } { 12 2 }
 	}
 
 	{
@@ -1091,8 +1090,8 @@ section "Strings" "Creating, inspecting, transforming, and splitting strings." {
 		argsn 2
 		pure
 		argtypes {
-			1 [ String Block List ]
-			2 [ String Integer ]
+			1 [ String Block List Bunch ]
+			2 [ String Integer Word Tagword Decimal Boolean ]
 		}
 		arg `collection: String, block or list to search in`
 		arg `value: Value to search for`
@@ -2135,7 +2134,6 @@ section "Collections" "Working with blocks, lists, dicts, sets, and other collec
 	"Selects a random value from a block of values."
 	{
 		argsn 1
-		pure
 		argtypes {
 			1 [ Integer ]
 		}
@@ -2155,7 +2153,6 @@ section "Collections" "Working with blocks, lists, dicts, sets, and other collec
 	"Returns a new block or list with the same values as the input but in a randomized (shuffled) order."
 	{
 		argsn 1
-		pure
 		argtypes {
 			1 [ Block List ]
 		}
@@ -2199,7 +2196,6 @@ section "Collections" "Working with blocks, lists, dicts, sets, and other collec
 	"Randomly selects a specified number of elements from a collection without replacement."
 	{
 		argsn 2
-		pure
 		argtypes {
 			1 [ Integer ]
 			2 [ Integer ]
@@ -2876,8 +2872,8 @@ section "Collections" "Working with blocks, lists, dicts, sets, and other collec
 	{
 		argsn 2
 		argtypes {
-			1 [ Block List ]
-			2 [ Block List ]
+			1 [ Block List Bunch ]
+			2 [ Block List Bunch ]
 		}
 		arg `collection1: First block or list`
 		arg `collection2: Second block or list`
@@ -2930,7 +2926,7 @@ section "Collections" "Working with blocks, lists, dicts, sets, and other collec
 	{
 		argsn 1
 		argtypes {
-			2 [ String Dict List Block Table Vector ]
+			2 [ String Dict List Bunch Block Table Vector ]
 		}
 		arg `collection: String, block, dict, list, table, context or vector to check`
 		returns `boolean true if the collection is empty, false otherwise`
@@ -3082,8 +3078,8 @@ section "Collections" "Working with blocks, lists, dicts, sets, and other collec
 		argsn 2
 		pure
 		argtypes {
-			1 [ String Block List ]
-			2 [ String Block List ]
+			1 [ String Block List Bunch ]
+			2 [ String Block List Bunch ]
 		}
 		arg `collection1: First string, block or list`
 		arg `collection2: Second string, block or list (same type as first)`
@@ -3141,8 +3137,8 @@ section "Collections" "Working with blocks, lists, dicts, sets, and other collec
 		argsn 2
 		pure
 		argtypes {
-			1 [ String Block List ]
-			2 [ String Block List ]
+			1 [ String Block List Bunch ]
+			2 [ String Block List Bunch ]
 		}
 		arg `collection1: First string, block or list`
 		arg `collection2: Second string, block or list (same type as first)`
@@ -3497,6 +3493,85 @@ section "Collections" "Working with blocks, lists, dicts, sets, and other collec
 	{
 		equal { x: 1 y: 2 evals\with 10 { + x , * y } } { 11 20 }
 		equal { x: 1 y: 2 evals\with 100 { + 10 , * 8.9 } } { 110 890.0 }
+	}
+
+	{
+	}
+
+}
+}
+section "evaldo/builtins_bunches.go" "Working with bunch values." {
+section "Bunches" "Working with bunch values." {
+	group "bunch"
+	"Constructs a Bunch from a Block, List, or another Bunch. Values are normalised to strings; blocks, lists and dicts are not valid elements."
+	{
+		argsn 1
+		pure
+		arg `values: Block of scalar values, or an existing List/Bunch`
+		returns `a new Bunch containing the unique values`
+	}
+
+	{
+		equal { bunch { "a" "b" "a" } |length? } 2
+		equal { bunch { "a" "b" } |type? } 'bunch
+		equal { bunch { "a" "b" } |contains "a" } true
+		equal { bunch { "a" "b" } |contains "c" } false
+		equal { bunch { a b } |contains "a" } true
+		equal { bunch { 1 2 2 } |length? } 2
+		error { bunch { "a" { "x" } } } ; blocks are not valid bunch elements
+	}
+
+	{
+	}
+
+	group "to-bunch"
+	"Converts a Block, List, or Bunch to a Bunch. Alias for bunch."
+	{
+		argsn 1
+		pure
+		arg `values: Block, List, or Bunch to convert`
+		returns `a new Bunch containing the unique values`
+	}
+
+	{
+		equal { to-bunch { "a" "b" "a" } |length? } 2
+		equal { to-bunch list { "a" "b" } |contains "b" } true
+	}
+
+	{
+	}
+
+	group "add!"
+	"Adds a value to a Bunch in-place. The value is ignored if it is already present."
+	{
+		argsn 2
+		arg `value: Value to add`
+		arg `bunch: Bunch value or Word/Tagword referring to a Bunch variable`
+		returns `the modified Bunch`
+	}
+
+	{
+		equal { var 'seen bunch { "a" } add! "b" 'seen , seen |length? } 2
+		equal { var 'seen bunch { "a" } add! "a" 'seen , seen |length? } 1
+		equal { var 'seen bunch { "a" } add! "b" 'seen , seen |contains "b" } true
+	}
+
+	{
+	}
+
+	group "remove!"
+	"Removes a value from a Bunch in-place. Removing a missing value is a no-op."
+	{
+		argsn 2
+		arg `value: Value to remove`
+		arg `bunch: Bunch value or Word/Tagword referring to a Bunch variable`
+		returns `the modified Bunch`
+	}
+
+	{
+		equal { var 'seen bunch { "a" "b" } remove! "a" 'seen , seen |length? } 1
+		equal { var 'seen bunch { "a" "b" } remove! "c" 'seen , seen |length? } 2
+		equal { var 'seen bunch { "a" "b" } remove! "a" 'seen , seen |contains "a" } false
 	}
 
 	{
@@ -6460,7 +6535,6 @@ section "Other" "Assignments, word lookup, contexts, and runtime helpers." {
 	"Takes a block of code and does (runs) it."
 	{
 		argsn 1
-		pure
 		argtypes {
 			1 [ Block ]
 		}
@@ -6575,7 +6649,6 @@ section "Other" "Assignments, word lookup, contexts, and runtime helpers." {
 	"Evaluates each subblock of a block of subblocks, one at a time, and returns the result of the last subblock."
 	{
 		argsn 1
-		pure
 		argtypes {
 			1 [ Block ]
 		}
@@ -7873,7 +7946,7 @@ section "Failure" "Handling failures" {
 	}
 
 	group "finally"
-	"Executes a block and ensures another block is executed afterward, regardless of errors."
+	"Runs the main block, then always runs the cleanup block before continuing. Successful cleanup preserves the main result or failure; failed cleanup replaces it. Unlike try, finally does not handle failures. Unlike defer, cleanup runs at the end of this block, not at function exit."
 	{
 		argsn 2
 		argtypes {
@@ -7881,8 +7954,8 @@ section "Failure" "Handling failures" {
 			2 [ Block ]
 		}
 		arg `main-block: Block of code to execute`
-		arg `finally-block: Block to execute afterward, regardless of errors`
-		returns `result of the main block, preserving any failure state`
+		arg `finally-block: Cleanup block to execute afterward, even if the main block fails or returns`
+		returns `the main block's result and failure state when cleanup succeeds;; otherwise the cleanup failure/error takes precedence`
 	}
 
 	{
@@ -8033,7 +8106,6 @@ section "Declared effects" "Explicit input and output points with validation, dr
 	{
 		"output-effect 'user-login \"alice\" { print \"logged in\" }"
 	}
-
 
 }
 }
@@ -8565,7 +8637,7 @@ section "Row level functions" "Read, update, add, or remove individual table row
 		argsn 2
 		argtypes {
 			1 [ Table ]
-			2 [ Block Native ]
+			2 [ Block List Native ]
 		}
 		arg `sheet - the sheet that is getting rows added to it`
 		arg `rows - a block containing one or more rows worth of values, or a TableRow Native value`

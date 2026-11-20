@@ -514,7 +514,13 @@ var Builtins_table_files = map[string]*env.Builtin{
 				if err != nil {
 					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Unable to get rows from sheet in '%s': %s", file.GetPath(), err), "Load\\xlsx")
 				}
-				rows.Next()
+				defer rows.Close()
+				if !rows.Next() {
+					if err := rows.Error(); err != nil {
+						return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Unable to read header row in '%s': %s", file.GetPath(), err), "Load\\xlsx")
+					}
+					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("No header row in '%s'", file.GetPath()), "Load\\xlsx")
+				}
 				header, err := rows.Columns()
 				if err != nil {
 					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Unable to get columns from sheet in '%s': %s", file.GetPath(), err), "Load\\xlsx")
@@ -523,20 +529,39 @@ var Builtins_table_files = map[string]*env.Builtin{
 					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Header row is empty in '%s'", file.GetPath()), "Load\\xlsx")
 				}
 				spr := env.NewTable(header)
+				physicalRow := 1
 				for rows.Next() {
+					physicalRow++
 					row, err := rows.Columns()
 					if err != nil {
 						return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Unable to get row in '%s': %s", file.GetPath(), err), "Load\\xlsx")
 					}
-					anyRow := make([]any, len(row))
+					// Worksheets often contain styled or previously edited rows far
+					// below the data. Columns can return empty strings for those
+					// cells: ignore blank rows rather than making empty table rows.
+					// Trim only trailing empty cells; whitespace and internal gaps
+					// remain meaningful data.
+					for len(row) > 0 && row[len(row)-1] == "" {
+						row = row[:len(row)-1]
+					}
+					if len(row) == 0 {
+						continue
+					}
+					if len(row) > len(spr.Cols) {
+						return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Row %d in '%s' has %d cells but the header has %d columns", physicalRow, file.GetPath(), len(row), len(spr.Cols)), "Load\\xlsx")
+					}
+					// Size each nonempty row to the header's width.
+					anyRow := make([]any, len(spr.Cols))
 					for i, v := range row {
 						anyRow[i] = evaldo.LoadXlsxCell(ps, v)
 					}
-					// fill in any missing columns with empty strings
 					for i := len(row); i < len(spr.Cols); i++ {
 						anyRow[i] = *env.NewString("")
 					}
 					spr.AddRow(*env.NewTableRow(anyRow, spr))
+				}
+				if err := rows.Error(); err != nil {
+					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Unable to read rows in '%s': %s", file.GetPath(), err), "Load\\xlsx")
 				}
 				return *spr
 			default:

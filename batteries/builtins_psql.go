@@ -13,6 +13,10 @@ import (
 	_ "github.com/lib/pq"
 )
 
+var psqlQueryBuiltin *env.Builtin
+
+func init() { psqlQueryBuiltin = Builtins_psql["Rye-psql//Query"] }
+
 var Builtins_psql = map[string]*env.Builtin{
 
 	//
@@ -117,6 +121,15 @@ var Builtins_psql = map[string]*env.Builtin{
 	// Returns:
 	// * table containing query results (SQL NULL values converted to Void{})
 	// * error if query fails or returns no data
+	"Rye-psql//Query\\one": {
+		Effect: env.EffInput,
+		Argsn:  2,
+		Doc:    "Executes a SQL query and returns the first value of its first row, failing if no value exists.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, _, _, _ env.Object) env.Object {
+			return queryOneValue(ps, arg0, arg1, psqlQueryBuiltin, "Rye-psql//Query\\one")
+		},
+	},
+
 	"Rye-psql//Query": {
 		Effect: env.EffInput,
 		Argsn:  2,
