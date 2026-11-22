@@ -9,7 +9,6 @@
 
 **For comprehensive documentation, tutorials, and examples, visit [ryelang.org](https://ryelang.org/)**
 
-
 ## What is Rye?
 
 Rye is programming and **interaction language**. You use it not just to program, but to interact with computers live, via rich console and other approaches.
