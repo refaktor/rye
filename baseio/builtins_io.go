@@ -16,6 +16,7 @@ import (
 	"github.com/hpcloud/tail"
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
+	"gopkg.in/gomail.v2"
 
 	"net/http"
 	//	"net/http/cgi"
@@ -36,6 +37,86 @@ func readConsoleLine() string {
 		return ""
 	}
 	return strings.TrimRight(line, "\r\n")
+}
+
+// fileReader keeps a reference to the underlying file so that reader//Close
+// actually releases the file descriptor. A bare *bufio.Reader does not
+// implement io.Closer, which previously made reader//Close a silent no-op.
+type fileReader struct {
+	*bufio.Reader
+	file *os.File
+}
+
+func newFileReader(file *os.File) *fileReader {
+	return &fileReader{Reader: bufio.NewReader(file), file: file}
+}
+
+func (r *fileReader) Close() error {
+	return r.file.Close()
+}
+
+// fileWriter keeps a reference to the underlying file so that writer//Close can
+// flush buffered data and then close the file. Without this, data written via
+// file//Writer could remain in the buffer and be lost on exit.
+type fileWriter struct {
+	*bufio.Writer
+	file *os.File
+}
+
+func newFileWriter(file *os.File) *fileWriter {
+	return &fileWriter{Writer: bufio.NewWriter(file), file: file}
+}
+
+// Close flushes any buffered data before closing the underlying file. Flush
+// errors take precedence because they indicate that data was not persisted.
+func (w *fileWriter) Close() error {
+	flushErr := w.Flush()
+	closeErr := w.file.Close()
+	if flushErr != nil {
+		return flushErr
+	}
+	return closeErr
+}
+
+// underlyingFile returns the *os.File behind a plain file native or one of the
+// buffered reader/writer wrappers.
+func underlyingFile(value any) (*os.File, bool) {
+	switch f := value.(type) {
+	case *os.File:
+		return f, true
+	case *fileReader:
+		return f.file, true
+	case *fileWriter:
+		return f.file, true
+	default:
+		return nil, false
+	}
+}
+
+// isStandardStream reports whether f is one of the process standard streams,
+// which must not be closed by writer//Close/reader//Close.
+func isStandardStream(f *os.File) bool {
+	return f == os.Stdin || f == os.Stdout || f == os.Stderr
+}
+
+func asHTTPRequest(value any) (*http.Request, bool) {
+	req, ok := value.(*http.Request)
+	return req, ok
+}
+
+func asHTTPResponse(value any) (*http.Response, bool) {
+	resp, ok := value.(*http.Response)
+	return resp, ok
+}
+
+func asFTPConnection(value any) (*ftp.ServerConn, bool) {
+	conn, ok := value.(*ftp.ServerConn)
+	return conn, ok
+}
+
+func asNetConnection(value any) (net.Conn, bool) {
+	conn, ok := value.(net.Conn)
+	return conn, ok
 }
 
 var Builtins_io = map[string]*env.Builtin{
@@ -194,9 +275,9 @@ var Builtins_io = map[string]*env.Builtin{
 			case env.Uri:
 				ext := filepath.Ext(s.Path)
 				return *env.NewString(ext)
-			/* case env.String:
-			ext := filepath.Ext(s.Value)
-			return *env.NewString(ext) */
+			case env.String:
+				ext := filepath.Ext(s.Value)
+				return *env.NewString(ext)
 			default:
 				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType, env.StringType}, "Ext?")
 			}
@@ -402,7 +483,7 @@ var Builtins_io = map[string]*env.Builtin{
 					ps.FailureFlag = true
 					return evaldo.MakeBuiltinError(ps, "Error opening file.", "file//Reader")
 				}
-				return *env.NewNative(ps.Idx, bufio.NewReader(file), "reader")
+				return *env.NewNative(ps.Idx, newFileReader(file), "reader")
 			default:
 				ps.FailureFlag = true
 				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "file//Reader")
@@ -428,7 +509,7 @@ var Builtins_io = map[string]*env.Builtin{
 					ps.FailureFlag = true
 					return evaldo.MakeBuiltinError(ps, "Error opening file.", "file//Writer")
 				}
-				return *env.NewNative(ps.Idx, bufio.NewWriter(file), "writer")
+				return *env.NewNative(ps.Idx, newFileWriter(file), "writer")
 			default:
 				ps.FailureFlag = true
 				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "file//Writer")
@@ -454,7 +535,7 @@ var Builtins_io = map[string]*env.Builtin{
 					ps.FailureFlag = true
 					return evaldo.MakeBuiltinError(ps, "Error opening file.", "file-uri//Reader")
 				}
-				return *env.NewNative(ps.Idx, bufio.NewReader(file), "reader")
+				return *env.NewNative(ps.Idx, newFileReader(file), "reader")
 			default:
 				ps.FailureFlag = true
 				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType}, "file-uri//Read")
@@ -571,6 +652,10 @@ var Builtins_io = map[string]*env.Builtin{
 			case env.Native:
 				// Check if the reader implements io.Closer
 				if closer, ok := r.Value.(io.Closer); ok {
+					// Never close the process standard streams through a reader.
+					if f, isFile := underlyingFile(r.Value); isFile && isStandardStream(f) {
+						return *env.NewString("")
+					}
 					err := closer.Close()
 					if err != nil {
 						ps.FailureFlag = true
@@ -602,20 +687,25 @@ var Builtins_io = map[string]*env.Builtin{
 			case env.Native:
 				switch w := arg1.(type) {
 				case env.Native:
-					// Writer , Reader
-					_, err := io.Copy(w.Value.(io.Writer), r.Value.(io.Reader))
+					reader, rOK := r.Value.(io.Reader)
+					writer, wOK := w.Value.(io.Writer)
+					if !rOK || !wOK {
+						ps.FailureFlag = true
+						return evaldo.MakeBuiltinError(ps, "reader//Copy expects a reader and a writer", "reader//Copy")
+					}
+					_, err := io.Copy(writer, reader)
 					if err != nil {
 						ps.FailureFlag = true
-						return evaldo.MakeBuiltinError(ps, err.Error(), "__copy")
+						return evaldo.MakeBuiltinError(ps, err.Error(), "reader//Copy")
 					}
 					return arg0
 				default:
 					ps.FailureFlag = true
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.NativeType}, "__copy")
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.NativeType}, "reader//Copy")
 				}
 			default:
 				ps.FailureFlag = true
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "__copy")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "reader//Copy")
 			}
 
 		},
@@ -637,20 +727,25 @@ var Builtins_io = map[string]*env.Builtin{
 			case env.Native:
 				switch w := arg1.(type) {
 				case env.Native:
-					// Writer , Reader
-					_, err := io.Copy(w.Value.(io.Writer), r.Value.(io.Reader))
+					reader, rOK := r.Value.(io.Reader)
+					writer, wOK := w.Value.(io.Writer)
+					if !rOK || !wOK {
+						ps.FailureFlag = true
+						return evaldo.MakeBuiltinError(ps, "file//Copy expects a reader and a writer", "file//Copy")
+					}
+					_, err := io.Copy(writer, reader)
 					if err != nil {
 						ps.FailureFlag = true
-						return evaldo.MakeBuiltinError(ps, err.Error(), "__copy")
+						return evaldo.MakeBuiltinError(ps, err.Error(), "file//Copy")
 					}
 					return arg0
 				default:
 					ps.FailureFlag = true
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.NativeType}, "__copy")
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.NativeType}, "file//Copy")
 				}
 			default:
 				ps.FailureFlag = true
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "__copy")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "file//Copy")
 			}
 
 		},
@@ -669,7 +764,12 @@ var Builtins_io = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch r := arg0.(type) {
 			case env.Native:
-				info, err := r.Value.(*os.File).Stat()
+				file, ok := underlyingFile(r.Value)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Expected a file object", "file//Stat")
+				}
+				info, err := file.Stat()
 				if err != nil {
 					ps.FailureFlag = true
 					return evaldo.MakeBuiltinError(ps, err.Error(), "file//Stat")
@@ -695,7 +795,12 @@ var Builtins_io = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Native:
-				size := s.Value.(os.FileInfo).Size()
+				info, ok := s.Value.(os.FileInfo)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Expected a file-info object", "file-info//Size?")
+				}
+				size := info.Size()
 				return *env.NewInteger(size)
 			default:
 				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "file-info//Size?")
@@ -716,10 +821,15 @@ var Builtins_io = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Native:
-				data, err := io.ReadAll(s.Value.(io.Reader))
+				reader, ok := s.Value.(io.Reader)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Expected a reader object", "file//Read")
+				}
+				data, err := io.ReadAll(reader)
 				if err != nil {
 					ps.FailureFlag = true
-					return evaldo.MakeBuiltinError(ps, "Error reading file.", "Read")
+					return evaldo.MakeBuiltinError(ps, "Error reading file.", "file//Read")
 				}
 				return *env.NewString(string(data))
 			default:
@@ -734,17 +844,21 @@ var Builtins_io = map[string]*env.Builtin{
 	// Returns:
 	// * the same file object with position set to end of file
 	"file//Seek\\end": {
-		Effect: env.EffNone,
+		Effect: env.EffIO,
 		Argsn:  1,
 		Doc:    "Seeks to the end of a file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Native:
-				reader, ok := s.Value.(*os.File)
+				file, ok := underlyingFile(s.Value)
 				if !ok {
-					return evaldo.MakeBuiltinError(ps, "Native not io.Reader", "file//Seek\\end")
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Expected a file object", "file//Seek\\end")
 				}
-				reader.Seek(0, os.SEEK_END)
+				if _, err := file.Seek(0, io.SeekEnd); err != nil {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, err.Error(), "file//Seek\\end")
+				}
 				return arg0
 			default:
 				ps.FailureFlag = true
@@ -772,14 +886,22 @@ var Builtins_io = map[string]*env.Builtin{
 
 			switch s := arg0.(type) {
 			case env.Native:
-				file, ok := s.Value.(*os.File)
-				if !ok {
-					ps.FailureFlag = true
-					return evaldo.MakeBuiltinError(ps, "Native not os.File", "file//Write")
+				var writer io.Writer
+				if fw, ok := s.Value.(*fileWriter); ok {
+					// Keep using the buffered writer so direct writes and buffered
+					// writes preserve their order.
+					writer = fw
+				} else {
+					file, ok := underlyingFile(s.Value)
+					if !ok {
+						ps.FailureFlag = true
+						return evaldo.MakeBuiltinError(ps, "Expected a file object", "file//Write")
+					}
+					writer = file
 				}
 				switch content := arg1.(type) {
 				case env.String:
-					_, err := file.WriteString(content.Value)
+					_, err := io.WriteString(writer, content.Value)
 					if err != nil {
 						ps.FailureFlag = true
 						return evaldo.MakeBuiltinError(ps, err.Error(), "file//Write")
@@ -809,15 +931,23 @@ var Builtins_io = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Native:
-				err := s.Value.(*os.File).Close()
+				closer, ok := s.Value.(io.Closer)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Expected a closable file object", "file//Close")
+				}
+				if f, isFile := underlyingFile(s.Value); isFile && isStandardStream(f) {
+					return *env.NewString("")
+				}
+				err := closer.Close()
 				if err != nil {
 					ps.FailureFlag = true
-					return evaldo.MakeBuiltinError(ps, err.Error(), "__close")
+					return evaldo.MakeBuiltinError(ps, err.Error(), "file//Close")
 				}
 				return *env.NewString("")
 			default:
 				ps.FailureFlag = true
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "__close")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "file//Close")
 			}
 
 		},
@@ -927,27 +1057,35 @@ var Builtins_io = map[string]*env.Builtin{
 			// If not in readonly mode, proceed with the original function
 			switch f := arg0.(type) {
 			case env.Uri:
+				var data []byte
 				switch s := arg1.(type) {
 				case env.String:
-					err := os.WriteFile(f.GetPath(), []byte(s.Value), 0600)
-					if err != nil {
-						ps.FailureFlag = true
-						return evaldo.MakeBuiltinError(ps, err.Error(), "__fs_write")
-					}
-					return arg1
+					data = []byte(s.Value)
+				case env.Bytes:
+					data = s.Value
 				case env.Native:
-					err := os.WriteFile(f.GetPath(), s.Value.([]byte), 0600)
-					if err != nil {
+					if ps.Idx.GetWord(s.GetKind()) != "Go-bytes" {
 						ps.FailureFlag = true
-						return evaldo.MakeBuiltinError(ps, err.Error(), "__fs_write")
+						return evaldo.MakeBuiltinError(ps, "Expected a Go-bytes object", "file-uri//Write")
 					}
-					return arg1
+					bytesValue, ok := s.Value.([]byte)
+					if !ok {
+						ps.FailureFlag = true
+						return evaldo.MakeBuiltinError(ps, "Go-bytes object does not contain a byte slice", "file-uri//Write")
+					}
+					data = bytesValue
 				default:
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType, env.NativeType}, "__fs_write")
+					ps.FailureFlag = true
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType, env.BytesType, env.NativeType}, "file-uri//Write")
 				}
+				if err := os.WriteFile(f.GetPath(), data, 0644); err != nil {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, err.Error(), "file-uri//Write")
+				}
+				return arg1
 			default:
 				ps.FailureFlag = true
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType}, "__fs_write")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType}, "file-uri//Write")
 			}
 		},
 	},
@@ -967,23 +1105,28 @@ var Builtins_io = map[string]*env.Builtin{
 			case env.Native:
 				if ps.Idx.GetWord(bytesObj.GetKind()) != "Go-bytes" {
 					ps.FailureFlag = true
-					return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "write-file")
+					return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "write\\bytes")
+				}
+				data, ok := bytesObj.Value.([]byte)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Go-bytes object does not contain a byte slice", "write\\bytes")
 				}
 				switch path := arg1.(type) {
 				case env.String:
-					err := os.WriteFile(path.Value, bytesObj.Value.([]byte), 0644)
+					err := os.WriteFile(path.Value, data, 0644)
 					if err != nil {
 						ps.FailureFlag = true
-						return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Failed to write file: %v", err), "write-file")
+						return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Failed to write file: %v", err), "write\\bytes")
 					}
 					return env.Integer{1} // Success indicator
 				default:
 					ps.FailureFlag = true
-					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "write-file")
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "write\\bytes")
 				}
 			default:
 				ps.FailureFlag = true
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "write-file")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "write\\bytes")
 			}
 		},
 	},
@@ -1028,12 +1171,17 @@ var Builtins_io = map[string]*env.Builtin{
 			// Check if we're in readonly mode
 			profile, exists := os.LookupEnv("RYE_SECCOMP_PROFILE")
 			if exists && profile == "readonly" {
-				// Allow writing to stdout/stderr but block writing to files
-				switch ww := arg0.(type) {
-				case env.Native:
-					_, ok := ww.Value.(io.Writer)
-					if !ok {
-						return evaldo.MakeBuiltinError(ps, "Native not io.Writer", "writer//Write")
+				// Allow writing to stdout/stderr but block file-backed writers.
+				if ww, ok := arg0.(env.Native); ok {
+					if f, isFile := underlyingFile(ww.Value); isFile {
+						if !isStandardStream(f) {
+							ps.FailureFlag = true
+							return evaldo.MakeBuiltinError(ps, "write operation blocked by readonly seccomp profile", "writer//Write")
+						}
+					} else if _, isBuffered := ww.Value.(*bufio.Writer); isBuffered {
+						// The backing destination of an arbitrary buffered writer is unknown.
+						ps.FailureFlag = true
+						return evaldo.MakeBuiltinError(ps, "write operation blocked by readonly seccomp profile", "writer//Write")
 					}
 				}
 			}
@@ -1046,18 +1194,21 @@ var Builtins_io = map[string]*env.Builtin{
 					if bw, ok := ww.Value.(*bufio.Writer); ok {
 						_, err := bw.WriteString(s.Value)
 						if err != nil {
+							ps.FailureFlag = true
 							return evaldo.MakeBuiltinError(ps, "Error at write: "+err.Error(), "writer//Write")
 						}
 						return arg0
 					}
-					// Fall back to io.Writer interface (handles *os.File, etc.)
+					// Fall back to io.Writer interface (handles *os.File, *fileWriter, etc.)
 					if w, ok := ww.Value.(io.Writer); ok {
 						_, err := io.WriteString(w, s.Value)
 						if err != nil {
+							ps.FailureFlag = true
 							return evaldo.MakeBuiltinError(ps, "Error at write: "+err.Error(), "writer//Write")
 						}
 						return arg0
 					}
+					ps.FailureFlag = true
 					return evaldo.MakeBuiltinError(ps, "Native not io.Writer", "writer//Write")
 				default:
 					ps.FailureFlag = true
@@ -1065,7 +1216,75 @@ var Builtins_io = map[string]*env.Builtin{
 				}
 			default:
 				ps.FailureFlag = true
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType}, "writer//Write")
+				return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "writer//Write")
+			}
+		},
+	},
+
+	// Args:
+	// * writer: native writer object
+	// Returns:
+	// * empty string if successful
+	"writer//Flush": {
+		Effect: env.EffOutput,
+		Argsn:  1,
+		Doc:    "Flushes buffered data to the underlying writer.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch w := arg0.(type) {
+			case env.Native:
+				if flusher, ok := w.Value.(interface{ Flush() error }); ok {
+					if err := flusher.Flush(); err != nil {
+						ps.FailureFlag = true
+						return evaldo.MakeBuiltinError(ps, err.Error(), "writer//Flush")
+					}
+				}
+				return *env.NewString("")
+			default:
+				ps.FailureFlag = true
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "writer//Flush")
+			}
+		},
+	},
+
+	// Args:
+	// * writer: native writer object
+	// Returns:
+	// * empty string if successful
+	"writer//Close": {
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Flushes and closes a writer when it implements io.Closer. Standard streams are flushed but never closed.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch w := arg0.(type) {
+			case env.Native:
+				if f, isFile := underlyingFile(w.Value); isFile && isStandardStream(f) {
+					if flusher, ok := w.Value.(interface{ Flush() error }); ok {
+						if err := flusher.Flush(); err != nil {
+							ps.FailureFlag = true
+							return evaldo.MakeBuiltinError(ps, err.Error(), "writer//Close")
+						}
+					}
+					return *env.NewString("")
+				}
+				if closer, ok := w.Value.(io.Closer); ok {
+					if err := closer.Close(); err != nil {
+						ps.FailureFlag = true
+						return evaldo.MakeBuiltinError(ps, err.Error(), "writer//Close")
+					}
+					return *env.NewString("")
+				}
+				if flusher, ok := w.Value.(interface{ Flush() error }); ok {
+					if err := flusher.Flush(); err != nil {
+						ps.FailureFlag = true
+						return evaldo.MakeBuiltinError(ps, err.Error(), "writer//Close")
+					}
+					return *env.NewString("")
+				}
+				ps.FailureFlag = true
+				return evaldo.MakeBuiltinError(ps, "Native not io.Closer or flusher", "writer//Close")
+			default:
+				ps.FailureFlag = true
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "writer//Close")
 			}
 		},
 	},
@@ -1213,15 +1432,16 @@ var Builtins_io = map[string]*env.Builtin{
 				// body, _ := io.ReadAll(resp.Body)
 
 				if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
-					return *env.NewNative(ps.Idx, resp.Body, "https-uri://open")
+					return *env.NewNative(ps.Idx, resp.Body, "reader")
 				} else {
+					resp.Body.Close()
 					ps.FailureFlag = true
 					errMsg := fmt.Sprintf("Status Code: %v", resp.StatusCode)
 					return evaldo.MakeBuiltinError(ps, errMsg, "https-uri://Open")
 				}
 			default:
 				ps.FailureFlag = true
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "https-uri://Open")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType}, "https-uri://Open")
 			}
 		},
 	},
@@ -1249,7 +1469,11 @@ var Builtins_io = map[string]*env.Builtin{
 					return *env.NewError(err.Error())
 				}
 				defer resp.Body.Close()
-				body, _ := io.ReadAll(resp.Body)
+				body, err := io.ReadAll(resp.Body)
+				if err != nil {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, err.Error(), "https-uri//Get")
+				}
 
 				if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
 					return *env.NewString(string(body))
@@ -1455,15 +1679,16 @@ var Builtins_io = map[string]*env.Builtin{
 				}
 
 				if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
-					return *env.NewNative(ps.Idx, resp.Body, "http-uri://open")
+					return *env.NewNative(ps.Idx, resp.Body, "reader")
 				} else {
+					resp.Body.Close()
 					ps.FailureFlag = true
 					errMsg := fmt.Sprintf("Status Code: %v", resp.StatusCode)
 					return evaldo.MakeBuiltinError(ps, errMsg, "http-uri://Open")
 				}
 			default:
 				ps.FailureFlag = true
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "http-uri://Open")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.UriType}, "http-uri://Open")
 			}
 		},
 	},
@@ -1491,7 +1716,11 @@ var Builtins_io = map[string]*env.Builtin{
 					return *env.NewError(err.Error())
 				}
 				defer resp.Body.Close()
-				body, _ := io.ReadAll(resp.Body)
+				body, err := io.ReadAll(resp.Body)
+				if err != nil {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, err.Error(), "http-uri//Get")
+				}
 
 				if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
 					return *env.NewString(string(body))
@@ -1684,7 +1913,12 @@ var Builtins_io = map[string]*env.Builtin{
 					name := ps.Idx.GetWord(method.Index)
 					switch data := arg2.(type) {
 					case env.String:
-						req.Value.(*http.Request).Header.Set(name, data.Value)
+						request, ok := asHTTPRequest(req.Value)
+						if !ok {
+							ps.FailureFlag = true
+							return evaldo.MakeBuiltinError(ps, "Expected an https-request object", "https-request//Header!")
+						}
+						request.Header.Set(name, data.Value)
 						return arg0
 					default:
 						return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType}, "https-request//Header!")
@@ -1715,7 +1949,12 @@ var Builtins_io = map[string]*env.Builtin{
 				case env.String:
 					switch password := arg2.(type) {
 					case env.String:
-						req.Value.(*http.Request).SetBasicAuth(username.Value, password.Value)
+						request, ok := asHTTPRequest(req.Value)
+						if !ok {
+							ps.FailureFlag = true
+							return evaldo.MakeBuiltinError(ps, "Expected an https-request object", "https-request//Basic-auth!")
+						}
+						request.SetBasicAuth(username.Value, password.Value)
 						return arg0
 					default:
 						return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType}, "https-request//Basic-auth!")
@@ -1740,8 +1979,13 @@ var Builtins_io = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch req := arg0.(type) {
 			case env.Native:
+				request, ok := asHTTPRequest(req.Value)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Expected an https-request object", "https-request//Call")
+				}
 				client := &http.Client{}
-				resp, err := client.Do(req.Value.(*http.Request))
+				resp, err := client.Do(request)
 				// defer resp.Body.Close() // TODO -- comment this and figure out goling bodyclose
 				if err != nil {
 					return evaldo.MakeBuiltinError(ps, err.Error(), "https-request//Call")
@@ -1773,7 +2017,12 @@ var Builtins_io = map[string]*env.Builtin{
 					name := ps.Idx.GetWord(method.Index)
 					switch data := arg2.(type) {
 					case env.String:
-						req.Value.(*http.Request).Header.Set(name, data.Value)
+						request, ok := asHTTPRequest(req.Value)
+						if !ok {
+							ps.FailureFlag = true
+							return evaldo.MakeBuiltinError(ps, "Expected an http-request object", "http-request//Header!")
+						}
+						request.Header.Set(name, data.Value)
 						return arg0
 					default:
 						return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType}, "http-request//Header!")
@@ -1804,7 +2053,12 @@ var Builtins_io = map[string]*env.Builtin{
 				case env.String:
 					switch password := arg2.(type) {
 					case env.String:
-						req.Value.(*http.Request).SetBasicAuth(username.Value, password.Value)
+						request, ok := asHTTPRequest(req.Value)
+						if !ok {
+							ps.FailureFlag = true
+							return evaldo.MakeBuiltinError(ps, "Expected an http-request object", "http-request//Basic-auth!")
+						}
+						request.SetBasicAuth(username.Value, password.Value)
 						return arg0
 					default:
 						return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType}, "http-request//Basic-auth!")
@@ -1829,8 +2083,13 @@ var Builtins_io = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch req := arg0.(type) {
 			case env.Native:
+				request, ok := asHTTPRequest(req.Value)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Expected an http-request object", "http-request//Call")
+				}
 				client := &http.Client{}
-				resp, err := client.Do(req.Value.(*http.Request))
+				resp, err := client.Do(request)
 				if err != nil {
 					return evaldo.MakeBuiltinError(ps, err.Error(), "http-request//Call")
 				}
@@ -1855,7 +2114,12 @@ var Builtins_io = map[string]*env.Builtin{
 			switch resp := arg0.(type) {
 			case env.Native:
 				// Return the Body field, which implements io.Reader, not the entire Response
-				return *env.NewNative(ps.Idx, resp.Value.(*http.Response).Body, "reader")
+				response, ok := asHTTPResponse(resp.Value)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Expected an https-response object", "https-response//Reader")
+				}
+				return *env.NewNative(ps.Idx, response.Body, "reader")
 			default:
 				ps.FailureFlag = true
 				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "https-response//Reader")
@@ -1874,7 +2138,12 @@ var Builtins_io = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch resp := arg0.(type) {
 			case env.Native:
-				data, err := io.ReadAll(resp.Value.(*http.Response).Body)
+				response, ok := asHTTPResponse(resp.Value)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Expected an https-response object", "https-response//Read-body")
+				}
+				data, err := io.ReadAll(response.Body)
 				if err != nil {
 					return evaldo.MakeBuiltinError(ps, err.Error(), "https-response//Read-body")
 				}
@@ -1898,7 +2167,12 @@ var Builtins_io = map[string]*env.Builtin{
 			switch resp := arg0.(type) {
 			case env.Native:
 				// Return the Body field, which implements io.Reader, not the entire Response
-				return *env.NewNative(ps.Idx, resp.Value.(*http.Response).Body, "reader")
+				response, ok := asHTTPResponse(resp.Value)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Expected an http-response object", "http-response//Reader")
+				}
+				return *env.NewNative(ps.Idx, response.Body, "reader")
 			default:
 				ps.FailureFlag = true
 				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "http-response//Reader")
@@ -1917,7 +2191,12 @@ var Builtins_io = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch resp := arg0.(type) {
 			case env.Native:
-				data, err := io.ReadAll(resp.Value.(*http.Response).Body)
+				response, ok := asHTTPResponse(resp.Value)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Expected an http-response object", "http-response//Read-body")
+				}
+				data, err := io.ReadAll(response.Body)
 				if err != nil {
 					return evaldo.MakeBuiltinError(ps, err.Error(), "http-response//Read-body")
 				}
@@ -1940,7 +2219,12 @@ var Builtins_io = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch resp := arg0.(type) {
 			case env.Native:
-				err := resp.Value.(*http.Response).Body.Close()
+				response, ok := asHTTPResponse(resp.Value)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Expected an https-response object", "https-response//Close-body!")
+				}
+				err := response.Body.Close()
 				if err != nil {
 					ps.FailureFlag = true
 					return evaldo.MakeBuiltinError(ps, err.Error(), "https-response//Close-body!")
@@ -1949,6 +2233,34 @@ var Builtins_io = map[string]*env.Builtin{
 			default:
 				ps.FailureFlag = true
 				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "https-response//Close-body!")
+			}
+		},
+	},
+
+	// Args:
+	// * response: native http-response object
+	// Returns:
+	// * empty string if close succeeds
+	"http-response//Close-body!": {
+		Effect: env.EffIO,
+		Argsn:  1,
+		Doc:    "Closes the HTTP response body to free network resources.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch resp := arg0.(type) {
+			case env.Native:
+				response, ok := asHTTPResponse(resp.Value)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Expected an http-response object", "http-response//Close-body!")
+				}
+				if err := response.Body.Close(); err != nil {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, err.Error(), "http-response//Close-body!")
+				}
+				return *env.NewString("")
+			default:
+				ps.FailureFlag = true
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "http-response//Close-body!")
 			}
 		},
 	},
@@ -1970,51 +2282,85 @@ var Builtins_io = map[string]*env.Builtin{
 			case env.Email:
 				switch msg := arg1.(type) {
 				case env.String:
-					idx, _ := ps.Idx.GetIndex("user-profile")
-					uctx_, _ := ps.Ctx.Get(idx)
-					uctx := uctx_.(*env.RyeCtx)
-					fmt.Println(to_)
-					fmt.Println(msg)
-					fmt.Println(uctx)
-					// TODO continue: uncomment and make it work
-					/*
-						from, _ := uctx.Get(ps.Idx.GetIndex("smtp-from"))
-						password, _ := uctx.Get(ps.Idx.GetIndex("smtp-password"))
-						server, _ := uctx.Get(ps.Idx.GetIndex("smtp-server"))
-						port, _ := uctx.Get(ps.Idx.GetIndex("smtp-port"))
-						// Receiver email address.
-						// to := []string{
-						//	to_.Value,
-						//}
-						// Message.
-						// message := []byte(msg.Value)
-						m := gomail.NewMessage()
+					profileIdx, ok := ps.Idx.GetIndex("user-profile")
+					if !ok {
+						ps.FailureFlag = true
+						return evaldo.MakeBuiltinError(ps, "Missing user-profile context", "email//Send")
+					}
+					profileObj, ok := ps.Ctx.Get(profileIdx)
+					if !ok {
+						ps.FailureFlag = true
+						return evaldo.MakeBuiltinError(ps, "Missing user-profile context", "email//Send")
+					}
+					profile, ok := profileObj.(*env.RyeCtx)
+					if !ok {
+						ps.FailureFlag = true
+						return evaldo.MakeBuiltinError(ps, "user-profile is not a context", "email//Send")
+					}
 
-						// Set E-Mail sender
-						m.SetHeader("From", from)
-
-						// Set E-Mail receivers
-						m.SetHeader("To", to_.Address)
-
-						// Set E-Mail subject
-						m.SetHeader("Subject", msg.Value)
-
-						// Set E-Mail body. You can set plain text or html with text/html
-						m.SetBody("text/plain", msg.Value)
-
-						// Settings for SMTP server
-						d := gomail.NewDialer(server, port, from, password)
-
-						// This is only needed when SSL/TLS certificate is not valid on server.
-						// In production this should be set to false.
-						//			d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
-
-						// Now send E-Mail
-						if err := d.DialAndSend(m); err != nil {
-							ps.FailureFlag = true
-							return env.NewError(err.Error())
+					getString := func(name string) (string, bool) {
+						wordIdx, ok := ps.Idx.GetIndex(name)
+						if !ok {
+							return "", false
 						}
-					*/
+						value, ok := profile.Get(wordIdx)
+						if !ok {
+							return "", false
+						}
+						switch v := value.(type) {
+						case env.String:
+							return v.Value, true
+						case env.Uri:
+							return v.GetPath(), true
+						case env.Word:
+							return ps.Idx.GetWord(v.Index), true
+						case env.Email:
+							return v.Address, true
+						default:
+							return "", false
+						}
+					}
+
+					from, ok := getString("smtp-from")
+					if !ok {
+						ps.FailureFlag = true
+						return evaldo.MakeBuiltinError(ps, "user-profile is missing 'smtp-from'", "email//Send")
+					}
+					password, _ := getString("smtp-password")
+					server, ok := getString("smtp-server")
+					if !ok {
+						ps.FailureFlag = true
+						return evaldo.MakeBuiltinError(ps, "user-profile is missing 'smtp-server'", "email//Send")
+					}
+
+					port := 587
+					if portIdx, ok := ps.Idx.GetIndex("smtp-port"); ok {
+						if portObj, ok := profile.Get(portIdx); ok {
+							switch v := portObj.(type) {
+							case env.Integer:
+								port = int(v.Value)
+							case env.String:
+								if _, err := fmt.Sscanf(v.Value, "%d", &port); err != nil {
+									ps.FailureFlag = true
+									return evaldo.MakeBuiltinError(ps, "'smtp-port' is not an integer", "email//Send")
+								}
+							default:
+								ps.FailureFlag = true
+								return evaldo.MakeBuiltinError(ps, "'smtp-port' is not an integer", "email//Send")
+							}
+						}
+					}
+
+					m := gomail.NewMessage()
+					m.SetHeader("From", from)
+					m.SetHeader("To", to_.Address)
+					m.SetHeader("Subject", msg.Value)
+					m.SetBody("text/plain", msg.Value)
+					d := gomail.NewDialer(server, port, from, password)
+					if err := d.DialAndSend(m); err != nil {
+						ps.FailureFlag = true
+						return evaldo.MakeBuiltinError(ps, err.Error(), "email//Send")
+					}
 					return *env.NewInteger(1)
 				default:
 					ps.FailureFlag = true
@@ -2114,12 +2460,17 @@ var Builtins_io = map[string]*env.Builtin{
 				if ps.Idx.GetWord(s.Kind.Index) != "ftp-connection" {
 					return evaldo.MakeBuiltinError(ps, "Expected FTP connection.", "ftp-connection//Retrieve")
 				}
+				conn, ok := asFTPConnection(s.Value)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Invalid FTP connection.", "ftp-connection//Retrieve")
+				}
 				path, ok := arg1.(env.String)
 				if !ok {
 					ps.FailureFlag = true
 					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "ftp-connection//Retrieve")
 				}
-				resp, err := s.Value.(*ftp.ServerConn).Retr(path.Value)
+				resp, err := conn.Retr(path.Value)
 				if err != nil {
 					ps.FailureFlag = true
 					return evaldo.MakeBuiltinError(ps, "Error retrieving file from FTP server: "+err.Error(), "ftp-connection//Retrieve")
@@ -2209,7 +2560,12 @@ var Builtins_io = map[string]*env.Builtin{
 						return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "ftp-connection//List")
 					}
 				}
-				entries, err := s.Value.(*ftp.ServerConn).List(path)
+				conn, ok := asFTPConnection(s.Value)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Invalid FTP connection.", "ftp-connection//List")
+				}
+				entries, err := conn.List(path)
 				if err != nil {
 					ps.FailureFlag = true
 					return evaldo.MakeBuiltinError(ps, err.Error(), "ftp-connection//List")
@@ -2255,12 +2611,17 @@ var Builtins_io = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Native:
+				conn, ok := asFTPConnection(s.Value)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Invalid FTP connection.", "ftp-connection//Cwd")
+				}
 				p, ok := arg1.(env.String)
 				if !ok {
 					ps.FailureFlag = true
 					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "ftp-connection//Cwd")
 				}
-				if err := s.Value.(*ftp.ServerConn).ChangeDir(p.Value); err != nil {
+				if err := conn.ChangeDir(p.Value); err != nil {
 					ps.FailureFlag = true
 					return evaldo.MakeBuiltinError(ps, err.Error(), "ftp-connection//Cwd")
 				}
@@ -2286,12 +2647,17 @@ var Builtins_io = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Native:
+				conn, ok := asFTPConnection(s.Value)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Invalid FTP connection.", "ftp-connection//Mkdir")
+				}
 				p, ok := arg1.(env.String)
 				if !ok {
 					ps.FailureFlag = true
 					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "ftp-connection//Mkdir")
 				}
-				if err := s.Value.(*ftp.ServerConn).MakeDir(p.Value); err != nil {
+				if err := conn.MakeDir(p.Value); err != nil {
 					ps.FailureFlag = true
 					return evaldo.MakeBuiltinError(ps, err.Error(), "ftp-connection//Mkdir")
 				}
@@ -2317,12 +2683,17 @@ var Builtins_io = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Native:
+				conn, ok := asFTPConnection(s.Value)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Invalid FTP connection.", "ftp-connection//Rmdir")
+				}
 				p, ok := arg1.(env.String)
 				if !ok {
 					ps.FailureFlag = true
 					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "ftp-connection//Rmdir")
 				}
-				if err := s.Value.(*ftp.ServerConn).RemoveDir(p.Value); err != nil {
+				if err := conn.RemoveDir(p.Value); err != nil {
 					ps.FailureFlag = true
 					return evaldo.MakeBuiltinError(ps, err.Error(), "ftp-connection//Rmdir")
 				}
@@ -2348,12 +2719,17 @@ var Builtins_io = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Native:
+				conn, ok := asFTPConnection(s.Value)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Invalid FTP connection.", "ftp-connection//Delete")
+				}
 				p, ok := arg1.(env.String)
 				if !ok {
 					ps.FailureFlag = true
 					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "ftp-connection//Delete")
 				}
-				if err := s.Value.(*ftp.ServerConn).Delete(p.Value); err != nil {
+				if err := conn.Delete(p.Value); err != nil {
 					ps.FailureFlag = true
 					return evaldo.MakeBuiltinError(ps, err.Error(), "ftp-connection//Delete")
 				}
@@ -2380,6 +2756,11 @@ var Builtins_io = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Native:
+				conn, ok := asFTPConnection(s.Value)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Invalid FTP connection.", "ftp-connection//Rename")
+				}
 				from, ok := arg1.(env.String)
 				if !ok {
 					ps.FailureFlag = true
@@ -2390,7 +2771,7 @@ var Builtins_io = map[string]*env.Builtin{
 					ps.FailureFlag = true
 					return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType}, "ftp-connection//Rename")
 				}
-				if err := s.Value.(*ftp.ServerConn).Rename(from.Value, to.Value); err != nil {
+				if err := conn.Rename(from.Value, to.Value); err != nil {
 					ps.FailureFlag = true
 					return evaldo.MakeBuiltinError(ps, err.Error(), "ftp-connection//Rename")
 				}
@@ -2417,6 +2798,11 @@ var Builtins_io = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Native:
+				conn, ok := asFTPConnection(s.Value)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Invalid FTP connection.", "ftp-connection//Store")
+				}
 				path, ok := arg1.(env.String)
 				if !ok {
 					ps.FailureFlag = true
@@ -2442,7 +2828,7 @@ var Builtins_io = map[string]*env.Builtin{
 					ps.FailureFlag = true
 					return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType, env.NativeType}, "ftp-connection//Store")
 				}
-				if err := s.Value.(*ftp.ServerConn).Stor(path.Value, rdr); err != nil {
+				if err := conn.Stor(path.Value, rdr); err != nil {
 					ps.FailureFlag = true
 					return evaldo.MakeBuiltinError(ps, err.Error(), "ftp-connection//Store")
 				}
@@ -2628,7 +3014,12 @@ var Builtins_io = map[string]*env.Builtin{
 				}
 				switch data := arg1.(type) {
 				case env.String:
-					_, err := conn.Value.(net.Conn).Write([]byte(data.Value))
+					connection, ok := asNetConnection(conn.Value)
+					if !ok {
+						ps.FailureFlag = true
+						return evaldo.MakeBuiltinError(ps, "Invalid unix-connection object", "unix-connection//Write")
+					}
+					_, err := connection.Write([]byte(data.Value))
 					if err != nil {
 						ps.FailureFlag = true
 						return evaldo.MakeBuiltinError(ps, "Error writing to Unix socket: "+err.Error(), "unix-connection//Write")
@@ -2660,8 +3051,13 @@ var Builtins_io = map[string]*env.Builtin{
 					ps.FailureFlag = true
 					return evaldo.MakeBuiltinError(ps, "Expected unix-connection object", "unix-connection//Read")
 				}
+				connection, ok := asNetConnection(conn.Value)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Invalid unix-connection object", "unix-connection//Read")
+				}
 				buf := make([]byte, 1024)
-				n, err := conn.Value.(net.Conn).Read(buf)
+				n, err := connection.Read(buf)
 				if err != nil {
 					ps.FailureFlag = true
 					return evaldo.MakeBuiltinError(ps, "Error reading from Unix socket: "+err.Error(), "unix-connection//Read")
@@ -2689,7 +3085,12 @@ var Builtins_io = map[string]*env.Builtin{
 					ps.FailureFlag = true
 					return evaldo.MakeBuiltinError(ps, "Expected unix-connection object", "unix-connection//Close")
 				}
-				err := conn.Value.(net.Conn).Close()
+				connection, ok := asNetConnection(conn.Value)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Invalid unix-connection object", "unix-connection//Close")
+				}
+				err := connection.Close()
 				if err != nil {
 					ps.FailureFlag = true
 					return evaldo.MakeBuiltinError(ps, err.Error(), "unix-connection//Close")
