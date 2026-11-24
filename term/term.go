@@ -1421,64 +1421,12 @@ func DisplayTableCustom(bloc env.Table, myfn func(row env.Object, iscurr env.Int
 	curr := 0
 	moveUp := 0
 	mode := 0 // 0 - human, 1 - dev
-	// get the ideal widths of columns
-	widths := make([]int, len(bloc.Cols))
-	// check all col names
-	for ic, col := range bloc.Cols {
-		widths[ic] = len(col) + 1
-	}
-	// check all data
-	for _, r := range bloc.Rows {
-		for ic, v := range r.Values {
-			ww := 5
-			switch val := v.(type) {
-			case string:
-				ww = len(val) + 2
-				if ww > 52 {
-					ww = 52
-				}
-			case int64:
-				ww = len(strconv.Itoa(int(val))) + 1
-			case env.Integer:
-				ww = len(strconv.Itoa(int(val.Value))) + 1
-			case float64:
-				ww = len(strconv.FormatFloat(val, 'f', 2, 64)) + 1
-			case env.Decimal:
-				ww = len(strconv.FormatFloat(val.Value, 'f', 2, 64)) + 1
-			case env.String:
-				ww = len(val.Print(*idx))
-				if ww > 52 {
-					ww = 52
-				}
-				//if ww > 60 {
-				// ww = 60
-				//}
-			case env.Vector:
-				ww = len(val.Print(*idx))
-			}
-			if len(widths) > ic && widths[ic] < ww {
-				widths[ic] = ww + 1
-			}
-		}
-	}
-	fulwidth := 0
-	for _, w := range widths {
-		fulwidth += w + 2
-	}
 
 DODO:
 	if moveUp > 0 {
 		CurUp(moveUp)
 	}
 	SaveCurPos()
-	/* for ic, cn := range bloc.Cols {
-		Bold()
-		termPrintf("| %-"+strconv.Itoa(widths[ic])+"s", cn)
-		CloseProps()
-	}
-	termPrintln("|")
-	termPrintln("+" + strings.Repeat("-", fulwidth-1) + "+")
-	*/
 
 	for range bloc.Rows {
 		ClearLine()

@@ -99,18 +99,9 @@ func DisplayRyeValue(ps *env.ProgramState, arg0 env.Object, interactive bool) (e
 	}
 
 	switch obj := arg0.(type) {
-	case env.Block:
-		if len(obj.Series.GetAll()) <= 5 {
-			return arg0, p + obj.Inspect(*ps.Idx)
-		} else {
-			return arg0, p + fmt.Sprintf("[Block with %d items: %s ... ]", len(obj.Series.GetAll()), obj.Series.GetAll()[0].Inspect(*ps.Idx))
-		}
-	case *env.Block:
-		if len(obj.Series.GetAll()) <= 5 {
-			return arg0, p + obj.Inspect(*ps.Idx)
-		} else {
-			return arg0, p + fmt.Sprintf("[Block with %d items: %s ... ]", len(obj.Series.GetAll()), obj.Series.GetAll()[0].Inspect(*ps.Idx))
-		}
+	case env.Block, *env.Block, env.Dict, *env.Dict:
+		// Use the same compact collection summary as tables and explore.
+		return arg0, p + term.CompactValueText(obj, ps.Idx, false)
 	case env.Table:
 		rows := len(obj.Rows)
 		cols := len(obj.Cols)
@@ -119,32 +110,6 @@ func DisplayRyeValue(ps *env.ProgramState, arg0 env.Object, interactive bool) (e
 		rows := len(obj.Rows)
 		cols := len(obj.Cols)
 		return arg0, p + fmt.Sprintf("[Table %dx%d: %v]", rows, cols, obj.Cols)
-	case env.Dict:
-		keys := make([]string, 0)
-		for k := range obj.Data {
-			keys = append(keys, k)
-			if len(keys) >= 3 {
-				break
-			}
-		}
-		if len(obj.Data) <= 3 {
-			return arg0, p + fmt.Sprintf("[Dict with keys: %v]", keys)
-		} else {
-			return arg0, p + fmt.Sprintf("[Dict with %d keys: %v ...]", len(obj.Data), keys)
-		}
-	case *env.Dict:
-		keys := make([]string, 0)
-		for k := range obj.Data {
-			keys = append(keys, k)
-			if len(keys) >= 3 {
-				break
-			}
-		}
-		if len(obj.Data) <= 3 {
-			return arg0, p + fmt.Sprintf("[Dict with keys: %v]", keys)
-		} else {
-			return arg0, p + fmt.Sprintf("[Dict with %d keys: %v ...]", len(obj.Data), keys)
-		}
 	default:
 		return arg0, p + obj.Inspect(*ps.Idx)
 	}

@@ -1552,6 +1552,37 @@ func (p *NoPEGParser) parseBlock(blockType int) (env.Object, error) {
 	return *env.NewBlockWithLocation(*ser, blockType, p.l.scriptPath, blockLine, blockCol), nil
 }
 
+// isSymbolicOperatorName reports whether name denotes a Rye symbolic operator.
+// Symbolic operators are interned with a leading underscore (e.g. "+" -> "_+"),
+// while ordinary word names, including single letters, keep their spelling.
+func isSymbolicOperatorName(name string) bool {
+	if len(name) == 1 {
+		return strings.ContainsRune("+-*/%!?.|<>=&^~", rune(name[0]))
+	}
+	switch name {
+	case "<<", ">>", "<-", "->", "-->", "<--", "=>", "<~", "~>",
+		">=", "<=", "<>", "<=>", "//", "..", "++", "--", "==", "!=", "/*", "*/":
+		return true
+	}
+	return false
+}
+
+// normalizeCallableOperator applies the same force-modifier and symbolic-operator
+// rules to ordinary opwords, dotwords, and pipewords. It returns the interned
+// name, the force flag, and whether the base name was capitalized.
+func normalizeCallableOperator(word string) (string, int, bool) {
+	force := 0
+	if len(word) > 1 && strings.HasSuffix(word, "*") {
+		force = 1
+		word = strings.TrimSuffix(word, "*")
+	}
+	capitalized := len(word) > 0 && word[0] >= 'A' && word[0] <= 'Z'
+	if isSymbolicOperatorName(word) {
+		return "_" + word, force, capitalized
+	}
+	return word, force, capitalized
+}
+
 // parseToken parses a single token and returns the corresponding Rye object
 func (p *NoPEGParser) parseToken() (env.Object, error) {
 	// fmt.Println("PARSE TOKEN ENTER (((()))))")
@@ -1609,46 +1640,14 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 		if strings.HasPrefix(word, "~") && len(word) > 1 && word != "~>" {
 			word = strings.TrimPrefix(word, "~")
 		}
-		var idx int
-		force := 0
-		// Single-char operators and specific multi-char operators get underscore prefix
-		if len(word) == 1 || word == "<<" || word == ">>" || word == "<-" || word == "->" ||
-			word == "-->" || word == "<--" ||
-			word == "=>" || word == "<~" || word == "~>" || word == ">=" || word == "<=" ||
-			word == "<>" || word == "<=>" ||
-			word == "//" || word == ".." || word == "++" || word == "--" || word == "==" ||
-			word == "!=" || word == "." || word == "|" {
-			idx = p.wordIndex.IndexWord("_" + word)
-		} else {
-			if word[len(word)-1:] == "*" {
-				force = 1
-				word = word[:len(word)-1]
-			}
-			idx = p.wordIndex.IndexWord(word)
-		}
-		capitalized := len(word) > 0 && word[0] >= 'A' && word[0] <= 'Z'
+		name, force, capitalized := normalizeCallableOperator(word)
+		idx := p.wordIndex.IndexWord(name)
 		return *env.NewOpwordC(idx, force, capitalized), nil
 	case NPEG_TOKEN_DOTWORD:
 		// Dotwords are method-style operators like .add, .upper, .concat, .+, .*
 		word := p.currentToken.Value[1:] // Strip the leading '.'
-		var idx int
-		force := 0
-		// Single-char operators get underscore prefix (like pipewords do)
-		// But single letters like .x should not get the prefix
-		isSingleCharOp := len(word) == 1 && (word[0] == '+' || word[0] == '-' || word[0] == '*' ||
-			word[0] == '/' || word[0] == '>' || word[0] == '<' || word[0] == '=' ||
-			word[0] == '!' || word[0] == '?' || word[0] == '%' || word[0] == '~')
-		isMultiCharOp := word == ">>" || word == "->" || word == "~>" || word == "-->" || word == "++" || word == "=>" || word == "%"
-		if isSingleCharOp || isMultiCharOp {
-			idx = p.wordIndex.IndexWord("_" + word)
-		} else {
-			if len(word) > 1 && word[len(word)-1:] == "*" {
-				force = 1
-				word = word[:len(word)-1]
-			}
-			idx = p.wordIndex.IndexWord(word)
-		}
-		capitalized := len(word) > 0 && word[0] >= 'A' && word[0] <= 'Z'
+		name, force, capitalized := normalizeCallableOperator(word)
+		idx := p.wordIndex.IndexWord(name)
 		return *env.NewDotwordC(idx, force, capitalized), nil
 	case NPEG_TOKEN_PIPEWORD:
 		var word string
@@ -1657,23 +1656,14 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 		} else {
 			word = p.currentToken.Value
 		}
-		var idx int
-		force := 0
-		if len(word) == 1 || word == ">>" || word == "->" || word == "~>" || word == "-->" || word == ".." || word == "++" || word == "=>" || word == "|" || word == "%" {
-			idx = p.wordIndex.IndexWord("_" + word)
-		} else {
-			if word[len(word)-1:] == "*" {
-				force = 1
-				word = word[:len(word)-1]
-			}
-			idx = p.wordIndex.IndexWord(word)
-		}
-		capitalized := len(word) > 0 && word[0] >= 'A' && word[0] <= 'Z'
+		name, force, capitalized := normalizeCallableOperator(word)
+		idx := p.wordIndex.IndexWord(name)
 		return *env.NewPipewordC(idx, force, capitalized), nil
 	case NPEG_TOKEN_ONECHARPIPE:
 		word := p.currentToken.Value
-		idx := p.wordIndex.IndexWord("_" + word)
-		return *env.NewPipeword(idx, 0), nil
+		name, force, capitalized := normalizeCallableOperator(word)
+		idx := p.wordIndex.IndexWord(name)
+		return *env.NewPipewordC(idx, force, capitalized), nil
 	case NPEG_TOKEN_TAGWORD:
 		word := p.currentToken.Value
 		idx := p.wordIndex.IndexWord(word[1:])
