@@ -4,17 +4,129 @@ import (
 	"fmt"
 	"io"
 	"sort"
-	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/refaktor/rye/util"
 
 	"github.com/refaktor/rye/env"
 )
 
+const (
+	// DisplayMaxValueWidth is the longest compact value shown in a table cell.
+	// Values longer than this are truncated with an ellipsis.
+	DisplayMaxValueWidth = 52
+
+	// displayValueMaxItems keeps nested collections readable: show a few items,
+	// then an ellipsis. The same rule is used by tables and by display/explore.
+	displayValueMaxItems = 5
+)
+
 // DisplayValueText formats a cell or entry in human (Print) or developer
-// (Inspect) mode. Both static output and the interactive views use it.
+// (Inspect) mode. Collections are summarized so nested blocks, lists and dicts
+// stay readable; both static output and the interactive views use it.
 func DisplayValueText(value any, idx *env.Idxs, developer bool) string {
+	if obj, ok := value.(env.Object); ok {
+		switch v := obj.(type) {
+		case env.Block:
+			return util.TruncateString(displayBlockItems(v.Series.GetAll(), idx, developer), DisplayMaxValueWidth)
+		case *env.Block:
+			return util.TruncateString(displayBlockItems(v.Series.GetAll(), idx, developer), DisplayMaxValueWidth)
+		case env.List:
+			return util.TruncateString(displayListItems(v.Data, idx, developer), DisplayMaxValueWidth)
+		case *env.List:
+			return util.TruncateString(displayListItems(v.Data, idx, developer), DisplayMaxValueWidth)
+		case env.Dict:
+			return util.TruncateString(displayDictItems(v, idx, developer), DisplayMaxValueWidth)
+		case *env.Dict:
+			return util.TruncateString(displayDictItems(*v, idx, developer), DisplayMaxValueWidth)
+		case env.Bunch:
+			return util.TruncateString(displayBunchItems(v), DisplayMaxValueWidth)
+		case *env.Bunch:
+			return util.TruncateString(displayBunchItems(*v), DisplayMaxValueWidth)
+		case env.Table:
+			return v.Inspect(*idx)
+		case *env.Table:
+			return v.Inspect(*idx)
+		}
+		if developer {
+			return obj.Inspect(*idx)
+		}
+		return obj.Print(*idx)
+	}
+	return fmt.Sprint(value)
+}
+
+// CompactValueText is DisplayValueText capped to the width used by table cells.
+func CompactValueText(value any, idx *env.Idxs, developer bool) string {
+	return util.TruncateString(DisplayValueText(value, idx, developer), DisplayMaxValueWidth)
+}
+
+func displayBlockItems(items []env.Object, idx *env.Idxs, developer bool) string {
+	parts, truncated := displayItemParts(items, idx, developer)
+	return joinDisplayParts(parts, truncated, "", "")
+}
+
+func displayListItems(items []any, idx *env.Idxs, developer bool) string {
+	parts, truncated := displayAnyItemParts(items, idx, developer)
+	return joinDisplayParts(parts, truncated, "L[", " ]")
+}
+
+func displayDictItems(dict env.Dict, idx *env.Idxs, developer bool) string {
+	keys := make([]string, 0, len(dict.Data))
+	for key := range dict.Data {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	limit := min(len(keys), displayValueMaxItems)
+	parts := make([]string, 0, limit)
+	for _, key := range keys[:limit] {
+		parts = append(parts, key+": "+displayItemText(dict.Data[key], idx, developer))
+	}
+	return joinDisplayParts(parts, len(keys) > limit, "[", " ]")
+}
+
+func displayBunchItems(bunch env.Bunch) string {
+	keys := bunch.SortedKeys()
+	limit := min(len(keys), displayValueMaxItems)
+	parts := make([]string, 0, limit)
+	for _, key := range keys[:limit] {
+		parts = append(parts, fmt.Sprintf("%q", key))
+	}
+	return joinDisplayParts(parts, len(keys) > limit, "Bunch[", " ]")
+}
+
+func displayItemParts(items []env.Object, idx *env.Idxs, developer bool) ([]string, bool) {
+	limit := min(len(items), displayValueMaxItems)
+	parts := make([]string, 0, limit)
+	for _, item := range items[:limit] {
+		if item == nil {
+			parts = append(parts, "[NIL]")
+			continue
+		}
+		parts = append(parts, displayItemText(item, idx, developer))
+	}
+	return parts, len(items) > limit
+}
+
+func displayAnyItemParts(items []any, idx *env.Idxs, developer bool) ([]string, bool) {
+	limit := min(len(items), displayValueMaxItems)
+	parts := make([]string, 0, limit)
+	for _, item := range items[:limit] {
+		parts = append(parts, displayItemText(item, idx, developer))
+	}
+	return parts, len(items) > limit
+}
+
+func displayItemText(value any, idx *env.Idxs, developer bool) string {
+	// Recurse so nested collections get the same item limit.
+	switch v := value.(type) {
+	case map[string]any:
+		return displayDictItems(*env.NewDict(v), idx, developer)
+	case env.Block, *env.Block, env.List, *env.List, env.Dict, *env.Dict, env.Bunch, *env.Bunch, env.Table, *env.Table:
+		return DisplayValueText(value, idx, developer)
+	}
 	if obj, ok := value.(env.Object); ok {
 		if developer {
 			return obj.Inspect(*idx)
@@ -24,45 +136,43 @@ func DisplayValueText(value any, idx *env.Idxs, developer bool) string {
 	return fmt.Sprint(value)
 }
 
+func joinDisplayParts(parts []string, truncated bool, open string, close string) string {
+	text := strings.Join(parts, " ")
+	if truncated {
+		if text != "" {
+			text += " "
+		}
+		text += "..."
+	}
+	if open == "" && close == "" {
+		return text
+	}
+	if text == "" {
+		return open + close
+	}
+	return open + " " + text + close
+}
+
 // TableDisplayWidths lays out static and interactive tables consistently.
-// The interactive view retains its historical text width limit; static output
-// expands columns to show complete values.
+// Interactive tables show compact values capped at DisplayMaxValueWidth; static
+// output may expand complete scalar values, but collections remain summarized.
 func TableDisplayWidths(table env.Table, idx *env.Idxs, full bool) []int {
 	widths := make([]int, len(table.Cols))
 	for i, col := range table.Cols {
-		widths[i] = len(col) + 1
+		widths[i] = utf8.RuneCountInString(col) + 1
 	}
 	for _, row := range table.Rows {
 		for i, value := range row.Values {
 			if i >= len(widths) {
 				continue
 			}
-			width := 5
-			switch v := value.(type) {
-			case string:
-				width = len(v) + 2
-				if width > 52 {
-					width = 52
-				}
-			case int64:
-				width = len(strconv.FormatInt(v, 10)) + 1
-			case env.Integer:
-				width = len(strconv.FormatInt(v.Value, 10)) + 1
-			case float64:
-				width = len(strconv.FormatFloat(v, 'f', 2, 64)) + 1
-			case env.Decimal:
-				width = len(strconv.FormatFloat(v.Value, 'f', 2, 64)) + 1
-			case env.String, env.Vector:
-				width = len(DisplayValueText(v, idx, false))
-				if width > 52 {
-					width = 52
-				}
+			text := DisplayValueText(value, idx, false)
+			if !full {
+				text = util.TruncateString(text, DisplayMaxValueWidth)
 			}
-			if full {
-				width = max(width, len(DisplayValueText(value, idx, false)))
-			}
+			width := utf8.RuneCountInString(text) + 1
 			if widths[i] < width {
-				widths[i] = width + 1
+				widths[i] = width
 			}
 		}
 	}
