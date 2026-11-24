@@ -7,6 +7,7 @@ package env
 // Call only from the goroutine that owns ps, before publishing the child.
 func (ps *ProgramState) ForkForGoroutine() *ProgramState {
 	return &ProgramState{
+		TaskScope:    ps.TaskScope,
 		Ctx:          ps.Ctx,
 		PCtx:         ps.PCtx,
 		Idx:          ps.Idx,

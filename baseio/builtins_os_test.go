@@ -94,10 +94,15 @@ func TestArchiveExtractionRejectsEscapes(t *testing.T) {
 				wantError    bool
 			}{
 				{"safe", "sub/file.txt", false, false},
+				{"safe-nested", "nested/safe/file.txt", false, false},
+				{"safe-dot-prefix", "./safe-dot.txt", false, false},
+				{"safe-internal-parent", "sub/../inside.txt", false, false},
 				{"traversal", "../outside.txt", false, true},
+				{"traversal-after-safe-prefix", "sub/../../outside.txt", false, true},
 				{"sibling-prefix", "../dest-other/outside.txt", false, true},
 				{"absolute", "/tmp/archive-absolute-escape.txt", false, true},
 				{"symlink-parent", "link/file.txt", true, true},
+				{"symlink-deep-parent", "link/sub/file.txt", true, true},
 				{"symlink-target", "file.txt", true, true},
 			} {
 				t.Run(tc.name, func(t *testing.T) {

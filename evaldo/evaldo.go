@@ -1634,6 +1634,7 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 // switches dialects; ordinary Rye calls do not need that allocation.
 func newFunctionCallState(fn env.Function, parent *env.ProgramState, ctx *env.RyeCtx) *env.ProgramState {
 	child := &env.ProgramState{
+		TaskScope:      parent.TaskScope,
 		Ser:            fn.Body.Series,
 		Ctx:            ctx,
 		PCtx:           parent.PCtx,

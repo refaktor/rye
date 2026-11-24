@@ -31,6 +31,69 @@ func (m *RyeMutex) Unlock() error {
 	return nil
 }
 
+// RyeWaitGroup is a validated waitgroup. Unlike sync.WaitGroup, invalid
+// transitions return Rye errors instead of panicking or corrupting state, and
+// the same waitgroup can be reused after all waiters have been released.
+type RyeWaitGroup struct {
+	mu      sync.Mutex
+	cond    *sync.Cond
+	counter int64
+}
+
+func NewRyeWaitGroup() *RyeWaitGroup {
+	wg := &RyeWaitGroup{}
+	wg.cond = sync.NewCond(&wg.mu)
+	return wg
+}
+
+func (wg *RyeWaitGroup) Add(delta int64) error {
+	wg.mu.Lock()
+	defer wg.mu.Unlock()
+
+	newCount := wg.counter + delta
+	if delta > 0 && newCount < wg.counter {
+		return fmt.Errorf("waitgroup counter overflow")
+	}
+	if delta < 0 && newCount > wg.counter {
+		return fmt.Errorf("waitgroup counter underflow")
+	}
+	if newCount < 0 {
+		return fmt.Errorf("waitgroup counter cannot become negative (current %d, delta %d)", wg.counter, delta)
+	}
+	wg.counter = newCount
+	if wg.counter == 0 {
+		wg.cond.Broadcast()
+	}
+	return nil
+}
+
+func (wg *RyeWaitGroup) Done() error {
+	return wg.Add(-1)
+}
+
+func (wg *RyeWaitGroup) Wait() {
+	wg.mu.Lock()
+	defer wg.mu.Unlock()
+	for wg.counter != 0 {
+		wg.cond.Wait()
+	}
+}
+
+func asRyeMutex(value any) (*RyeMutex, bool) {
+	mtx, ok := value.(*RyeMutex)
+	return mtx, ok && mtx != nil
+}
+
+func asRyeWaitGroup(value any) (*RyeWaitGroup, bool) {
+	wg, ok := value.(*RyeWaitGroup)
+	return wg, ok && wg != nil
+}
+
+func asRyeChannel(value any) (chan *env.Object, bool) {
+	ch, ok := value.(chan *env.Object)
+	return ch, ok && ch != nil
+}
+
 var Builtins_goroutines = map[string]*env.Builtin{
 
 	//
@@ -79,6 +142,8 @@ var Builtins_goroutines = map[string]*env.Builtin{
 						return evaldo.MakeBuiltinError(ps, "function with exactly 1 argument required", "go-with")
 					}
 					psTemp := ps.ForkForGoroutine()
+					// Legacy go-with is detached from structured task scopes.
+					psTemp.TaskScope = nil
 
 					// Launch goroutine with panic recovery
 					go func() {
@@ -122,6 +187,8 @@ var Builtins_goroutines = map[string]*env.Builtin{
 					return evaldo.MakeBuiltinError(ps, "function with 0 arguments required", "go")
 				}
 				psTemp := ps.ForkForGoroutine()
+				// Legacy go is detached from structured task scopes.
+				psTemp.TaskScope = nil
 
 				// Launch goroutine with panic recovery
 				go func() {
@@ -185,19 +252,22 @@ var Builtins_goroutines = map[string]*env.Builtin{
 			switch chn := arg0.(type) {
 			case env.Native:
 				// Type assertion with proper error handling
-				ch, ok := chn.Value.(chan *env.Object)
+				ch, ok := asRyeChannel(chn.Value)
 				if !ok {
 					ps.FailureFlag = true
-					return evaldo.MakeBuiltinError(ps, "Invalid channel type", "Rye-channel//Read")
+					return evaldo.MakeBuiltinError(ps, "Invalid channel type or nil channel", "Rye-channel//Read")
 				}
 
-				msg, ok := <-ch
-				if ok {
-					return *msg
-				} else {
+				msg, open := <-ch
+				if !open {
 					ps.FailureFlag = true
 					return evaldo.MakeBuiltinError(ps, "channel closed", "Rye-channel//Read")
 				}
+				if msg == nil || *msg == nil {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "channel delivered a nil value", "Rye-channel//Read")
+				}
+				return *msg
 			default:
 				ps.FailureFlag = true
 				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-channel//Read")
@@ -227,10 +297,10 @@ var Builtins_goroutines = map[string]*env.Builtin{
 			}()
 			switch chn := arg0.(type) {
 			case env.Native:
-				ch, ok := chn.Value.(chan *env.Object)
+				ch, ok := asRyeChannel(chn.Value)
 				if !ok {
 					ps.FailureFlag = true
-					return evaldo.MakeBuiltinError(ps, "Invalid channel type", "Rye-channel//Send")
+					return evaldo.MakeBuiltinError(ps, "Invalid channel type or nil channel", "Rye-channel//Send")
 				}
 				ch <- &arg1
 				return arg0
@@ -262,8 +332,8 @@ var Builtins_goroutines = map[string]*env.Builtin{
 			}()
 			switch chn := arg0.(type) {
 			case env.Native:
-				ch, ok := chn.Value.(chan *env.Object)
-				if !ok || ch == nil {
+				ch, ok := asRyeChannel(chn.Value)
+				if !ok {
 					ps.FailureFlag = true
 					return evaldo.MakeBuiltinError(ps, "Invalid channel type or nil channel", "Rye-channel//Close")
 				}
@@ -305,8 +375,7 @@ var Builtins_goroutines = map[string]*env.Builtin{
 		Argsn:  0,
 		Doc:    "Creates a new waitgroup for coordinating multiple goroutines to wait for completion.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var wg sync.WaitGroup
-			return *env.NewNative(ps.Idx, &wg, "Rye-waitgroup")
+			return *env.NewNative(ps.Idx, NewRyeWaitGroup(), "Rye-waitgroup")
 		},
 	},
 
@@ -324,7 +393,12 @@ var Builtins_goroutines = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch mtx := arg0.(type) {
 			case env.Native:
-				mtx.Value.(*RyeMutex).Lock()
+				mutex, ok := asRyeMutex(mtx.Value)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Invalid mutex object", "Rye-mutex//Lock")
+				}
+				mutex.Lock()
 				return arg0
 			default:
 				ps.FailureFlag = true
@@ -347,10 +421,15 @@ var Builtins_goroutines = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch mtx := arg0.(type) {
 			case env.Native:
-				err := mtx.Value.(*RyeMutex).Unlock()
+				mutex, ok := asRyeMutex(mtx.Value)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Invalid mutex object", "Rye-mutex//Unlock")
+				}
+				err := mutex.Unlock()
 				if err != nil {
 					ps.FailureFlag = true
-					return *env.NewError(err.Error())
+					return evaldo.MakeBuiltinError(ps, err.Error(), "Rye-mutex//Unlock")
 				}
 				return arg0
 			default:
@@ -375,9 +454,17 @@ var Builtins_goroutines = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch wg := arg0.(type) {
 			case env.Native:
+				group, ok := asRyeWaitGroup(wg.Value)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Invalid waitgroup object", "Rye-waitgroup//Add")
+				}
 				switch count := arg1.(type) {
 				case env.Integer:
-					wg.Value.(*sync.WaitGroup).Add(int(count.Value))
+					if err := group.Add(count.Value); err != nil {
+						ps.FailureFlag = true
+						return evaldo.MakeBuiltinError(ps, err.Error(), "Rye-waitgroup//Add")
+					}
 					return arg0
 				default:
 					ps.FailureFlag = true
@@ -404,7 +491,15 @@ var Builtins_goroutines = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch wg := arg0.(type) {
 			case env.Native:
-				wg.Value.(*sync.WaitGroup).Done()
+				group, ok := asRyeWaitGroup(wg.Value)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Invalid waitgroup object", "Rye-waitgroup//Done")
+				}
+				if err := group.Done(); err != nil {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, err.Error(), "Rye-waitgroup//Done")
+				}
 				return arg0
 			default:
 				ps.FailureFlag = true
@@ -427,7 +522,12 @@ var Builtins_goroutines = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch wg := arg0.(type) {
 			case env.Native:
-				wg.Value.(*sync.WaitGroup).Wait()
+				group, ok := asRyeWaitGroup(wg.Value)
+				if !ok {
+					ps.FailureFlag = true
+					return evaldo.MakeBuiltinError(ps, "Invalid waitgroup object", "Rye-waitgroup//Wait")
+				}
+				group.Wait()
 				return arg0
 			default:
 				ps.FailureFlag = true

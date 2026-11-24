@@ -39,16 +39,48 @@ do-benchmarks: fn { dsl } {
 		a3: fn { x y z } { x }
 		print time-it { dsl { prns loop 1000000 { a3 1 2 3 } } }
 	}
+	prns "fn-args0:"
+	private {
+		f0: does { 123 }
+		print time-it { dsl { prns loop 1000000 { f0 } } }
+		if ( f0 ) != 123 { print "ERROR: fn-args0 returned wrong value" }
+	}
+	prns "fn-args1:"
+	private {
+		f1: fn { a } { 123 }
+		print time-it { dsl { prns loop 1000000 { f1 1 } } }
+		if ( f1 1 ) != 123 { print "ERROR: fn-args1 returned wrong value" }
+	}
+	prns "fn-args2:"
+	private {
+		f2: fn { a b } { 123 }
+		print time-it { dsl { prns loop 1000000 { f2 1 2 } } }
+		if ( f2 1 2 ) != 123 { print "ERROR: fn-args2 returned wrong value" }
+	}
+	prns "fn-args3-const:"
+	private {
+		f3: fn { a b c } { 123 }
+		print time-it { dsl { prns loop 1000000 { f3 1 2 3 } } }
+		if ( f3 1 2 3 ) != 123 { print "ERROR: fn-args3-const returned wrong value" }
+	}
 	prns "recursion-fib25:"
 	private {
 		fib: fn { n } { either n < 2 { n } { ( fib n - 1 ) + ( fib n - 2 ) } }
 		print time-it { dsl { prns fib 25 } }
+		if ( fib 25 ) != 75025 { print "ERROR: recursion-fib25 returned wrong value" }
+	}
+	prns "recursion-fib25-fixed-parent:"
+	private {
+		fib: fn\cc { n } { either n < 2 { n } { ( fib n - 1 ) + ( fib n - 2 ) } }
+		print time-it { dsl { prns fib 25 } }
+		if ( fib 25 ) != 75025 { print "ERROR: recursion-fib25-fixed-parent returned wrong value" }
 	}
 	prns "closure:"
 	private {
-		make-counter: fn { } { n: 0  closure { } { n:: n + 1  n } }
+		make-counter: fn { } { var 'n 0  closure { } { inc! 'n } }
 		c: make-counter
 		print time-it { dsl { prns loop 1000000 { c } } }
+		if ( c ) != 1000001 { print "ERROR: closure returned wrong final value" }
 	}
 	prns "branching:"
 	print time-it { dsl { prns loop 1000000 { either 1 > 0 { 1 } { 2 } } } }
