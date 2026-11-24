@@ -1025,7 +1025,15 @@ type EffectMode struct {
 	OutputsFailed   int // outputs that ran and produced a failure/error
 }
 
+// TaskScope tracks task completion without coupling env to the evaluator.
+// RegisterTask must be called before launching work; its callback completes it.
+type TaskScope interface {
+	RegisterTask() func(Object, bool)
+}
+
 type ProgramState struct {
+	TaskScope TaskScope // inherited by calls and spawned descendants
+
 	Ser           TSeries // current block of code
 	Res           Object  // result of expression
 	Ctx           *RyeCtx // Env object ()
