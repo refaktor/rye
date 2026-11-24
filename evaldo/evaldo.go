@@ -144,17 +144,18 @@ func EvalBlockInj_Rye2(ps *env.ProgramState, inj env.Object, injnow bool) {
 					return
 				}
 			}*/
-			if ps.ErrorFlag || ps.CallDepth > 0 {
+			if ps.ErrorFlag {
 				return
 			}
-			// CallDepth == 0 with ReturnFlag only:
-			if ps.Ser.Pos() < ps.Ser.Len() {
-				switch ps.Ser.Peek().(type) {
-				case env.Pipeword, env.Dotword, env.LSetword, env.Opword:
-					return // orphaned continuation token – stop to avoid "pipeword without left value"
+			if ps.ReturnFlag {
+				// A return at the outermost boundary terminates the program, regardless
+				// of what token follows. An unhandled failure carried by that return is
+				// escalated once so Capture/display can run before termination.
+				if ps.CallDepth == 0 && ps.FailureFlag {
+					ps.ErrorFlag = true
 				}
+				return
 			}
-			ps.ReturnFlag = false // next is an independent expression – safe to continue
 		}
 		// TODO: check this whole function if we really need all internal logic or we can clean it up and get more consistent behaviour
 		if tryHandleFailure(ps) {
@@ -2519,9 +2520,12 @@ func MaybeDisplayFailureOrError2(es *env.ProgramState, genv *env.Idxs, tag strin
 
 			capturedErr := es.Res // the error value to inject
 
-			// Reset error state so the capture block evaluates cleanly
+			// Reset error state so the capture block evaluates cleanly. The pending
+			// return signal belongs to the abandoned program and must not cut the
+			// capture handler short after its first expression.
 			es.ErrorFlag = false
 			es.FailureFlag = false
+			es.ReturnFlag = false
 
 			// Save and restore the code-position series around the capture block
 			originalSer := es.Ser
