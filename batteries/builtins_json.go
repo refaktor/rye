@@ -334,12 +334,12 @@ var Builtins_json = map[string]*env.Builtin{
 				var m any
 				err := json.Unmarshal([]byte(input.Value), &m)
 				if err != nil {
-					return evaldo.MakeBuiltinError(ps, "Failed to Unmarshal.", "_parse_json")
+					return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Failed to parse JSON: %s", err), "parse-json")
 					//panic(err)
 				}
 				return env.ToRyeValue(m)
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType}, "_parse_json")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType}, "parse-json")
 			}
 		},
 	},
@@ -363,13 +363,13 @@ var Builtins_json = map[string]*env.Builtin{
 					var m any
 					err := decoder.Decode(&m)
 					if err != nil {
-						return evaldo.MakeBuiltinError(ps, "Failed to Unmarshal.", "_parse_json\\lines")
+						return evaldo.MakeBuiltinError(ps, fmt.Sprintf("Failed to parse JSON: %s", err), "parse-json\\lines")
 					}
 					vals = append(vals, env.ToRyeValue(m))
 				}
 				return *env.NewList(vals)
 			default:
-				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType}, "_parse_json\\lines")
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.StringType}, "parse-json\\lines")
 			}
 		},
 	},
